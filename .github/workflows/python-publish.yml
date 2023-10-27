@@ -36,7 +36,7 @@ jobs:
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
       run: |
-        mkdir .cortex
+        mkdir $HOME/.cortex
         echo "[default]" > $HOME/.cortex/config
         echo "api_key = $CORTEX_API_KEY" >> $HOME/.cortex/config
         pwd
