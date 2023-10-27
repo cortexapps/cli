@@ -41,6 +41,7 @@ jobs:
         echo "api_key = $CORTEX_API_KEY" >> $HOME/.cortex/config
         pwd
         ls -l $HOME/.cortex
+        cat $HOME/.cortex/config
       shell: bash
     - name: Test with pytest
       run: |
