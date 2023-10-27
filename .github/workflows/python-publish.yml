@@ -32,7 +32,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install build requests pyyaml
-    - name: Create and populate .Renviron file
+    - name: Create and populate .cortex/config file
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
       run: |
