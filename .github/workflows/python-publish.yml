@@ -32,6 +32,13 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install build requests pyyaml
+    - name: Create and populate .Renviron file
+        env:
+          CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+        run: |
+          mkdir .cortex
+          echo "CORTEX_API_KEY = $CORTEX_API_KEY" >> .cortex/config
+        shell: bash
     - name: Test with pytest
       run: |
         pip install pytest pytest-cov
