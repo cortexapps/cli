@@ -1,2 +1,7 @@
-dist
-**/__pycache
+.cache
+.coverage
+build/
+develop-eggs/
+dist/
+eggs/
+__pycache__/
