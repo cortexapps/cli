@@ -51,6 +51,12 @@ jobs:
       run: |
         pip install pytest pytest-cov
         pytest --cov=cortexapps_cli --cov-report term-missing --cov-report=json --cov-report=html
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: code coverage
+        path: htmlcov/
     - name: Build package
       run: python -m build
     - name: Publish package
