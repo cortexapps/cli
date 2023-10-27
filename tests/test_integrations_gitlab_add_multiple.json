@@ -1,0 +1,20 @@
+{
+  "configurations": [
+   {
+      "alias": "cortex-test-2",
+      "groupNames": [
+      ],
+      "hidePersonalProjects": false,
+      "isDefault": false,
+      "personalAccessToken": "bogusToken1"
+    },
+   {
+      "alias": "cortex-test-3",
+      "groupNames": [
+      ],
+      "hidePersonalProjects": false,
+      "isDefault": false,
+      "personalAccessToken": "bogusToken2"
+    }
+  ]
+}

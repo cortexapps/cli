@@ -1,0 +1,6 @@
+{
+  "description": "This is a test resource definition.",
+  "name": "Test Resource Defintion",
+  "schema": {},
+  "type": "test-resource-definition"
+}

@@ -1,0 +1,3 @@
+{
+   "query": "tag = \"test-service\" and custom(\"testField\") != null"
+}

@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "name": "Stanford",
+    "description": "Stanford Cardinal 2023 Final Four Team",
+    "summary": null
+  },
+  "links": [],
+  "slackChannels": [],
+  "additionalMembers": [
+    {
+      "name": "Steph Curry",
+      "email": "steph.curry@cortex.io",
+      "description": "guard"
+    }
+  ],
+  "cortexTeam":{
+     "members": []
+  },
+  "type": "CORTEX"
+}

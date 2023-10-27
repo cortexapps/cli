@@ -1,0 +1,42 @@
+{
+  "teamTag": "test-team",
+  "metadata": {
+    "name": "Stanford",
+    "description": "Stanford Cardinal 1998 Final Four Team",
+    "summary": null
+  },
+  "links": [],
+  "slackChannels": [],
+  "additionalMembers": [
+    {
+      "name": "Mark Madsen",
+      "email": "mark.madsen@cortex.io",
+      "description": "forward"
+    },
+    {
+      "name": "Kris Weems",
+      "email": "kris.weems@cortex.io",
+      "description": "shooting guard"
+    },
+    {
+      "name": "Tim Young",
+      "email": "tim.young@cortex.io",
+      "description": "center"
+    },
+    {
+      "name": "Peter Sauer",
+      "email": "peter.sauer@cortex.io",
+      "description": "forward"
+    },
+    {
+      "name": "Arthur Lee",
+      "email": "arthur.lee@cortex.io",
+      "description": "point guard"
+    }
+  ],
+  "isArchived": false,
+  "cortexTeam": {
+    "members": []
+  },
+  "type": "CORTEX"
+}

@@ -1,0 +1,8 @@
+openapi: 3.0.1
+info:
+  title: Invalid Service to test dryrun
+  x-cortex-bag: invalid-service
+  x-cortex-type: service
+  x-cortex-owners:
+  - type: EMAIL
+    email: snoop.dogg@cortex.io

@@ -1,0 +1,16 @@
+{
+  "values": {
+    "test-service": [
+      {
+        "key": "checklist",
+        "value": {
+           "ada": "yes",
+           "pii": "n/a",
+           "itar": "no",
+           "date": "Fri Aug 25 2023",
+           "signed_by": "Jeff Schnitter"
+        }
+      }
+    ]
+  }
+}

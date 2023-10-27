@@ -1,0 +1,10 @@
+{
+  "customData": {
+     "test3": 678,
+     "test4": "someVal3"
+  },
+  "description": "Config event",
+  "timestamp": "2023-10-08T13:27:51.226Z",
+  "title": "config event",
+  "type": "CONFIG_SERVICE"
+}
