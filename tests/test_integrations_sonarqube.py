@@ -1,5 +1,6 @@
+@pytest.mark.skip(reason="Skipping until I can figure out how to install community sonarqube and use ngrok3")
 """
-Tests for newrelic integration commands.
+Tests for sonarqube integration commands.
 """
 from cortexapps_cli.cortex import cli
 from string import Template

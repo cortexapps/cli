@@ -1,5 +1,5 @@
 """
-Tests for teams commands.
+Tests for deploys commands.
 """
 from cortexapps_cli.cortex import cli
 
