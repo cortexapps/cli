@@ -11,7 +11,7 @@ name: Test Pull Request
 on:
   workflow_dispatch:
   push:
-    branches:
+    branches-ignore:
       - 'main'
 
 permissions:
