@@ -1,9 +1,10 @@
 """
-Tests for newrelic integration commands.
+Tests for sonarqube integration commands.
 """
 from cortexapps_cli.cortex import cli
 from string import Template
 import os
+import pytest
 
 sonarqube_host = os.getenv('SONARQUBE_HOST')
 sonarqube_personal_token = os.getenv('SONARQUBE_PERSONAL_TOKEN')
@@ -38,9 +39,11 @@ def test_integrations_sonarqube_get_all():
 def test_integrations_sonarqube_get_default():
     cli(["integrations", "sonarqube", "get-default"])
 
+@pytest.mark.skip(reason="Skipping until I can figure out how to install community sonarqube and use ngrok3")
 def test_integrations_sonarqube_validate():
     cli(["integrations", "sonarqube", "validate", "-a", "cortex-test"])
 
+@pytest.mark.skip(reason="Skipping until I can figure out how to install community sonarqube and use ngrok3")
 def test_integrations_sonarqube_validate_all():
     cli(["integrations", "sonarqube", "validate-all"])
 
@@ -74,7 +77,3 @@ def test_integrations_sonarqube_add_multiple(tmp_path):
     content = template.substitute(sonarqube_host=sonarqube_host, sonarqube_personal_token=sonarqube_personal_token)
     f.write_text(content)
     cli(["integrations", "sonarqube", "add-multiple", "-f", str(f)])
-
-
-
-
