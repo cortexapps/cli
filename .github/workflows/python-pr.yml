@@ -9,6 +9,7 @@
 name: Test Pull Request
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'main'
