@@ -41,6 +41,8 @@ jobs:
         pip install build requests pyyaml
     - name: Run pip-audit to check for vulnerabilities
       uses: pypa/gh-action-pip-audit@v1.0.8
+      with:
+        inputs: .
     - name: Create and populate .cortex/config file
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
