@@ -75,7 +75,7 @@ def check_config_file(config_file, replace_string):
     if not os.path.isfile(config_file):
         print("Cortex CLI config file " + config_file + " does not exist.  Create (Y/N)?")
         response = input()
-        if response == "Y":
+        if response == "Y" or response == "y":
             if not os.path.isdir(os.path.dirname(config_file)):
                os.mkdir(os.path.dirname(config_file), 0o700)
             cortex_config_contents = textwrap.dedent('''\
