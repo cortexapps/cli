@@ -674,13 +674,15 @@ def export(args):
         with open(resource_file, 'w') as f:
             f.write(output)
         f.close()
-    delattr(args, 'type')
+    if "type" in args:
+       delattr(args, 'type')
 
     print("Getting catalog entities")
     catalog_json=json_directory + "/catalog.json"
     args.types = resource_types
     catalog_list(args)
-    delattr(args, 'types')
+    if "types" in args:
+       delattr(args, 'types')
     with open(catalog_json, 'w') as f:
         f.write(output)
 

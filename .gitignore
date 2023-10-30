@@ -1,7 +1,8 @@
 .cache
 .coverage
+__pycache__/
 build/
 develop-eggs/
 dist/
 eggs/
-__pycache__/
+htmlcov/
