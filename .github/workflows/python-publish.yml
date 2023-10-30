@@ -26,7 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        # TODO: need to refactor tests to allow multiple versions tested at once.
+        # Tests that delete-all integration configurations break tests that just
+        # created them.
+        #python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.7"]
 
     steps:
     - uses: actions/checkout@v3
