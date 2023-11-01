@@ -7,11 +7,13 @@ import configparser
 from datetime import datetime
 import inspect
 import json
+import importlib.metadata
 import os
 import requests
 from subprocess import run
 import sys
 import textwrap
+import tomllib
 import yaml
 
 # It ain't pretty, but I'm just gonna throw a few globals into the mix.
@@ -19,6 +21,16 @@ output_behavior="print"
 output=""
 replace_string = "REPLACE_WITH_YOUR_CORTEX_API_KEY"
 config={}
+
+# borrowed from https://github.com/python-poetry/poetry/issues/273
+def version():
+    try:
+        with open("pyproject.toml", "rb") as f:
+            pyproject = tomllib.load(f)
+        version = pyproject["project"]["version"]
+    except Exception as e:
+        version = importlib.metadata.version('cortexapps_cli')
+    return version
 
 # Not sure if there is a cleaner way to implement parameter validation when you have subcommands and sub-subcommands.
 # For now, this is just a brute force way to manage it.
@@ -3130,10 +3142,9 @@ def cli(argv=sys.argv[1:]):
     parser.add_argument('-a', '--cliAlias', help='get CLI parms from [TENANT.aliases] in config file',metavar='')
     parser.add_argument('-c', '--config', help='Config location, default = ~/.cortex/config', default=os.path.expanduser('~') + '/.cortex/config')
     parser.add_argument('-d', '--debug', help='Writes request debug information as JSON to stderr', action='store_true')
-    # Makefile sed command replaces this with the actual version.  Please do not change this line or I will be sad.
     parser.add_argument('-n', '--noObfuscate', help='Do not obfuscate bearer token when debugging', action='store_true')
     parser.add_argument('-t', '--tenant', default='default', help='tenant name defined in ~/.cortex/config, defaults to \'default\'',metavar='')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s DEVELOPMENT')
+    parser.add_argument('-v', '--version', action='version', version=version())
     sp = parser.add_subparsers(help='sub-command help')
 
     subparser_audit_logs_opts(sp)
@@ -3164,3 +3175,7 @@ def cli(argv=sys.argv[1:]):
 
 if __name__ == '__main__':
     sys.exit(cli())
+
+
+
+
