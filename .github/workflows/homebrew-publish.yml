@@ -1,0 +1,61 @@
+name: homebrew
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Build description'
+
+  # Trigger homebrew upload following successfully python package build
+  workflow_run:
+    workflows: ["Upload Python Package"]
+    type:
+      - complete
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get version
+      id: get_version
+      run: echo "version=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+
+    - name: Create github release
+      uses: a7ul/tar-action@v1.1.0
+      id: compress
+      with:
+        command: c
+        cwd: ./src/cortexapps_cli
+        files: |
+          ./cortex.py
+        outPath: release/cortexapps-cli.tar.gz
+
+    - name: Set SHA
+      id: shasum
+      run: |
+        echo sha="$(shasum -a 256 ./release/cortexapps-cli.tar.gz | awk '{printf $1}')" >> $GITHUB_OUTPUT
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # reference: https://github.com/extrawurst/gitui/blob/master/.github/workflows/cd.yml
+        files: |
+          ./release/*.tar.gz
+          HISTORY.md
+
+    - name: Bump homebrew-core formula
+      uses: mislav/bump-homebrew-formula-action@v2
+      if: "!contains(github.ref, '-')" # skip prereleases
+      env:
+        COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
+      with:
+        formula-name: cortexapps-cli
+        # https://github.com/mislav/bump-homebrew-formula-action/issues/58
+        formula-path: Formula/c/cortexapps-cli.rb
