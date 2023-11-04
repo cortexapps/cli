@@ -82,7 +82,7 @@ jobs:
     steps:
     - name: Get version
       id: get_version
-      run: echo "version=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+      run: cortex -v >> $GITHUB_OUTPUT
 
     - name: Create github release
       uses: a7ul/tar-action@v1.1.0
@@ -92,12 +92,12 @@ jobs:
         cwd: ./src/cortexapps_cli
         files: |
           ./cortex.py
-        outPath: release/cortexapps-cli.tar.gz
+        outPath: cortexapps-cli.tar.gz
 
     - name: Set SHA
       id: shasum
       run: |
-        echo sha="$(shasum -a 256 ./release/cortexapps-cli.tar.gz | awk '{printf $1}')" >> $GITHUB_OUTPUT
+        echo sha="$(shasum -a 256 cortexapps-cli.tar.gz | awk '{printf $1}')" >> $GITHUB_OUTPUT
 
     - name: Release
       uses: softprops/action-gh-release@v1
