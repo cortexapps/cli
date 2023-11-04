@@ -59,8 +59,6 @@ jobs:
       with:
         name: code coverage
         path: htmlcov/
-    - name: Build package
-      run: python -m build
   pypi:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
@@ -68,6 +66,8 @@ jobs:
        test
     ]
     steps:
+    - name: Build package
+      run: python -m build
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
