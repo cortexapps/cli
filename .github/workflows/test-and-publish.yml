@@ -100,12 +100,13 @@ jobs:
        pypi
     ]
     steps:
-    - name: Get version
+    - name: Get version artifact
       uses: actions/upload-artifact@v3
       with:
         name: cortex-version
         path: version.txt
       id: get_version
+    - name: Add version to github output
       run: cat version.txt >> $GITHUB_OUTPUT
 
     - name: Create github release
