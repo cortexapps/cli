@@ -1,35 +1,34 @@
-[build-system]
-requires = ["setuptools>=65.5.1"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "cortexapps_cli"
-version = "0.0.5-alpha"
-authors = [
-  { name="Cortex Apps", email="cortexapps@cortex.io" },
-]
+[tool.poetry]
+name = "cortexapps-cli"
+version = "0.0.6-alpha"
 description = "Command Line Interface for cortexapps"
-readme = "README.md"
-requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    "Cortex Apps <cortexapps@cortex.io>",
+]
+readme = "README.pypi.md"
+packages = [{include = "cortexapps_cli"}]
+
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "requests >= 2.3.0, < 3",
-    "pyyaml >= 6.0.1, < 7"
-]
 
-[tool.pytest.ini_options]
-addopts = [
-    "--import-mode=importlib",
-]
-pythonpath = "src"
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = ">= 2.3.0, < 3"
+pyyaml = ">= 6.0.1, < 7"
 
-[project.scripts]
+[tool.poetry.scripts]
 cortex = "cortexapps_cli.cortex:cli"
 
-[project.urls]
-"Homepage" = "https://github.com/cortexapps/cli"
-"Bug Tracker" = "https://github.com/cortexapps/cli/issues"
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
+homepage = "https://github.com/cortexapps/cli"
+"Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
