@@ -72,8 +72,8 @@ jobs:
     - name: Build package
       run: python -m build
   publish:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    if: contains(github.ref, "main")
     steps:
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
