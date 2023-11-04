@@ -18,7 +18,7 @@ $ python -m pip install cortexapps-cli
 
 Alternatively, in a venv environment:
 ```
-VENV_DIR = /tmp/cortex # this can be any writable directory
+VENV_DIR = ~/.venv/cortex
 python3 -m venv $VENV_DIR
 source $VENV_DIR/bin/activate
 pip install cortexapps-cli
