@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build requests pyyaml
+        pip install requests pyyaml
     - name: Run pip-audit to check for vulnerabilities
       uses: pypa/gh-action-pip-audit@v1.0.8
       with:
@@ -66,6 +66,10 @@ jobs:
        test
     ]
     steps:
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build requests pyyaml
     - name: Build package
       run: python -m build
     - name: Publish package
@@ -82,7 +86,7 @@ jobs:
     steps:
     - name: Get version
       id: get_version
-      run: cortex -v >> $GITHUB_OUTPUT
+      run: python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])' >> $GITHUB_OUTPUT
 
     - name: Create github release
       uses: a7ul/tar-action@v1.1.0
