@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cortexapps_cli"
-version = "0.0.5"
+version = "0.0.5-alpha"
 authors = [
   { name="Cortex Apps", email="cortexapps@cortex.io" },
 ]
 description = "Command Line Interface for cortexapps"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
