@@ -19,7 +19,6 @@ permissions:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,7 +27,6 @@ jobs:
         # created them.
         #python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
         python-version: ["3.8"]
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -73,8 +71,11 @@ jobs:
         path: htmlcov/
     - name: Build package
       run: python -m build
+  publish:
+    runs-on: ubuntu-latest
+    if: contains(github.ref, "main")
+    steps:
     - name: Publish package
-      if: contains(github.ref, "main")
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
         user: __token__
