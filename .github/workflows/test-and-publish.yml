@@ -44,10 +44,10 @@ jobs:
         ls -l $HOME/.cortex
         cat $HOME/.cortex/config
       shell: bash
-    - name: Build package
-      run: poetry build
     - name: Install package
-      run: poetry install
+      run: |
+        poetry build
+        poetry install
     - name: Test with pytest
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
@@ -59,12 +59,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
+    - uses: actions/checkout@v3
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.64.0
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         WITH_V: true
-    - uses: actions/checkout@v3
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
