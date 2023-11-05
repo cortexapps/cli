@@ -25,7 +25,7 @@ cortex = "cortexapps_cli.cortex:cli"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-cov=cortexapps_cli --cov-report term-missing"
+addopts = "--cov=cortexapps_cli --cov-report term-missing"
 testpaths = [
     "tests"
 ]
