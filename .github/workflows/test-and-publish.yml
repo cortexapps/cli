@@ -48,12 +48,19 @@ jobs:
       run: poetry build
     - name: Install package
       run: poetry install
+    - name: pytest native
+      env:
+        CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      run: |
+        pytest --cov-report term-missing
     - name: Test with pytest
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
         poetry run pip list
+        poetry self add pytest-cov
         poetry about
         poetry env info
         poetry show
