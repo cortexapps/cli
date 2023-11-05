@@ -54,7 +54,8 @@ jobs:
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
         pip install pytest pytest-cov
-        pytest --cov-report term-missing
+        pytest --help
+        pytest --cov-report term-missing --import-mode=importlib
     - name: Test with pytest
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
