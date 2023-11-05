@@ -58,6 +58,7 @@ jobs:
         poetry self add pytest-cov
         poetry self show
         poetry self show plugins
+        poetry run pytest --help
         poetry run pytest --traceconfig
         poetry run pytest --traceconfig --cov=cortexapps_cli --cov-report term-missing
   pypi:
