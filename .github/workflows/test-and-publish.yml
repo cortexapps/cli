@@ -55,9 +55,9 @@ jobs:
       run: |
         pip install pytest-cov
         pip list
-        pytest --cov=cortexapps_cli --cov-report term-missing
         poetry self add pytest-cov
-        poetry run pytest --cov=cortexapps_cli --cov-report term-missing
+        poetry run pytest --traceconfig
+        poetry run pytest --traceconfig --cov=cortexapps_cli --cov-report term-missing
   pypi:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
