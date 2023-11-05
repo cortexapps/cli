@@ -33,6 +33,14 @@ jobs:
         pip install poetry poetry-audit-plugin pytest-cov pytest
     - name: Run pip-audit to check for vulnerabilities
       run: poetry audit
+    - name: pytest native
+      env:
+        CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      run: |
+        pip install pytest pytest-cov
+        pytest --help
+        pytest --cov=cortexapps_cli --cov-report term-missing --import-mode=importlib
     - name: Create and populate .cortex/config file
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
@@ -48,14 +56,6 @@ jobs:
       run: poetry build
     - name: Install package
       run: poetry install
-    - name: pytest native
-      env:
-        CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
-        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      run: |
-        pip install pytest pytest-cov
-        pytest --help
-        pytest --cov=cortexapps_cli --cov-report term-missing --import-mode=importlib
     - name: Test with pytest
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
