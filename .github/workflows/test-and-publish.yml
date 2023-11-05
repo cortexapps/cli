@@ -53,6 +53,7 @@ jobs:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
+        pip install pytest pytest-cov
         pytest --cov-report term-missing
     - name: Test with pytest
       env:
