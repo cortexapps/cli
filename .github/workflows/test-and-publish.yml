@@ -55,7 +55,7 @@ jobs:
       run: |
         pip install pytest pytest-cov
         pytest --help
-        pytest --cov-report term-missing --import-mode=importlib
+        pytest --cov=cortexapps_cli --cov-report term-missing --import-mode=importlib
     - name: Test with pytest
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
