@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install poetry poetry-audit-plugin
+        pip install poetry poetry-audit-plugin pytest-cov
     - name: Run pip-audit to check for vulnerabilities
       run: poetry audit
     - name: Create and populate .cortex/config file
@@ -54,18 +54,7 @@ jobs:
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
         poetry self add pytest-cov
-        poetry run pytest --cov=cortexapps_cli --cov-report term-missing --cov-report=json --cov-report=html
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: code coverage
-        path: htmlcov/
-    - name: Upload dist artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist
-        path: dist
+        poetry run pytest --cov=cortexapps_cli --cov-report term-missing
   pypi:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
