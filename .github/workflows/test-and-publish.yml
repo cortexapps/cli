@@ -53,8 +53,6 @@ jobs:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
-        poetry self add pytest-cov
-        poetry run pytest --help
         poetry run pytest --cov=cortexapps_cli --cov-report term-missing
   pypi:
     if: ${{ github.ref == 'refs/heads/main' }}
