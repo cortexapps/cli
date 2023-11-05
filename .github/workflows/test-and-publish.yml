@@ -48,13 +48,14 @@ jobs:
       run: poetry build
     - name: Iinstall package
       run: poetry install
+    # pip install poetry poetry-audit-plugin pytest-cov pytest
     - name: Test with pytest
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
         poetry self add pytest-cov
-        poetry run pytest --cov=cortexapps_cli --cov-report term-missing
+        poetry run pytest
   pypi:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
