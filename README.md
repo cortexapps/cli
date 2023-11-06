@@ -31,7 +31,7 @@ This is a temporary solution until we reach 'notable' status and get the formula
 Run the following commands to download the homebrew formula from this repo into your local homebrew tap:
 
 ```
-curl -L -H "Accept: application/vnd.github.VERSION.raw" -o $(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/c/README.pypi.md https://api.github.com/repos/cortexapps/cli/contents/README.pypi.md
+curl -L -H "Accept: application/vnd.github.VERSION.raw" -o $(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/c/cortexapps-cli.rb https://api.github.com/repos/cortexapps/cli/contents/homebrew/cortexapps-cli.rb
 HOMEBREW_NO_INSTALL_FROM_API=1 brew install --build-from-source cortexapps-cli
 ```
 
