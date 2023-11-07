@@ -3,6 +3,8 @@ name: Test pull request
 on:
   workflow_dispatch:
   push:
+    branches-ignore:
+      - main
     paths:
       - 'cortexapps_cli/**'
       - 'tests/**'
