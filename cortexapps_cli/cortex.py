@@ -629,28 +629,29 @@ def export(args):
 
     print("Getting resource definitions")
     resource_definitions_json=json_directory + "/resource-definitions.json"
-    output = io.StringIO()
-    with redirect_stdout(output):
+    resource_definitions_output = io.StringIO()
+    with redirect_stdout(resource_definitions_output):
         resource_definitions_list(args)
         with open(resource_definitions_json, 'w') as f:
-            f.write(output.getvalue())
-    data = json.loads(output.getvalue())
+            f.write(resource_definitions_output.getvalue())
+    data = json.loads(resource_definitions_output.getvalue())
 
     # Can't sort json keys, so need to create a list first so it can be sorted.
     resource_types_list = []
     for t in data['definitions']:
         resource_types_list.append(t['type'])
 
-    resource_types="service,domain"
+    resource_types="service,domain,team"
     for resource_type in sorted(resource_types_list):
         resource_types=resource_types + "," + resource_type
         print("-->  " + resource_type)
         resource_file=resource_definitions_directory + "/" + resource_type + ".json"
         args.type = resource_type
-        with redirect_stdout(output):
+        resource_definition_output = io.StringIO()
+        with redirect_stdout(resource_definition_output):
             resource_definitions_retrieve(args)
             with open(resource_file, 'w') as f:
-                f.write(output.getvalue())
+                f.write(resource_definition_output.getvalue())
             f.close()
     if "type" in args:
        delattr(args, 'type')

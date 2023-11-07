@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'cortexapps_cli/cortex.py'
+      - '.github/workflows/publish-pypi.yml'
 
 jobs:
   pypi:
