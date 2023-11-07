@@ -13,12 +13,8 @@ def test_queries_run(capsys):
     out, err = capsys.readouterr()
     out = json.loads(out)
     jobId = out['jobId']
-    #sys.stdout.write("jobId = " + jobId)
-    # TODO: add while loop while query status is IN_PROGESS, wait until
-    # status is SUCCCESS.
     max_attempts = 60
     for attempt in range(1, max_attempts):
-        #print("check " + str(attempt) + " of " + str(max_attempts))
         cli(["queries", "get", "-i", jobId])
         out, err = capsys.readouterr()
         out = json.loads(out)
