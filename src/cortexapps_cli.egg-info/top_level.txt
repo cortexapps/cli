@@ -1,1 +1,0 @@
-cortexapps_cli

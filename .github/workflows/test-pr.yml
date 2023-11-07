@@ -38,10 +38,13 @@ jobs:
     - name: Create and populate .cortex/config file
       env:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+        CORTEX_API_KEY_RICH_SANDBOX: ${{ secrets.CORTEX_API_KEY_RICH_SANDBOX }}
       run: |
         mkdir $HOME/.cortex
         echo "[default]" > $HOME/.cortex/config
         echo "api_key = $CORTEX_API_KEY" >> $HOME/.cortex/config
+        echo "[rich-sandbox]" > $HOME/.cortex/config
+        echo "api_key = $CORTEX_API_KEY_RICH_SANDBOX" >> $HOME/.cortex/config
         pwd
         ls -l $HOME/.cortex
         cat $HOME/.cortex/config
@@ -57,4 +60,4 @@ jobs:
         CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
-        poetry run pytest --cov=cortexapps_cli --cov-report term-missing
+        poetry run pytest

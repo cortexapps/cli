@@ -33,3 +33,10 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.urls]
 homepage = "https://github.com/cortexapps/cli"
 "Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
+
+[tool.pytest.ini_options]
+minversion = "7.4.3"
+addopts = "--cov=cortexapps_cli --cov-report term-missing"
+testpaths = [
+    "tests"
+]

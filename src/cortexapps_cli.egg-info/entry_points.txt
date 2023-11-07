@@ -1,2 +1,0 @@
-[console_scripts]
-cortex = cortexapps_cli.cortex:cli
