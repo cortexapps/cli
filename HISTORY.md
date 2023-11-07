@@ -1,6 +1,16 @@
 Release History
 ===============
 
+0.2.0 (2023-11-07)
+------------------
+
+**Bugfixes**
+- Command line validation.
+
+**Improvements**
+- Test coverage improvements.
+- Post publish results to Cortex.
+
 0.0.5-alpha (2023-11-04)
 ------------------------
 

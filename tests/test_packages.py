@@ -30,6 +30,9 @@ def test_packages_node_yarn_lock():
 def test_packages_list():
     cli(["packages", "list", "-t", "test-service"])
 
+def test_packages_java_delete():
+    cli(["packages", "java", "delete", "-t", "test-service", "-n", "io.cortex.teams"])
+
 def test_packages_python_delete():
     cli(["packages", "python", "delete", "-t", "test-service", "-n", "cycler"])
 

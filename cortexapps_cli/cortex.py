@@ -4,8 +4,10 @@ import argparse
 from argparse import Namespace
 from collections import OrderedDict
 import configparser
+from contextlib import redirect_stdout
 from datetime import datetime
 import inspect
+import io
 import json
 import importlib.metadata
 import os
@@ -16,10 +18,6 @@ import textwrap
 import tomllib
 import yaml
 
-# It ain't pretty, but I'm just gonna throw a few globals into the mix.
-output_behavior="print"
-output=""
-replace_string = "REPLACE_WITH_YOUR_CORTEX_API_KEY"
 config={}
 
 # borrowed from https://github.com/python-poetry/poetry/issues/273
@@ -36,7 +34,7 @@ def version():
 # For now, this is just a brute force way to manage it.
 #
 # Potentially, you can override the help class to customize this, https://medium.com/@george.shuklin/simple-implementation-of-help-command-a634711b70e
-def validate_input(argv):
+def validate_input(argv, parser):
     if len(argv)==0:
        parser.print_help()
        sys.exit(2)
@@ -47,7 +45,7 @@ def validate_input(argv):
     if argv[0] == "integrations":
        if len(argv) == 1:
           print("ERROR! Command provided with no parameters.\n")
-          print("Try " + argv[0] + " " + argv[1] + " -h for help")
+          print("Try " + argv[0]  + " -h for help")
           sys.exit(2)
        if argv[1] == "-h" or argv[1] == "--help":
           return
@@ -87,6 +85,8 @@ def check_config_file(config_file, replace_string):
     if not os.path.isfile(config_file):
         print("Cortex CLI config file " + config_file + " does not exist.  Create (Y/N)?")
         response = input()
+        print("response type = " + str(type(response)))
+        print("response = " + response)
         if response == "Y" or response == "y":
             if not os.path.isdir(os.path.dirname(config_file)):
                os.mkdir(os.path.dirname(config_file), 0o700)
@@ -115,7 +115,7 @@ def check_config_file(config_file, replace_string):
             sys.exit(0)
         
 
-def get_config(config, args, argv, parser):
+def get_config(config, args, argv, parser, replace_string):
     check_config_file(args.config, replace_string)
 
     config_parser = configparser.ConfigParser()
@@ -176,16 +176,6 @@ def add_argument_caller_tag(subparser, help_text='The entity tag (x-cortex-tag) 
     subparser.add_argument(
             '-r',
             '--callerTag',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
-
-def add_argument_child(subparser, help_text='The child group.'):
-    subparser.add_argument(
-            '-c',
-            '--child',
             help=help_text,
             required=True,
             default=argparse.SUPPRESS,
@@ -412,32 +402,12 @@ def add_argument_page_size(subparser, help_text='Page size for results, default 
             metavar=''
     )
 
-def add_argument_parent(subparser, help_text='The parent group.'):
-    subparser.add_argument(
-            '-p',
-            '--parent',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
-
 def add_argument_path(subparser, help_text='The path of the dependency.'):
     subparser.add_argument(
             '-p',
             '--path',
             help=help_text,
             required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
-
-def add_argument_replace(subparser, help_text='Flag to indicate if relationships should be replaced.'):
-    subparser.add_argument(
-            '-r',
-            '--replace',
-            help=help_text,
-            required=True,
             default=argparse.SUPPRESS,
             metavar=''
     )
@@ -564,11 +534,7 @@ def exit(r, method, expected_rc=200):
         sys.exit(r.status_code)
     else:
         debug_json(r, method)
-        if output_behavior=="print":
-            print(r.text)
-        else:
-            global output
-            output = r.text
+        print(r.text)
 
 def api_key(headers):
     headers.update({"Authorization": "Bearer " + config['api_key']})
@@ -578,7 +544,7 @@ def api_key(headers):
 def get(url, headers={}):
     api_key(headers)
     r = requests.get(config['url'] + url, headers=headers)
-    exit( r, 'GET')
+    exit(r, 'GET')
 
 def put(url, headers={}, payload=""):
     api_key(headers)
@@ -649,9 +615,6 @@ def subparser_backup_export(subparser):
     sp.set_defaults(func=export)
 
 def export(args):
-    global output_behavior
-    output_behavior="return"
-
     catalog_directory=args.directory + "/catalog"
     json_directory=args.directory + "/json"
     scorecard_directory=args.directory + "/scorecards"
@@ -666,10 +629,12 @@ def export(args):
 
     print("Getting resource definitions")
     resource_definitions_json=json_directory + "/resource-definitions.json"
-    resource_definitions_list(args)
-    with open(resource_definitions_json, 'w') as f:
-        f.write(output)
-    data = json.loads(output)
+    output = io.StringIO()
+    with redirect_stdout(output):
+        resource_definitions_list(args)
+        with open(resource_definitions_json, 'w') as f:
+            f.write(output.getvalue())
+    data = json.loads(output.getvalue())
 
     # Can't sort json keys, so need to create a list first so it can be sorted.
     resource_types_list = []
@@ -682,23 +647,25 @@ def export(args):
         print("-->  " + resource_type)
         resource_file=resource_definitions_directory + "/" + resource_type + ".json"
         args.type = resource_type
-        resource_definitions_retrieve(args)
-        with open(resource_file, 'w') as f:
-            f.write(output)
-        f.close()
+        with redirect_stdout(output):
+            resource_definitions_retrieve(args)
+            with open(resource_file, 'w') as f:
+                f.write(output.getvalue())
+            f.close()
     if "type" in args:
        delattr(args, 'type')
 
     print("Getting catalog entities")
     catalog_json=json_directory + "/catalog.json"
     args.types = resource_types
-    catalog_list(args)
-    if "types" in args:
-       delattr(args, 'types')
-    with open(catalog_json, 'w') as f:
-        f.write(output)
-
-    data = json.loads(output)
+    catalog_output = io.StringIO()
+    with redirect_stdout(catalog_output):
+        catalog_list(args)
+        if "types" in args:
+           delattr(args, 'types')
+        with open(catalog_json, 'w') as f:
+            f.write(catalog_output.getvalue())
+    data = json.loads(catalog_output.getvalue())
 
     # Can't sort json keys, so need to create a list first so it can be sorted.
     entity_list = []
@@ -709,23 +676,29 @@ def export(args):
         print("-->  " + tag)
         entity_file=catalog_directory + "/" + tag + ".yaml"
         args.tag = tag
-        catalog_descriptor(args)
-        with open(entity_file, 'w') as f:
-            f.write(output)
+        entity_output = io.StringIO()
+        with redirect_stdout(entity_output):
+            catalog_descriptor(args)
+            with open(entity_file, 'w') as f:
+                f.write(entity_output.getvalue())
 
     print("Getting IP Allowlist definitions")
     ip_allowlist_json=json_directory + "/ip-allowlist.json"
-    ip_allowlist_get(args)
-    with open(ip_allowlist_json, 'w') as f:
-        f.write(output)
+    ip_allowlist_output = io.StringIO()
+    with redirect_stdout(ip_allowlist_output):
+        ip_allowlist_get(args)
+        with open(ip_allowlist_json, 'w') as f:
+            f.write(ip_allowlist_output.getvalue())
 
     print("Getting scorecards")
     scorecards_json=json_directory + "/scorecards.json"
-    scorecards_list(args)
-    with open(scorecards_json, 'w') as f:
-        f.write(output)
+    scorecards_output = io.StringIO()
+    with redirect_stdout(scorecards_output):
+        scorecards_list(args)
+        with open(scorecards_json, 'w') as f:
+            f.write(scorecards_output.getvalue())
 
-    data = json.loads(output)
+    data = json.loads(scorecards_output.getvalue())
 
     # Can't sort json keys, so need to create a list first so it can be sorted.
     scorecard_list = []
@@ -736,19 +709,23 @@ def export(args):
         print("-->  " + tag)
         scorecard_file=scorecard_directory + "/" + tag + ".yaml"
         args.tag=tag
-        scorecards_descriptor(args)
-        with open(scorecard_file, 'w') as f:
-            f.write(output)
+        scorecards_descriptor_output = io.StringIO()
+        with redirect_stdout(scorecards_descriptor_output):
+            scorecards_descriptor(args)
+            with open(scorecard_file, 'w') as f:
+                f.write(scorecards_descriptor_output.getvalue())
     delattr(args, 'tag')
 
     # CORTEX teams; will not try to import IDP-backed teams.  Those would get re-imported after re-establishing the IDP integration.
     print("Getting teams")
     teams_json=json_directory + "/teams.json"
-    teams_list(args)
-    with open(teams_json, 'w') as f:
-        f.write(output)
+    teams_output = io.StringIO()
+    with redirect_stdout(teams_output):
+        teams_list(args)
+        with open(teams_json, 'w') as f:
+            f.write(teams_output.getvalue())
 
-    data = json.loads(output)
+    data = json.loads(teams_output.getvalue())
 
     # Can't sort json keys, so need to create a list first so it can be sorted.
     # Has to be a dictionary because we also need to know about the type of team.
@@ -762,9 +739,11 @@ def export(args):
         print("-->  " + team_tag)
         team_file=teams_directory + "/" + team_tag + ".json"
         args.teamTag=team_tag
-        teams_get(args)
-        with open(team_file, 'w') as f:
-            f.write(output)
+        team_output = io.StringIO()
+        with redirect_stdout(team_output):
+            teams_get(args)
+            with open(team_file, 'w') as f:
+                f.write(team_output.getvalue())
 
     print("\nExport complete!")
     print("Contents available in " + args.directory)
@@ -775,9 +754,6 @@ def subparser_backup_import(subparser):
     sp.set_defaults(func=import_from_export)
 
 def import_from_export(args):
-    global output_behavior
-    output_behavior="return"
-
     catalog_directory = args.directory + "/catalog"
     json_directory = args.directory + "/json"
     scorecard_directory = args.directory + "/scorecards"
@@ -3168,9 +3144,10 @@ def cli(argv=sys.argv[1:]):
     subparser_teams_hierarchies_opts(sp)
     subparser_teams_opts(sp)
 
-    validate_input(argv)
+    replace_string = "REPLACE_WITH_YOUR_CORTEX_API_KEY"
+    validate_input(argv, parser)
     args = parser.parse_args(argv)
-    args = get_config(config, args, argv, parser)
+    args = get_config(config, args, argv, parser, replace_string)
     args.func(args)
 
 if __name__ == '__main__':

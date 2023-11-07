@@ -15,6 +15,9 @@ def test_scorecards_shield():
 def test_scorecards_get():
     cli(["scorecards", "get", "-t", "test-scorecard"])
 
+def test_scorecards_descriptor():
+    cli(["scorecards", "descriptor", "-t", "test-scorecard"])
+
 def test_scorecards_next_steps():
     cli(["scorecards", "next-steps", "-t", "test-scorecard", "-e", "test-service"])
 
