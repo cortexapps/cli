@@ -43,7 +43,7 @@ jobs:
         mkdir $HOME/.cortex
         echo "[default]" > $HOME/.cortex/config
         echo "api_key = $CORTEX_API_KEY" >> $HOME/.cortex/config
-        echo "[rich-sandbox]" > $HOME/.cortex/config
+        echo "[rich-sandbox]" >> $HOME/.cortex/config
         echo "api_key = $CORTEX_API_KEY_RICH_SANDBOX" >> $HOME/.cortex/config
         pwd
         ls -l $HOME/.cortex
