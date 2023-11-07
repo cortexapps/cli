@@ -3,6 +3,7 @@ Tests for queries commands.
 """
 from cortexapps_cli.cortex import cli
 import json
+import pytest
 import sys
 import time
 
