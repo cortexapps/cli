@@ -1,0 +1,24 @@
+name: Cortex Deploy
+
+on:
+  workflow_dispatch:
+
+env:
+  CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Post deploy to Cortex
+    steps:
+      - uses: actions/checkout@v4
+      - id: post-deploy
+        uses: cortexapps/action-cortex-deploys@v1
+        with:
+          tag:         "stanford"
+          environment: "PyPI.org"
+          sha:         "123"
+          timestamp:   "2023-11-08T10:25:59"
+          title:       "v1.0.0"
+          url:         "https://www.cortex.io"
+
