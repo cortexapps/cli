@@ -7,3 +7,4 @@ dist/
 eggs/
 htmlcov/
 coverage.json
+.github/workflows/test.yml

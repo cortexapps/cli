@@ -15,6 +15,7 @@ import requests
 from subprocess import run
 import sys
 import textwrap
+import time
 import tomllib
 import yaml
 
@@ -482,6 +483,16 @@ def add_argument_timestamp(subparser, help_text='Date-time of events to include.
             metavar=''
     )
 
+def add_argument_timeout(subparser, help_text='Time in seconds to wait before timeout.'):
+    subparser.add_argument(
+            '-x',
+            '--timeout',
+            help=help_text,
+            required=False,
+            default=120,
+            metavar=''
+    )
+
 def add_argument_type(subparser, option="-t", help_text='The resource type.', required=True):
     subparser.add_argument(
             option,
@@ -510,6 +521,16 @@ def add_argument_uuid(subparser, option="-u", help_text='UUID of custom event.',
             required=required,
             default=argparse.SUPPRESS,
             metavar=''
+    )
+
+def add_argument_wait(subparser, help_text='Wait for query to complete.'):
+    subparser.add_argument(
+            '-w',
+            '--wait',
+            help=help_text,
+            required=False,
+            default=False,
+            action='store_true'
     )
 
 def debug_json(r, method):
@@ -2751,13 +2772,83 @@ def subparser_queries_opts(subparsers):
     subparser_queries_get(sp)
 
 def subparser_queries_run(subparser):
-    sp = subparser.add_parser('run', help='Run CQL query')
+    sp = subparser.add_parser('run', help='Run CQL query',
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Query input can be provided either as a JSON-formatted file or in a file
+                containing the query text that would be used in Query Builder in the Cortex UI.
+                In the latter case, the text will be converted into the expected JSON format
+                and then sent to the API.
+
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                   "query": "tag = \"test-service\" and custom(\"testField\") != null"
+                }
+
+                Same query as above as CQL input:
+                ---------------------------------
+                tag = "test-service" and custom("testField") != null
+
+                The --wait and --timeout parameters are optional.  If they are not passed
+                as parameters, the CLI returns a JSON response containing the name of the 
+                jobId.  
+
+                Subsequent calls to "queries get" can be made to check for completion status.
+
+                With the wait parameter set, the CLI will make the calls to "queries get"
+                and not return a JSON response until the query completes.  The default wait
+                time is 120 seconds.  If the query does not complete in that time, the command
+                fails.  The wait time can be configured with the --timeout parameter.
+                '''))
     add_argument_file(sp, 'File containing JSON-formatted CQL query')
+    add_argument_wait(sp, 'Optional; wait for query to complete.')
+    add_argument_timeout(sp, 'Valid on with -w flag; time in seconds to allow for wait to run')
     sp.set_defaults(func=queries_run)
 
 def queries_run(args):
     headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    post("/api/v1/queries", headers, payload=read_file(args))
+    if hasattr(args, "wait"):
+       query_output = io.StringIO()
+       with redirect_stdout(query_output):
+           delattr(args, 'wait')
+           queries_run(args)
+           out = json.loads(query_output.getvalue())
+
+       jobId = out['jobId']
+       sleep_interval = 2
+       max_attempts = int(args.timeout)//sleep_interval
+       args.id = jobId
+
+       done = False
+       for attempt in range(1, max_attempts):
+           query_check_output = io.StringIO()
+           with redirect_stdout(query_check_output):
+              queries_get(args)
+              out = json.loads(query_check_output.getvalue())
+              status = out['status']
+              if status == "DONE":
+                  done = True
+                  break
+              else:
+                  if attempt == max_attempts:
+                     break
+                  time.sleep(sleep_interval)
+
+       if not done:
+           print("failed to find job id " + jobId + " in DONE state within " + args.timeout + " seconds")
+           print(str(out))
+           sys.exit(2)
+       else:
+           print(str(json.dumps(out)))
+    else:
+       # Support input being in JSON format or bare CQL.
+       payload = read_file(args)
+       if payload[0] != "{":
+          data = {}
+          data['query'] = payload
+          payload = str(json.dumps(data))
+       post("/api/v1/queries", headers, payload=payload)
 
 def subparser_queries_get(subparser):
     sp = subparser.add_parser('get', help='Get results of a CQL query')

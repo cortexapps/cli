@@ -1,0 +1,51 @@
+name: "Add deployment for entity"
+description: "Cortex API - Add deployment for entity"
+inputs:
+  tag:
+    required: true
+  environment:
+    required: true
+  sha:
+    required: true
+  title:
+    required: true
+  type:
+    required: true
+  deployer-email:
+    required: false
+    default: "cortexapps@cortex.io"
+  deployer-name:
+    required: false
+    default: "Cortexapps"
+  url:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        cat << EOF > deploy.json
+        {
+          "customData": {},
+          "deployer": {
+            "email": "${{ inputs.deployer-email }}",
+            "name": "${{ inputs.deployer-name }}"
+          },
+          "environment": "${{ inputs.environment }}",
+          "sha": "${{ inputs.sha }}",
+          "title": "${{ inputs.title }}",
+          "timestamp": "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
+          "type": "${{ inputs.type }}"
+          "url": "${{ inputs.url }}"
+        }
+        EOF
+        cat deploy.json
+      shell: bash
+
+    - name: Post Cortex deploy JSON to API
+      run: |
+        curl \
+          --data @deploy.json \
+          -H "Content-Type: application/json;charset=UTF-8" \
+          -H "Authorization: Bearer ${CORTEX_API_KEY}" \
+          "https://api.getcortexapp.com/api/v1/catalog/${{ inputs.tag }}/deploys"
+      shell: bash
