@@ -1,10 +1,10 @@
 openapi: 3.0.1
 info:
-  title: Dependency Service
-  x-cortex-tag: test-dependency
+  title: Test Dependencies Add Dependency
+  x-cortex-tag: test-dependencies-add-dependency
   x-cortex-type: service
   x-cortex-dependency:
-  - tag: test-service
+  - tag: test-dependencies-add-service
     path: "/2.0/users/{username}"
     method: GET
     description: ensure user has payment information configured

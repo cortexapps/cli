@@ -1,6 +1,6 @@
 {
 "values": {
-  "dependency-service": [
+  "test-dependencies-delete-in-bulk-dependency": [
      {
        "description": "dependency descr",
        "metadata": {
@@ -9,7 +9,7 @@
        },
        "method": "GET",
        "path": "/2.0/users/{username}",
-       "tag": "test-service"
+       "tag": "test-dependencies-delete-in-bulk-service"
      }
   ]
 }
