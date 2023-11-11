@@ -14,5 +14,5 @@
   "description": "Just testin' plugin uploads",
   "isDraft": false,
   "minimumRoleRequired": "VIEWER",
-  "name": "My Test Plugin"
+  "name": "Test Plugins"
 }

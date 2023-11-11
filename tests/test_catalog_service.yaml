@@ -1,17 +1,17 @@
 openapi: 3.0.1
 info:
-  title: Test Service
+  title: Test Catalog Service
   x-cortex-git:
     github:
       repository: snoop-dogg/woof
-  x-cortex-tag: test-service
+  x-cortex-tag: test-catalog-service
   x-cortex-type: service
   x-cortex-groups:
-  - corona-spokesperson
+  - test-catalog-group
   x-cortex-owners:
   - type: EMAIL
     email: snoop.dogg@cortex.io
-  - name: test-team-1
+  - name: test-catalog-team
     type: GROUP
     provider: CORTEX
   x-cortex-custom-metadata:

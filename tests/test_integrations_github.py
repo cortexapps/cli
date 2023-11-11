@@ -7,6 +7,13 @@ from string import Template
 import json
 import pytest
 
+def _github_all(capsys):
+    cli(["integrations", "github", "get-all"])
+    out, err = capsys.readouterr()
+    json_data = json.loads(out)
+
+    return json_data
+
 def github_personal_input(tmp_path):
     gh_pat = os.getenv('GH_PAT')
     f = tmp_path / "test_integrations_github_add_personal.json"
@@ -42,51 +49,24 @@ def github_app_input(tmp_path):
     f.write_text(content)
     return f
 
-def test_integrations_github_add(capsys, tmp_path):
-    cli(["integrations", "github", "get", "-a", "github-test-3"])
-    out, err = capsys.readouterr()
-    out = json.loads(out)
-    if (out['type'] != "NOT_FOUND"):
-        cli(["integrations", "github", "delete", "-a", "github-test-3"])
+def test_integrations_github(capsys, tmp_path):
+    json_data = _github_all(capsys)
+    if json_data:
+        cli(["integrations", "github", "delete-all"])
 
     f = github_app_input(tmp_path)
     cli(["integrations", "github", "add", "-f", str(f)])
 
-def test_integrations_github_add_personal(capsys, tmp_path):
-    cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
-    out, err = capsys.readouterr()
-    out = json.loads(out)
-    if (out['type'] != "NOT_FOUND"):
-        cli(["integrations", "github", "delete-personal", "-a", "github-personal-test-001"])
-
     f = github_personal_input(tmp_path)
     cli(["integrations", "github", "add-personal", "-f", str(f)])
 
-def test_integrations_github_get():
     cli(["integrations", "github", "get", "-a", "github-test-3"])
-
-def test_integrations_github_get_personal():
     cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
-
-def test_integrations_github_get_all():
-    cli(["integrations", "github", "get-all"])
-
-def test_integrations_github_get_default():
     cli(["integrations", "github", "get-default"])
-
-def test_integrations_github_validate():
     cli(["integrations", "github", "validate", "-a", "cortex-test"])
-
-def test_integrations_github_validate_all():
     cli(["integrations", "github", "validate-all"])
 
-def test_integrations_github_update_personal(tmp_path):
     f = github_personal_input(tmp_path)
     cli(["integrations", "github", "update-personal", "-a", "github-personal-test-001", "-f", str(f)])
 
-def test_integrations_github_update():
     cli(["integrations", "github", "update", "-a", "github-test-3", "-f", "tests/test_integrations_github_update.json"])
-
-# Intentionally missing delete-all test because I didn't want to destroy my test env
-# Can add this in once we have a better process, an automated process to create github apps
-# cli(["integrations", "github", "delete-all"])

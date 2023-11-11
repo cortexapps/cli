@@ -3,21 +3,21 @@ Tests for plugins commands.
 """
 from cortexapps_cli.cortex import cli
 
-def test_plugins_create(capsys):
+import json
+
+def _plugins_get(capsys):
     cli(["plugins", "get"])
     out, err = capsys.readouterr()
-    if (str(out).find('{"tag":"my-test-plugin"') != -1):
-        cli(["plugins", "delete", "-t", "my-test-plugin"])
+    json_data = json.loads(out)
+
+    return json_data
+
+def test_plugins(capsys):
+    json_data = _plugins_get(capsys)
+
+    if any(entity['tag'] == 'test-plugins' for entity in json_data['plugins']):
+        cli(["plugins", "delete", "-t", "test-plugins"])
     cli(["plugins", "create", "-f", "tests/test_plugins.json"])
-
-def test_plugins_get():
-    cli(["plugins", "get"])
-
-def test_plugins_update():
-    cli(["plugins", "update", "-t", "my-test-plugin", "-f", "tests/test_plugins_update.json"])
-
-def test_plugins_get_by_tag():
-    cli(["plugins", "get-by-tag", "-t", "my-test-plugin"])
-
-def test_plugins_delete():
-    cli(["plugins", "delete", "-t", "my-test-plugin"])
+    cli(["plugins", "update", "-t", "test-plugins", "-f", "tests/test_plugins_update.json"])
+    cli(["plugins", "get-by-tag", "-t", "test-plugins"])
+    cli(["plugins", "delete", "-t", "test-plugins"])

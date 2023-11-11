@@ -1,0 +1,5 @@
+openapi: 3.0.1
+info:
+  title: Test Deploys Service
+  x-cortex-tag: test-deploys-service
+  x-cortex-type: service

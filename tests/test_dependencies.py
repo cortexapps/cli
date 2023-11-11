@@ -66,12 +66,22 @@ def test_dependencies_get(capsys):
         cli(["dependencies", "delete-all", "-r", "test-dependencies-get-dependency"])
         cli(["catalog", "delete", "-t", "test-dependencies-get-dependency"])
 
-    if any(entity['tag'] == 'test-dependencies-get-service' for entity in json_data['entities']):
-        cli(["catalog", "delete", "-t", "test-dependencies-get-service"])
+    #if any(entity['tag'] == 'test-dependencies-get-service' for entity in json_data['entities']):
+    #    cli(["catalog", "delete", "-t", "test-dependencies-get-service"])
 
     cli(["catalog", "create", "-f", "tests/test_dependencies_get_service.yaml"])
     cli(["catalog", "create", "-f", "tests/test_dependencies_get_dependency.yaml"])
 
+    sys.stdout.write("HERE 0\n")
+    cli(["dependencies", "get-all", "-r", "test-dependencies-get-dependency", "-o"])
+    sys.stdout.write("HERE 1\n")
+    # This replaces the existing entry
+    #cli(["dependencies", "add", "-r", "test-dependencies-get-dependency", "-e",
+    #      "test-dependencies-get-service", "-m", "GET", "-p", "/2.0/users", "-f", "tests/test_dependencies.json"])
+    sys.stdout.write("HERE 2\n")
+    cli(["dependencies", "get-all", "-r", "test-dependencies-get-dependency", "-o"])
+    sys.stdout.write("HERE 3\n")
+    cli(["dependencies", "get", "-r", "test-dependencies-get-service", "-e", "test-dependencies-get-dependency", "-m", "GET", "-p", "/2.0/users/{username}"])
     cli(["dependencies", "get", "-r", "test-dependencies-get-dependency", "-e", "test-dependencies-get-service", "-m", "GET", "-p", "/2.0/users/{username}"])
 
 def test_dependencies_get_all(capsys):

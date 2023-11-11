@@ -1,0 +1,5 @@
+openapi: 3.0.1
+info:
+  title: Test Custom Events Service
+  x-cortex-tag: test-custom-events-service
+  x-cortex-type: service

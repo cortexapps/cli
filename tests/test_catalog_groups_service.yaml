@@ -1,0 +1,7 @@
+openapi: 3.0.1
+info:
+  title: Test Catalog Groups Service
+  x-cortex-tag: test-catalog-groups-service
+  x-cortex-type: service
+  x-cortex-groups:
+  - test-catalog-owners-group

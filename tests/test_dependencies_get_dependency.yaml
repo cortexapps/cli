@@ -8,3 +8,5 @@ info:
     path: "/2.0/users/{username}"
     method: GET
     description: ensure user has payment information configured
+    metadata:
+      prod: true

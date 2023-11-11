@@ -1,0 +1,16 @@
+openapi: 3.0.1
+info:
+  title: Test Catalog Owners Team
+  description: Ninjas Book Club
+  x-cortex-tag: test-catalog-owners-team
+  x-cortex-team:
+    members:
+    - name: Jeff Schnitter
+      email: jeff.schnitter@cortex.io
+      description: forward
+      notificationsEnabled: true
+    - name: Rich Jay
+      email: richard.jay@cortex.io
+      description: forward
+      notificationsEnabled: false
+  x-cortex-type: team

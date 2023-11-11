@@ -3,22 +3,24 @@ Tests for deploys commands.
 """
 from cortexapps_cli.cortex import cli
 
-def _add_deploy():
-    cli(["deploys", "add", "-t", "test-service", "-f", "tests/test_deploys.json"])
+import json
 
-def test_deploys_add():
-    _add_deploy()
+def _catalog_list(capsys):
+    cli(["catalog", "list"])
+    out, err = capsys.readouterr()
+    json_data = json.loads(out)
 
-def test_deploys_list():
-    cli(["deploys", "list", "-t", "test-service"])
+    return json_data
 
-def test_deploys_delete():
-    cli(["deploys", "delete", "-t", "test-service", "-s", "SHA-123456"])
-    _add_deploy()
+def test_deploys(capsys):
+    json_data = _catalog_list(capsys)
 
-def test_deploys_delete_filter():
-    cli(["deploys", "delete-filter", "-y", "DEPLOY"])
-    _add_deploy()
+    if any(entity['tag'] == 'test-deploys-service' for entity in json_data['entities']):
+        cli(["catalog", "delete", "-t", "test-deploys-service"])
+    cli(["catalog", "create", "-f", "tests/test_deploys_service.yaml"])
 
-def test_deploys_add():
     cli(["deploys", "delete-all"])
+
+    cli(["deploys", "add", "-t", "test-deploys-service", "-f", "tests/test_deploys.json"])
+    cli(["deploys", "delete", "-t", "test-deploys-service", "-s", "SHA-123456"])
+    cli(["deploys", "delete-filter", "-y", "DEPLOY"])
