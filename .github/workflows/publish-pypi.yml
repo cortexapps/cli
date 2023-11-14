@@ -40,11 +40,12 @@ jobs:
         poetry build
         poetry publish
 
-    - name: vars
+    - name: Set variables needed for Cortex deploy API
       run: |
          echo "SHA=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')" >> $GITHUB_ENV
-         echo "VERSION=$(ls -1 dist/*.tar.gz | tail -n 1 | awk -F- '{ print $2 }'" >> $GITHUB_ENV
-         echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_ENV
+         VERSION=$(ls -1 dist/*.tar.gz | tail -n 1 | awk -F- '{ print $2 }')
+         echo "VERSION=${VERSION}" >> $GITHUB_ENV
+         echo "URL=https://pypi.org/project/cortexapps-cli/${VERSION}/" >> $GITHUB_ENV
 
     - uses: actions/checkout@v4
     - name: Post deploy event to Cortex
