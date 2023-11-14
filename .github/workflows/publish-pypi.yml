@@ -8,6 +8,9 @@ on:
       - 'cortexapps_cli/cortex.py'
       - '.github/workflows/publish-pypi.yml'
 
+env:
+  CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+
 jobs:
   pypi:
     runs-on: ubuntu-latest
@@ -37,39 +40,19 @@ jobs:
         poetry build
         poetry publish
 
-    - name: Create Cortex deploy JSON
+    - name: vars
       run: |
-        sha=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')
-        version=$(ls -1 dist/*.tar.gz | tail -n 1 | awk -F- '{ print $2 }'  | sed 's/.tar.gz//')
-        timestamp="$(date +"%Y-%m-%dT%H:%M:%S").000Z"
-        url="https://pypi.org/project/cortexapps-cli/${version}/"
+         echo "SHA=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')" >> $GITHUB_ENV
+         echo "VERSION=$(ls -1 dist/*.tar.gz | tail -n 1 | awk -F- '{ print $2 }'" >> $GITHUB_ENV
+         echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_ENV
 
-        echo '{'                                      >> input.json
-        echo '  "customData": {},'                    >> input.json
-        echo '  "deployer": {'                        >> input.json
-        echo '    "email": "cortexappsr@cortex.io",'  >> input.json
-        echo '    "name": "Cortexapps"'               >> input.json
-        echo '  },'                                   >> input.json
-        echo '  "environment": "PyPI.org",'           >> input.json
-        echo "  \"sha\": \"${sha}\","                 >> input.json
-        echo "  \"timestamp\": \"${timestamp}\","     >> input.json
-        echo "  \"title\": \"${version}\","           >> input.json
-        echo '  "type": "DEPLOY",'                    >> input.json
-        echo "  \"url\": \"${url}\""                  >> input.json
-        echo '}'                                      >> input.json
-        cat input.json
-      shell: bash
-
-    - name: Post Cortex deploy JSON to API
-      env:
-        CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
-      run: |
-        cat input.json
-        curl \
-          -v \
-          --data @input.json \
-          -w "\nhttp_code=%{http_code}\n" \
-          -H "Content-Type: application/json;charset=UTF-8" \
-          -H "Authorization: Bearer ${CORTEX_API_KEY}" \
-          https://api.getcortexapp.com/api/v1/catalog/cli/deploys | grep "http_code=200"
-      shell: bash
+    - uses: actions/checkout@v4
+    - name: Post deploy event to Cortex
+      uses: ./.github/actions/cortex-deploys
+      with:
+        tag:         "cli"
+        environment: "PyPI.org"
+        sha:         "${{ env.SHA }}"
+        title:       "${{ env.VERSION }}"
+        type:        "DEPLOY"
+        url:         "${{ env.URL }}"
