@@ -698,6 +698,7 @@ def export(args):
         print("-->  " + tag)
         entity_file=catalog_directory + "/" + tag + ".yaml"
         args.tag = tag
+        args.yaml = True
         entity_output = io.StringIO()
         with redirect_stdout(entity_output):
             catalog_descriptor(args)

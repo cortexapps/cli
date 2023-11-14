@@ -1,12 +1,15 @@
 Release History
 ===============
 
-0.5.0 (2023-11-09)
+0.6.0 (2023-11-09)
 ------------------
 
 **Improvements**
 - Add --wait and --timeout for queries run.
 - Add option to supply query input as text.
+
+**Bugfixes**
+- Change backup of catalog entries to be in yaml format.
 
 0.3.0 (2023-11-07)
 ------------------
