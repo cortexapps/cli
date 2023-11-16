@@ -37,7 +37,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install poetry poetry-audit-plugin pytest-cov pytest
+        pip install poetry poetry-audit-plugin pytest-cov pytest pytest-xdist
 
     - name: Run pip-audit to check for vulnerabilities
       run: poetry audit
