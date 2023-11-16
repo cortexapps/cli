@@ -31,7 +31,7 @@ def test_queries_run_json(tmp_path):
     f1.write_text(custom_content)
 
     cli(["custom-data", "add", "-t", "cli-test-service", "-f", str(f1)])
-    cli(["-d", "queries", "run", "-w", "-t", "300", "-f", str(f)])
+    cli(["-d", "queries", "run", "-w", "-x", "300", "-f", str(f)])
 
 def test_queries_run_text(tmp_path):
     today = datetime.now()
@@ -56,7 +56,7 @@ def test_queries_run_text(tmp_path):
     f1.write_text(content)
 
     cli(["custom-data", "add", "-t", "cli-test-service", "-f", str(f1)])
-    cli(["queries", "run", "-w", "-t", "300", "-f", str(f)])
+    cli(["queries", "run", "-w", "-x", "300", "-f", str(f)])
 
 # Verify timeout handling.  If CQL query completes in 2 seconds, this test
 # could fail.  Could probably put in try/catch stanza.
