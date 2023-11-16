@@ -1,5 +1,5 @@
 {
   "description": "custom data field description",
-  "key": "testField",
+  "key": "anotherTestField",
   "value": "123"
 }

@@ -34,7 +34,7 @@ runs:
           "sha": "${{ inputs.sha }}",
           "title": "${{ inputs.title }}",
           "timestamp": "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
-          "type": "${{ inputs.type }}"
+          "type": "${{ inputs.type }}",
           "url": "${{ inputs.url }}"
         }
         EOF

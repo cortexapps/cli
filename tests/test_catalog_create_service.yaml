@@ -1,0 +1,5 @@
+openapi: 3.0.1
+info:
+  title: CLI Test Create Service
+  x-cortex-tag: cli-test-create
+  x-cortex-type: service

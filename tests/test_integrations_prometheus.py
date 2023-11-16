@@ -25,30 +25,22 @@ def _prometheus_input(tmp_path):
     f.write_text(content)
     return f
 
-def test_integrations_prometheus_delete_all():
     cli(["integrations", "prometheus", "delete-all"])
 
-def test_integrations_prometheus_add(tmp_path):
     f = _prometheus_input(tmp_path)
     cli(["integrations", "prometheus", "add", "-f", str(f)])
 
-def test_integrations_prometheus_get():
     cli(["integrations", "prometheus", "get", "-a", "cortex-test"])
 
-def test_integrations_prometheus_get_all():
     cli(["integrations", "prometheus", "get-all"])
 
-def test_integrations_prometheus_get_default():
     cli(["integrations", "prometheus", "get-default"])
 
-def test_integrations_prometheus_update(tmp_path):
     f = _prometheus_input(tmp_path)
     cli(["integrations", "prometheus", "update", "-a", "cortex-test", "-f", str(f)])
 
-def test_integrations_prometheus_delete():
     cli(["integrations", "prometheus", "delete", "-a", "cortex-test"])
 
-def test_integrations_prometheus_add_multiple(tmp_path):
     f = tmp_path / "test_integrations_prometheus_add_multiple.json"
     template = Template("""
         {
@@ -76,6 +68,5 @@ def test_integrations_prometheus_add_multiple(tmp_path):
     f.write_text(content)
     cli(["integrations", "prometheus", "add-multiple", "-f", str(f)])
 
-def test_integrations_prometheus_delete_all():
     cli(["integrations", "prometheus", "delete-all"])
 

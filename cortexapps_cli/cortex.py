@@ -66,11 +66,8 @@ def read_file(args):
     if str(type(args.file)) == "<class '_io.TextIOWrapper'>":
         return args.file.read()
     # import_from_backup passes the file as a string
-    elif isinstance(args.file, str):
-        with open(args.file, 'rb') as f:
-            return f.read()
     else:
-        with open(args.file.name, 'rb') as f:
+        with open(args.file, 'rb') as f:
             return f.read()
 
 def read_json_from_yaml(args):
@@ -783,10 +780,21 @@ def import_from_export(args):
     teams_directory = args.directory + "/teams"
     resource_definitions_directory = args.directory + "/resource-definitions"
 
+    # Default behavior is to output to terminal, so redirect stdout so it
+    # can be captured as a string.
+    resource_definitions_output = io.StringIO()
+    with redirect_stdout(resource_definitions_output):
+        resource_definitions_list(args)
+        resource_definitions_json = json.loads(resource_definitions_output.getvalue())
+ 
     print("Importing resource definitions")
     for file in sorted(os.listdir(resource_definitions_directory)):
         print("-->  " + file)
         args.file = resource_definitions_directory + "/" + file
+        definition_type = file.replace(".json", "")
+        if any(definition['type'] == definition_type for definition in resource_definitions_json['definitions']):
+            args.type = definition_type
+            resource_definitions_delete(args)
         resource_definitions_create(args)
 
     print("Importing catalog entities")
@@ -797,7 +805,8 @@ def import_from_export(args):
 
     print("Importing IP Allowlist definitions")
     args.file = json_directory + "/ip-allowlist.json"
-    ip_allowlist_replace(args)
+    if os.path.exists(args.file):
+        ip_allowlist_replace(args)
 
     print("Importing scorecards")
     for file in sorted(os.listdir(scorecard_directory)):
@@ -805,10 +814,24 @@ def import_from_export(args):
         args.file = scorecard_directory + "/" + file
         scorecards_create_or_update(args)
 
+    # Default behavior is to output to terminal, so redirect stdout so it
+    # can be captured as a string.
+    teams_output = io.StringIO()
+    with redirect_stdout(teams_output):
+        teams_list(args)
+        teams_json = json.loads(teams_output.getvalue())
+
     print("Importing teams")
     for file in sorted(os.listdir(teams_directory)):
         print("-->  " + file)
         args.file = teams_directory + "/" + file
+        team = file.replace(".json", "")
+        print("team = " + team)
+        print("teams_json = " + str(teams_json))
+        if any(teamTag['teamTag'] == team for teamTag in teams_json['teams']):
+            print("deleting team: " + team)
+            args.teamTag = team
+            teams_delete(args)
         teams_create(args)
 
     print("\nImport complete!")
@@ -2837,7 +2860,7 @@ def queries_run(args):
                   time.sleep(sleep_interval)
 
        if not done:
-           print("failed to find job id " + jobId + " in DONE state within " + args.timeout + " seconds")
+           print("failed to find job id " + jobId + " in DONE state within " + str(args.timeout) + " seconds")
            print(str(out))
            sys.exit(2)
        else:
@@ -3043,7 +3066,7 @@ def scorecards_next_steps(args):
     get("/api/v1/scorecards/" + args.tag + "/next-steps" + parse_opts(args))
 
 def subparser_scorecards_scores(subparser):
-    sp = subparser.add_parser('scores', help='Return latest scores fot all entities in the Scorecard')
+    sp = subparser.add_parser('scores', help='Return latest scores for all entities in the Scorecard')
     add_argument_tag(sp, 'Unique tag for the scorecard')
     add_argument_entity_tag(sp)
     sp.set_defaults(func=scorecards_scores)

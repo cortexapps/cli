@@ -1,6 +1,16 @@
 Release History
 ===============
 
+0.5.0 (2023-11-16)
+------------------
+
+**Improvements**
+- Dev improvements to run all tests in parallel.
+
+**Bugfixes**
+- Delete existing teams and resource definitions when running import.
+- Fix for publishing deploy event to Cortex's production Cortex instance.
+
 0.4.0 (2023-11-13)
 ------------------
 
