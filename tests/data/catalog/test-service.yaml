@@ -16,6 +16,7 @@ info:
     provider: CORTEX
   x-cortex-custom-metadata:
     foo: bar
+    testField: 123
 paths:
   /:
     get:

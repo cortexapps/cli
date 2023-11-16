@@ -1,0 +1,23 @@
+{
+  "teamTag": "test-team-3",
+  "metadata": {
+    "name": "Test Team 3",
+    "description": null,
+    "summary": null
+  },
+  "links": [],
+  "slackChannels": [],
+  "additionalMembers": [],
+  "isArchived": false,
+  "cortexTeam": {
+    "members": [
+      {
+        "email": "jeff.schnitter@cortex.io",
+        "name": "Jeff Schnitter",
+        "description": "",
+        "role": null
+      }
+    ]
+  },
+  "type": "CORTEX"
+}

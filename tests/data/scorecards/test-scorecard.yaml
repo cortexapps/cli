@@ -1,5 +1,5 @@
-tag: test-scorecard-import
-name: Test Scorecard Import
+tag: test-scorecard
+name: Test Scorecard
 description: Used to test Cortex CLI
 draft: false
 ladder:
@@ -15,5 +15,5 @@ rules:
   weight: 1
   level: You Made It
 filter:
-  query: entity_descriptor.info.`x-cortex-tag` = "test-service"
+  query: entity_descriptor.info.`x-cortex-tag` = "cli-test-service"
   category: SERVICE

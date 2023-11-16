@@ -4,7 +4,7 @@ info:
   x-cortex-tag: dependency-service
   x-cortex-type: service
   x-cortex-dependency:
-  - tag: test-service
+  - tag: cli-test-service
     path: "/2.0/users/{username}"
     method: GET
     description: ensure user has payment information configured

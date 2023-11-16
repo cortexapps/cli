@@ -1,0 +1,13 @@
+{
+  "definitions": [
+    {
+      "type": "test-resource-definition",
+      "source": "CUSTOM",
+      "name": "Test Resource Defintion -- Update",
+      "description": "This is a test resource definition.",
+      "schema": {
+        "type": "object"
+      }
+    }
+  ]
+}

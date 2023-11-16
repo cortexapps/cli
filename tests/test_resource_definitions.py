@@ -14,11 +14,8 @@ def test_resource_definitions_create(capsys):
         cli(["resource-definitions", "delete", "-t", "test-resource-definition"])
     cli(["resource-definitions", "create", "-f", "tests/test-resource-definition.json"])
 
-def test_resource_definitions_list():
     cli(["resource-definitions", "list"])
 
-def test_resource_definitions_get():
     cli(["resource-definitions", "get", "-t", "test-resource-definition"])
 
-def test_resource_definitions_update():
     cli(["resource-definitions", "update", "-t", "test-resource-definition", "-f", "tests/test-resource-definition-update.json"])

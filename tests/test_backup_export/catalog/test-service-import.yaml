@@ -1,0 +1,5 @@
+openapi: 3.0.1
+info:
+  title: CLI Test Service Import
+  x-cortex-tag: cli-test-service-import
+  x-cortex-type: service
