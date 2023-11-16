@@ -3,7 +3,7 @@ Tests for scorecards commands.
 """
 from cortexapps_cli.cortex import cli
 
-def test_scorecards_create():
+def test_scorecards():
     cli(["scorecards", "create", "-f", "tests/test_scorecards.yaml"])
 
     cli(["scorecards", "list"])

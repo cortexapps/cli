@@ -3,7 +3,7 @@ Tests for teams commands.
 """
 from cortexapps_cli.cortex import cli
 
-def test_dependencies_add(capsys):
+def test_dependencies(capsys):
     cli(["dependencies", "delete-all", "-r", "dependency-service"])
     cli(["dependencies", "add", "-r", "dependency-service", "-e",
           "test-service", "-m", "GET", "-p", "/2.0/users/{username}", "-f", "tests/test_dependencies.json"])

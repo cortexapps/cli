@@ -6,7 +6,7 @@ from cortexapps_cli.cortex import cli
 import json
 import pytest
 
-def test_create_service(capsys):
+def test_catalog_create_service(capsys):
     cli(["catalog", "create", "-f", "tests/test_catalog_create_service.yaml"])
 
 def test_retrieve_service(capsys):

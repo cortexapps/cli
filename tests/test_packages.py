@@ -3,7 +3,7 @@ Tests for packages commands.
 """
 from cortexapps_cli.cortex import cli
 
-def test_packages_go_sum():
+def test_packages():
     cli(["packages", "go", "upload", "-t", "test-service", "-f", "tests/test_packages_go.sum"])
 
     cli(["packages", "java", "upload-single", "-t", "test-service", "-f", "tests/test_packages_java_single.json"])

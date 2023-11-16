@@ -6,7 +6,7 @@ from cortexapps_cli.cortex import cli
 def _add_deploy():
     cli(["deploys", "add", "-t", "cli-test-service", "-f", "tests/test_deploys.json"])
 
-def test_deploys_add():
+def test_deploys():
     _add_deploy()
 
     cli(["deploys", "list", "-t", "cli-test-service"])

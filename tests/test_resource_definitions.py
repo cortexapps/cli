@@ -5,7 +5,7 @@ from cortexapps_cli.cortex import cli
 import json
 import sys
 
-def test_resource_definitions_create(capsys):
+def test_resource_definitions(capsys):
     # Delete resource definition if it already exists.
     cli(["resource-definitions", "list"])
     out, err = capsys.readouterr()

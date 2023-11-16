@@ -6,7 +6,7 @@ import os
 import sys
 from string import Template
 
-def test_integrations_gitlab_add(tmp_path):
+def test_integrations_gitlab(tmp_path):
     cli(["integrations", "gitlab", "delete-all"])
 
     gitlab_personal_token = os.getenv('GITLAB_PERSONAL_TOKEN')

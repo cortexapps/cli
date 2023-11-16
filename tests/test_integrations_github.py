@@ -42,6 +42,7 @@ def github_app_input(tmp_path):
     f.write_text(content)
     return f
 
+def test_integrations_github(tmp_path):
     cli(["integrations", "github", "get", "-a", "github-test-3"])
     out, err = capsys.readouterr()
     out = json.loads(out)

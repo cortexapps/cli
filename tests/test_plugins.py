@@ -3,7 +3,7 @@ Tests for plugins commands.
 """
 from cortexapps_cli.cortex import cli
 
-def test_plugins_create(capsys):
+def test_plugins(capsys):
     cli(["plugins", "get"])
     out, err = capsys.readouterr()
     if (str(out).find('{"tag":"my-test-plugin"') != -1):
