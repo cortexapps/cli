@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.7.0 (2023-11-17)
+------------------
+
+**Improvements**
+- Add pagerduty integration.
+
 0.5.0 (2023-11-16)
 ------------------
 

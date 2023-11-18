@@ -21,6 +21,12 @@ def github_personal_input(tmp_path):
     f.write_text(content)
     return f
 
+def _github_configurations(capsys):
+    cli(["integrations", "github", "get-all"])
+    out, err = capsys.readouterr()
+    out = json.loads(out)
+    return out
+
 def github_app_input(tmp_path):
     gh_app_id = os.getenv('GH_APP_ID')
     gh_client_id = os.getenv('GH_CLIENT_ID')
@@ -43,35 +49,25 @@ def github_app_input(tmp_path):
     return f
 
 def test_integrations_github_personal(capsys, tmp_path):
-    cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
-    out, err = capsys.readouterr()
-    out = json.loads(out)
-    if (out['type'] != "NOT_FOUND"):
+    out = _github_configurations(capsys)
+    if any(configuration['alias'] == 'github-personal-test-001' for configuration in out['configurations']):
         cli(["integrations", "github", "delete-personal", "-a", "github-personal-test-001"])
 
     f = github_personal_input(tmp_path)
     cli(["integrations", "github", "add-personal", "-f", str(f)])
 
 def test_integrations_github(tmp_path, capsys):
-    cli(["integrations", "github", "get", "-a", "github-test-3"])
-    out, err = capsys.readouterr()
-    out = json.loads(out)
-    if (out['type'] != "NOT_FOUND"):
+    out = _github_configurations(capsys)
+    if any(configuration['alias'] == 'github-test-3' for configuration in out['configurations']):
         cli(["integrations", "github", "delete", "-a", "github-test-3"])
 
     f = github_app_input(tmp_path)
     cli(["integrations", "github", "add", "-f", str(f)])
-
     cli(["integrations", "github", "get", "-a", "github-test-3"])
-
     cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
-
     cli(["integrations", "github", "get-all"])
-
     cli(["integrations", "github", "get-default"])
-
-    cli(["integrations", "github", "validate", "-a", "cortex-test"])
-
+    cli(["integrations", "github", "validate", "-a", "github-test-3"])
     cli(["integrations", "github", "validate-all"])
 
     f = github_personal_input(tmp_path)
