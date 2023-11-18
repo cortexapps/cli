@@ -1239,27 +1239,6 @@ def groups_get(args):
     get("/api/v1/catalog/"+ args.tag + "/groups")
 # Groups end
 
-# Integrations start
-def subparser_integrations_opts(subparsers):
-    p = subparsers.add_parser('integrations', help='integrations sub-commands')
-    sp = p.add_subparsers(help='integrations subcommand help')
-
-    ssp = sp.add_parser('aws', help='AWS integration')
-    subparser_integrations_aws_opts(ssp)
-    ssp = sp.add_parser('datadog', help='Datadog integration')
-    subparser_integrations_datadog_opts(ssp)
-    ssp = sp.add_parser('github', help='GitHub integration')
-    subparser_integrations_github_opts(ssp)
-    ssp = sp.add_parser('gitlab', help='GitLab integration')
-    subparser_integrations_gitlab_opts(ssp)
-    ssp = sp.add_parser('newrelic', help='Newrelic integration')
-    subparser_integrations_newrelic_opts(ssp)
-    ssp = sp.add_parser('prometheus', help='Prometheus integration')
-    subparser_integrations_prometheus_opts(ssp)
-    ssp = sp.add_parser('sonarqube', help='Sonarqube integration')
-    subparser_integrations_sonarqube_opts(ssp)
-# Integrations end
-
 # Dependencies start
 def subparser_dependencies_opts(subparsers):
     p = subparsers.add_parser('dependencies', help='dependencies commands')
@@ -1599,6 +1578,29 @@ def subparser_groups_get(subparser):
 def groups_get(args):
     get("/api/v1/catalog/"+ args.tag + "/groups")
 # Groups end
+
+# Integrations start
+def subparser_integrations_opts(subparsers):
+    p = subparsers.add_parser('integrations', help='integrations sub-commands')
+    sp = p.add_subparsers(help='integrations subcommand help')
+
+    ssp = sp.add_parser('aws', help='AWS integration')
+    subparser_integrations_aws_opts(ssp)
+    ssp = sp.add_parser('datadog', help='Datadog integration')
+    subparser_integrations_datadog_opts(ssp)
+    ssp = sp.add_parser('github', help='GitHub integration')
+    subparser_integrations_github_opts(ssp)
+    ssp = sp.add_parser('gitlab', help='GitLab integration')
+    subparser_integrations_gitlab_opts(ssp)
+    ssp = sp.add_parser('newrelic', help='Newrelic integration')
+    subparser_integrations_newrelic_opts(ssp)
+    ssp = sp.add_parser('pagerduty', help='Pagerduty integration')
+    subparser_integrations_pagerduty_opts(ssp)
+    ssp = sp.add_parser('prometheus', help='Prometheus integration')
+    subparser_integrations_prometheus_opts(ssp)
+    ssp = sp.add_parser('sonarqube', help='Sonarqube integration')
+    subparser_integrations_sonarqube_opts(ssp)
+# Integrations end
 
 # Integrations-AWS start
 def subparser_integrations_aws_opts(subparser):
@@ -2067,6 +2069,115 @@ def integrations_datadog_validate_all(args):
     post("/api/v1/datadog/configuration/validate")
 # Integrations-datadog end
 
+# Integrations-newrelic start
+def subparser_integrations_newrelic_opts(subparser):
+    sp = subparser.add_subparsers(help='integrations - newrelic help')
+
+    subparser_integrations_newrelic_add(sp)
+    subparser_integrations_newrelic_add_multiple(sp)
+    subparser_integrations_newrelic_delete(sp)
+    subparser_integrations_newrelic_delete_all(sp)
+    subparser_integrations_newrelic_get(sp)
+    subparser_integrations_newrelic_get_all(sp)
+    subparser_integrations_newrelic_get_default(sp)
+    subparser_integrations_newrelic_update(sp)
+    subparser_integrations_newrelic_validate(sp)
+    subparser_integrations_newrelic_validate_all(sp)
+
+def subparser_integrations_newrelic_add(subparser):
+    sp = subparser.add_parser('add', help='Add a single configuration')
+    add_argument_file(sp, 'File containing JSON-formatted newrelic configuration')
+    sp.set_defaults(func=integrations_newrelic_add)
+
+def integrations_newrelic_add(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/newrelic/configuration/", headers, payload=read_file(args))
+
+def subparser_integrations_newrelic_add_multiple(subparser):
+    sp = subparser.add_parser('add-multiple', 
+            help='Add multiple configurations', 
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "accountId": 0,
+                  "alias": "string",
+                  "isDefault": true,
+                  "personalKey": "string",
+                  "region": "US"
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted newrelic configurations')
+    sp.set_defaults(func=integrations_newrelic_add_multiple)
+
+def integrations_newrelic_add_multiple(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/newrelic/configurations", headers, payload=read_file(args))
+
+def subparser_integrations_newrelic_delete(subparser):
+    sp = subparser.add_parser('delete', help='Delete a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_newrelic_delete)
+
+def integrations_newrelic_delete(args):
+    delete("/api/v1/newrelic/configuration/" + args.alias)
+
+def subparser_integrations_newrelic_delete_all(subparser):
+    sp = subparser.add_parser('delete-all', help='Delete all configurations')
+    sp.set_defaults(func=integrations_newrelic_delete_all)
+
+def integrations_newrelic_delete_all(args):
+    delete("/api/v1/newrelic/configurations")
+
+def subparser_integrations_newrelic_get(subparser):
+    sp = subparser.add_parser('get', help='Get a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_newrelic_get)
+
+def integrations_newrelic_get(args):
+    get("/api/v1/newrelic/configuration/" + args.alias)
+
+def subparser_integrations_newrelic_get_all(subparser):
+    sp = subparser.add_parser('get-all', help='Get all configurations')
+    sp.set_defaults(func=integrations_newrelic_get_all)
+
+def integrations_newrelic_get_all(args):
+    get("/api/v1/newrelic/configurations")
+
+def subparser_integrations_newrelic_get_default(subparser):
+    sp = subparser.add_parser('get-default', help='Get default configuration')
+    sp.set_defaults(func=integrations_newrelic_get_default)
+
+def integrations_newrelic_get_default(args):
+    get("/api/v1/newrelic/default-configuration")
+
+def subparser_integrations_newrelic_update(subparser):
+    sp = subparser.add_parser('update', help='WARNING: Updating aliases for configurations or changing the default configuration could cause entity YAMLs that use this integration to break.')
+    add_argument_alias(sp)
+    add_argument_file(sp, 'File containing JSON-formatted newrelic configuration')
+    sp.set_defaults(func=integrations_newrelic_update)
+
+def integrations_newrelic_update(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    put("/api/v1/newrelic/configuration/" + args.alias, headers, payload=read_file(args))
+
+def subparser_integrations_newrelic_validate(subparser):
+    sp = subparser.add_parser('validate', help='Validate a single configurations')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_newrelic_validate)
+
+def integrations_newrelic_validate(args):
+    post("/api/v1/newrelic/configuration/validate/" + args.alias)
+
+def subparser_integrations_newrelic_validate_all(subparser):
+    sp = subparser.add_parser('validate-all', help='Validate all configurations')
+    sp.set_defaults(func=integrations_newrelic_validate_all)
+
+def integrations_newrelic_validate_all(args):
+    post("/api/v1/newrelic/configuration/validate")
+# Integrations-newrelic end
+
 # Integrations-prometheus start
 def subparser_integrations_prometheus_opts(subparser):
     sp = subparser.add_subparsers(help='integrations - prometheus help')
@@ -2175,114 +2286,45 @@ def integrations_prometheus_validate_all(args):
     post("/api/v1/prometheus/configuration/validate")
 # Integrations-prometheus end
 
-# Integrations-newrelic start
-def subparser_integrations_newrelic_opts(subparser):
-    sp = subparser.add_subparsers(help='integrations - newrelic help')
+# Integrations-pagerduty start
+def subparser_integrations_pagerduty_opts(subparser):
+    sp = subparser.add_subparsers(help='integrations - pagerduty help')
 
-    subparser_integrations_newrelic_add(sp)
-    subparser_integrations_newrelic_add_multiple(sp)
-    subparser_integrations_newrelic_delete(sp)
-    subparser_integrations_newrelic_delete_all(sp)
-    subparser_integrations_newrelic_get(sp)
-    subparser_integrations_newrelic_get_all(sp)
-    subparser_integrations_newrelic_get_default(sp)
-    subparser_integrations_newrelic_update(sp)
-    subparser_integrations_newrelic_validate(sp)
-    subparser_integrations_newrelic_validate_all(sp)
+    subparser_integrations_pagerduty_add(sp)
+    subparser_integrations_pagerduty_delete(sp)
+    subparser_integrations_pagerduty_get(sp)
+    subparser_integrations_pagerduty_validate(sp)
 
-def subparser_integrations_newrelic_add(subparser):
+def subparser_integrations_pagerduty_add(subparser):
     sp = subparser.add_parser('add', help='Add a single configuration')
-    add_argument_file(sp, 'File containing JSON-formatted newrelic configuration')
-    sp.set_defaults(func=integrations_newrelic_add)
+    add_argument_file(sp, 'File containing JSON-formatted pagerduty configuration')
+    sp.set_defaults(func=integrations_pagerduty_add)
 
-def integrations_newrelic_add(args):
+def integrations_pagerduty_add(args):
     headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    post("/api/v1/newrelic/configuration/", headers, payload=read_file(args))
+    post("/api/v1/pagerduty/configuration/", headers, payload=read_file(args))
 
-def subparser_integrations_newrelic_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
-                Format of JSON-formatted configuration file:
-                --------------------------------------------
-                {
-                  "accountId": 0,
-                  "alias": "string",
-                  "isDefault": true,
-                  "personalKey": "string",
-                  "region": "US"
-                }
-                '''))
-    add_argument_file(sp, 'File containing JSON-formatted newrelic configurations')
-    sp.set_defaults(func=integrations_newrelic_add_multiple)
-
-def integrations_newrelic_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    post("/api/v1/newrelic/configurations", headers, payload=read_file(args))
-
-def subparser_integrations_newrelic_delete(subparser):
+def subparser_integrations_pagerduty_delete(subparser):
     sp = subparser.add_parser('delete', help='Delete a single configurations')
-    add_argument_alias(sp)
-    sp.set_defaults(func=integrations_newrelic_delete)
+    sp.set_defaults(func=integrations_pagerduty_delete)
 
-def integrations_newrelic_delete(args):
-    delete("/api/v1/newrelic/configuration/" + args.alias)
+def integrations_pagerduty_delete(args):
+    delete("/api/v1/pagerduty/configurations")
 
-def subparser_integrations_newrelic_delete_all(subparser):
-    sp = subparser.add_parser('delete-all', help='Delete all configurations')
-    sp.set_defaults(func=integrations_newrelic_delete_all)
-
-def integrations_newrelic_delete_all(args):
-    delete("/api/v1/newrelic/configurations")
-
-def subparser_integrations_newrelic_get(subparser):
+def subparser_integrations_pagerduty_get(subparser):
     sp = subparser.add_parser('get', help='Get a single configurations')
-    add_argument_alias(sp)
-    sp.set_defaults(func=integrations_newrelic_get)
+    sp.set_defaults(func=integrations_pagerduty_get)
 
-def integrations_newrelic_get(args):
-    get("/api/v1/newrelic/configuration/" + args.alias)
+def integrations_pagerduty_get(args):
+    get("/api/v1/pagerduty/default-configuration")
 
-def subparser_integrations_newrelic_get_all(subparser):
-    sp = subparser.add_parser('get-all', help='Get all configurations')
-    sp.set_defaults(func=integrations_newrelic_get_all)
+def subparser_integrations_pagerduty_validate(subparser):
+    sp = subparser.add_parser('validate', help='Validate a configuration')
+    sp.set_defaults(func=integrations_pagerduty_validate)
 
-def integrations_newrelic_get_all(args):
-    get("/api/v1/newrelic/configurations")
-
-def subparser_integrations_newrelic_get_default(subparser):
-    sp = subparser.add_parser('get-default', help='Get default configuration')
-    sp.set_defaults(func=integrations_newrelic_get_default)
-
-def integrations_newrelic_get_default(args):
-    get("/api/v1/newrelic/default-configuration")
-
-def subparser_integrations_newrelic_update(subparser):
-    sp = subparser.add_parser('update', help='WARNING: Updating aliases for configurations or changing the default configuration could cause entity YAMLs that use this integration to break.')
-    add_argument_alias(sp)
-    add_argument_file(sp, 'File containing JSON-formatted newrelic configuration')
-    sp.set_defaults(func=integrations_newrelic_update)
-
-def integrations_newrelic_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    put("/api/v1/newrelic/configuration/" + args.alias, headers, payload=read_file(args))
-
-def subparser_integrations_newrelic_validate(subparser):
-    sp = subparser.add_parser('validate', help='Validate a single configurations')
-    add_argument_alias(sp)
-    sp.set_defaults(func=integrations_newrelic_validate)
-
-def integrations_newrelic_validate(args):
-    post("/api/v1/newrelic/configuration/validate/" + args.alias)
-
-def subparser_integrations_newrelic_validate_all(subparser):
-    sp = subparser.add_parser('validate-all', help='Validate all configurations')
-    sp.set_defaults(func=integrations_newrelic_validate_all)
-
-def integrations_newrelic_validate_all(args):
-    post("/api/v1/newrelic/configuration/validate")
-# Integrations-newrelic end
+def integrations_pagerduty_validate(args):
+    post("/api/v1/pagerduty/configuration/validate")
+# Integrations-pagerduty end
 
 # Integrations-sonarqube start
 def subparser_integrations_sonarqube_opts(subparser):

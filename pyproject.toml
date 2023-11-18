@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "cortexapps-cli"
-version = "0.0.6-alpha"
+# version will be incremented via command line as part of github actions build
+version = "0.0.0"
 description = "Command Line Interface for cortexapps"
 license = "MIT"
 authors = [
