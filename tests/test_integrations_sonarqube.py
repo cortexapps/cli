@@ -3,8 +3,10 @@ Tests for sonarqube integration commands.
 """
 from cortexapps_cli.cortex import cli
 from string import Template
+import json
 import os
 import pytest
+import responses
 
 sonarqube_host = os.getenv('SONARQUBE_HOST')
 sonarqube_personal_token = os.getenv('SONARQUBE_PERSONAL_TOKEN')
@@ -63,11 +65,10 @@ def test_integrations_sonarqube(tmp_path):
     f.write_text(content)
     cli(["integrations", "sonarqube", "add-multiple", "-f", str(f)])
 
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community sonarqube and use ngrok3")
+@responses.activate
 def test_integrations_sonarqube_validate():
+    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/sonarqube/configuration/validate/cortex-test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
     cli(["integrations", "sonarqube", "validate", "-a", "cortex-test"])
 
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community sonarqube and use ngrok3")
-def test_integrations_sonarqube_validate_all():
+    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/sonarqube/configuration/validate", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
     cli(["integrations", "sonarqube", "validate-all"])
-

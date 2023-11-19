@@ -22,16 +22,13 @@ def _ip_allowlist_input(tmp_path):
     f.write_text(content)
     return f
 
-def test_ip_allowlist_get():
+def test_ip_allowlist(tmp_path):
     cli(["ip-allowlist", "get"])
 
-def test_ip_allowlist_validate(tmp_path):
     f = _ip_allowlist_input(tmp_path)
     cli(["ip-allowlist", "validate", "-f", str(f)])
 
-def test_ip_allowlist_replace(tmp_path):
     f = _ip_allowlist_input(tmp_path)
     cli(["ip-allowlist", "replace", "-f", str(f)])
 
-def test_ip_allowlist_empty():
     cli(["ip-allowlist", "replace", "-f", "tests/test_ip_allowlist_empty.json"])

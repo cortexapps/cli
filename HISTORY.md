@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.8.0 (2023-11-19)
+------------------
+
+**Improvements**
+- Add coralogx, launchdarkly integrations.
+
 0.7.0 (2023-11-17)
 ------------------
 
