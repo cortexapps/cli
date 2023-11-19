@@ -1586,18 +1586,31 @@ def subparser_integrations_opts(subparsers):
 
     ssp = sp.add_parser('aws', help='AWS integration')
     subparser_integrations_aws_opts(ssp)
+
+    ssp = sp.add_parser('coralogix', help='Coralogix integration')
+    subparser_integrations_coralogix_opts(ssp)
+
     ssp = sp.add_parser('datadog', help='Datadog integration')
     subparser_integrations_datadog_opts(ssp)
+
     ssp = sp.add_parser('github', help='GitHub integration')
     subparser_integrations_github_opts(ssp)
+
     ssp = sp.add_parser('gitlab', help='GitLab integration')
     subparser_integrations_gitlab_opts(ssp)
+
+    ssp = sp.add_parser('launchdarkly', help='Launchdarkly integration')
+    subparser_integrations_launchdarkly_opts(ssp)
+
     ssp = sp.add_parser('newrelic', help='Newrelic integration')
     subparser_integrations_newrelic_opts(ssp)
+
     ssp = sp.add_parser('pagerduty', help='Pagerduty integration')
     subparser_integrations_pagerduty_opts(ssp)
+
     ssp = sp.add_parser('prometheus', help='Prometheus integration')
     subparser_integrations_prometheus_opts(ssp)
+
     ssp = sp.add_parser('sonarqube', help='Sonarqube integration')
     subparser_integrations_sonarqube_opts(ssp)
 # Integrations end
@@ -1680,6 +1693,115 @@ def subparser_integrations_aws_delete_all(subparser):
 def integrations_aws_delete_all(args):
     delete("/api/v1/aws/configurations")
 # Integrations-AWS end
+
+# Integrations-coralogix start
+def subparser_integrations_coralogix_opts(subparser):
+    sp = subparser.add_subparsers(help='integrations - coralogix help')
+
+    subparser_integrations_coralogix_add(sp)
+    subparser_integrations_coralogix_add_multiple(sp)
+    subparser_integrations_coralogix_delete(sp)
+    subparser_integrations_coralogix_delete_all(sp)
+    subparser_integrations_coralogix_get(sp)
+    subparser_integrations_coralogix_get_all(sp)
+    subparser_integrations_coralogix_get_default(sp)
+    subparser_integrations_coralogix_update(sp)
+    subparser_integrations_coralogix_validate(sp)
+    subparser_integrations_coralogix_validate_all(sp)
+
+def subparser_integrations_coralogix_add(subparser):
+    sp = subparser.add_parser('add', help='Add a single configuration')
+    add_argument_file(sp, 'File containing JSON-formatted coralogix configuration')
+    sp.set_defaults(func=integrations_coralogix_add)
+
+def integrations_coralogix_add(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/coralogix/configuration/", headers, payload=read_file(args))
+
+def subparser_integrations_coralogix_add_multiple(subparser):
+    sp = subparser.add_parser('add-multiple', 
+            help='Add multiple configurations', 
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "accountId": 0,
+                  "alias": "string",
+                  "isDefault": true,
+                  "personalKey": "string",
+                  "region": "US"
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted coralogix configurations')
+    sp.set_defaults(func=integrations_coralogix_add_multiple)
+
+def integrations_coralogix_add_multiple(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/coralogix/configurations", headers, payload=read_file(args))
+
+def subparser_integrations_coralogix_delete(subparser):
+    sp = subparser.add_parser('delete', help='Delete a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_coralogix_delete)
+
+def integrations_coralogix_delete(args):
+    delete("/api/v1/coralogix/configuration/" + args.alias)
+
+def subparser_integrations_coralogix_delete_all(subparser):
+    sp = subparser.add_parser('delete-all', help='Delete all configurations')
+    sp.set_defaults(func=integrations_coralogix_delete_all)
+
+def integrations_coralogix_delete_all(args):
+    delete("/api/v1/coralogix/configurations")
+
+def subparser_integrations_coralogix_get(subparser):
+    sp = subparser.add_parser('get', help='Get a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_coralogix_get)
+
+def integrations_coralogix_get(args):
+    get("/api/v1/coralogix/configuration/" + args.alias)
+
+def subparser_integrations_coralogix_get_all(subparser):
+    sp = subparser.add_parser('get-all', help='Get all configurations')
+    sp.set_defaults(func=integrations_coralogix_get_all)
+
+def integrations_coralogix_get_all(args):
+    get("/api/v1/coralogix/configurations")
+
+def subparser_integrations_coralogix_get_default(subparser):
+    sp = subparser.add_parser('get-default', help='Get default configuration')
+    sp.set_defaults(func=integrations_coralogix_get_default)
+
+def integrations_coralogix_get_default(args):
+    get("/api/v1/coralogix/default-configuration")
+
+def subparser_integrations_coralogix_update(subparser):
+    sp = subparser.add_parser('update', help='WARNING: Updating aliases for configurations or changing the default configuration could cause entity YAMLs that use this integration to break.')
+    add_argument_alias(sp)
+    add_argument_file(sp, 'File containing JSON-formatted coralogix configuration')
+    sp.set_defaults(func=integrations_coralogix_update)
+
+def integrations_coralogix_update(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    put("/api/v1/coralogix/configuration/" + args.alias, headers, payload=read_file(args))
+
+def subparser_integrations_coralogix_validate(subparser):
+    sp = subparser.add_parser('validate', help='Validate a single configurations')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_coralogix_validate)
+
+def integrations_coralogix_validate(args):
+    post("/api/v1/coralogix/configuration/validate/" + args.alias)
+
+def subparser_integrations_coralogix_validate_all(subparser):
+    sp = subparser.add_parser('validate-all', help='Validate all configurations')
+    sp.set_defaults(func=integrations_coralogix_validate_all)
+
+def integrations_coralogix_validate_all(args):
+    post("/api/v1/coralogix/configuration/validate")
+# Integrations-coralogix end
 
 # Integrations-github start
 def subparser_integrations_github_opts(subparser):
@@ -2068,6 +2190,115 @@ def subparser_integrations_datadog_validate_all(subparser):
 def integrations_datadog_validate_all(args):
     post("/api/v1/datadog/configuration/validate")
 # Integrations-datadog end
+
+# Integrations-launchdarkly start
+def subparser_integrations_launchdarkly_opts(subparser):
+    sp = subparser.add_subparsers(help='integrations - launchdarkly help')
+
+    subparser_integrations_launchdarkly_add(sp)
+    subparser_integrations_launchdarkly_add_multiple(sp)
+    subparser_integrations_launchdarkly_delete(sp)
+    subparser_integrations_launchdarkly_delete_all(sp)
+    subparser_integrations_launchdarkly_get(sp)
+    subparser_integrations_launchdarkly_get_all(sp)
+    subparser_integrations_launchdarkly_get_default(sp)
+    subparser_integrations_launchdarkly_update(sp)
+    subparser_integrations_launchdarkly_validate(sp)
+    subparser_integrations_launchdarkly_validate_all(sp)
+
+def subparser_integrations_launchdarkly_add(subparser):
+    sp = subparser.add_parser('add', help='Add a single configuration')
+    add_argument_file(sp, 'File containing JSON-formatted launchdarkly configuration')
+    sp.set_defaults(func=integrations_launchdarkly_add)
+
+def integrations_launchdarkly_add(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/launchdarkly/configuration/", headers, payload=read_file(args))
+
+def subparser_integrations_launchdarkly_add_multiple(subparser):
+    sp = subparser.add_parser('add-multiple', 
+            help='Add multiple configurations', 
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "accountId": 0,
+                  "alias": "string",
+                  "isDefault": true,
+                  "personalKey": "string",
+                  "region": "US"
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted launchdarkly configurations')
+    sp.set_defaults(func=integrations_launchdarkly_add_multiple)
+
+def integrations_launchdarkly_add_multiple(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/launchdarkly/configurations", headers, payload=read_file(args))
+
+def subparser_integrations_launchdarkly_delete(subparser):
+    sp = subparser.add_parser('delete', help='Delete a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_launchdarkly_delete)
+
+def integrations_launchdarkly_delete(args):
+    delete("/api/v1/launchdarkly/configuration/" + args.alias)
+
+def subparser_integrations_launchdarkly_delete_all(subparser):
+    sp = subparser.add_parser('delete-all', help='Delete all configurations')
+    sp.set_defaults(func=integrations_launchdarkly_delete_all)
+
+def integrations_launchdarkly_delete_all(args):
+    delete("/api/v1/launchdarkly/configurations")
+
+def subparser_integrations_launchdarkly_get(subparser):
+    sp = subparser.add_parser('get', help='Get a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_launchdarkly_get)
+
+def integrations_launchdarkly_get(args):
+    get("/api/v1/launchdarkly/configuration/" + args.alias)
+
+def subparser_integrations_launchdarkly_get_all(subparser):
+    sp = subparser.add_parser('get-all', help='Get all configurations')
+    sp.set_defaults(func=integrations_launchdarkly_get_all)
+
+def integrations_launchdarkly_get_all(args):
+    get("/api/v1/launchdarkly/configurations")
+
+def subparser_integrations_launchdarkly_get_default(subparser):
+    sp = subparser.add_parser('get-default', help='Get default configuration')
+    sp.set_defaults(func=integrations_launchdarkly_get_default)
+
+def integrations_launchdarkly_get_default(args):
+    get("/api/v1/launchdarkly/default-configuration")
+
+def subparser_integrations_launchdarkly_update(subparser):
+    sp = subparser.add_parser('update', help='WARNING: Updating aliases for configurations or changing the default configuration could cause entity YAMLs that use this integration to break.')
+    add_argument_alias(sp)
+    add_argument_file(sp, 'File containing JSON-formatted launchdarkly configuration')
+    sp.set_defaults(func=integrations_launchdarkly_update)
+
+def integrations_launchdarkly_update(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    put("/api/v1/launchdarkly/configuration/" + args.alias, headers, payload=read_file(args))
+
+def subparser_integrations_launchdarkly_validate(subparser):
+    sp = subparser.add_parser('validate', help='Validate a single configurations')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_launchdarkly_validate)
+
+def integrations_launchdarkly_validate(args):
+    post("/api/v1/launchdarkly/configuration/validate/" + args.alias)
+
+def subparser_integrations_launchdarkly_validate_all(subparser):
+    sp = subparser.add_parser('validate-all', help='Validate all configurations')
+    sp.set_defaults(func=integrations_launchdarkly_validate_all)
+
+def integrations_launchdarkly_validate_all(args):
+    post("/api/v1/launchdarkly/configuration/validate")
+# Integrations-launchdarkly end
 
 # Integrations-newrelic start
 def subparser_integrations_newrelic_opts(subparser):

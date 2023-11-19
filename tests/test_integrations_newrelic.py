@@ -3,8 +3,10 @@ Tests for newrelic integration commands.
 """
 from cortexapps_cli.cortex import cli
 from string import Template
+import json
 import os
 import pytest
+import responses
 
 newrelic_account_id = os.getenv('NEWRELIC_ACCOUNT_ID')
 newrelic_personal_key = os.getenv('NEWRELIC_PERSONAL_KEY')
@@ -24,41 +26,18 @@ def _newrelic_input(tmp_path):
     f.write_text(content)
     return f
 
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
 def test_integrations_newrelic_add(tmp_path):
-    cli(["integrations", "newrelic", "delete-all"])
     f = _newrelic_input(tmp_path)
+
+    cli(["integrations", "newrelic", "delete-all"])
     cli(["integrations", "newrelic", "add", "-f", str(f)])
-
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
-def test_integrations_newrelic_get():
     cli(["integrations", "newrelic", "get", "-a", "test"])
-
-def test_integrations_newrelic_get_all():
     cli(["integrations", "newrelic", "get-all"])
-
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
-def test_integrations_newrelic_get_default():
     cli(["integrations", "newrelic", "get-default"])
 
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
-def test_integrations_newrelic_validate():
-    cli(["integrations", "newrelic", "validate", "-a", "test"])
-
-def test_integrations_newrelic_validate_all():
-    cli(["integrations", "newrelic", "validate-all"])
-
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
-def test_integrations_newrelic_update(tmp_path):
-    f = _newrelic_input(tmp_path)
     cli(["integrations", "newrelic", "update", "-a", "test", "-f", str(f)])
-
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
-def test_integrations_newrelic_delete():
     cli(["integrations", "newrelic", "delete", "-a", "test"])
 
-@pytest.mark.skip(reason="Skipping until I can figure out how to install community newrelic and use ngrok3")
-def test_integrations_newrelic_update_multiple(tmp_path):
     f = tmp_path / "test_integrations_newrelic_update_multiple.json"
     template = Template("""
         {
@@ -83,6 +62,12 @@ def test_integrations_newrelic_update_multiple(tmp_path):
     content = template.substitute(newrelic_account_id=newrelic_account_id, newrelic_personal_key=newrelic_personal_key)
     f.write_text(content)
     cli(["integrations", "newrelic", "add-multiple", "-f", str(f)])
-
-def test_integrations_newrelic_delete_all():
     cli(["integrations", "newrelic", "delete-all"])
+
+@responses.activate
+def test_integrations_newrelic_validate(tmp_path):
+    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/newrelic/configuration/validate/test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
+    cli(["integrations", "newrelic", "validate", "-a", "test"])
+
+    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/newrelic/configuration/validate", json=[ { 'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}], status=200)
+    cli(["integrations", "newrelic", "validate-all"])
