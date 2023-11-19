@@ -22,7 +22,7 @@ def _ip_allowlist_input(tmp_path):
     f.write_text(content)
     return f
 
-def test_ip_allowlist():
+def test_ip_allowlist(tmp_path):
     cli(["ip-allowlist", "get"])
 
     f = _ip_allowlist_input(tmp_path)
