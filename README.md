@@ -5,8 +5,18 @@
 # Installation
 
 ## pypi.org
-The cortexapps-cli package is published to [pypi.org](https://pypi.org/project/cortexapps-cli/).  Refer
-to the instructions there to install using [pip](https://pypi.org/project/pip/).
+
+```
+pip install cortexapps-cli
+```
+
+Using a python virtual environment:
+```
+VENV_DIR=~/.venv/cortex
+python3 -m venv $VENV_DIR
+source $VENV_DIR/bin/activate
+pip install cortexapps-cli
+```
 
 ## homebrew
 The package will be published to homebrew in the future, but we need your help!
@@ -85,3 +95,48 @@ positional arguments:
 options:
   -h, --help  show this help message and exit
 ```
+
+# Examples
+
+## Export from one tenant; import into another
+
+This example shows how to export from a tenant named `myTenant-dev` and import those contents into a tenant
+named `myTenant`.
+
+Your cortex config file will require api keys for both tenants.  It would look like this:
+```
+[myTenant]
+api_key = <your API Key for myTenant>
+
+[myTenant-dev]
+api_key = <your API Key for myTenant-dev>
+``` 
+
+**Export**
+```
+$ cortex -t myTenant-dev backup export
+Getting resource definitions
+-->  my-resource-1
+Getting catalog entities
+-->  my-domain-1
+-->  my-service-1
+-->  my-service-2
+Getting IP Allowlist definitions
+Getting scorecards
+-->  my-scorecard-1
+Getting teams
+-->  my-team-1
+-->  my-team-2
+
+Export complete!
+Contents available in /Users/myUser/.cortex/export/2023-11-19-14-58-14
+```
+
+**Import**
+```
+$ cortex backup import -d <directory created by export>
+```
+
+**NOTE:** some content will not be exported, including integration configurations and resources that
+are automatically imported by Cortex.  Cortex does not have access to any keys, so it cannot export any
+integration configurations.
