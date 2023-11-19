@@ -7,9 +7,10 @@ import json
 import os
 import pytest
 import responses
+import sys
 
-newrelic_account_id = os.getenv('NEWRELIC_ACCOUNT_ID')
-newrelic_personal_key = os.getenv('NEWRELIC_PERSONAL_KEY')
+newrelic_account_id = 123
+newrelic_personal_key = json.dumps("fakeKey")
 
 def _newrelic_input(tmp_path):
     f = tmp_path / "test_integrations_newrelic_add.json"
@@ -18,11 +19,12 @@ def _newrelic_input(tmp_path):
           "accountId": ${newrelic_account_id},
           "alias": "test",
           "isDefault": true,
-          "personalKey": "${newrelic_personal_key}",
+          "personalKey": ${newrelic_personal_key},
           "region": "US"
         }
         """)
     content = template.substitute(newrelic_account_id=newrelic_account_id, newrelic_personal_key=newrelic_personal_key)
+    sys.stdout.write(content)
     f.write_text(content)
     return f
 
@@ -46,14 +48,14 @@ def test_integrations_newrelic_add(tmp_path):
              "accountId": ${newrelic_account_id},
              "alias": "test-1",
              "isDefault": false,
-             "personalKey": "${newrelic_personal_key}",
+             "personalKey": ${newrelic_personal_key},
              "region": "US"
            },
            {
              "accountId": ${newrelic_account_id},
              "alias": "test-2",
              "isDefault": false,
-             "personalKey": "${newrelic_personal_key}",
+             "personalKey": ${newrelic_personal_key},
              "region": "US"
            }
           ]
