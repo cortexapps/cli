@@ -120,12 +120,23 @@ def get_config(config, args, argv, parser, replace_string):
     config_parser.read(args.config)
     tenant_config = config_parser[args.tenant]
     api_key = tenant_config.get('api_key')
+
+    # https://github.com/cortexapps/cli/issues/20
+    # Deal with case where user may have added key with quotes.
+    # Don't want to do a global replace in case there is a quote in the key, so
+    # only remove if found at begining or end of the string.
+    api_key = api_key.lstrip('\"')
+    api_key = api_key.rstrip('\"')
+    api_key = api_key.lstrip("\'")
+    api_key = api_key.rstrip("\'")
+
     if api_key == replace_string:
         print("Config file " + args.config + " has not been updated to include your Cortex API key.")
         print("Add your key to the file and then retry your command.")
         sys.exit(2)
     config.update({"url": tenant_config.get('base_url', 'https://api.getcortexapp.com')})
     config.update({"api_key": api_key})
+    config.update({"config_file": args.config})
 
     config.update({"debug": args.debug})
     config.update({"noObfuscate": args.noObfuscate})
@@ -547,7 +558,9 @@ def debug_json(r, method):
 
 def exit(r, method, expected_rc=200):
     if r.status_code != expected_rc:
-        print(r.text)
+        sys.stderr.write(r.reason + "\n")
+        if r.status_code == 401:
+            sys.stderr.write("\nCheck your api_key in " + config['config_file'] + ".\n")
         debug_json(r, method)
         sys.exit(r.status_code)
     else:
