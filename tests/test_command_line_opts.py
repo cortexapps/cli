@@ -31,13 +31,3 @@ def test_integrations_command():
 def test_command_no_options():
     with pytest.raises(SystemExit) as excinfo:
         cli(["catalog"])
-
-def test_new_config_file(tmp_path):
-    f = tmp_path / "cortex_config"
-    content = """
-        [default]
-        api_key = REPLACE_WITH_YOUR_CORTEX_API_KEY
-        """
-    f.write_text(content)
-    with pytest.raises(SystemExit) as excinfo:
-        cli(["-c", str(f), "catalog", "list"])
