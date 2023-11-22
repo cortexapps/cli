@@ -37,8 +37,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.urls]
-homepage = "https://github.com/cortexapps/cli"
-"Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
+Homepage = "https://github.com/cortexapps/cli"
+"Bug Tracker" = "https://github.com/cortexapps/cli/issues"
+"Changes" = " https://github.com/cortexapps/cli/blob/main/HISTORY.md"
+"Documentation" = " https://github.com/cortexapps/cli/blob/main/README.md"
 
 [tool.pytest.ini_options]
 minversion = "7.4.3"
