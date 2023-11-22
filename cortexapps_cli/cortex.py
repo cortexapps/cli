@@ -262,6 +262,13 @@ def add_argument_export_directory(subparser):
             default=os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
             metavar=''
     )
+    subparser.add_argument(
+            '-default-directory', 
+            '--default-directory', 
+            help=argparse.SUPPRESS,
+            required=False,
+            default=os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    )
 
 def add_argument_file(subparser, help_text):
     subparser.add_argument(
@@ -646,6 +653,11 @@ def subparser_backup_export(subparser):
     sp.set_defaults(func=export)
 
 def export(args):
+    # https://github.com/cortexapps/cli/issues/21
+    # Cannot add this when option is added because we don't have the tenant yet.
+    if args.directory == args.default_directory:
+        args.directory = args.directory + "-" + args.tenant
+
     catalog_directory=args.directory + "/catalog"
     json_directory=args.directory + "/json"
     scorecard_directory=args.directory + "/scorecards"

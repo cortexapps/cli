@@ -1,11 +1,23 @@
 Release History
 ===============
 
+0.10.0 (2023-11-21)
+------------------
+
+**Improvements**
+- For exports, add the cortex tenant - the value in the .cortex/config file that identifies the tenant.
+
+0.9.0 (2023-11-21)
+------------------
+
+**Improvements**
+- Better API key handling -- strip quotes from keys; add better error messages.
+
 0.8.0 (2023-11-19)
 ------------------
 
 **Improvements**
-- Add coralogx, launchdarkly integrations.
+- Add coralogix, launchdarkly integrations.
 
 0.7.0 (2023-11-17)
 ------------------

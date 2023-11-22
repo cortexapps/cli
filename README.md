@@ -1,6 +1,11 @@
+[![PyPi version](https://badgen.net/pypi/v/cortexapps-cli/)](https://pypi.org/project/cortexapps-cli)
+[![PyPI download month](https://img.shields.io/pypi/dm/cortexapps-cli.svg)](https://pypi.python.org/pypi/cortexapps-cli/)
+[![PyPI license](https://img.shields.io/pypi/l/cortexapps-cli.svg)](https://pypi.python.org/pypi/cortexapps-cli/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/cortexapps-cli.svg)](https://pypi.python.org/pypi/cortexapps-cli/)
+
 # Cortex CLI
 
-**cortexapps-cli** implements a command line interface for cortexapps.
+**cortexapps-cli** implements a command line interface for [cortexapps](https://cortex.io).
 
 # Installation
 
