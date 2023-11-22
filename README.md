@@ -2,6 +2,7 @@
 [![PyPI download month](https://img.shields.io/pypi/dm/cortexapps-cli.svg)](https://pypi.python.org/pypi/cortexapps-cli/)
 [![PyPI license](https://img.shields.io/pypi/l/cortexapps-cli.svg)](https://pypi.python.org/pypi/cortexapps-cli/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/cortexapps-cli.svg)](https://pypi.python.org/pypi/cortexapps-cli/)
+![publish](https://github.com/cortexapps/cli/actions/workflows/publish-pypi.yml/badge.svg)
 
 # Cortex CLI
 
