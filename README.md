@@ -225,7 +225,6 @@ cortex catalog details -t my-service-1 | jq ".git"
 # Add a suffix to all x-cortex-tag values for services
 ```
 for service in `cortex catalog list -t service | jq -r ".entities[].tag" | sort`; do
-   echo "service = $service"
    cortex catalog descriptor -y -t ${service} | yq '.info.x-cortex-tag |= . + "-suffix"' | cortex catalog create -f-
 done
 ```
@@ -238,3 +237,27 @@ This example combines several CLI commands:
 
 **NOTE:** Any cortex commands that accept a file as input can also receive input from stdin by specifying a "-" after the -f
 parameter.
+
+# Add a group to all domains
+```
+for domain in `cortex catalog list -t domain | jq -r ".entities[].tag" | sort`; do
+   cortex catalog descriptor -y -t ${domain} | yq -e '.info.x-cortex-groups += [ "my-new-group" ]' | cortex catalog create -f-
+done
+```
+
+# Remove a group from domains
+```
+for domain in `cortex catalog list -t domain -g my-old-group | jq -r ".entities[].tag" | sort`; do
+   cortex catalog descriptor -y -t ${domain} | yq -e '.info.x-cortex-groups -= [ "my-old-group" ]' | cortex catalog create -f-
+done
+```
+
+# Add a domain parent to a single service
+```
+cortex catalog descriptor -y -t my-service | yq -e '.info.x-cortex-domain-parents += { "tag": "my-new-domain" }' | cortex catalog create -f-
+```
+
+# Add a github group as an owner to a service
+```
+cortex catalog descriptor -y -t my-service | yq -e '.info.x-cortex-owners += { "name": "my-org/my-team", "type": "GROUP", "provider": "GITHUB" }' | cortex catalog create -f-
+```
