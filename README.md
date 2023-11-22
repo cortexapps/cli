@@ -85,7 +85,51 @@ cortex -t my-test catalog list
 If the config file does not exist, the CLI will prompt you to create it.
 
 ## Commands
-Run `cortex -h` to see a list of all commands.
+Run `cortex -h` to see a list of all commands:
+```
+usage: cortex CLI [-h] [-a] [-c CONFIG] [-d] [-n] [-t] [-v]
+                  {audit-logs,backup,catalog,custom-data,custom-events,dependencies,deploys,discovery-audit,docs,groups,integrations,ip-allowlist,on-call,packages,plugins,queries,resource-definitions,scorecards,teams-hierarchies,teams}
+                  ...
+
+Cortex command line interface
+
+positional arguments:
+  {audit-logs,backup,catalog,custom-data,custom-events,dependencies,deploys,discovery-audit,docs,groups,integrations,ip-allowlist,on-call,packages,plugins,queries,resource-definitions,scorecards,teams-hierarchies,teams}
+                        sub-command help
+    audit-logs          audit log commands
+    backup              import/export commands
+    catalog             catalog commands
+    custom-data         custom_data actions
+    custom-events       custom events actions
+    dependencies        dependencies commands
+    deploys             deploys commands
+    discovery-audit     Discovery Audit commands
+    docs                OpenAPI doc commands
+    groups              groups commands
+    integrations        integrations sub-commands
+    ip-allowlist        IP Allowlist information
+    on-call             get on-call information
+    packages            commands to create and modify packages
+    plugins             commands to create and access plugins
+    queries             run CQL queries
+    resource-definitions
+                        resource definitions
+    scorecards          scorecards API requests
+    teams-hierarchies   commands to create and modify team hierarchies
+    teams               commands to create and modify teams
+
+options:
+  -h, --help            show this help message and exit
+  -a , --cliAlias       get CLI parms from [TENANT.aliases] in config file
+  -c CONFIG, --config CONFIG
+                        Config location, default = ~/.cortex/config
+  -d, --debug           Writes request debug information as JSON to stderr
+  -n, --noObfuscate     Do not obfuscate bearer token when debugging
+  -t , --tenant         tenant name defined in ~/.cortex/config, defaults to 'default'
+  -v, --version         show program's version number and exit
+
+Type 'man cortex' for additional details.
+```
 
 Run `cortex <subcommand> -h` to see a list of all commands for each subcommand.
 
@@ -103,6 +147,8 @@ options:
 ```
 
 # Examples
+
+Almost all CLI responses return JSON or YAML.  Tools like [jq](https://jqlang.github.io/jq/) and [yq](https://mikefarah.gitbook.io/yq/) will be helpful to extract content from these responses.
 
 ## Export from one tenant; import into another
 
@@ -146,3 +192,49 @@ $ cortex backup import -d <directory created by export>
 **NOTE:** some content will not be exported, including integration configurations and resources that
 are automatically imported by Cortex.  Cortex does not have access to any keys, so it cannot export any
 integration configurations.
+
+# Iterate over all domains
+```
+for domain in `cortex catalog list -t domain | jq -r ".entities[].tag" | sort`; do echo "domain = $domain"; done
+```
+
+# Iterate over all teams
+```
+for team in `cortex catalog list -t team | jq -r ".entities[].tag" | sort`; do echo "team = $team"; done
+```
+
+# Iterate over all services
+```
+for service in `cortex catalog list -t service | jq -r ".entities[].tag" | sort`; do echo "service = $service"; done
+```
+
+# Get git details for a service
+```
+cortex catalog details -t my-service-1 | jq ".git"
+```
+
+```
+{
+  "repository": "my-org/my-service-1",
+  "alias": null,
+  "basepath": null,
+  "provider": "github"
+}
+```
+
+# Add a suffix to all x-cortex-tag values for services
+```
+for service in `cortex catalog list -t service | jq -r ".entities[].tag" | sort`; do
+   echo "service = $service"
+   cortex catalog descriptor -y -t ${service} | yq '.info.x-cortex-tag |= . + "-suffix"' | cortex catalog create -f-
+done
+```
+
+This example combines several CLI commands:
+- the for loop iterates over all services
+- the descriptor for each service is retrieved in YAML format
+- the YAML descriptor is piped to yq where the value of `x-cortex-tag` is retrieved and modified to add "-suffix" to the end
+- the modified YAML is then piped to the cortex catalog command to update the entity in cortex
+
+**NOTE:** Any cortex commands that accept a file as input can also receive input from stdin by specifying a "-" after the -f
+parameter.
