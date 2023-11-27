@@ -1,6 +1,7 @@
 name: Publish to hub.docker.com
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows:
       - [Publish to pypi.org]
@@ -21,9 +22,8 @@ jobs:
 
     - name: checkout source
       uses: actions/checkout@v3
-
-    - name: Get tags
-      run: git fetch --tags origin
+      with:
+        fetch-tags: true
 
     - name: Get version
       run: |
