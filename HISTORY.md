@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.10.0 (2023-11-27)
+------------------
+
+**Improvements**
+- Add support for docker image builds.
+
 0.10.0 (2023-11-21)
 ------------------
 
