@@ -1,9 +1,9 @@
 """""""""""""""""
 Cortexapps CLI
 """""""""""""""""
-...........
+................................................................
 A command-line interface for `Cortexapps <https://cortex.io>`_.
-...........
+................................................................
 
 .. contents:: Overview
    :depth: 3
@@ -41,7 +41,8 @@ In order to be accepted to `homebrew-core <https://github.com/Homebrew/homebrew-
 is determined by running an `audit <https://docs.brew.sh/Adding-Software-to-Homebrew#testing-and-auditing-the-formula>`_
 of the homebrew formula.  Currently, this results in the following:
 
-.. code:: bash
+.. code-block::
+
   brew audit --strict --new-formula --online cortexapps-cli
   cortexapps-cli
     * GitHub repository not notable enough (<30 forks, <30 watchers and <75 stars)
@@ -51,7 +52,7 @@ Please help us by watching and starring https://github.com/cortexapps/cli.  Once
 throw a small party for ourselves and then submit a PR to homebrew-core. 
  
 Workaround for homebrew installation
---------------------------
+------------------------------------
 
 This is a temporary solution until we reach 'notable' status and get the formula added to `homebrew-core <https://github.com/Homebrew/homebrew-core>`_.
 
@@ -185,9 +186,9 @@ Examples
 
 Almost all CLI responses return JSON or YAML.  Tools like `jq <https://jqlang.github.io/jq/>`_ and `yq <https://mikefarah.gitbook.io/yq/>`_ will be helpful to extract content from these responses.
 
-----------------------
+-------------------------------------------
 Export from one tenant; import into another
-----------------------
+-------------------------------------------
 
 This example shows how to export from a tenant named :code:`myTenant-dev` and import those contents into a tenant
 named :code:`myTenant`.
@@ -238,9 +239,9 @@ Your cortex config file will require api keys for both tenants.  It would look l
 are automatically imported by Cortex.  Cortex does not have access to any keys, so it cannot export any
 integration configurations.
 
-----------------------
+------------------------
 Iterate over all domains
-----------------------
+------------------------
 
 .. code:: bash
 
@@ -254,17 +255,17 @@ Iterate over all teams
 
  for team in `cortex catalog list -t team | jq -r ".entities[].tag" | sort`; do echo "team = $team"; done
 
-----------------------
+-------------------------
 Iterate over all services
-----------------------
+-------------------------
 
 .. code:: bash
 
  for service in `cortex catalog list -t service | jq -r ".entities[].tag" | sort`; do echo "service = $service"; done
 
-----------------------
+-----------------------------
 Get git details for a service
-----------------------
+-----------------------------
 
 .. code:: bash
 
@@ -279,9 +280,9 @@ Get git details for a service
    "provider": "github"
  }
 
-----------------------
+----------------------------------------------------
 Add a suffix to all x-cortex-tag values for services
-----------------------
+----------------------------------------------------
 
 .. code:: bash
 
@@ -299,9 +300,9 @@ This example combines several CLI commands:
 **NOTE:** Any cortex commands that accept a file as input can also receive input from stdin by specifying a "-" after the -f
 parameter.
 
-----------------------
+--------------------------
 Add a group to all domains
-----------------------
+--------------------------
 
 .. code:: bash
 
@@ -310,9 +311,9 @@ Add a group to all domains
  done
 
 
-----------------------
+---------------------------
 Remove a group from domains
-----------------------
+---------------------------
 
 .. code:: bash
 
@@ -320,17 +321,17 @@ Remove a group from domains
     cortex catalog descriptor -y -t ${domain} | yq -e '.info.x-cortex-groups -= [ "my-old-group" ]' | cortex catalog create -f-
  done
 
-----------------------
+---------------------------------------
 Add a domain parent to a single service
-----------------------
+---------------------------------------
 
 .. code:: bash
 
  cortex catalog descriptor -y -t my-service | yq -e '.info.x-cortex-domain-parents += { "tag": "my-new-domain" }' | cortex catalog create -f-
 
-----------------------
+-------------------------------------------
 Add a github group as an owner to a service
-----------------------
+-------------------------------------------
 
 .. code:: bash
 

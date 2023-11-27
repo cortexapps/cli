@@ -1,13 +1,11 @@
 name: Publish to hub.docker.com
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'cortexapps_cli/cortex.py'
-      - 'docker/**'
-      - '.github/workflows/publish-docker.yml'
+  workflow_run:
+    workflows:
+      - [Publish to pypi.org]
+    types:
+      - completed
 
 # Note: we will change DOCKER_USERNAME to cortexapps once we create this
 # account in hub.docker.com.  Publishing to my own account for now to 
@@ -23,6 +21,9 @@ jobs:
 
     - name: checkout source
       uses: actions/checkout@v3
+
+    - name: Get tags
+      run: git fetch --tags origin
 
     - name: Get version
       run: |
