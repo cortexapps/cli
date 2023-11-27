@@ -7,7 +7,7 @@ license = "MIT"
 authors = [
     "Cortex Apps <cortexapps@cortex.io>",
 ]
-readme = "README.pypi.md"
+readme = "README.rst"
 packages = [{include = "cortexapps_cli"}]
 
 classifiers = [
@@ -40,7 +40,7 @@ build-backend = "poetry.core.masonry.api"
 Homepage = "https://github.com/cortexapps/cli"
 "Bug Tracker" = "https://github.com/cortexapps/cli/issues"
 "Changes" = " https://github.com/cortexapps/cli/blob/main/HISTORY.md"
-"Documentation" = " https://github.com/cortexapps/cli/blob/main/README.md"
+"Documentation" = " https://github.com/cortexapps/cli/blob/main/README.rst"
 
 [tool.pytest.ini_options]
 minversion = "7.4.3"
