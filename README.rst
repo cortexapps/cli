@@ -1,3 +1,5 @@
+|made-with-python| |PyPI version shields.io| |PyPI download month| |PyPI license| |PyPI pyversions|
+
 """""""""""""""""
 Cortexapps CLI
 """""""""""""""""
@@ -336,3 +338,17 @@ Add a github group as an owner to a service
 .. code:: bash
 
  cortex catalog descriptor -y -t my-service | yq -e '.info.x-cortex-owners += { "name": "my-org/my-team", "type": "GROUP", "provider": "GITHUB" }' | cortex catalog create -f-
+
+.. |PyPI download month| image:: https://img.shields.io/pypi/dm/cortexapps-cli.svg
+    :target: https://pypi.python.org/pypi/cortexapps-cli/
+.. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/cortexapps-cli.svg
+    :target: https://pypi.python.org/pypi/cortexapps-cli/
+.. |PyPI license| image:: https://img.shields.io/pypi/l/cortexapps-cli.svg
+    :target: https://pypi.python.org/pypi/cortexapps-cli/
+.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/cortexapps-cli.svg
+    :target: https://pypi.python.org/pypi/cortexapps-cli/
+.. |PyPI status| image:: https://img.shields.io/pypi/status/cortexapps-cli.svg
+    :target: https://pypi.python.org/pypi/cortexapps-cli/
+.. |made-with-python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+   :target: https://www.python.org/
+
