@@ -1,10 +1,9 @@
 name: Publish to hub.docker.com
 
 on:
-  workflow_dispatch:
   workflow_run:
     workflows:
-      - [Publish to pypi.org]
+      - ["Publish to pypi.org"]
     types:
       - completed
 
