@@ -398,7 +398,7 @@ def add_argument_name(subparser, help_text='The name of the thing'):
             metavar=''
     )
 
-def add_argument_page(subparser, help_text='Page number of results to retrieve'):
+def add_argument_page(subparser, help_text='Page number to return, 0 indexed'):
     subparser.add_argument(
             '-p',
             '--page',
@@ -546,6 +546,15 @@ def add_argument_wait(subparser, help_text='Wait for query to complete.'):
             required=False,
             default=False,
             action='store_true'
+    )
+def add_argument_yaml(subparser, help_text='When true, returns the YAML representation of the descriptor.'):
+    subparser.add_argument(
+            '-y',
+            '--yaml',
+            help=help_text,
+            action='store_true',
+            default=False,
+            required=False
     )
 
 def debug_json(r, method):
@@ -871,9 +880,12 @@ def subparser_catalog_opts(subparsers):
     subparser_catalog_create_or_update(sp)
     subparser_catalog_delete(sp)
     subparser_catalog_delete_by_type(sp)
-    subparser_catalog_list(sp)
     subparser_catalog_descriptor(sp)
     subparser_catalog_details(sp)
+    subparser_catalog_gitops_logs(sp)
+    subparser_catalog_list(sp)
+    subparser_catalog_list_descriptors(sp)
+    subparser_catalog_scorecard_scores(sp)
     subparser_catalog_unarchive(sp)
 
 def subparser_catalog_archive(subparser):
@@ -931,6 +943,14 @@ def subparser_catalog_delete_by_type(subparser):
 
 def catalog_delete_by_type(args):
     delete("/api/v1/catalog" + parse_opts(args))
+
+def subparser_catalog_gitops_logs(subparser):
+    sp = subparser.add_parser('gitops-logs', help='Retrieve most recent GitOps log for entity')
+    add_argument_tag(sp)
+    sp.set_defaults(func=catalog_gitops_logs)
+
+def catalog_gitops_logs(args):
+    get("/api/v1/catalog/" + args.tag + "/gitops-logs")
 
 def subparser_catalog_list(subparser):
     sp = subparser.add_parser(
@@ -990,22 +1010,42 @@ def subparser_catalog_list(subparser):
             action='store_true',
             required=False
     )
+    sp.add_argument(
+            '-l',
+            '--includeLinks',
+            help='Whether to include links for each entity in the response',
+            default=False,
+            action='store_true',
+            required=False
+    )
+    sp.add_argument(
+            '-wo',
+            '--includeOwners',
+            help='Whether to include ownership information for each entity in the response',
+            default=False,
+            action='store_true',
+            required=False
+    )
     sp.set_defaults(func=catalog_list)
 
 def catalog_list(args):
     get("/api/v1/catalog" + parse_opts(args))
 
+def subparser_catalog_list_descriptors(subparser):
+    sp = subparser.add_parser('list-descriptors', help='List entity descriptors')
+    add_argument_page_size(sp)
+    add_argument_page(sp)
+    add_argument_types(sp, required=False)
+    add_argument_yaml(sp, help_text="When true, returns the YAML representation of the descriptors.")
+    sp.set_defaults(func=catalog_list_descriptors)
+
+def catalog_list_descriptors(args):
+    get("/api/v1/catalog/descriptors" + parse_opts(args))
+
 def subparser_catalog_descriptor(subparser):
     sp = subparser.add_parser('descriptor', help='Retrieve entity descriptor')
     add_argument_tag(sp)
-    sp.add_argument(
-            '-y',
-            '--yaml',
-            help='When true, returns the YAML representation of the descriptor',
-            action='store_true',
-            default=False,
-            required=False
-    )
+    add_argument_yaml(sp)
     sp.set_defaults(func=catalog_descriptor)
 
 def catalog_descriptor(args):
@@ -1026,6 +1066,14 @@ def subparser_catalog_details(subparser):
 
 def catalog_details(args):
     get("/api/v1/catalog/" + args.tag + parse_opts(args))
+
+def subparser_catalog_scorecard_scores(subparser):
+    sp = subparser.add_parser('scorecard-scores', help='Retrieve entity Scorecard scores')
+    add_argument_tag(sp)
+    sp.set_defaults(func=catalog_scorecard_scores)
+
+def catalog_scorecard_scores(args):
+    get("/api/v1/catalog/" + args.tag + "/scorecards")
 
 def subparser_catalog_unarchive(subparser):
     sp = subparser.add_parser('unarchive', help='unarchive an entity')
@@ -3566,7 +3614,3 @@ def cli(argv=sys.argv[1:]):
 
 if __name__ == '__main__':
     sys.exit(cli())
-
-
-
-

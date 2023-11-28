@@ -17,6 +17,13 @@ info:
   x-cortex-custom-metadata:
     foo: bar
     testField: 123
+  x-cortex-link:
+  - name: Cortex Homepage
+    type: DOCUMENTATION
+    url: https://cortex.io
+  - name: Cortex Documentation
+    type: DOCUMENTATION
+    url: https://docs.cortex.io
 paths:
   /:
     get:

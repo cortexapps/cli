@@ -1,7 +1,16 @@
 Release History
 ===============
 
-0.10.0 (2023-11-27)
+0.12.0 (2023-11-27)
+------------------
+
+**Improvements**
+- add includeLinks and includeOwners options in catalog list
+- add catalog list-descriptors
+- add catalog gitops-logs
+- add catalog scorecard-scores
+
+0.11.0 (2023-11-27)
 ------------------
 
 **Improvements**
