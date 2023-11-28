@@ -61,6 +61,7 @@ jobs:
         type:        "DEPLOY"
         url:         "${{ env.URL }}"
   docker:
+    needs: pypi
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
