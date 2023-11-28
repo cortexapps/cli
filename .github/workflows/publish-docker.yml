@@ -4,6 +4,8 @@ on:
   workflow_run:
     workflows:
       - ["Publish to pypi.org"]
+    branches:
+      - main
     types:
       - completed
 
