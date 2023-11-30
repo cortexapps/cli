@@ -6,8 +6,7 @@ on:
       - main
     paths:
       - 'cortexapps_cli/cortex.py'
-      - '.github/workflows/publish-pypi.yml'
-      - '.github/workflows/publish-docker.yml'
+      - '.github/workflows/publish.yml'
 
 env:
   CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
@@ -47,6 +46,10 @@ jobs:
 
     - name: Set variables needed for Cortex deploy API
       run: |
+         author=$(echo "$GITHUB_CONTEXT" | jq -r ".event.head_commit.author.name")
+         email=$(echo "$GITHUB_CONTEXT" | jq -r ".event.head_commit.author.email")
+         echo "AUTHOR=${author}" >> $GITHUB_ENV
+         echo "EMAIL=${email}" >> $GITHUB_ENV
          echo "SHA=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')" >> $GITHUB_ENV
          echo "URL=https://pypi.org/project/cortexapps-cli/${{ env.VERSION }}/" >> $GITHUB_ENV
 
@@ -54,12 +57,14 @@ jobs:
     - name: Post pypi deploy event to Cortex
       uses: ./.github/actions/cortex-deploys
       with:
-        tag:         "cli"
-        environment: "PyPI.org"
-        sha:         "${{ env.SHA }}"
-        title:       "${{ env.VERSION }}"
-        type:        "DEPLOY"
-        url:         "${{ env.URL }}"
+        deployer-email: "${{ env.EMAIL }}"
+        deployer-name:  "${{ env.AUTHOR }}"
+        environment:    "PyPI.org"
+        sha:            "${{ env.SHA }}"
+        tag:            "cli"
+        title:          "${{ env.VERSION }}"
+        type:           "DEPLOY"
+        url:            "${{ env.URL }}"
   docker:
     needs: pypi
     runs-on: ubuntu-latest

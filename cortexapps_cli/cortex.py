@@ -1473,10 +1473,12 @@ def subparser_deploys_opts(subparsers):
     sp = p.add_subparsers(help='deploys help')
 
     subparser_deploys_add(sp)
-    subparser_deploys_list(sp)
     subparser_deploys_delete(sp)
     subparser_deploys_delete_all(sp)
+    subparser_deploys_delete_by_uuid(sp)
     subparser_deploys_delete_filter(sp)
+    subparser_deploys_list(sp)
+    subparser_deploys_update_by_uuid(sp)
 
 def subparser_deploys_add(subparser):
     sp = subparser.add_parser('add', help='Add a deployment to an entity')
@@ -1514,6 +1516,15 @@ def subparser_deploys_delete_all(subparser):
 def deploys_delete_all(args):
     delete("/api/v1/catalog/deploys/all")
 
+def subparser_deploys_delete_by_uuid(subparser):
+    sp = subparser.add_parser('delete-by-uuid', help='Delete deployment by UUID')
+    add_argument_tag(sp)
+    add_argument_uuid(sp, help_text="UUID of deploy to delete")
+    sp.set_defaults(func=deploys_delete_by_uuid)
+
+def deploys_delete_by_uuid(args):
+    delete("/api/v1/catalog/" + args.tag + "/deploys/" + args.uuid)
+
 def subparser_deploys_delete_filter(subparser):
     sp = subparser.add_parser('delete-filter', help='Delete deployments for all entities based on a filter')
     add_argument_environment(sp)
@@ -1523,6 +1534,17 @@ def subparser_deploys_delete_filter(subparser):
 
 def deploys_delete_filter(args):
     delete("/api/v1/catalog/deploys" + parse_opts(args))
+
+def subparser_deploys_update_by_uuid(subparser):
+    sp = subparser.add_parser('update-by-uuid', help='Update deployment by UUID')
+    add_argument_file(sp, 'File containing JSON-formatted deployment details')
+    add_argument_tag(sp)
+    add_argument_uuid(sp, help_text="UUID of deploy to update")
+    sp.set_defaults(func=deploys_update_by_uuid)
+
+def deploys_update_by_uuid(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    put("/api/v1/catalog/" + args.tag + "/deploys/" + args.uuid, headers, payload=read_file(args))
 # Deploys end
 
 # Discovery Audit start
@@ -2395,7 +2417,7 @@ def subparser_integrations_newrelic_add(subparser):
 
 def integrations_newrelic_add(args):
     headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    post("/api/v1/newrelic/configuration/", headers, payload=read_file(args))
+    post("/api/v1/newrelic/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_newrelic_add_multiple(subparser):
     sp = subparser.add_parser('add-multiple', 
