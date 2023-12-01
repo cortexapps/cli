@@ -1694,6 +1694,9 @@ def subparser_integrations_opts(subparsers):
     ssp = sp.add_parser('gitlab', help='GitLab integration')
     subparser_integrations_gitlab_opts(ssp)
 
+    ssp = sp.add_parser('incidentio', help='Incident.io integration')
+    subparser_integrations_incidentio_opts(ssp)
+
     ssp = sp.add_parser('launchdarkly', help='Launchdarkly integration')
     subparser_integrations_launchdarkly_opts(ssp)
 
@@ -2285,6 +2288,133 @@ def subparser_integrations_datadog_validate_all(subparser):
 def integrations_datadog_validate_all(args):
     post("/api/v1/datadog/configuration/validate")
 # Integrations-datadog end
+
+# Integrations-incidentio start
+def subparser_integrations_incidentio_opts(subparser):
+    sp = subparser.add_subparsers(help='integrations - incident.io help')
+
+    subparser_integrations_incidentio_add(sp)
+    subparser_integrations_incidentio_add_multiple(sp)
+    subparser_integrations_incidentio_delete(sp)
+    subparser_integrations_incidentio_delete_all(sp)
+    subparser_integrations_incidentio_get(sp)
+    subparser_integrations_incidentio_get_all(sp)
+    subparser_integrations_incidentio_get_default(sp)
+    subparser_integrations_incidentio_update(sp)
+    subparser_integrations_incidentio_validate(sp)
+    subparser_integrations_incidentio_validate_all(sp)
+
+def subparser_integrations_incidentio_add(subparser):
+    sp = subparser.add_parser('add', 
+            help='Add a single configuration',
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "alias": "string",
+                  "apiKey": "string",
+                  "isDefault": true
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted incidentio configuration')
+    sp.set_defaults(func=integrations_incidentio_add)
+
+def integrations_incidentio_add(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/incidentio/configuration", headers, payload=read_file(args))
+
+def subparser_integrations_incidentio_add_multiple(subparser):
+    sp = subparser.add_parser('add-multiple', 
+            help='Add multiple configurations', 
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "configurations": [
+                    {
+                      "alias": "string",
+                      "apiKey": "string",
+                      "isDefault": true
+                    },
+                    {
+                      "alias": "string",
+                      "apiKey": "string",
+                      "isDefault": true
+                    }
+                  ]
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted incidentio configurations')
+    sp.set_defaults(func=integrations_incidentio_add_multiple)
+
+def integrations_incidentio_add_multiple(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/incidentio/configurations", headers, payload=read_file(args))
+
+def subparser_integrations_incidentio_delete(subparser):
+    sp = subparser.add_parser('delete', help='Delete a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_incidentio_delete)
+
+def integrations_incidentio_delete(args):
+    delete("/api/v1/incidentio/configuration/" + args.alias)
+
+def subparser_integrations_incidentio_delete_all(subparser):
+    sp = subparser.add_parser('delete-all', help='Delete all configurations')
+    sp.set_defaults(func=integrations_incidentio_delete_all)
+
+def integrations_incidentio_delete_all(args):
+    delete("/api/v1/incidentio/configurations")
+
+def subparser_integrations_incidentio_get(subparser):
+    sp = subparser.add_parser('get', help='Get a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_incidentio_get)
+
+def integrations_incidentio_get(args):
+    get("/api/v1/incidentio/configuration/" + args.alias)
+
+def subparser_integrations_incidentio_get_all(subparser):
+    sp = subparser.add_parser('get-all', help='Get all configurations')
+    sp.set_defaults(func=integrations_incidentio_get_all)
+
+def integrations_incidentio_get_all(args):
+    get("/api/v1/incidentio/configurations")
+
+def subparser_integrations_incidentio_get_default(subparser):
+    sp = subparser.add_parser('get-default', help='Get default configuration')
+    sp.set_defaults(func=integrations_incidentio_get_default)
+
+def integrations_incidentio_get_default(args):
+    get("/api/v1/incidentio/default-configuration")
+
+def subparser_integrations_incidentio_update(subparser):
+    sp = subparser.add_parser('update', help='WARNING: Updating aliases for configurations or changing the default configuration could cause entity YAMLs that use this integration to break.')
+    add_argument_alias(sp)
+    add_argument_file(sp, 'File containing JSON-formatted incidentio configuration')
+    sp.set_defaults(func=integrations_incidentio_update)
+
+def integrations_incidentio_update(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    put("/api/v1/incidentio/configuration/" + args.alias, headers, payload=read_file(args))
+
+def subparser_integrations_incidentio_validate(subparser):
+    sp = subparser.add_parser('validate', help='Validate a single configurations')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_incidentio_validate)
+
+def integrations_incidentio_validate(args):
+    post("/api/v1/incidentio/configuration/validate/" + args.alias)
+
+def subparser_integrations_incidentio_validate_all(subparser):
+    sp = subparser.add_parser('validate-all', help='Validate all configurations')
+    sp.set_defaults(func=integrations_incidentio_validate_all)
+
+def integrations_incidentio_validate_all(args):
+    post("/api/v1/incidentio/configuration/validate")
+# Integrations-incidentio end
 
 # Integrations-launchdarkly start
 def subparser_integrations_launchdarkly_opts(subparser):

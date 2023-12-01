@@ -1,10 +1,18 @@
 Release History
 ===============
 
+0.13.0 (2023-11-30)
+------------------
+
+**Improvements**
+- add incident.io integration
+
 0.12.0 (2023-11-27)
 ------------------
 
 **Improvements**
+- add deploys update-by-uuid
+- add deploys delete-by-uuid
 - add includeLinks and includeOwners options in catalog list
 - add catalog list-descriptors
 - add catalog gitops-logs
