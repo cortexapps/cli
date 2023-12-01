@@ -16,6 +16,10 @@ env:
 jobs:
   pypi:
     runs-on: ubuntu-latest
+    outputs:
+      EMAIL:   ${{ steps.git-details.outputs.EMAIL }}
+      PUSHER:  ${{ steps.git-details.outputs.PUSHER }}
+      VERSION: ${{ steps.git-details.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v3
 
@@ -35,30 +39,35 @@ jobs:
         python -m pip install --upgrade pip
         pip install poetry
 
-    - name: Publish
+    - name: Git details about version
+      id: git-details
       run: |
-        version=$(git describe --tags --abbrev=0)
-        echo "VERSION=${version}" >> $GITHUB_ENV
+         version=$(git describe --tags --abbrev=0)
+         echo "VERSION=${version}" >> $GITHUB_ENV
+         echo "VERSION=${version}" >> $GITHUB_OUTPUT
+         pusher=$(echo "$GITHUB_CONTEXT" | jq -r ".event.pusher.name")
+         email=$(echo "$GITHUB_CONTEXT" | jq -r ".event.pusher.email")
+         echo "PUSHER=${pusher}" >> $GITHUB_ENV
+         echo "PUSHER=${pusher}" >> $GITHUB_OUTPUT
+         echo "EMAIL=${email}" >> $GITHUB_ENV
+         echo "EMAIL=${email}" >> $GITHUB_OUTPUT
+         echo "SHA=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')" >> $GITHUB_ENV
+         echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_ENV
+
+    - name: Publish
+      id: publish
+      run: |
         poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-        poetry version $(git describe --tags --abbrev=0)
+        poetry version ${{ env.VERSION }}
         poetry build
         poetry publish
-
-    - name: Set variables needed for Cortex deploy API
-      run: |
-         author=$(echo "$GITHUB_CONTEXT" | jq -r ".event.head_commit.author.name")
-         email=$(echo "$GITHUB_CONTEXT" | jq -r ".event.head_commit.author.email")
-         echo "AUTHOR=${author}" >> $GITHUB_ENV
-         echo "EMAIL=${email}" >> $GITHUB_ENV
-         echo "SHA=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')" >> $GITHUB_ENV
-         echo "URL=https://pypi.org/project/cortexapps-cli/${{ env.VERSION }}/" >> $GITHUB_ENV
 
     - uses: actions/checkout@v4
     - name: Post pypi deploy event to Cortex
       uses: ./.github/actions/cortex-deploys
       with:
         deployer-email: "${{ env.EMAIL }}"
-        deployer-name:  "${{ env.AUTHOR }}"
+        deployer-name:  "${{ env.PUSHER }}"
         environment:    "PyPI.org"
         sha:            "${{ env.SHA }}"
         tag:            "cli"
@@ -71,10 +80,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Get version
+    - name: Get version info
+      env:
+        EMAIL: ${{needs.pypi.outputs.EMAIL}}
+        PUSHER: ${{needs.pypi.outputs.PUSHER}}
+        VERSION: ${{needs.pypi.outputs.VERSION}}
       run: |
-        version=$(git describe --tags --abbrev=0)
-        echo "DOCKER_IMAGE=${{ env.DOCKER_USERNAME }}/cli:${version}" >> $GITHUB_ENV
+        echo "EMAIL=${EMAIL}" >> $GITHUB_ENV
+        echo "PUSHER=${PUSHER}" >> $GITHUB_ENV
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE=${{ env.DOCKER_USERNAME }}/cli:${VERSION}" >> $GITHUB_ENV
 
     - name: build docker image
       working-directory: ./docker
@@ -93,16 +108,6 @@ jobs:
         ignore-unfixed: true
         severity: CRITICAL,HIGH
 
-    - name: Notify slack fail
-      if: failure()
-      uses: voxmedia/github-action-slack-notify-build@v1
-      with:
-        channel: cli
-        status: FAILED
-        color: danger
-      env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_ERROR_REPORTING_BOT_TOKEN }}
-
     - name: push docker image
       run: |
         docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
@@ -112,9 +117,11 @@ jobs:
     - name: Post docker deploy event to Cortex
       uses: ./.github/actions/cortex-deploys
       with:
-        tag:         "cli"
-        environment: "docker"
-        sha:         "${{ env.DOCKER_SHA }}"
-        title:       "${{ env.VERSION }}"
-        type:        "DEPLOY"
-        url:         "${{ env.URL }}"
+        deployer-email: "${{ env.EMAIL }}"
+        deployer-name:  "${{ env.PUSHER }}"
+        environment:    "docker"
+        sha:            "${{ env.DOCKER_SHA }}"
+        tag:            "cli"
+        title:          "${{ env.VERSION }}"
+        type:           "DEPLOY"
+        url:            "${{ env.URL }}"
