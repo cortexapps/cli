@@ -51,8 +51,10 @@ jobs:
          echo "PUSHER=${pusher}" >> $GITHUB_OUTPUT
          echo "EMAIL=${email}" >> $GITHUB_ENV
          echo "EMAIL=${email}" >> $GITHUB_OUTPUT
-         echo "SHA=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')" >> $GITHUB_ENV
          echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_ENV
+         echo "$GITHUB_CONTEXT"
+         echo "pusher = ${pusher}"
+         echo "email = ${email}"
 
     - name: Publish
       id: publish
@@ -61,6 +63,8 @@ jobs:
         poetry version ${{ env.VERSION }}
         poetry build
         poetry publish
+        sha=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')
+        echo "SHA=${sha}" >> $GITHUB_ENV
 
     - uses: actions/checkout@v4
     - name: Post pypi deploy event to Cortex

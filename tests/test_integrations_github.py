@@ -6,6 +6,7 @@ import os
 from string import Template
 import json
 import pytest
+import responses
 
 def github_personal_input(tmp_path):
     gh_pat = os.getenv('GH_PAT')
@@ -55,6 +56,8 @@ def test_integrations_github_personal(capsys, tmp_path):
 
     f = github_personal_input(tmp_path)
     cli(["integrations", "github", "add-personal", "-f", str(f)])
+    cli(["integrations", "github", "update-personal", "-a", "github-personal-test-001", "-f", str(f)])
+    cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
 
 def test_integrations_github(tmp_path, capsys):
     out = _github_configurations(capsys)
@@ -64,17 +67,14 @@ def test_integrations_github(tmp_path, capsys):
     f = github_app_input(tmp_path)
     cli(["integrations", "github", "add", "-f", str(f)])
     cli(["integrations", "github", "get", "-a", "github-test-3"])
-    cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
     cli(["integrations", "github", "get-all"])
     cli(["integrations", "github", "get-default"])
     cli(["integrations", "github", "validate", "-a", "github-test-3"])
     cli(["integrations", "github", "validate-all"])
 
-    f = github_personal_input(tmp_path)
-    cli(["integrations", "github", "update-personal", "-a", "github-personal-test-001", "-f", str(f)])
-
     cli(["integrations", "github", "update", "-a", "github-test-3", "-f", "tests/test_integrations_github_update.json"])
 
-# Intentionally missing delete-all test because I didn't want to destroy my test env
-# Can add this in once we have a better process, an automated process to create github apps
-# cli(["integrations", "github", "delete-all"])
+@responses.activate
+def test_integrations_github_delete_all():
+    responses.add(responses.DELETE, "https://api.getcortexapp.com/api/v1/github/configurations", status=200)
+    cli(["integrations", "github", "delete-all"])

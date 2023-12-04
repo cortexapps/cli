@@ -1,22 +1,28 @@
 Release History
 ===============
 
+0.14.0 (2023-12-01)
+------------------
+
+**Improvements**
+- Environment variable support for CORTEX_API_KEY, CORTEX_BASE_URL.
+
 0.13.0 (2023-11-30)
 ------------------
 
 **Improvements**
-- add incident.io integration
+- Add incident.io integration
 
 0.12.0 (2023-11-27)
 ------------------
 
 **Improvements**
-- add deploys update-by-uuid
-- add deploys delete-by-uuid
-- add includeLinks and includeOwners options in catalog list
-- add catalog list-descriptors
-- add catalog gitops-logs
-- add catalog scorecard-scores
+- Add deploys update-by-uuid
+- Add deploys delete-by-uuid
+- Add includeLinks and includeOwners options in catalog list
+- Add catalog list-descriptors
+- Add catalog gitops-logs
+- Add catalog scorecard-scores
 
 0.11.0 (2023-11-27)
 ------------------
@@ -95,4 +101,3 @@ Release History
 
 **Bugfixes**
 - Fix export command to deal with entity types that may not exist.
-
