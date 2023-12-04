@@ -83,8 +83,6 @@ def check_config_file(config_file, replace_string):
     if not os.path.isfile(config_file):
         print("Cortex CLI config file " + config_file + " does not exist.  Create (Y/N)?")
         response = input()
-        print("response type = " + str(type(response)))
-        print("response = " + response)
         if response == "Y" or response == "y":
             if not os.path.isdir(os.path.dirname(config_file)):
                os.mkdir(os.path.dirname(config_file), 0o700)
@@ -112,44 +110,45 @@ def check_config_file(config_file, replace_string):
         else:
             sys.exit(0)
         
-
+# If CORTEX_API_KEY environment variable is defined, will not check for existence of a cortex
+# config file.
 def get_config(config, args, argv, parser, replace_string):
-    check_config_file(args.config, replace_string)
+    if os.environ.get('CORTEX_API_KEY'):
+        cortex_base_url = os.environ.get('CORTEX_BASE_URL', default='https://api.getcortexapp.com')
+        config.update({"url": cortex_base_url})
+        config.update({"api_key": os.environ.get("CORTEX_API_KEY")})
+        config.update({"config_file": "ENVIRONMENT"})
+    else:
+        check_config_file(args.config, replace_string)
 
-    config_parser = configparser.ConfigParser()
-    config_parser.read(args.config)
-    tenant_config = config_parser[args.tenant]
-    api_key = tenant_config.get('api_key')
+        config_parser = configparser.ConfigParser()
+        config_parser.read(args.config)
+        tenant_config = config_parser[args.tenant]
+        api_key = tenant_config.get('api_key')
 
-    # https://github.com/cortexapps/cli/issues/20
-    # Deal with case where user may have added key with quotes.
-    # Don't want to do a global replace in case there is a quote in the key, so
-    # only remove if found at begining or end of the string.
-    api_key = api_key.lstrip('\"')
-    api_key = api_key.rstrip('\"')
-    api_key = api_key.lstrip("\'")
-    api_key = api_key.rstrip("\'")
+        # https://github.com/cortexapps/cli/issues/20
+        # Deal with case where user may have added key with quotes.
+        # Don't want to do a global replace in case there is a quote in the key, so
+        # only remove if found at begining or end of the string.
+        api_key = api_key.lstrip('\"')
+        api_key = api_key.rstrip('\"')
+        api_key = api_key.lstrip("\'")
+        api_key = api_key.rstrip("\'")
 
-    if api_key == replace_string:
-        print("Config file " + args.config + " has not been updated to include your Cortex API key.")
-        print("Add your key to the file and then retry your command.")
-        sys.exit(2)
-    config.update({"url": tenant_config.get('base_url', 'https://api.getcortexapp.com')})
-    config.update({"api_key": api_key})
-    config.update({"config_file": args.config})
+        if api_key == replace_string:
+            print("Config file " + args.config + " has not been updated to include your Cortex API key.")
+            print("Add your key to the file and then retry your command.")
+            sys.exit(2)
+        config.update({"url": tenant_config.get('base_url', 'https://api.getcortexapp.com')})
+        config.update({"api_key": api_key})
+        config.update({"config_file": args.config})
 
     config.update({"debug": args.debug})
     config.update({"noObfuscate": args.noObfuscate})
 
-    if args.cliAlias != None:
-        key = args.tenant + '.aliases'
-        argv.remove("-a")
-        argv.remove(args.cliAlias)
-        for word in config_parser[key][args.cliAlias].split():
-            argv.append(word)
-    args = parser.parse_args(argv)
+    #args = parser.parse_args(argv)
 
-    return args
+    #return args
 
 def add_argument_accountId(subparser):
     subparser.add_argument(
@@ -576,7 +575,10 @@ def exit(r, method, expected_rc=200):
     if r.status_code != expected_rc:
         sys.stderr.write(r.reason + "\n")
         if r.status_code == 401:
-            sys.stderr.write("\nCheck your api_key in " + config['config_file'] + ".\n")
+            if config['config_file'] == "ENVIRONMENT":
+                sys.stderr.write("\nCheck value of environment variable CORTEX_API_KEY.\n")
+            else:
+                sys.stderr.write("\nCheck your api_key in " + config['config_file'] + ".\n")
         debug_json(r, method)
         sys.exit(r.status_code)
     else:
@@ -617,7 +619,7 @@ def parse_opts(args):
     opts = ""
 
     for k, v in dict(vars(args)).items():
-        if k in ['tenant', 'cliAlias', 'debug', 'noObfuscate', 'func', 'config']:
+        if k in ['tenant', 'debug', 'noObfuscate', 'func', 'config']:
             continue
         if len(opts) == 0:
            char="?"
@@ -3729,7 +3731,6 @@ def cli(argv=sys.argv[1:]):
             epilog=textwrap.dedent('''\
                 Type 'man cortex' for additional details.
                 '''))
-    parser.add_argument('-a', '--cliAlias', help='get CLI parms from [TENANT.aliases] in config file',metavar='')
     parser.add_argument('-c', '--config', help='Config location, default = ~/.cortex/config', default=os.path.expanduser('~') + '/.cortex/config')
     parser.add_argument('-d', '--debug', help='Writes request debug information as JSON to stderr', action='store_true')
     parser.add_argument('-n', '--noObfuscate', help='Do not obfuscate bearer token when debugging', action='store_true')
@@ -3761,7 +3762,8 @@ def cli(argv=sys.argv[1:]):
     replace_string = "REPLACE_WITH_YOUR_CORTEX_API_KEY"
     validate_input(argv, parser)
     args = parser.parse_args(argv)
-    args = get_config(config, args, argv, parser, replace_string)
+    #args = get_config(config, args, argv, parser, replace_string)
+    get_config(config, args, argv, parser, replace_string)
     args.func(args)
 
 if __name__ == '__main__':

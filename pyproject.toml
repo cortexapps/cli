@@ -43,8 +43,11 @@ Homepage = "https://github.com/cortexapps/cli"
 "Documentation" = " https://github.com/cortexapps/cli/blob/main/README.rst"
 
 [tool.pytest.ini_options]
+markers = [
+    "serial",
+]
 minversion = "7.4.3"
-addopts = "--cov=cortexapps_cli --cov-report term-missing"
+addopts = "--cov=cortexapps_cli --cov-append --cov-report term-missing"
 testpaths = [
     "tests"
 ]
