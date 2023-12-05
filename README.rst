@@ -108,6 +108,20 @@ For example, to list all entities in the :code:`my-test` tenant, run the followi
 
 If the config file does not exist, the CLI will prompt you to create it.
 
+----------------------
+Environment Variables
+----------------------
+
+The CLI supports the following environment variables.  If provided, the Cortex config file will not be read.
+
+- CORTEX_API_KEY
+- CORTEX_BASE_URL - this is optional if using Cortex cloud; defaults to `https://app.getcortexapp.com`
+
+Example:
+
+.. code-block::
+
+  export CORTEX_API_KEY=<YOUR_API_KEY>
 
 ----------------------
 Commands
