@@ -338,6 +338,16 @@ Add a github group as an owner to a service
 
  cortex catalog descriptor -y -t my-service | yq -e '.info.x-cortex-owners += { "name": "my-org/my-team", "type": "GROUP", "provider": "GITHUB" }' | cortex catalog create -f-
 
+-----------------------------------------------------------------------------
+Modify all github basepath values for domain entitities, changing '-' to '_'
+-----------------------------------------------------------------------------
+
+.. code:: bash
+
+  for domain in `cortex catalog list -t domain | jq -r ".entities[].tag"`; do 
+     cortex catalog descriptor -y -t ${domain} | yq ".info.x-cortex-git.github.basepath |= sub(\"-\", \"_\")" | cortex catalog create -f-
+  done
+
 ====================================
 
 .. |PyPI download month| image:: https://img.shields.io/pypi/dm/cortexapps-cli.svg
