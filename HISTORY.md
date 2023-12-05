@@ -1,6 +1,13 @@
 Release History
 ===============
 
+0.15.0 (2023-12-05)
+------------------
+
+**Improvements**
+- use cortexapps CLI docker image for writing Cortex deploy events
+- tag docker image with latest and version tag 
+
 0.14.0 (2023-12-01)
 ------------------
 

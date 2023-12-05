@@ -41,6 +41,8 @@ jobs:
 
     - name: Git details about version
       id: git-details
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
          version=$(git describe --tags --abbrev=0)
          echo "VERSION=${version}" >> $GITHUB_ENV
@@ -94,6 +96,7 @@ jobs:
         echo "PUSHER=${PUSHER}" >> $GITHUB_ENV
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
         echo "DOCKER_IMAGE=${{ env.DOCKER_USERNAME }}/cli:${VERSION}" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE_LATEST=${{ env.DOCKER_USERNAME }}/cli:latest" >> $GITHUB_ENV
 
     - name: build docker image
       working-directory: ./docker
@@ -115,17 +118,38 @@ jobs:
     - name: push docker image
       run: |
         docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
+        docker tag ${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_IMAGE_LATEST }}
         docker push ${{ env.DOCKER_IMAGE }}
+        docker push ${{ env.DOCKER_IMAGE_LATEST }}
 
-    - uses: actions/checkout@v4
+  docker-deploy-event:
+    needs: docker
+    runs-on: ubuntu-latest
+    container:
+      image: jeffschnittercortex/cli:latest
+    steps:
+
     - name: Post docker deploy event to Cortex
-      uses: ./.github/actions/cortex-deploys
-      with:
-        deployer-email: "${{ env.EMAIL }}"
-        deployer-name:  "${{ env.PUSHER }}"
-        environment:    "docker"
-        sha:            "${{ env.DOCKER_SHA }}"
-        tag:            "cli"
-        title:          "${{ env.VERSION }}"
-        type:           "DEPLOY"
-        url:            "${{ env.URL }}"
+      env:
+        EMAIL:   ${{needs.pypi.outputs.EMAIL}}
+        PUSHER:  ${{needs.pypi.outputs.PUSHER}}
+        SHA:     ${{needs.docker.outputs.SHA}}
+        URL:     ${{needs.docker.outputs.URL}}
+        VERSION: ${{needs.pypi.outputs.VERSION}}
+      run: |
+        cat << EOF > /tmp/deploy.json
+        {
+          "customData": {},
+          "deployer": {
+            "email": "${{ env.EMAIL }}",
+            "name": "${{ env.PUSHER }}"
+          },
+          "environment": "docker",
+          "sha": "       ${{ env.SHA }}",
+          "timestamp":   "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
+          "title":       "${{ env.VERSION }}",
+          "type":        "DEPLOY",
+          "url":         "${{ env.URL }}"
+        }
+        EOF
+        cortex deploys add -t cli -f /tmp/deploy.json
