@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.16.0 (2023-12-06)
+------------------
+
+**Improvements**
+- add integrations azure-resources
+
 0.15.0 (2023-12-05)
 ------------------
 
