@@ -695,9 +695,8 @@ def export(args):
     for t in data['definitions']:
         resource_types_list.append(t['type'])
 
-    resource_types="service,domain,team"
+    resource_types="service,domain"
     for resource_type in sorted(resource_types_list):
-        resource_types=resource_types + "," + resource_type
         print("-->  " + resource_type)
         resource_file=resource_definitions_directory + "/" + resource_type + ".json"
         args.type = resource_type
@@ -712,12 +711,9 @@ def export(args):
 
     print("Getting catalog entities")
     catalog_json=json_directory + "/catalog.json"
-    args.types = resource_types
     catalog_output = io.StringIO()
     with redirect_stdout(catalog_output):
         catalog_list(args)
-        if "types" in args:
-           delattr(args, 'types')
         with open(catalog_json, 'w') as f:
             f.write(catalog_output.getvalue())
     data = json.loads(catalog_output.getvalue())
@@ -729,7 +725,10 @@ def export(args):
 
     for tag in sorted(entity_list):
         print("-->  " + tag)
-        entity_file=catalog_directory + "/" + tag + ".yaml"
+        # Can't create a file with '/' in the tag because it is interpreted as a subdirectory
+        # for the filename.
+        output_tag = tag.replace("/", "-")
+        entity_file=catalog_directory + "/" + output_tag + ".yaml"
         args.tag = tag
         args.yaml = True
         entity_output = io.StringIO()

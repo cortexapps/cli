@@ -5,6 +5,10 @@ Tests for the cortex CLI config file
 # These tests are all marked to run in serial order because they make modifications to the 
 # cortex config file and/or CORTEX_API_KEY value and would potentially impact other tests
 # that are running in parallel (with poetry run pytest -n auto), so they are run separately.
+
+# Additionally, order is VERY IMPORTANT in this file because of the way CORTEX_API key is
+# deleted, set to invalid values, etc.  Moving test order could impact the overall success
+# of pytest.  Tread carefully here.
 from cortexapps_cli.cortex import cli
 
 import io
@@ -16,7 +20,8 @@ from string import Template
 # Requires user input, so use monkeypatch to set it.
 @pytest.fixture(scope="session")
 def delete_cortex_api_key():
-    del os.environ['CORTEX_API_KEY']
+    if "CORTEX_API_KEY" in os.environ:
+        del os.environ['CORTEX_API_KEY']
 
 @pytest.mark.serial
 def test_config_file_api_key_quotes(tmp_path):
@@ -52,6 +57,15 @@ def test_config_file_new(tmp_path, capsys, delete_cortex_api_key):
     with pytest.raises(SystemExit) as excinfo:
         cli(["-c", str(f), "teams", "list"])
         out, err = capsys.readouterr()
+
+@pytest.mark.serial
+def test_export(capsys, delete_cortex_api_key):
+    cli(["-t", "rich-sandbox", "backup", "export"])
+    out, err = capsys.readouterr()
+    last_line = out.strip().split("\n")[-1]
+    sys.stdout.write(out + "\n\n")
+    sys.stdout.write(last_line + "\n\n")
+    assert "rich-sandbox" in out 
 
 @pytest.mark.serial
 def test_config_file_bad_api_key(tmp_path, capsys, delete_cortex_api_key):
