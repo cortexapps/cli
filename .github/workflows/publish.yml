@@ -19,9 +19,9 @@ jobs:
     outputs:
       EMAIL:   ${{ steps.git-details.outputs.EMAIL }}
       PUSHER:  ${{ steps.git-details.outputs.PUSHER }}
-      VERSION: ${{ steps.git-details.outputs.VERSION }}
-      URL:     ${{ steps.git-details.outputs.URL }}
       SHA:     ${{ steps.publish.outputs.SHA }}
+      URL:     ${{ steps.git-details.outputs.URL }}
+      VERSION: ${{ steps.git-details.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v3
 
@@ -93,6 +93,9 @@ jobs:
   docker:
     needs: pypi
     runs-on: ubuntu-latest
+    outputs:
+      SHA:     ${{ steps.build-docker-image.outputs.SHA }}
+      URL:     ${{ steps.build-docker-image.outputs.URL }}
     steps:
     - uses: actions/checkout@v3
 
@@ -105,12 +108,13 @@ jobs:
         echo "DOCKER_IMAGE_LATEST=${{ env.DOCKER_USERNAME }}/cli:latest" >> $GITHUB_ENV
 
     - name: build docker image
+      id: build-docker-image
       working-directory: ./docker
       run: |
         docker build -t ${{ env.DOCKER_IMAGE }} .
         sha=$(docker images --format {{.ID}}  --no-trunc ${{ env.DOCKER_USERNAME }}/cli:${{ env.VERSION }})
-        echo "DOCKER_SHA=${sha}" >> $GITHUB_ENV
-        echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_USERNAME }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_ENV
+        echo "SHA=${sha}" >> $GITHUB_OUTPUT
+        echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_USERNAME }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy on Root Image
       uses: aquasecurity/trivy-action@master
