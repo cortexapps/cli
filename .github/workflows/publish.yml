@@ -133,7 +133,9 @@ jobs:
         docker push ${{ env.DOCKER_IMAGE_LATEST }}
 
   docker-deploy-event:
-    needs: docker
+    needs:
+    - docker
+    - pypi
     runs-on: ubuntu-latest
     container:
       image: jeffschnittercortex/cli:latest
