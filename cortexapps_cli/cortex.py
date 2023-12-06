@@ -1684,6 +1684,9 @@ def subparser_integrations_opts(subparsers):
     ssp = sp.add_parser('aws', help='AWS integration')
     subparser_integrations_aws_opts(ssp)
 
+    ssp = sp.add_parser('azure-resources', help='Azure resources integration')
+    subparser_integrations_azure_resources_opts(ssp)
+
     ssp = sp.add_parser('coralogix', help='Coralogix integration')
     subparser_integrations_coralogix_opts(ssp)
 
@@ -1793,6 +1796,134 @@ def subparser_integrations_aws_delete_all(subparser):
 def integrations_aws_delete_all(args):
     delete("/api/v1/aws/configurations")
 # Integrations-AWS end
+
+# Integrations-azure-resources start
+def subparser_integrations_azure_resources_opts(subparser):
+    sp = subparser.add_subparsers(help='integrations - azure-resources help')
+
+    subparser_integrations_azure_resources_add(sp)
+    subparser_integrations_azure_resources_add_multiple(sp)
+    subparser_integrations_azure_resources_delete(sp)
+    subparser_integrations_azure_resources_delete_all(sp)
+    subparser_integrations_azure_resources_get(sp)
+    subparser_integrations_azure_resources_get_all(sp)
+    subparser_integrations_azure_resources_get_default(sp)
+    subparser_integrations_azure_resources_update(sp)
+    subparser_integrations_azure_resources_validate(sp)
+    subparser_integrations_azure_resources_validate_all(sp)
+
+def subparser_integrations_azure_resources_add(subparser):
+    sp = subparser.add_parser('add',
+            help='Add a single configuration',
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "alias": "string",
+                  "azureTenantId": "string",
+                  "clientId": "string",
+                  "clientSecret": "string",
+                  "isDefault": true,
+                  "subscriptionId": "string"
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted azure-resources configuration')
+    sp.set_defaults(func=integrations_azure_resources_add)
+
+def integrations_azure_resources_add(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/azure-resources/configuration", headers, payload=read_file(args))
+
+def subparser_integrations_azure_resources_add_multiple(subparser):
+    sp = subparser.add_parser('add-multiple', 
+            help='Add multiple configurations', 
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "configurations": [
+                    {
+                      "alias": "string",
+                      "azureTenantId": "string",
+                      "clientId": "string",
+                      "clientSecret": "string",
+                      "isDefault": true,
+                      "subscriptionId": "string"
+                    }
+                  ]
+                }
+                '''))
+    add_argument_file(sp, 'File containing JSON-formatted azure-resources configurations')
+    sp.set_defaults(func=integrations_azure_resources_add_multiple)
+
+def integrations_azure_resources_add_multiple(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    post("/api/v1/azure-resources/configurations", headers, payload=read_file(args))
+
+def subparser_integrations_azure_resources_delete(subparser):
+    sp = subparser.add_parser('delete', help='Delete a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_azure_resources_delete)
+
+def integrations_azure_resources_delete(args):
+    delete("/api/v1/azure-resources/configuration/" + args.alias)
+
+def subparser_integrations_azure_resources_delete_all(subparser):
+    sp = subparser.add_parser('delete-all', help='Delete all configurations')
+    sp.set_defaults(func=integrations_azure_resources_delete_all)
+
+def integrations_azure_resources_delete_all(args):
+    delete("/api/v1/azure-resources/configurations")
+
+def subparser_integrations_azure_resources_get(subparser):
+    sp = subparser.add_parser('get', help='Get a single configuration')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_azure_resources_get)
+
+def integrations_azure_resources_get(args):
+    get("/api/v1/azure-resources/configuration/" + args.alias)
+
+def subparser_integrations_azure_resources_get_all(subparser):
+    sp = subparser.add_parser('get-all', help='Get all configurations')
+    sp.set_defaults(func=integrations_azure_resources_get_all)
+
+def integrations_azure_resources_get_all(args):
+    get("/api/v1/azure-resources/configurations")
+
+def subparser_integrations_azure_resources_get_default(subparser):
+    sp = subparser.add_parser('get-default', help='Get default configuration')
+    sp.set_defaults(func=integrations_azure_resources_get_default)
+
+def integrations_azure_resources_get_default(args):
+    get("/api/v1/azure-resources/default-configuration")
+
+def subparser_integrations_azure_resources_update(subparser):
+    sp = subparser.add_parser('update', help='WARNING: Updating aliases for configurations or changing the default configuration could cause entity YAMLs that use this integration to break.')
+    add_argument_alias(sp)
+    add_argument_file(sp, 'File containing JSON-formatted azure-resources configuration')
+    sp.set_defaults(func=integrations_azure_resources_update)
+
+def integrations_azure_resources_update(args):
+    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    put("/api/v1/azure-resources/configuration/" + args.alias, headers, payload=read_file(args))
+
+def subparser_integrations_azure_resources_validate(subparser):
+    sp = subparser.add_parser('validate', help='Validate a single configurations')
+    add_argument_alias(sp)
+    sp.set_defaults(func=integrations_azure_resources_validate)
+
+def integrations_azure_resources_validate(args):
+    post("/api/v1/azure-resources/configuration/validate/" + args.alias)
+
+def subparser_integrations_azure_resources_validate_all(subparser):
+    sp = subparser.add_parser('validate-all', help='Validate all configurations')
+    sp.set_defaults(func=integrations_azure_resources_validate_all)
+
+def integrations_azure_resources_validate_all(args):
+    post("/api/v1/azure-resources/configuration/validate")
+# Integrations-azure-resources end
 
 # Integrations-coralogix start
 def subparser_integrations_coralogix_opts(subparser):
@@ -2543,7 +2674,20 @@ def subparser_integrations_newrelic_opts(subparser):
     subparser_integrations_newrelic_validate_all(sp)
 
 def subparser_integrations_newrelic_add(subparser):
-    sp = subparser.add_parser('add', help='Add a single configuration')
+    sp = subparser.add_parser('add', 
+            help='Add a single configuration',
+            formatter_class=argparse.RawTextHelpFormatter, 
+            epilog=textwrap.dedent('''\
+                Format of JSON-formatted configuration file:
+                --------------------------------------------
+                {
+                  "accountId": 0,
+                  "alias": "string",
+                  "isDefault": true,
+                  "personalKey": "string",
+                  "region": "US"
+                }
+                '''))
     add_argument_file(sp, 'File containing JSON-formatted newrelic configuration')
     sp.set_defaults(func=integrations_newrelic_add)
 
@@ -2559,11 +2703,15 @@ def subparser_integrations_newrelic_add_multiple(subparser):
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
-                  "accountId": 0,
-                  "alias": "string",
-                  "isDefault": true,
-                  "personalKey": "string",
-                  "region": "US"
+                  "configurations": [
+                    {
+                      "accountId": 0,
+                      "alias": "string",
+                      "isDefault": true,
+                      "personalKey": "string",
+                      "region": "US"
+                    }
+                  ]
                 }
                 '''))
     add_argument_file(sp, 'File containing JSON-formatted newrelic configurations')
