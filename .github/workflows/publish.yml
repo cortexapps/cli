@@ -19,6 +19,8 @@ jobs:
     outputs:
       EMAIL:   ${{ steps.git-details.outputs.EMAIL }}
       PUSHER:  ${{ steps.git-details.outputs.PUSHER }}
+      SHA:     ${{ steps.publish.outputs.SHA }}
+      URL:     ${{ steps.git-details.outputs.URL }}
       VERSION: ${{ steps.git-details.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v3
@@ -49,14 +51,9 @@ jobs:
          echo "VERSION=${version}" >> $GITHUB_OUTPUT
          pusher=$(echo "$GITHUB_CONTEXT" | jq -r ".event.pusher.name")
          email=$(echo "$GITHUB_CONTEXT" | jq -r ".event.pusher.email")
-         echo "PUSHER=${pusher}" >> $GITHUB_ENV
          echo "PUSHER=${pusher}" >> $GITHUB_OUTPUT
-         echo "EMAIL=${email}" >> $GITHUB_ENV
          echo "EMAIL=${email}" >> $GITHUB_OUTPUT
-         echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_ENV
-         echo "$GITHUB_CONTEXT"
-         echo "pusher = ${pusher}"
-         echo "email = ${email}"
+         echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_OUTPUT
 
     - name: Publish
       id: publish
@@ -66,45 +63,58 @@ jobs:
         poetry build
         poetry publish
         sha=$(sha256sum dist/*.tar.gz | awk '{ print $1 }')
-        echo "SHA=${sha}" >> $GITHUB_ENV
+        echo "SHA=${sha}" >> $GITHUB_OUTPUT
 
-    - uses: actions/checkout@v4
+  pypi-deploy-event:
+    needs: pypi
+    runs-on: ubuntu-latest
+    container:
+      image: jeffschnittercortex/cli:latest
+    steps:
+
     - name: Post pypi deploy event to Cortex
-      uses: ./.github/actions/cortex-deploys
-      with:
-        deployer-email: "${{ env.EMAIL }}"
-        deployer-name:  "${{ env.PUSHER }}"
-        environment:    "PyPI.org"
-        sha:            "${{ env.SHA }}"
-        tag:            "cli"
-        title:          "${{ env.VERSION }}"
-        type:           "DEPLOY"
-        url:            "${{ env.URL }}"
+      run: |
+        cat << EOF > /tmp/deploy.json
+        {
+          "customData": {},
+          "deployer": {
+            "email": "${{needs.pypi.outputs.EMAIL}}",
+            "name":  "${{needs.pypi.outputs.PUSHER}}"
+          },
+          "environment": "PYPI.org",
+          "sha":         "${{needs.pypi.outputs.SHA}}",
+          "timestamp":   "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
+          "title":       "${{needs.pypi.outputs.VERSION}}",
+          "type":        "DEPLOY",
+          "url":         "${{needs.pypi.outputs.URL}}"
+        }
+        EOF
+        cortex deploys add -t cli -f /tmp/deploy.json
   docker:
     needs: pypi
     runs-on: ubuntu-latest
+    outputs:
+      SHA:     ${{ steps.build-docker-image.outputs.SHA }}
+      URL:     ${{ steps.build-docker-image.outputs.URL }}
     steps:
     - uses: actions/checkout@v3
 
     - name: Get version info
       env:
-        EMAIL: ${{needs.pypi.outputs.EMAIL}}
-        PUSHER: ${{needs.pypi.outputs.PUSHER}}
         VERSION: ${{needs.pypi.outputs.VERSION}}
       run: |
-        echo "EMAIL=${EMAIL}" >> $GITHUB_ENV
-        echo "PUSHER=${PUSHER}" >> $GITHUB_ENV
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
         echo "DOCKER_IMAGE=${{ env.DOCKER_USERNAME }}/cli:${VERSION}" >> $GITHUB_ENV
         echo "DOCKER_IMAGE_LATEST=${{ env.DOCKER_USERNAME }}/cli:latest" >> $GITHUB_ENV
 
     - name: build docker image
+      id: build-docker-image
       working-directory: ./docker
       run: |
         docker build -t ${{ env.DOCKER_IMAGE }} .
         sha=$(docker images --format {{.ID}}  --no-trunc ${{ env.DOCKER_USERNAME }}/cli:${{ env.VERSION }})
-        echo "DOCKER_SHA=${sha}" >> $GITHUB_ENV
-        echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_USERNAME }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_ENV
+        echo "SHA=${sha}" >> $GITHUB_OUTPUT
+        echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_USERNAME }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy on Root Image
       uses: aquasecurity/trivy-action@master
@@ -130,26 +140,20 @@ jobs:
     steps:
 
     - name: Post docker deploy event to Cortex
-      env:
-        EMAIL:   ${{needs.pypi.outputs.EMAIL}}
-        PUSHER:  ${{needs.pypi.outputs.PUSHER}}
-        SHA:     ${{needs.docker.outputs.SHA}}
-        URL:     ${{needs.docker.outputs.URL}}
-        VERSION: ${{needs.pypi.outputs.VERSION}}
       run: |
         cat << EOF > /tmp/deploy.json
         {
           "customData": {},
           "deployer": {
-            "email": "${{ env.EMAIL }}",
-            "name": "${{ env.PUSHER }}"
+            "email": "${{needs.pypi.outputs.EMAIL}}",
+            "name":  "${{needs.pypi.outputs.PUSHER}}"
           },
           "environment": "docker",
-          "sha": "       ${{ env.SHA }}",
+          "sha":         "${{needs.docker.outputs.SHA}}",
           "timestamp":   "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
-          "title":       "${{ env.VERSION }}",
+          "title":       "${{needs.pypi.outputs.VERSION}}",
           "type":        "DEPLOY",
-          "url":         "${{ env.URL }}"
+          "url":         "${{needs.docker.outputs.URL}}"
         }
         EOF
         cortex deploys add -t cli -f /tmp/deploy.json
