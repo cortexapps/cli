@@ -247,7 +247,7 @@ Your cortex config file will require api keys for both tenants.  It would look l
 
 .. code:: bash
 
- cortex backup import -d <directory created by export>
+ cortex -t myTenant backup import -d <directory created by export>
 
 
 **NOTE:** some content will not be exported, including integration configurations and resources that
