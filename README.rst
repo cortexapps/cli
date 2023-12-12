@@ -362,6 +362,24 @@ Modify all github basepath values for domain entitities, changing '-' to '_'
      cortex catalog descriptor -y -t ${domain} | yq ".info.x-cortex-git.github.basepath |= sub(\"-\", \"_\")" | cortex catalog create -f-
   done
 
+-----------------------------------------------------------------------------
+Modify deploys based on selection criteria
+-----------------------------------------------------------------------------
+
+This example fixes a typo in the deployment environment field, changing PYPI.org to PyPI.org.
+
+It loops over each selected array elements based on the search criteria, removes the uuid attribute (because that is not included in the payload), 
+assigns the environment attribut to the correct value and invokes the CLI with that input.
+
+.. code:: bash
+
+  cortex deploys list -t cli > /tmp/deploys.json
+  for uuid in `cat /tmp/deploys.json | jq -r '.deployments[] | select(.environment=="PYPI.org") | .uuid'`
+  do
+     cat /tmp/deploys.json | jq ".deployments[] | select (.uuid==\"${uuid}\") | del(.uuid) | .environment = \"PyPI.org\"" | cortex deploys update-by-uuid -t cli -u ${uuid} -f-
+  done
+
+
 ====================================
 
 .. |PyPI download month| image:: https://img.shields.io/pypi/dm/cortexapps-cli.svg
