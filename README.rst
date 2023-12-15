@@ -368,8 +368,8 @@ Modify deploys based on selection criteria
 
 This example fixes a typo in the deployment environment field, changing PYPI.org to PyPI.org.
 
-It loops over each selected array elements based on the search criteria, removes the uuid attribute (because that is not included in the payload), 
-assigns the environment attribut to the correct value and invokes the CLI with that input.
+It loops over each selected array element based on the search criteria, removes the uuid attribute (because that is not included in the payload), 
+assigns the environment attribute to the correct value and invokes the CLI with that input.
 
 .. code:: bash
 
