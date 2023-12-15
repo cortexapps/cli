@@ -67,8 +67,8 @@ def test_integrations_sonarqube(tmp_path):
 
 @responses.activate
 def test_integrations_sonarqube_validate():
-    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/sonarqube/configuration/validate/cortex-test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configuration/validate/cortex-test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
     cli(["integrations", "sonarqube", "validate", "-a", "cortex-test"])
 
-    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/sonarqube/configuration/validate", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configuration/validate", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
     cli(["integrations", "sonarqube", "validate-all"])

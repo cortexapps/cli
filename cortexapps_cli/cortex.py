@@ -571,7 +571,7 @@ def debug_json(r, method):
         json_data = json.dumps(data)
         print(json_data, file=sys.stderr)
 
-def exit(r, method, expected_rc=200):
+def exit(r, method, expected_rc=200, err=None):
     if r.status_code != expected_rc:
         sys.stderr.write(r.reason + "\n")
         if r.status_code == 401:
@@ -580,6 +580,8 @@ def exit(r, method, expected_rc=200):
             else:
                 sys.stderr.write("\nCheck your api_key in " + config['config_file'] + ".\n")
         debug_json(r, method)
+        if err:
+            print(err)
         sys.exit(r.status_code)
     else:
         debug_json(r, method)
@@ -592,26 +594,47 @@ def api_key(headers):
 # these methods into a single generic method.
 def get(url, headers={}):
     api_key(headers)
-    r = requests.get(config['url'] + url, headers=headers)
+
+    err = None
+    try:
+        r = requests.get(config['url'] + url, headers=headers)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        err = e.response.text
     exit(r, 'GET')
 
 def put(url, headers={}, payload=""):
     api_key(headers)
 
-    r = requests.put(config['url'] + url, headers=headers, data=payload)
+    err = None
+    try:
+        r = requests.put(config['url'] + url, headers=headers, data=payload)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        err = e.response.text
     exit(r, 'PUT')
 
 def delete(url, headers={}, payload="", expected_rc=200):
     api_key(headers)
 
-    r = requests.delete(config['url'] + url, headers=headers, data=payload)
+    err = None
+    try:
+        r = requests.delete(config['url'] + url, headers=headers, data=payload)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        err = e.response.text
     exit(r, 'DELETE', expected_rc)
 
 def post(url, headers={}, payload="", expected_rc=200):
     api_key(headers)
 
-    r = requests.post(config['url'] + url, headers=headers,data=payload)
-    exit(r, 'POST', expected_rc)
+    err = None
+    try:
+        r = requests.post(config['url'] + url, headers=headers,data=payload)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        err = e.response.text
+    exit(r, 'POST', expected_rc, err)
 
 # Generate HTTP API options.  Everything in the Namespace argparse object is
 # added to the URL with the exception of those listed in the array below.
@@ -1637,6 +1660,23 @@ def docs_update(args):
     headers = { 'Content-Type': 'application/json;charset=UTF-8' }
     put("/api/v1/catalog/" + args.tag + "/documentation/openapi", headers, payload=read_json_from_yaml(args))
 # Docs End
+
+# Gitops Logs Start
+def subparser_gitops_logs_opts(subparsers):
+    p = subparsers.add_parser('gitops-logs', help='Gitops logs commands')
+    sp = p.add_subparsers(help='gitops-logs subcommand help')
+
+    subparser_gitops_logs_get(sp)
+
+def subparser_gitops_logs_get(subparser):
+    sp = subparser.add_parser('get', help='Retrieve GitOps logs')
+    add_argument_page(sp)
+    add_argument_page_size(sp)
+    sp.set_defaults(func=gitops_logs_get)
+
+def gitops_logs_get(args):
+    get("/api/v1/gitops-logs/" + parse_opts(args))
+# Gitops Logs End
 
 # Groups start
 def subparser_groups_opts(subparsers):
@@ -3894,6 +3934,7 @@ def cli(argv=sys.argv[1:]):
     subparser_deploys_opts(sp)
     subparser_discovery_audit_opts(sp)
     subparser_docs_opts(sp)
+    subparser_gitops_logs_opts(sp)
     subparser_groups_opts(sp)
     subparser_integrations_opts(sp)
     subparser_ip_allowlist_opts(sp)

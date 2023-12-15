@@ -1,3 +1,7 @@
+ifndef CORTEX_BASE_URL
+	export CORTEX_BASE_URL = https://api.getcortexapp.com
+endif
+
 test: setup test-all
 
 setup:

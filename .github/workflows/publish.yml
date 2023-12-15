@@ -81,7 +81,7 @@ jobs:
             "email": "${{needs.pypi.outputs.EMAIL}}",
             "name":  "${{needs.pypi.outputs.PUSHER}}"
           },
-          "environment": "PYPI.org",
+          "environment": "PyPI.org",
           "sha":         "${{needs.pypi.outputs.SHA}}",
           "timestamp":   "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
           "title":       "${{needs.pypi.outputs.VERSION}}",

@@ -1,0 +1,10 @@
+openapi: 3.0.1
+info:
+  title: Test Team 2
+  x-cortex-tag: test-team-2
+  x-cortex-team:
+    members:
+    - name: Joe Montana
+      email: joe.montana@cortex.io
+      notificationsEnabled: true
+  x-cortex-type: team
