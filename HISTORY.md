@@ -1,6 +1,13 @@
 Release History
 ===============
 
+0.18.0 (2023-12-15)
+------------------
+
+**Improvements**
+- add gitops-log command
+- ensure API errors get displayed on the terminal
+
 0.16.0 (2023-12-06)
 ------------------
 
