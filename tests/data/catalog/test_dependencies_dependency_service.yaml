@@ -3,6 +3,9 @@ info:
   title: Dependency Service
   x-cortex-tag: dependency-service
   x-cortex-type: service
+  x-cortex-owners:
+  - type: EMAIL
+    email: richard.lafleur@cortex.io
   x-cortex-dependency:
   - tag: cli-test-service
     path: "/2.0/users/{username}"

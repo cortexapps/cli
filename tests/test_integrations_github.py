@@ -3,78 +3,75 @@ Tests for github integration commands.
 """
 from cortexapps_cli.cortex import cli
 import os
-from string import Template
-import json
 import pytest
 import responses
 
-def github_personal_input(tmp_path):
-    gh_pat = os.getenv('GH_PAT')
-    f = tmp_path / "test_integrations_github_add_personal.json"
-    template = Template("""
-        {
-          "accessToken": "${gh_pat}",
-          "alias": "github-personal-test-001",
-          "isDefault": false
-        }
-        """)
-    content = template.substitute(gh_pat=gh_pat)
-    f.write_text(content)
+# Since responses are all mocked and no data validation is done by the CLI --
+# we let the API handle validation -- we don't need valid input files.
+def _dummy_file(tmp_path):
+    f = tmp_path / "test.json"
+    f.write_text("foobar")
     return f
 
-def _github_configurations(capsys):
-    cli(["integrations", "github", "get-all"])
-    out, err = capsys.readouterr()
-    out = json.loads(out)
-    return out
+@responses.activate
+def test_integrations_github_add_personal(capsys, tmp_path):
+    f = _dummy_file(tmp_path)
 
-def github_app_input(tmp_path):
-    gh_app_id = os.getenv('GH_APP_ID')
-    gh_client_id = os.getenv('GH_CLIENT_ID')
-    gh_client_secret = os.getenv('GH_CLIENT_SECRET')
-    gh_private_key = os.getenv('GH_PRIVATE_KEY')
-    f = tmp_path / "test_integrations_github_add.json"
-    template = Template("""
-        {
-          "alias": "github-test-3",
-          "appUrl": "https://github.com/apps/cortex-app",
-          "applicationId": "${gh_app_id}",
-          "clientId": "${gh_client_id}",
-          "clientSecret": "${gh_client_secret}",
-          "isDefault": false,
-          "privateKey": "${gh_private_key}"
-        }
-        """)
-    content = template.substitute(gh_app_id=gh_app_id, gh_client_id=gh_client_id, gh_client_secret=gh_client_secret, gh_private_key=gh_private_key)
-    f.write_text(content)
-    return f
-
-def test_integrations_github_personal(capsys, tmp_path):
-    out = _github_configurations(capsys)
-    if any(configuration['alias'] == 'github-personal-test-001' for configuration in out['configurations']):
-        cli(["integrations", "github", "delete-personal", "-a", "github-personal-test-001"])
-
-    f = github_personal_input(tmp_path)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal", status=200)
     cli(["integrations", "github", "add-personal", "-f", str(f)])
-    cli(["integrations", "github", "update-personal", "-a", "github-personal-test-001", "-f", str(f)])
-    cli(["integrations", "github", "get-personal", "-a", "github-personal-test-001"])
 
-def test_integrations_github(tmp_path, capsys):
-    out = _github_configurations(capsys)
-    if any(configuration['alias'] == 'github-test-3' for configuration in out['configurations']):
-        cli(["integrations", "github", "delete", "-a", "github-test-3"])
+@responses.activate
+def test_integrations_github_update_personal(capsys, tmp_path):
+    f = _dummy_file(tmp_path)
 
-    f = github_app_input(tmp_path)
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal/pt-001", status=200)
+    cli(["integrations", "github", "update-personal", "-a", "pt-001", "-f", str(f)])
+
+@responses.activate
+def test_integrations_github_get_personal(capsys, tmp_path):
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal/pt-001", status=200)
+    cli(["integrations", "github", "get-personal", "-a", "pt-001"])
+
+@responses.activate
+def test_integrations_github_add(capsys, tmp_path):
+    f = _dummy_file(tmp_path)
+
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/app", status=200)
     cli(["integrations", "github", "add", "-f", str(f)])
-    cli(["integrations", "github", "get", "-a", "github-test-3"])
+
+@responses.activate
+def test_integrations_github_get(capsys, tmp_path):
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/app/pt-001", status=200)
+    cli(["integrations", "github", "get", "-a", "pt-001"])
+
+@responses.activate
+def test_integrations_github_get_all(capsys, tmp_path):
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations", status=200)
     cli(["integrations", "github", "get-all"])
+
+@responses.activate
+def test_integrations_github_get_default(capsys, tmp_path):
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/default-configuration", status=200)
     cli(["integrations", "github", "get-default"])
-    cli(["integrations", "github", "validate", "-a", "github-test-3"])
+
+@responses.activate
+def test_integrations_github_validate(capsys, tmp_path):
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/validate/pt-001", status=200)
+    cli(["integrations", "github", "validate", "-a", "pt-001"])
+
+@responses.activate
+def test_integrations_github_validate_all(capsys, tmp_path):
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/validate", status=200)
     cli(["integrations", "github", "validate-all"])
 
-    cli(["integrations", "github", "update", "-a", "github-test-3", "-f", "tests/test_integrations_github_update.json"])
+@responses.activate
+def test_integrations_github_update(capsys, tmp_path):
+    f = _dummy_file(tmp_path)
+
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/app/pt-001", status=200)
+    cli(["integrations", "github", "update", "-a", "pt-001", "-f", str(f)])
 
 @responses.activate
 def test_integrations_github_delete_all():
-    responses.add(responses.DELETE, "https://api.getcortexapp.com/api/v1/github/configurations", status=200)
+    responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations", status=200)
     cli(["integrations", "github", "delete-all"])

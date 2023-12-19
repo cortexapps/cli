@@ -62,8 +62,8 @@ def test_integrations_launchdarkly_add(tmp_path):
 
 @responses.activate
 def test_integrations_launchdarkly_validate(tmp_path):
-    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/launchdarkly/configuration/validate/test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/launchdarkly/configuration/validate/test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
     cli(["integrations", "launchdarkly", "validate", "-a", "test"])
 
-    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/launchdarkly/configuration/validate", json=[ { 'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}], status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/launchdarkly/configuration/validate", json=[ { 'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}], status=200)
     cli(["integrations", "launchdarkly", "validate-all"])

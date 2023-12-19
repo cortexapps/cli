@@ -62,8 +62,8 @@ def test_integrations_coralogix_add(tmp_path):
 
 @responses.activate
 def test_integrations_coralogix_validate(tmp_path):
-    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/coralogix/configuration/validate/test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/coralogix/configuration/validate/test", json={'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}, status=200)
     cli(["integrations", "coralogix", "validate", "-a", "test"])
 
-    responses.add(responses.POST, "https://api.getcortexapp.com/api/v1/coralogix/configuration/validate", json=[ { 'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}], status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/coralogix/configuration/validate", json=[ { 'alias': 'test', 'isValid': json.dumps("true"), 'message': 'someMessage'}], status=200)
     cli(["integrations", "coralogix", "validate-all"])

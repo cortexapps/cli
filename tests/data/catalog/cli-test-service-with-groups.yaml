@@ -9,5 +9,5 @@ info:
   - name: test-team-1
     type: GROUP
     provider: CORTEX
-  x-cortex-custom-data:
+  x-cortex-custom-metadata:
     foo: bar

@@ -17,16 +17,16 @@ def test_audit_logs_page_size(capsys):
     assert len(out['logs']) == 5, "Changing page size should return requested amount of entries"
 
 def test_audit_logs_with_start_and_end(capsys):
-    now = datetime.utcnow()
+    now = datetime.now()
     yesterday = now - timedelta(days=1)
     cli(["audit-logs", "get", "-e", now.isoformat(), "-s", yesterday.isoformat()])
 
 def test_audit_logs_with_start():
-    now = datetime.utcnow()
+    now = datetime.now()
     yesterday = now - timedelta(days=1)
     cli(["audit-logs", "get", "-s", yesterday.isoformat()])
 
 def test_audit_logs_with_end():
-    now = datetime.utcnow()
+    now = datetime.now()
     yesterday = now - timedelta(days=1)
     cli(["audit-logs", "get", "-e", yesterday.isoformat()])
