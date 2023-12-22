@@ -10,4 +10,4 @@ RUN python -m pip install cortexapps-cli
 WORKDIR /home/cortex
 USER cortex
 
-ENTRYPOINT ["/bin/sh"]
+ENTRYPOINT ["cortex"]
