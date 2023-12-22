@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.19.0 (2023-12-21)
+------------------
+
+**Improvements**
+- publish docker image to cortexapp/cli
+
 0.18.0 (2023-12-15)
 ------------------
 

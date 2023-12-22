@@ -9,9 +9,10 @@ on:
       - '.github/workflows/publish.yml'
 
 env:
-  CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
-  DOCKER_USERNAME: jeffschnittercortex
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  CORTEX_API_KEY:      ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+  DOCKER_USERNAME:     jeffschnittercortex
+  DOCKER_PASSWORD:     ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_ORGANIZATION: cortexapp
 
 jobs:
   pypi:
@@ -69,7 +70,7 @@ jobs:
     needs: pypi
     runs-on: ubuntu-latest
     container:
-      image: jeffschnittercortex/cli:latest
+      image: cortexapp/cli:latest
     steps:
 
     - name: Post pypi deploy event to Cortex
@@ -104,17 +105,17 @@ jobs:
         VERSION: ${{needs.pypi.outputs.VERSION}}
       run: |
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
-        echo "DOCKER_IMAGE=${{ env.DOCKER_USERNAME }}/cli:${VERSION}" >> $GITHUB_ENV
-        echo "DOCKER_IMAGE_LATEST=${{ env.DOCKER_USERNAME }}/cli:latest" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE=${{ env.DOCKER_ORGANIZATION }}/cli:${VERSION}" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE_LATEST=${{ env.DOCKER_ORGANIZATION }}/cli:latest" >> $GITHUB_ENV
 
     - name: build docker image
       id: build-docker-image
       working-directory: ./docker
       run: |
         docker build -t ${{ env.DOCKER_IMAGE }} .
-        sha=$(docker images --format {{.ID}}  --no-trunc ${{ env.DOCKER_USERNAME }}/cli:${{ env.VERSION }})
+        sha=$(docker images --format {{.ID}}  --no-trunc ${{ env.DOCKER_ORGANIZATION }}/cli:${{ env.VERSION }})
         echo "SHA=${sha}" >> $GITHUB_OUTPUT
-        echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_USERNAME }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_OUTPUT
+        echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_ORGANIZATION }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy on Root Image
       uses: aquasecurity/trivy-action@master
@@ -138,7 +139,7 @@ jobs:
     - pypi
     runs-on: ubuntu-latest
     container:
-      image: jeffschnittercortex/cli:latest
+      image: cortexapp/cli:latest
     steps:
 
     - name: Post docker deploy event to Cortex
