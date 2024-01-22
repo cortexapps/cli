@@ -21,7 +21,7 @@ jobs:
 
     - name: Get changed files
       id: changed-files
-      uses: tj-actions/changed-files@v40
+      uses: tj-actions/changed-files@v41
 
     - name: Fail if HISTORY.md not updated
       if: contains(steps.changed-files.outputs.modified_files, 'HISTORY.md') != true
