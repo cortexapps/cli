@@ -232,12 +232,12 @@ def add_argument_end_time(subparser, help_text='End time for audit log retrieve'
             metavar=''
     )
 
-def add_argument_entity_tag(subparser, help_text='The entity tag (x-cortex-tag) that identifies the entity.'):
+def add_argument_entity_tag(subparser, help_text='The entity tag (x-cortex-tag) that identifies the entity.', required=True):
     subparser.add_argument(
             '-e',
             '--entityTag',
             help=help_text,
-            required=True,
+            required=required,
             default=argparse.SUPPRESS,
             metavar=''
     )
@@ -638,11 +638,11 @@ def post(url, headers={}, payload="", expected_rc=200):
 
 # Generate HTTP API options.  Everything in the Namespace argparse object is
 # added to the URL with the exception of those listed in the array below.
-def parse_opts(args):
+def parse_opts(args, ignore_tags=[]):
     opts = ""
 
     for k, v in dict(vars(args)).items():
-        if k in ['tenant', 'debug', 'noObfuscate', 'func', 'config']:
+        if k in ['tenant', 'debug', 'noObfuscate', 'func', 'config'] + ignore_tags:
             continue
         if len(opts) == 0:
            char="?"
@@ -1043,11 +1043,19 @@ def subparser_catalog_list(subparser):
             required=False
     )
     sp.add_argument(
-            '-wo',
+            '-io',
             '--includeOwners',
             help='Whether to include ownership information for each entity in the response',
             default=False,
             action='store_true',
+            required=False
+    )
+    sp.add_argument(
+            '-in',
+            '--includeNestedFields',
+            help='List of sub fields to include for different types, for example team:members',
+            default=argparse.SUPPRESS,
+            metavar='',
             required=False
     )
     sp.set_defaults(func=catalog_list)
@@ -3755,11 +3763,11 @@ def scorecards_next_steps(args):
 def subparser_scorecards_scores(subparser):
     sp = subparser.add_parser('scores', help='Return latest scores for all entities in the Scorecard')
     add_argument_tag(sp, 'Unique tag for the scorecard')
-    add_argument_entity_tag(sp)
+    add_argument_entity_tag(sp, required=False)
     sp.set_defaults(func=scorecards_scores)
 
 def scorecards_scores(args):
-    get("/api/v1/scorecards/" + args.tag + "/scores" + parse_opts(args))
+    get("/api/v1/scorecards/" + args.tag + "/scores" + parse_opts(args, ['tag']))
 # Scorecards end
 
 # Teams Hierarchies start
