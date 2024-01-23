@@ -45,7 +45,7 @@ def test_list_by_team(capsys):
     assert any(service['tag'] == 'cli-test-service-with-groups' for service in out['entities'])
 
 def test_list_with_owners(capsys):
-    cli(["catalog", "list", "-l", "-w", "-g", "corona-spokesperson"])
+    cli(["catalog", "list", "-l", "-io", "-g", "corona-spokesperson"])
     out, err = capsys.readouterr()
     out = json.loads(out)
 

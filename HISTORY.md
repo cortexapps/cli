@@ -1,6 +1,15 @@
 Release History
 ===============
 
+0.20.0 (2024-01-22)
+------------------
+
+**Breaking Changes**
+- catalog list: change -wo to -io for include owners in preparation for adding -in for include nested fields
+
+**Bugfixes**
+- Entity tag should be an optional parameter for scorecards scores.
+
 0.19.0 (2023-12-21)
 ------------------
 

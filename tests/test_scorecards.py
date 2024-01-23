@@ -18,3 +18,5 @@ def test_scorecards():
 
     # Not sure if we can run this cli right away.  Newly-created Scorecard might not be evaluated yet.
     cli(["scorecards", "scores", "-t", "test-scorecard", "-e", "test-service"])
+
+    cli(["scorecards", "scores", "-t", "test-scorecard"])
