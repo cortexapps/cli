@@ -379,6 +379,33 @@ assigns the environment attribute to the correct value and invokes the CLI with 
      cat /tmp/deploys.json | jq ".deployments[] | select (.uuid==\"${uuid}\") | del(.uuid) | .environment = \"PyPI.org\"" | cortex deploys update-by-uuid -t cli -u ${uuid} -f-
   done
 
+-----------------------------------------------------------------------------
+Compare scorecard scores and levels for two scorecards
+-----------------------------------------------------------------------------
+
+This could be helpful for changing CQL rules (for example for CQL v1 -> CQL v2) and ensuring that scorecards produce the same results.
+
+The following command get all scores for a scorecard, pipes the JSON output to jq and filters it to create a CSV file of the form: 
+
+.. code:: bash
+    
+   service,score,ladderLevel
+
+.. code:: bash
+
+   cortex scorecards scores -t myScorecard | jq -r '.serviceScores[] | [ .service.tag, .score.ladderLevels[].level.name // "noLevel", .score.summary.score|tostring] | join(",")' | sort > /tmp/scorecard-output.csv
+
+Run this command for two different scorecards and diff the csv files to compare results
+
+.. code:: bash
+
+  export SCORECARD=scorecard1
+  cortex scorecards scores -t ${SCORECARD} | jq -r '.serviceScores[] | [ .service.tag, .score.ladderLevels[].level.name // "noLevel", .score.summary.score|tostring] | join(",")' | sort > /tmp/${SCORECARD}.csv
+
+  export SCORECARD=scorecard2
+  cortex scorecards scores -t ${SCORECARD} | jq -r '.serviceScores[] | [ .service.tag, .score.ladderLevels[].level.name // "noLevel", .score.summary.score|tostring] | join(",")' | sort > /tmp/${SCORECARD}.csv
+
+  sdiff -s /tmp/scorecard1.csv /tmp/scorecard2.csv
 
 ====================================
 
