@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.21.0 (2024-01-25)
+------------------
+
+**Improvements**
+- Add showDrafts option to scorecards list
+
 0.20.0 (2024-01-22)
 ------------------
 

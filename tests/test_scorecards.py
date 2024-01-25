@@ -2,6 +2,7 @@
 Tests for scorecards commands.
 """
 from cortexapps_cli.cortex import cli
+import json
 
 def test_scorecards():
     cli(["scorecards", "create", "-f", "tests/test_scorecards.yaml"])
@@ -20,3 +21,14 @@ def test_scorecards():
     cli(["scorecards", "scores", "-t", "test-scorecard", "-e", "test-service"])
 
     cli(["scorecards", "scores", "-t", "test-scorecard"])
+
+def test_scorecards_drafts(capsys):
+    cli(["scorecards", "create", "-f", "tests/test_scorecards_draft.yaml"])
+    # Only capturing this so it doesn't show up in next call to capsys.
+    out, err = capsys.readouterr()
+
+    cli(["scorecards", "list", "-s"])
+    out, err = capsys.readouterr()
+
+    out = json.loads(out)
+    assert any(scorecard['tag'] == 'test-scorecard-draft' for scorecard in out['scorecards'])
