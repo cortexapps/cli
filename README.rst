@@ -436,9 +436,21 @@ This recipe is similar to the one above, but it does not create a new scorecard 
 Delete all draft scorecards
 -----------------------------------------------------------------------------
 
+WARNING: This recipe will delete all draft scorecards.  
+
 .. code:: bash
     
    for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag"`
+   do
+      cortex scorecards delete -t ${tag}
+   done
+
+If you only want to delete some drafts, for example if you followed a recipe that creates draft versions of all existing scorecards, you 
+will likely want to run this instead:
+
+.. code:: bash
+    
+   for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag" | grep "\-draft$"`
    do
       cortex scorecards delete -t ${tag}
    done
