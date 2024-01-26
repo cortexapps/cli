@@ -395,7 +395,7 @@ Create a backup of all scorecards
 Create a copy of all scorecards in draft mode
 -----------------------------------------------------------------------------
 
-This snippet creates a draft scorecard for all existing scorecards.  It creates each scorecard with a suffix for the scorecard tag of "-draft"
+This recipe creates a draft scorecard for all existing scorecards.  It creates each scorecard with a suffix for the scorecard tag of "-draft"
 and it appends " Draft" to the end of the existing title.
 
 .. code:: bash
@@ -409,7 +409,7 @@ and it appends " Draft" to the end of the existing title.
 Replace scorecards with draft versions and delete the draft versions
 -----------------------------------------------------------------------------
 
-This snippet is a companion to the above snippet.  This snippet will replace the versions from
+This recipe is a companion to the above recipe.  This recipe will replace the versions from
 which the drafts were created and delete the drafts.
 
 .. code:: bash
@@ -417,6 +417,19 @@ which the drafts were created and delete the drafts.
    for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag" | grep "\-draft$"`
    do
       cortex scorecards descriptor -t ${tag} | yq '.draft = false | .tag |= sub("-draft","") | .name |= sub(" Draft", "")' | cortex scorecards create -f- && cortex scorecards delete -t ${tag}
+   done
+
+-----------------------------------------------------------------------------
+Get draft scorecards, change draft to false and save on disk
+-----------------------------------------------------------------------------
+
+This recipe is similar to the one above, but it does not create a new scorecard in Cortex.  Rather, it makes the changes and saves to a file.
+
+.. code:: bash
+    
+   for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag" | grep "\-draft$"`
+   do
+      cortex scorecards descriptor -t ${tag} | yq '.draft = false | .tag |= sub("-draft","") | .name |= sub(" Draft", "")' > ${tag}.yaml
    done
 
 -----------------------------------------------------------------------------
