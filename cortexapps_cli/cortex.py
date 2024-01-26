@@ -457,6 +457,15 @@ def add_argument_sha(subparser, help_text='The sha string of the deployment to d
             metavar=''
     )
 
+def add_argument_show_drafts(subparser, help_text='Include draft scorecards'):
+    subparser.add_argument(
+            '-s',
+            '--showDrafts',
+            help=help_text,
+            required=False,
+            action='store_true'
+    )
+
 def add_argument_start_time(subparser, help_text='Start time for audit log retrieve'):
     subparser.add_argument(
             '-s',
@@ -3721,10 +3730,11 @@ def scorecards_delete(args):
 
 def subparser_scorecards_list(subparser):
     sp = subparser.add_parser('list', help='List scorecards')
+    add_argument_show_drafts(sp)
     sp.set_defaults(func=scorecards_list)
 
 def scorecards_list(args):
-    get("/api/v1/scorecards")
+    get("/api/v1/scorecards" + parse_opts(args))
 
 def subparser_scorecards_shields_io_badge(subparser):
     sp = subparser.add_parser('shield', help='Retrieve scorecard shields.io badge')
