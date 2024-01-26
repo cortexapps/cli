@@ -380,6 +380,57 @@ assigns the environment attribute to the correct value and invokes the CLI with 
   done
 
 -----------------------------------------------------------------------------
+Create a backup of all scorecards
+-----------------------------------------------------------------------------
+
+.. code:: bash
+    
+   for tag in `cortex scorecards list | jq -r ".scorecards[].tag"`
+   do
+      echo "backing up: ${tag}"
+      cortex scorecards descriptor -t ${tag} > ${tag}.yaml
+   done
+
+-----------------------------------------------------------------------------
+Create a copy of all scorecards in draft mode
+-----------------------------------------------------------------------------
+
+This snippet creates a draft scorecard for all existing scorecards.  It creates each scorecard with a suffix for the scorecard tag of "-draft"
+and it appends " Draft" to the end of the existing title.
+
+.. code:: bash
+    
+   for tag in `cortex scorecards list | jq -r ".scorecards[].tag"`
+   do
+      cortex scorecards descriptor -t ${tag} | yq '.draft = true | .tag += "-draft" | .name += " Draft"' | cortex scorecards create -f-
+   done
+
+-----------------------------------------------------------------------------
+Replace scorecards with draft versions and delete the draft versions
+-----------------------------------------------------------------------------
+
+This snippet is a companion to the above snippet.  This snippet will replace the versions from
+which the drafts were created and delete the drafts.
+
+.. code:: bash
+    
+   for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag" | grep "\-draft$"`
+   do
+      cortex scorecards descriptor -t ${tag} | yq '.draft = false | .tag |= sub("-draft","") | .name |= sub(" Draft", "")' | cortex scorecards create -f- && cortex scorecards delete -t ${tag}
+   done
+
+-----------------------------------------------------------------------------
+Delete all draft scorecards
+-----------------------------------------------------------------------------
+
+.. code:: bash
+    
+   for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag"`
+   do
+      cortex scorecards delete -t ${tag}
+   done
+
+-----------------------------------------------------------------------------
 Compare scorecard scores and levels for two scorecards
 -----------------------------------------------------------------------------
 
