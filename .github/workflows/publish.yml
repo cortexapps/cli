@@ -190,7 +190,7 @@ jobs:
 
     - name: Post homebrew deploy event to Cortex
       run: |
-        cat << EOF > /tmp/cortexjson
+        cat << EOF > /tmp/cortex.json
         {
           "timestamp":   "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
           "title":       "Update homebrew formula to ${{needs.pypi.outputs.VERSION}}",
