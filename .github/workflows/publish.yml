@@ -162,6 +162,8 @@ jobs:
         cortex deploys add -t cli -f /tmp/deploy.json
 
   homebrew:
+    needs:
+    - pypi
     runs-on: ubuntu-latest
     steps:
       - uses: mislav/bump-homebrew-formula-action@v3
