@@ -36,34 +36,10 @@ Using a python virtual environment:
 homebrew
 ----------------------
 
-The package will be published to homebrew in the future, but we need your help!
-
-In order to be accepted to `homebrew-core <https://github.com/Homebrew/homebrew-core>`_, a repository has to be 'notable'. This
-is determined by running an `audit <https://docs.brew.sh/Adding-Software-to-Homebrew#testing-and-auditing-the-formula>`_
-of the homebrew formula.  Currently, this results in the following:
-
-.. code-block::
-
-  brew audit --strict --new-formula --online cortexapps-cli
-  cortexapps-cli
-    * GitHub repository not notable enough (<30 forks, <30 watchers and <75 stars)
-  Error: 1 problem in 1 formula detected.
-
-Please help us by watching and starring https://github.com/cortexapps/cli.  Once we're 'notable', we'll
-throw a small party for ourselves and then submit a PR to homebrew-core. 
- 
-Workaround for homebrew installation
-------------------------------------
-
-This is a temporary solution until we reach 'notable' status and get the formula added to `homebrew-core <https://github.com/Homebrew/homebrew-core>`_.
-
-Run the following commands to download the homebrew formula from this repo into your local homebrew tap:
-
 .. code:: bash
-                                                                                                          
-  curl -L -H "Accept: application/vnd.github.VERSION.raw" -o $(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/c/cortexapps-cli.rb https://api.github.com/repos/cortexapps/cli/contents/homebrew/cortexapps-cli.rb
-  HOMEBREW_NO_INSTALL_FROM_API=1 brew install --build-from-source cortexapps-cli
 
+  brew tap cortexapps/tap
+  brew install cortexapps-cli
 
 ===================
  Usage

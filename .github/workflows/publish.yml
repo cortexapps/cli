@@ -160,3 +160,38 @@ jobs:
         }
         EOF
         cortex deploys add -t cli -f /tmp/deploy.json
+
+  homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: cortexapps-cli
+          homebrew-tap: cortexapps/homebrew-tap
+          download-url: https://pypi.io/packages/source/c/cortexapps_cli/cortexapps_cli-${{ needs.pypi.output.VERSION }}.tar.gz
+          commit-message: |
+            {{formulaName}} ${{ needs.pypi.output.VERSION }}
+
+            Created by https://github.com/mislav/bump-homebrew-formula-action
+        env:
+          COMMITTER_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  homebrew-custom-event:
+    needs:
+    - homebrew
+    - pypi
+    runs-on: ubuntu-latest
+    container:
+      image: cortexapp/cli:latest
+    steps:
+
+    - name: Post homebrew deploy event to Cortex
+      run: |
+        cat << EOF > /tmp/cortexjson
+        {
+          "timestamp":   "$(date +'%Y-%m-%dT%H:%M:%S').000Z",
+          "title":       "Update homebrew formula to ${{needs.pypi.outputs.VERSION}}",
+          "type":        "HOMEBREW_UPDATE"
+        }
+        EOF
+        cortex custom-events create -t cli -f /tmp/cortex.json
