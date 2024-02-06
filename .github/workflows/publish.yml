@@ -168,6 +168,7 @@ jobs:
         with:
           formula-name: cortexapps-cli
           homebrew-tap: cortexapps/homebrew-tap
+          tag-name:     ${{ needs.pypi.outputs.VERSION }}
           download-url: https://pypi.io/packages/source/c/cortexapps_cli/cortexapps_cli-${{ needs.pypi.output.VERSION }}.tar.gz
           commit-message: |
             {{formulaName}} ${{ needs.pypi.output.VERSION }}
