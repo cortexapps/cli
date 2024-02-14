@@ -171,9 +171,9 @@ jobs:
           formula-name: cortexapps-cli
           homebrew-tap: cortexapps/homebrew-tap
           tag-name:     ${{ needs.pypi.outputs.VERSION }}
-          download-url: https://pypi.io/packages/source/c/cortexapps_cli/cortexapps_cli-${{ needs.pypi.output.VERSION }}.tar.gz
+          download-url: https://pypi.io/packages/source/c/cortexapps_cli/cortexapps_cli-${{ needs.pypi.outputs.VERSION }}.tar.gz
           commit-message: |
-            {{formulaName}} ${{ needs.pypi.output.VERSION }}
+            {{formulaName}} ${{ needs.pypi.outputs.VERSION }}
 
             Created by https://github.com/mislav/bump-homebrew-formula-action
         env:
