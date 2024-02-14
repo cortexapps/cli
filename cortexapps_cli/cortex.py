@@ -89,15 +89,7 @@ def check_config_file(config_file, replace_string):
             cortex_config_contents = textwrap.dedent('''\
                 [default]
                 api_key = {replace}
-
-                # Add aliases to create shortcuts.
-                # left side = alias name
-                # right side = contents that will be provided as parameters to Cortex CLI
-                #
-                # For example, invoke the 'services' alias with this command:
-                # cortex -a services
-                [default.aliases]
-                services = catalog list -t service
+                base_url = https://api.getcortexapp.com
                 ''').format(replace=replace_string)
             f = open(config_file, "w")
             f.write(cortex_config_contents)

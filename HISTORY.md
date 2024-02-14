@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.24.0 (2024-02-13)
+------------------
+
+**Bugfixes**
+- Clean up default cortex config file
+
 0.22.0 (2024-02-05)
 ------------------
 
