@@ -168,10 +168,11 @@ jobs:
     steps:
       - uses: mislav/bump-homebrew-formula-action@v3
         with:
-          formula-name: cortexapps-cli
-          homebrew-tap: cortexapps/homebrew-tap
-          tag-name:     ${{ needs.pypi.outputs.VERSION }}
-          download-url: https://pypi.io/packages/source/c/cortexapps_cli/cortexapps_cli-${{ needs.pypi.outputs.VERSION }}.tar.gz
+          formula-name:    cortexapps-cli
+          homebrew-tap:    cortexapps/homebrew-tap
+          tag-name:        ${{ needs.pypi.outputs.VERSION }}
+          download-url:    https://pypi.io/packages/source/c/cortexapps_cli/cortexapps_cli-${{ needs.pypi.outputs.VERSION }}.tar.gz
+          download-sha256: ${{ needs.pypi.outputs.SHA }}
           commit-message: |
             {{formulaName}} ${{ needs.pypi.outputs.VERSION }}
 
