@@ -106,6 +106,9 @@ def check_config_file(config_file, replace_string):
 # config file.
 def get_config(config, args, argv, parser, replace_string):
     if os.environ.get('CORTEX_API_KEY'):
+        if args.tenant:
+            print("WARNING: tenant setting overidden by CORTEX_API_KEY")
+
         cortex_base_url = os.environ.get('CORTEX_BASE_URL', default='https://api.getcortexapp.com')
         config.update({"url": cortex_base_url})
         config.update({"api_key": os.environ.get("CORTEX_API_KEY")})
@@ -582,14 +585,36 @@ def exit(r, method, expected_rc=200, err=None):
                 sys.stderr.write("\nCheck your api_key in " + config['config_file'] + ".\n")
         debug_json(r, method)
         if err:
+            print(f'{method} {r.url} => {r.status_code} {r.reason}')
             print(err)
-        sys.exit(r.status_code)
+        
+        if not config.get('is_importing', False):
+            sys.exit(r.status_code)
     else:
         debug_json(r, method)
         print(r.text)
 
+
 def api_key(headers):
     headers.update({"Authorization": "Bearer " + config['api_key']})
+
+
+charset_utf8 = "charset=UTF-8"
+
+
+def default_headers(content_type='application/json', other={}):
+
+    if not content_type.endswith(charset_utf8):
+        content_type = content_type + ";" + charset_utf8
+
+    h = {
+        'Content-Type': content_type 
+    }
+    
+    for k, v in other.items():
+        h[k] = v
+    
+    return h
 
 # There might be a more efficient use of the requests library to combine
 # these methods into a single generic method.
@@ -838,6 +863,7 @@ def import_from_export(args):
     scorecard_directory = args.directory + "/scorecards"
     teams_directory = args.directory + "/teams"
     resource_definitions_directory = args.directory + "/resource-definitions"
+    config.update({"is_importing": True})
 
     # Default behavior is to output to terminal, so redirect stdout so it
     # can be captured as a string.
@@ -950,8 +976,10 @@ def subparser_catalog_create_or_update(subparser):
     sp.set_defaults(func=catalog_create_or_update)
 
 def catalog_create_or_update(args):
-    headers = { 'Content-Type': 'application/openapi;charset=UTF-8' }
-    post("/api/v1/open-api" + parse_opts(args), headers, read_file(args))
+    post(
+        "/api/v1/open-api" + parse_opts(args),
+        default_headers('application/openapi'), read_file(args)
+    )
 
 def subparser_catalog_delete(subparser):
     sp = subparser.add_parser('delete', help='delete entity')
@@ -1174,8 +1202,7 @@ def subparser_custom_data_add(subparser):
     sp.set_defaults(func=custom_data_add)
 
 def custom_data_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    post("/api/v1/catalog/" + args.tag + "/custom-data", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/custom-data", default_headers(), read_file(args))
 
 def subparser_custom_data_bulk(subparser):
     sp = subparser.add_parser('bulk', help='Add multiple key/values of custom data to multiple entities')
@@ -1184,8 +1211,7 @@ def subparser_custom_data_bulk(subparser):
     sp.set_defaults(func=custom_data_bulk)
 
 def custom_data_bulk(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    put("/api/v1/catalog/custom-data", headers, read_file(args))
+    put("/api/v1/catalog/custom-data", default_headers(), read_file(args))
 
 def subparser_custom_data_delete(subparser):
     sp = subparser.add_parser('delete', help='Delete custom data for entity')
@@ -1255,8 +1281,7 @@ def subparser_custom_events_create(subparser):
     sp.set_defaults(func=custom_events_create)
 
 def custom_events_create(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    post("/api/v1/catalog/" + args.tag + "/custom-events", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/custom-events", default_headers(), read_file(args))
 
 def subparser_custom_events_delete_all(subparser):
     sp = subparser.add_parser('delete-all', help='Delete all custom events for an entity') 
@@ -1304,8 +1329,7 @@ def subparser_custom_events_update_by_uuid(subparser):
     sp.set_defaults(func=custom_events_update_by_uuid)
 
 def custom_events_update_by_uuid(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    put("/api/v1/catalog/" + args.tag + "/custom-events/" + args.uuid, headers, read_file(args))
+    put("/api/v1/catalog/" + args.tag + "/custom-events/" + args.uuid, default_headers(), read_file(args))
 # Custom Events end
 
 # Groups start
@@ -1323,8 +1347,7 @@ def subparser_groups_add(subparser):
     sp.set_defaults(func=groups_add)
 
 def groups_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
-    put("/api/v1/catalog/"+ args.tag + "/groups", headers, payload=read_file(args))
+    put("/api/v1/catalog/"+ args.tag + "/groups", default_headers(), payload=read_file(args))
 
 def subparser_groups_delete(subparser):
     sp = subparser.add_parser('delete', help='Delete group from entity')
@@ -1333,7 +1356,7 @@ def subparser_groups_delete(subparser):
     sp.set_defaults(func=groups_delete)
 
 def groups_delete(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     delete("/api/v1/catalog/"+ args.tag + "/groups", headers, read_file(args))
 
 def subparser_groups_get(subparser):
@@ -1381,7 +1404,7 @@ def subparser_dependencies_add(subparser):
     sp.set_defaults(func=dependencies_add)
 
 def dependencies_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/" + args.callerTag + "/dependencies/" + args.calleeTag, headers, payload=read_file(args), expected_rc=201)
 
 def subparser_dependencies_add_in_bulk(subparser):
@@ -1412,7 +1435,7 @@ def subparser_dependencies_add_in_bulk(subparser):
     sp.set_defaults(func=dependencies_add_in_bulk)
 
 def dependencies_add_in_bulk(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/catalog/dependencies", headers, payload=read_file(args))
 
 def subparser_dependencies_delete(subparser):
@@ -1462,7 +1485,7 @@ def subparser_dependencies_delete_in_bulk(subparser):
     sp.set_defaults(func=dependencies_delete_in_bulk)
 
 def dependencies_delete_in_bulk(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     delete("/api/v1/catalog/dependencies", headers, payload=read_file(args), expected_rc=204)
 
 def subparser_dependencies_get(subparser):
@@ -1496,7 +1519,7 @@ def subparser_dependencies_update(subparser):
     sp.set_defaults(func=dependencies_update)
 
 def dependencies_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/catalog/" + args.callerTag + "/dependencies/" + args.calleeTag + parse_opts(args), headers, payload=read_file(args))
 # Dependencies end
 
@@ -1520,7 +1543,7 @@ def subparser_deploys_add(subparser):
     sp.set_defaults(func=deploys_add)
 
 def deploys_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/" + args.tag + "/deploys", headers, payload=read_file(args))
 
 def subparser_deploys_list(subparser):
@@ -1576,7 +1599,7 @@ def subparser_deploys_update_by_uuid(subparser):
     sp.set_defaults(func=deploys_update_by_uuid)
 
 def deploys_update_by_uuid(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/catalog/" + args.tag + "/deploys/" + args.uuid, headers, payload=read_file(args))
 # Deploys end
 
@@ -1666,7 +1689,7 @@ def subparser_docs_update(subparser):
     sp.set_defaults(func=docs_update)
 
 def docs_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/catalog/" + args.tag + "/documentation/openapi", headers, payload=read_json_from_yaml(args))
 # Docs End
 
@@ -1702,7 +1725,7 @@ def subparser_groups_add(subparser):
     sp.set_defaults(func=groups_add)
 
 def groups_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/catalog/"+ args.tag + "/groups", headers, payload=read_file(args))
 
 def subparser_groups_delete(subparser):
@@ -1712,7 +1735,7 @@ def subparser_groups_delete(subparser):
     sp.set_defaults(func=groups_delete)
 
 def groups_delete(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     delete("/api/v1/catalog/"+ args.tag + "/groups", headers, read_file(args))
 
 def subparser_groups_get(subparser):
@@ -1816,7 +1839,7 @@ def subparser_integrations_aws_add(subparser):
     sp.set_defaults(func=integrations_aws_add)
 
 def integrations_aws_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     payload="{ \"accountId\": \"" + args.accountId + "\", \"role\": \"" + args.role + "\"}"
     post("/api/v1/aws/configurations", headers, payload=payload)
 
@@ -1826,7 +1849,7 @@ def subparser_integrations_aws_update(subparser):
     sp.set_defaults(func=integrations_aws_update)
 
 def integrations_aws_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/aws/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_aws_delete(subparser):
@@ -1880,7 +1903,7 @@ def subparser_integrations_azure_resources_add(subparser):
     sp.set_defaults(func=integrations_azure_resources_add)
 
 def integrations_azure_resources_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/azure-resources/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_azure_resources_add_multiple(subparser):
@@ -1907,7 +1930,7 @@ def subparser_integrations_azure_resources_add_multiple(subparser):
     sp.set_defaults(func=integrations_azure_resources_add_multiple)
 
 def integrations_azure_resources_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/azure-resources/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_azure_resources_delete(subparser):
@@ -1954,7 +1977,7 @@ def subparser_integrations_azure_resources_update(subparser):
     sp.set_defaults(func=integrations_azure_resources_update)
 
 def integrations_azure_resources_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/azure-resources/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_azure_resources_validate(subparser):
@@ -1994,7 +2017,7 @@ def subparser_integrations_coralogix_add(subparser):
     sp.set_defaults(func=integrations_coralogix_add)
 
 def integrations_coralogix_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/coralogix/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_coralogix_add_multiple(subparser):
@@ -2016,7 +2039,7 @@ def subparser_integrations_coralogix_add_multiple(subparser):
     sp.set_defaults(func=integrations_coralogix_add_multiple)
 
 def integrations_coralogix_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/coralogix/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_coralogix_delete(subparser):
@@ -2063,7 +2086,7 @@ def subparser_integrations_coralogix_update(subparser):
     sp.set_defaults(func=integrations_coralogix_update)
 
 def integrations_coralogix_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/coralogix/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_coralogix_validate(subparser):
@@ -2122,7 +2145,7 @@ def subparser_integrations_github_add(subparser):
     sp.set_defaults(func=integrations_github_add)
 
 def integrations_github_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/github/configurations/app", headers, payload=read_file(args))
 
 def subparser_integrations_github_add_personal(subparser):
@@ -2143,7 +2166,7 @@ def subparser_integrations_github_add_personal(subparser):
     sp.set_defaults(func=integrations_github_add_personal)
 
 def integrations_github_add_personal(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/github/configurations/personal", headers, payload=read_file(args))
 
 def subparser_integrations_github_delete(subparser):
@@ -2214,7 +2237,7 @@ def subparser_integrations_github_update(subparser):
     sp.set_defaults(func=integrations_github_update)
 
 def integrations_github_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/github/configurations/app/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_github_update_personal(subparser):
@@ -2224,7 +2247,7 @@ def subparser_integrations_github_update_personal(subparser):
     sp.set_defaults(func=integrations_github_update_personal)
 
 def integrations_github_update_personal(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/github/configurations/personal/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_github_validate(subparser):
@@ -2264,7 +2287,7 @@ def subparser_integrations_gitlab_add(subparser):
     sp.set_defaults(func=integrations_gitlab_add)
 
 def integrations_gitlab_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/gitlab/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_gitlab_add_multiple(subparser):
@@ -2293,7 +2316,7 @@ def subparser_integrations_gitlab_add_multiple(subparser):
     sp.set_defaults(func=integrations_gitlab_add_multiple)
 
 def integrations_gitlab_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/gitlab/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_gitlab_delete(subparser):
@@ -2340,7 +2363,7 @@ def subparser_integrations_gitlab_update(subparser):
     sp.set_defaults(func=integrations_gitlab_update)
 
 def integrations_gitlab_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/gitlab/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_gitlab_validate(subparser):
@@ -2378,7 +2401,7 @@ def subparser_integrations_datadog_add(subparser):
     sp.set_defaults(func=integrations_datadog_add)
 
 def integrations_datadog_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/datadog/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_datadog_add_multiple(subparser):
@@ -2404,7 +2427,7 @@ def subparser_integrations_datadog_add_multiple(subparser):
     sp.set_defaults(func=integrations_datadog_add_multiple)
 
 def integrations_datadog_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/datadog/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_datadog_delete(subparser):
@@ -2451,7 +2474,7 @@ def subparser_integrations_datadog_update(subparser):
     sp.set_defaults(func=integrations_datadog_update)
 
 def integrations_datadog_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/datadog/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_datadog_validate(subparser):
@@ -2502,7 +2525,7 @@ def subparser_integrations_incidentio_add(subparser):
     sp.set_defaults(func=integrations_incidentio_add)
 
 def integrations_incidentio_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/incidentio/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_incidentio_add_multiple(subparser):
@@ -2531,7 +2554,7 @@ def subparser_integrations_incidentio_add_multiple(subparser):
     sp.set_defaults(func=integrations_incidentio_add_multiple)
 
 def integrations_incidentio_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/incidentio/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_incidentio_delete(subparser):
@@ -2578,7 +2601,7 @@ def subparser_integrations_incidentio_update(subparser):
     sp.set_defaults(func=integrations_incidentio_update)
 
 def integrations_incidentio_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/incidentio/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_incidentio_validate(subparser):
@@ -2618,7 +2641,7 @@ def subparser_integrations_launchdarkly_add(subparser):
     sp.set_defaults(func=integrations_launchdarkly_add)
 
 def integrations_launchdarkly_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/launchdarkly/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_launchdarkly_add_multiple(subparser):
@@ -2640,7 +2663,7 @@ def subparser_integrations_launchdarkly_add_multiple(subparser):
     sp.set_defaults(func=integrations_launchdarkly_add_multiple)
 
 def integrations_launchdarkly_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/launchdarkly/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_launchdarkly_delete(subparser):
@@ -2687,7 +2710,7 @@ def subparser_integrations_launchdarkly_update(subparser):
     sp.set_defaults(func=integrations_launchdarkly_update)
 
 def integrations_launchdarkly_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/launchdarkly/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_launchdarkly_validate(subparser):
@@ -2740,7 +2763,7 @@ def subparser_integrations_newrelic_add(subparser):
     sp.set_defaults(func=integrations_newrelic_add)
 
 def integrations_newrelic_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/newrelic/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_newrelic_add_multiple(subparser):
@@ -2766,7 +2789,7 @@ def subparser_integrations_newrelic_add_multiple(subparser):
     sp.set_defaults(func=integrations_newrelic_add_multiple)
 
 def integrations_newrelic_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/newrelic/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_newrelic_delete(subparser):
@@ -2813,7 +2836,7 @@ def subparser_integrations_newrelic_update(subparser):
     sp.set_defaults(func=integrations_newrelic_update)
 
 def integrations_newrelic_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/newrelic/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_newrelic_validate(subparser):
@@ -2851,7 +2874,7 @@ def subparser_integrations_prometheus_add(subparser):
     sp.set_defaults(func=integrations_prometheus_add)
 
 def integrations_prometheus_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/prometheus/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_prometheus_add_multiple(subparser):
@@ -2874,7 +2897,7 @@ def subparser_integrations_prometheus_add_multiple(subparser):
     sp.set_defaults(func=integrations_prometheus_add_multiple)
 
 def integrations_prometheus_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/prometheus/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_prometheus_delete(subparser):
@@ -2921,7 +2944,7 @@ def subparser_integrations_prometheus_update(subparser):
     sp.set_defaults(func=integrations_prometheus_update)
 
 def integrations_prometheus_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/prometheus/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_prometheus_validate(subparser):
@@ -2955,7 +2978,7 @@ def subparser_integrations_pagerduty_add(subparser):
     sp.set_defaults(func=integrations_pagerduty_add)
 
 def integrations_pagerduty_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/pagerduty/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_pagerduty_delete(subparser):
@@ -3001,7 +3024,7 @@ def subparser_integrations_sonarqube_add(subparser):
     sp.set_defaults(func=integrations_sonarqube_add)
 
 def integrations_sonarqube_add(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/sonarqube/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_sonarqube_add_multiple(subparser):
@@ -3022,7 +3045,7 @@ def subparser_integrations_sonarqube_add_multiple(subparser):
     sp.set_defaults(func=integrations_sonarqube_add_multiple)
 
 def integrations_sonarqube_add_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/sonarqube/configurations", headers, payload=read_file(args))
 
 def subparser_integrations_sonarqube_delete(subparser):
@@ -3069,7 +3092,7 @@ def subparser_integrations_sonarqube_update(subparser):
     sp.set_defaults(func=integrations_sonarqube_update)
 
 def integrations_sonarqube_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/sonarqube/configuration/" + args.alias, headers, payload=read_file(args))
 
 def subparser_integrations_sonarqube_validate(subparser):
@@ -3124,7 +3147,7 @@ def subparser_ip_allowlist_replace(subparser):
     sp.set_defaults(func=ip_allowlist_replace)
 
 def ip_allowlist_replace(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/ip-allowlist", headers, read_file(args))
 
 def subparser_ip_allowlist_validate(subparser):
@@ -3147,7 +3170,7 @@ def subparser_ip_allowlist_validate(subparser):
     sp.set_defaults(func=ip_allowlist_get)
 
 def ip_allowlist_validate(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/ip-allowlist/validate", headers, read_file(args))
 # IP Allowlist end
 
@@ -3213,7 +3236,7 @@ def subparser_packages_upload_go(subparser):
     sp.set_defaults(func=packages_upload_go)
 
 def packages_upload_go(args):
-    headers = { 'Content-Type': 'application/text;charset=UTF-8' }
+    headers = default_headers('application/text')
     post("/api/v1/catalog/"+ args.tag + "/packages/go/gosum", headers, read_file(args))
 
 def subparser_packages_delete_go(subparser):
@@ -3239,7 +3262,7 @@ def subparser_packages_upload_java_single(subparser):
     sp.set_defaults(func=packages_upload_java_single)
 
 def packages_upload_java_single(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/java", headers, read_file(args))
 
 def subparser_packages_upload_java_multiple(subparser):
@@ -3249,7 +3272,7 @@ def subparser_packages_upload_java_multiple(subparser):
     sp.set_defaults(func=packages_upload_java_multiple)
 
 def packages_upload_java_multiple(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/java/bulk", headers, read_file(args))
 
 def subparser_packages_delete_java(subparser):
@@ -3275,7 +3298,7 @@ def subparser_packages_upload_python_pipfile(subparser):
     sp.set_defaults(func=packages_upload_python_pipfile)
 
 def packages_upload_python_pipfile(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/python/pipfile", headers, read_file(args))
 
 def subparser_packages_upload_python_requirements(subparser):
@@ -3285,7 +3308,7 @@ def subparser_packages_upload_python_requirements(subparser):
     sp.set_defaults(func=packages_upload_python_requirements)
 
 def packages_upload_python_requirements(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/python/requirements", headers, read_file(args))
 
 def subparser_packages_delete_python(subparser):
@@ -3312,7 +3335,7 @@ def subparser_packages_upload_node_package(subparser):
     sp.set_defaults(func=packages_upload_node_package)
 
 def packages_upload_node_package(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/node/package-json", headers, read_file(args))
 
 def subparser_packages_upload_node_package_lock(subparser):
@@ -3322,7 +3345,7 @@ def subparser_packages_upload_node_package_lock(subparser):
     sp.set_defaults(func=packages_upload_node_package_lock)
 
 def packages_upload_node_package_lock(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/node/package-lock", headers, read_file(args))
 
 def subparser_packages_upload_node_yarn_lock(subparser):
@@ -3332,7 +3355,7 @@ def subparser_packages_upload_node_yarn_lock(subparser):
     sp.set_defaults(func=packages_upload_node_yarn_lock)
 
 def packages_upload_node_yarn_lock(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/node/yarn-lock", headers, read_file(args))
 
 def subparser_packages_delete_node(subparser):
@@ -3358,7 +3381,7 @@ def subparser_packages_upload_nuget_csproj(subparser):
     sp.set_defaults(func=packages_upload_nuget_csproj)
 
 def packages_upload_nuget_csproj(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/dotnet/nuget/csproj", headers, read_file(args))
 
 def subparser_packages_upload_nuget_packages_lock(subparser):
@@ -3368,7 +3391,7 @@ def subparser_packages_upload_nuget_packages_lock(subparser):
     sp.set_defaults(func=packages_upload_nuget_packages_lock)
 
 def packages_upload_nuget_packages_lock(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/"+ args.tag + "/packages/dotnet/nuget/packages-lock", headers, read_file(args))
 
 def subparser_packages_delete_nuget(subparser):
@@ -3422,7 +3445,7 @@ def subparser_plugins_create(subparser):
     sp.set_defaults(func=plugins_create)
 
 def plugins_create(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/plugins", headers, payload=read_file(args))
 
 def subparser_plugins_delete(subparser):
@@ -3479,7 +3502,7 @@ def subparser_plugins_update(subparser):
     sp.set_defaults(func=plugins_update)
 
 def plugins_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/plugins/" + args.tag, headers, payload=read_file(args))
 # Plugins end
 
@@ -3527,7 +3550,7 @@ def subparser_queries_run(subparser):
     sp.set_defaults(func=queries_run)
 
 def queries_run(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     if hasattr(args, "wait"):
        query_output = io.StringIO()
        with redirect_stdout(query_output):
@@ -3651,7 +3674,7 @@ def subparser_resource_definitions_create(subparser):
     sp.set_defaults(func=resource_definitions_create)
 
 def resource_definitions_create(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/catalog/definitions", headers, read_file(args))
 
 def subparser_resource_definitions_list(subparser):
@@ -3685,7 +3708,7 @@ def subparser_resource_definitions_update(subparser):
     sp.set_defaults(func=resource_definitions_update)
 
 def resource_definitions_update(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/catalog/definitions/" + args.type + parse_opts(args), headers, payload=read_file(args))
 # Resource Definitions end
 
@@ -3709,7 +3732,7 @@ def subparser_scorecards_create_or_update(subparser):
     sp.set_defaults(func=scorecards_create_or_update)
 
 def scorecards_create_or_update(args):
-    headers = { 'Content-Type': 'application/yaml;charset=UTF-8' }
+    headers = default_headers('application/yaml')
     post("/api/v1/scorecards/descriptor", headers, read_file(args))
 
 def subparser_scorecards_delete(subparser):
@@ -3806,7 +3829,7 @@ def subparser_teams_hierarchies_create(subparser):
     sp.set_defaults(func=teams_hierarchies_create)
 
 def teams_hierarchies_create(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/teams/departments", headers, read_file(args))
 
 def subparser_teams_hierarchies_get(subparser):
@@ -3853,7 +3876,7 @@ def subparser_teams_create(subparser):
     sp.set_defaults(func=teams_create)
 
 def teams_create(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/teams", headers, read_file(args))
 
 def subparser_teams_get(subparser):
@@ -3903,7 +3926,7 @@ def subparser_teams_update_metadata(subparser):
     sp.set_defaults(func=teams_update_metadata)
 
 def teams_update_metadata(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     put("/api/v1/teams/" + args.teamTag, headers, read_file(args))
 
 def subparser_teams_update_members(subparser):
@@ -3913,7 +3936,7 @@ def subparser_teams_update_members(subparser):
     sp.set_defaults(func=teams_update_members)
 
 def teams_update_members(args):
-    headers = { 'Content-Type': 'application/json;charset=UTF-8' }
+    headers = default_headers()
     post("/api/v1/teams" + parse_opts(args) + "/members", headers, read_file(args))
 # Teams end
 
