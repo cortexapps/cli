@@ -107,7 +107,7 @@ def check_config_file(config_file, replace_string):
 def get_config(config, args, argv, parser, replace_string):
     if os.environ.get('CORTEX_API_KEY'):
         if args.tenant:
-            print("WARNING: tenant setting overidden by CORTEX_API_KEY")
+            print("WARNING: tenant setting overidden by CORTEX_API_KEY", file=sys.stderr)
 
         cortex_base_url = os.environ.get('CORTEX_BASE_URL', default='https://api.getcortexapp.com')
         config.update({"url": cortex_base_url})
