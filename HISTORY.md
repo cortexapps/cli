@@ -1,6 +1,9 @@
 Release History
 ===============
 
+0.24.2 (2024-02-28)
+- Don't fail imports on Duplicate
+
 0.24.1 (2024-02-14)
 ------------------
 

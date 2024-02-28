@@ -588,7 +588,7 @@ def exit(r, method, expected_rc=200, err=None):
             print(f'{method} {r.url} => {r.status_code} {r.reason}')
             print(err)
         
-        if not config.get('is_importing', False):
+        if not config.get('is_importing', False) or r.status_code != 409 or r.status_code != 400:
             sys.exit(r.status_code)
     else:
         debug_json(r, method)
