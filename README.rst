@@ -235,7 +235,7 @@ Export all services from one tenant; import into another
 -------------------------------------------
 
 This example shows how to export services from a tenant named :code:`myTenant-dev` and import those services into a tenant
-named :code:`myTenant`.  It is similar to the full export example `Export from one tenant; import into another`__, but only
+named :code:`myTenant`.  It is similar to the full export example "`Export from one tenant; import into another`_", but only
 exports/imports services.
 
 Your cortex config file will require api keys for both tenants.  It would look like this:
@@ -284,7 +284,7 @@ entire export/import in its entirety.
 
  for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
  do
-    echo "creating ${service}.yaml"
+    echo "Processing service: ${service}"
     cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
  done
 
@@ -293,7 +293,7 @@ Export all domains from one tenant; import into another
 -------------------------------------------
 
 This example shows how to export domains from a tenant named :code:`myTenant-dev` and import those domains into a tenant
-named :code:`myTenant`.  It is similar to the full export example `Export from one tenant; import into another`__, but only
+named :code:`myTenant`.  It is similar to the full export example "`Export from one tenant; import into another`_", but only
 exports/imports domains.
 
 Your cortex config file will require api keys for both tenants.  It would look like this:
@@ -341,9 +341,10 @@ entire export/import in its entirety.
 
 .. code:: bash
 
- for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
+ for domain in `cortex -t myTenant catalog list -t domain | jq -r ".entities[].tag" | sort`
  do
-    cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
+    echo "Processing domain: ${domain}"
+    cortex -t myTenant catalog descriptor -y -t ${domain} | cortex -t myTenant-dev catalog create -f-
  done
 
 
