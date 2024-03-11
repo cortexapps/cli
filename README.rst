@@ -235,7 +235,7 @@ Export all services from one tenant; import into another
 -------------------------------------------
 
 This example shows how to export services from a tenant named :code:`myTenant-dev` and import those services into a tenant
-named :code:`myTenant`.  It is similar to the full export example `Export from one tenant; import into another`, but only
+named :code:`myTenant`.  It is similar to the full export example `Export from one tenant; import into another`__, but only
 exports/imports services.
 
 Your cortex config file will require api keys for both tenants.  It would look like this:
@@ -262,7 +262,66 @@ because you will have all YAMLs saved on disk.
  cd /tmp/cortex-export
  for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
  do
-    cortex -t myTenant catalog descriptor -y -t ${service} > ${service.yaml}
+    cortex -t myTenant catalog descriptor -y -t ${service} > ${service}.yaml
+ done
+
+**Import**
+
+.. code:: bash
+
+ cd /tmp/cortex-export
+ for file in `ls -1 *.yaml`
+ do
+    cortex -t myTenant-dev catalog create -f ${file}
+ done
+
+**Option 2: combine the export and import in a single command**
+
+This option is simpler and doesn't require any disk operations.  However, if it fails for any reason you have to run the 
+entire export/import in its entirety.
+
+.. code:: bash
+
+ for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
+ do
+    echo "creating ${service}.yaml"
+    cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
+ done
+
+-------------------------------------------
+Export all domains from one tenant; import into another
+-------------------------------------------
+
+This example shows how to export domains from a tenant named :code:`myTenant-dev` and import those domains into a tenant
+named :code:`myTenant`.  It is similar to the full export example `Export from one tenant; import into another`__, but only
+exports/imports domains.
+
+Your cortex config file will require api keys for both tenants.  It would look like this:
+
+.. code-block::
+
+ [myTenant]
+ api_key = <your API Key for myTenant>
+
+ [myTenant-dev]
+ api_key = <your API Key for myTenant-dev>
+
+
+**Option 1: export domain YAMLs to a directory and then import them**
+
+This option is helpful in case you want to save the entity YAML files.  It makes it easy to restart or retry an import
+because you will have all YAMLs saved on disk.
+
+**Export**
+
+.. code:: bash
+
+ mkdir -p /tmp/cortex-export
+ cd /tmp/cortex-export
+ for domain in `cortex -t myTenant catalog list -t domain | jq -r ".entities[].tag" | sort`
+ do
+    echo "creating ${domain}.yaml"
+    cortex -t myTenant catalog descriptor -y -t ${domain} > ${domain}.yaml
  done
 
 **Import**
@@ -286,6 +345,7 @@ entire export/import in its entirety.
  do
     cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
  done
+
 
 ------------------------
 Iterate over all domains
