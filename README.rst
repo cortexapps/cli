@@ -230,6 +230,63 @@ Your cortex config file will require api keys for both tenants.  It would look l
 are automatically imported by Cortex.  Cortex does not have access to any keys, so it cannot export any
 integration configurations.
 
+-------------------------------------------
+Export all services from one tenant; import into another
+-------------------------------------------
+
+This example shows how to export services from a tenant named :code:`myTenant-dev` and import those services into a tenant
+named :code:`myTenant`.  It is similar to the full export example `Export from one tenant; import into another`, but only
+exports/imports services.
+
+Your cortex config file will require api keys for both tenants.  It would look like this:
+
+.. code-block::
+
+ [myTenant]
+ api_key = <your API Key for myTenant>
+
+ [myTenant-dev]
+ api_key = <your API Key for myTenant-dev>
+
+
+**Option 1: export service YAMLs to a directory and then import them**
+
+This option is helpful in case you want to save the entity YAML files.  It makes it easy to restart or retry an import
+because you will have all YAMLs saved on disk.
+
+**Export**
+
+.. code:: bash
+
+ mkdir -p /tmp/cortex-export
+ cd /tmp/cortex-export
+ for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
+ do
+    cortex -t myTenant catalog descriptor -y -t ${service} > ${service.yaml}
+ done
+
+**Import**
+
+.. code:: bash
+
+ cd /tmp/cortex-export
+ for file in `ls -1 *.yaml`
+ do
+    cortex -t myTenant-dev catalog create -f ${file}
+ done
+
+**Option 2: combine the export and import in a single command**
+
+This option is simpler and doesn't require any disk operations.  However, if it fails for any reason you have to run the 
+entire export/import in its entirety.
+
+.. code:: bash
+
+ for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
+ do
+    cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
+ done
+
 ------------------------
 Iterate over all domains
 ------------------------
