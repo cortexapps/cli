@@ -578,6 +578,24 @@ Run this command for two different scorecards and diff the csv files to compare 
   sdiff -s /tmp/scorecard1.csv /tmp/scorecard2.csv
 
 -----------------------------------------------------------------------------
+Backup all Workday teams
+-----------------------------------------------------------------------------
+
+This recipe is helpful if you change your Workday report and want to save your existing teams in case you want to restore them.
+
+For each team it will create two files:
+- a JSON file that contains the Workday data
+- a Cortex team YAML file that refers to the Workday team
+
+.. code:: bash
+
+    for team in `cortex teams list | jq -r '.teams[] | select (.type == "IDP") | select (.idpGroup.provider == "WORKDAY") | .teamTag'`
+    do
+        cortex teams get -t ${team} > ${team}.json
+        cortex catalog descriptor -y -t ${team} > ${team}.yaml
+    done
+
+-----------------------------------------------------------------------------
 Delete all Workday teams
 -----------------------------------------------------------------------------
 
@@ -587,7 +605,7 @@ This recipe is helpful if you want to remove all Workday teams and import from s
 
     for team in `cortex teams list | jq -r '.teams[] | select (.type == "IDP") | select (.idpGroup.provider == "WORKDAY") | .teamTag'`
     do
-        cortex team delete -t ${team}
+        cortex teams delete -t ${team}
     done
 
 ====================================
