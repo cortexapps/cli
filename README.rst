@@ -230,9 +230,10 @@ Your cortex config file will require api keys for both tenants.  It would look l
 are automatically imported by Cortex.  Cortex does not have access to any keys, so it cannot export any
 integration configurations.
 
--------------------------------------------
+
+---------------------------------------------------------
 Export all services from one tenant; import into another
--------------------------------------------
+---------------------------------------------------------
 
 This example shows how to export services from a tenant named :code:`myTenant-dev` and import those services into a tenant
 named :code:`myTenant`.  It is similar to the full export example "`Export from one tenant; import into another`_", but only
@@ -288,9 +289,9 @@ entire export/import in its entirety.
     cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
  done
 
--------------------------------------------
+---------------------------------------------------------
 Export all domains from one tenant; import into another
--------------------------------------------
+---------------------------------------------------------
 
 This example shows how to export domains from a tenant named :code:`myTenant-dev` and import those domains into a tenant
 named :code:`myTenant`.  It is similar to the full export example "`Export from one tenant; import into another`_", but only
