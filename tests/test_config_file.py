@@ -32,12 +32,21 @@ def test_config_file_api_key_quotes(tmp_path):
         api_key = "${cortex_api_key}"
         """)
     content = template.substitute(cortex_api_key=cortex_api_key)
+    print(content)
     f.write_text(content)
     cli(["-c", str(f), "teams", "list"])
 
 @pytest.mark.serial
-def test_environment_variables():
+def test_environment_variables(capsys):
     cli(["teams", "list"])
+    out, err = capsys.readouterr()
+    #print(out)
+    print("ERR = " + err)
+    assert err.partition('\n')[0] == "WARNING: tenant setting overidden by CORTEX_API_KEY", "Warning should be displayed by default"
+
+    cli(["-q", "teams", "list"])
+    out, err = capsys.readouterr()
+    assert not(err.partition('\n')[0] == "WARNING: tenant setting overidden by CORTEX_API_KEY"), "Warning should be displayed with -q option"
 
 @pytest.mark.serial
 def test_config_file_create(monkeypatch, tmp_path, delete_cortex_api_key):

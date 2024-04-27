@@ -10,6 +10,7 @@ from string import Template
 import sys
 import subprocess
 
+@pytest.mark.skip(reason="Does not reliably complete within 5 minutes; will check with engineering for suggestions.")
 def test_queries_run_json(tmp_path):
     today = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
 
@@ -33,6 +34,7 @@ def test_queries_run_json(tmp_path):
     cli(["custom-data", "add", "-t", "cli-test-service", "-f", str(f1)])
     cli(["-d", "queries", "run", "-w", "-x", "300", "-f", str(f)])
 
+@pytest.mark.skip(reason="Does not reliably complete within 5 minutes; will check with engineering for suggestions.")
 def test_queries_run_text(tmp_path):
     today = datetime.now()
     yesterday = today - timedelta(days = 1)

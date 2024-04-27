@@ -107,7 +107,8 @@ def check_config_file(config_file, replace_string):
 def get_config(config, args, argv, parser, replace_string):
     if os.environ.get('CORTEX_API_KEY'):
         if args.tenant:
-            print("WARNING: tenant setting overidden by CORTEX_API_KEY", file=sys.stderr)
+            if not args.quiet:
+                print("WARNING: tenant setting overidden by CORTEX_API_KEY", file=sys.stderr)
 
         cortex_base_url = os.environ.get('CORTEX_BASE_URL', default='https://api.getcortexapp.com')
         config.update({"url": cortex_base_url})
@@ -3167,7 +3168,7 @@ def subparser_ip_allowlist_validate(subparser):
                 }
                 '''))
     add_argument_file(sp, 'file containing JSON-formatted content of IP allowlist entries')
-    sp.set_defaults(func=ip_allowlist_get)
+    sp.set_defaults(func=ip_allowlist_validate)
 
 def ip_allowlist_validate(args):
     headers = default_headers()
@@ -3954,6 +3955,7 @@ def cli(argv=sys.argv[1:]):
     parser.add_argument('-c', '--config', help='Config location, default = ~/.cortex/config', default=os.path.expanduser('~') + '/.cortex/config')
     parser.add_argument('-d', '--debug', help='Writes request debug information as JSON to stderr', action='store_true')
     parser.add_argument('-n', '--noObfuscate', help='Do not obfuscate bearer token when debugging', action='store_true')
+    parser.add_argument('-q', '--quiet', help='Suppress warning messages when overriding tenant settings with environment variables', action='store_true')
     parser.add_argument('-t', '--tenant', default='default', help='tenant name defined in ~/.cortex/config, defaults to \'default\'',metavar='')
     parser.add_argument('-v', '--version', action='version', version=version())
     sp = parser.add_subparsers(help='sub-command help')
