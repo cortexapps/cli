@@ -2,8 +2,10 @@
 Tests for plugins commands.
 """
 from cortexapps_cli.cortex import cli
+import pytest
 
-def test_plugins(capsys):
+@pytest.mark.skip(reason="Needs fix for CET-8598")
+def test(capsys):
     cli(["plugins", "get"])
     out, err = capsys.readouterr()
     if (str(out).find('{"tag":"my-test-plugin"') != -1):

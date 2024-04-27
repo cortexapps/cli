@@ -1,7 +1,17 @@
 Release History
 ===============
 
+0.24.3 (2024-04-26)
+------------------
+
+**Bugfixes**
+- Fix ip-allowlist validate
+
+**Improvements**
+- Add quiet option to suppress warning messages
+
 0.24.2 (2024-02-28)
+------------------
 - Don't fail imports on Duplicate
 
 0.24.1 (2024-02-14)
