@@ -1011,43 +1011,6 @@ def subparser_catalog_list(subparser):
             'list',
             help='List all entities across the Service, Resource and Domain Catalogs.\n This API returns summary data for each entity, so refer to the retrieve entity method to lookup more details for a single entity.'
     )
-    add_argument_groups(sp)
-    sp.add_argument(
-            '-o',
-            '--owners',
-            help='Filter based on owner group names, which correspond to the x-cortex-owners field in the Catalog Descriptor. Accepts a comma-delimited list of owner group names',
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
-    sp.add_argument(
-            '-d',
-            '--hierarchy-depth',
-            help='Depth of the parent / children hierarchy nodes. Can be \'full\' or a valid integer',
-            default='full',
-            metavar=''
-    )
-    sp.add_argument(
-            '-r',
-            '--gitRepositories',
-            help='Supports only GitHub repositories in the org/repo format',
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
-    sp.add_argument(
-            '-i',
-            '--includeHierarchyFields',
-            help='List of sub fields to include for hierarchies. Only supports \'groups\'',
-            default=False,
-            action='store_true',
-            required=False
-    )
-    sp.add_argument(
-            '-t',
-            '--types',
-            help='Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.',
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
     sp.add_argument(
             '-a',
             '--includeArchived',
@@ -1057,9 +1020,33 @@ def subparser_catalog_list(subparser):
             required=False
     )
     sp.add_argument(
-            '-m',
-            '--includeMetadata',
-            help='Whether to include custom data for each entity in the response',
+            '-d',
+            '--hierarchy-depth',
+            help='Depth of the parent / children hierarchy nodes. Can be \'full\' or a valid integer',
+            default='full',
+            metavar=''
+    )
+    add_argument_groups(sp)
+    sp.add_argument(
+            '-i',
+            '--includeHierarchyFields',
+            help='List of sub fields to include for hierarchies. Only supports \'groups\'',
+            default=False,
+            action='store_true',
+            required=False
+    )
+    sp.add_argument(
+            '-in',
+            '--includeNestedFields',
+            help='List of sub fields to include for different types, for example team:members',
+            default=argparse.SUPPRESS,
+            metavar='',
+            required=False
+    )
+    sp.add_argument(
+            '-io',
+            '--includeOwners',
+            help='Whether to include ownership information for each entity in the response',
             default=False,
             action='store_true',
             required=False
@@ -1073,21 +1060,36 @@ def subparser_catalog_list(subparser):
             required=False
     )
     sp.add_argument(
-            '-io',
-            '--includeOwners',
-            help='Whether to include ownership information for each entity in the response',
+            '-m',
+            '--includeMetadata',
+            help='Whether to include custom data for each entity in the response',
             default=False,
             action='store_true',
             required=False
     )
     sp.add_argument(
-            '-in',
-            '--includeNestedFields',
-            help='List of sub fields to include for different types, for example team:members',
+            '-o',
+            '--owners',
+            help='Filter based on owner group names, which correspond to the x-cortex-owners field in the Catalog Descriptor. Accepts a comma-delimited list of owner group names',
             default=argparse.SUPPRESS,
-            metavar='',
-            required=False
+            metavar=''
     )
+    add_argument_page(sp)
+    sp.add_argument(
+            '-r',
+            '--gitRepositories',
+            help='Supports only GitHub repositories in the org/repo format',
+            default=argparse.SUPPRESS,
+            metavar=''
+    )
+    sp.add_argument(
+            '-t',
+            '--types',
+            help='Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.',
+            default=argparse.SUPPRESS,
+            metavar=''
+    )
+    add_argument_page_size(sp)
     sp.set_defaults(func=catalog_list)
 
 def catalog_list(args):

@@ -25,6 +25,17 @@ def test_details(capsys):
 def test_list(capsys):
     cli(["catalog", "list"])
 
+def test_list_page(capsys):
+    cli(["catalog", "list", "-p", "0"])
+
+def test_list_page_size(capsys):
+    cli(["catalog", "list", "-z", "100"])
+
+def test_list_page_and_page_size(capsys):
+    cli(["catalog", "list", "-p", "0", "-z", "2"])
+    out, err = capsys.readouterr()
+    assert len(json.loads(out)['entities']) == 2
+
 def test_list_with_parms(capsys):
     cli(["catalog", "list", "-g", "corona-spokesperson", "-d", "1", "-t", "service", "-a", "-m" ])
     out, err = capsys.readouterr()
