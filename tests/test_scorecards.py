@@ -18,7 +18,8 @@ def test_scorecards():
     cli(["scorecards", "next-steps", "-t", "test-scorecard", "-e", "test-service"])
 
     # Not sure if we can run this cli right away.  Newly-created Scorecard might not be evaluated yet.
-    cli(["scorecards", "scores", "-t", "test-scorecard", "-e", "test-service"])
+    # 2024-05-06, additionally now blocked by CET-8882
+    # cli(["scorecards", "scores", "-t", "test-scorecard", "-e", "test-service"])
 
     cli(["scorecards", "scores", "-t", "test-scorecard"])
 

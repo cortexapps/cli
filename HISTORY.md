@@ -1,6 +1,18 @@
 Release History
 ===============
 
+0.26.0 (2024-05-06)
+------------------
+
+**Improvements**
+- Improve backup export time.
+
+0.25.0 (2024-05-05)
+------------------
+
+**Improvements**
+- Add catalog pagination parameters
+
 0.24.3 (2024-04-26)
 ------------------
 

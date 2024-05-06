@@ -41,6 +41,14 @@ homebrew
   brew tap cortexapps/tap
   brew install cortexapps-cli
 
+----------------------
+docker
+----------------------
+
+.. code:: bash
+
+  docker run -e CORTEX_API_KEY=<your API key> cortexapp/cli <Cortex CLI arguments>
+
 ===================
  Usage
 ===================

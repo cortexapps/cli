@@ -522,13 +522,13 @@ def add_argument_type(subparser, option="-t", help_text='The resource type.', re
             metavar=''
     )
 
-def add_argument_types(subparser, option="-t", help_text='Comma-separated list of entity types.', required=True):
+def add_argument_types(subparser, option="-t", help_text='Comma-separated list of entity types.', required=True, default=argparse.SUPPRESS):
     subparser.add_argument(
             option,
             '--types',
             help=help_text,
             required=required,
-            default=argparse.SUPPRESS,
+            default=default,
             metavar=''
     )
 
@@ -711,6 +711,8 @@ def subparser_backup_opts(subparsers):
 def subparser_backup_export(subparser):
     sp = subparser.add_parser('export', help='Export tenant')
     add_argument_export_directory(sp)
+    add_argument_types(sp, required=False, default="ALL", help_text="Entity types to export.  In addition to Cortex x-cortex-type values, this can include scorecard and ip-allowlist.  Defaults to all types.")
+    add_argument_page_size(sp, help_text="Number of entities to return in each catalog API call, defaults to 50.")
     sp.set_defaults(func=export)
 
 def export(args):
@@ -744,8 +746,7 @@ def export(args):
     resource_types_list = []
     for t in data['definitions']:
         resource_types_list.append(t['type'])
-
-    resource_types="service,domain"
+ 
     for resource_type in sorted(resource_types_list):
         print("-->  " + resource_type)
         resource_file=resource_definitions_directory + "/" + resource_type + ".json"
@@ -756,99 +757,104 @@ def export(args):
             with open(resource_file, 'w') as f:
                 f.write(resource_definition_output.getvalue())
             f.close()
-    if "type" in args:
-       delattr(args, 'type')
 
     print("Getting catalog entities")
-    catalog_json=json_directory + "/catalog.json"
-    catalog_output = io.StringIO()
-    with redirect_stdout(catalog_output):
-        catalog_list(args)
-        with open(catalog_json, 'w') as f:
+    this_page = 0
+    total_pages = -1
+    args.yaml = True
+
+    while not this_page == total_pages:
+        descriptors=json_directory + "/descriptors-" + str(this_page) + ".json"
+        catalog_output = io.StringIO()
+        with redirect_stdout(catalog_output):
+            save_types = args.types
+            if args.types == "ALL":
+                delattr(args, 'types')
+            catalog_list_descriptors(args)
+            args.types = save_types
+
+        with open(descriptors, 'w') as f:
             f.write(catalog_output.getvalue())
-    data = json.loads(catalog_output.getvalue())
+            data = json.loads(catalog_output.getvalue())
+            total_pages = data['totalPages']
+            this_page = this_page + 1
+            args.page = this_page
 
-    # Can't sort json keys, so need to create a list first so it can be sorted.
-    entity_list = []
-    for entity in data['entities']:
-        entity_list.append(entity['tag'])
+            for descriptor in data['descriptors']:
+                y = yaml.safe_load(str(descriptor))
+                tag = y['info']['x-cortex-tag']
+                # Slash will be interpreted as a sub-directory
+                output_tag = tag.replace("/", "-")
+                print("-->  " + tag)
+                f1 = open(catalog_directory + "/" + output_tag + ".yaml", 'w')
+                f1.write(str(descriptor) + "\n")
 
-    for tag in sorted(entity_list):
-        print("-->  " + tag)
-        # Can't create a file with '/' in the tag because it is interpreted as a subdirectory
-        # for the filename.
-        output_tag = tag.replace("/", "-")
-        entity_file=catalog_directory + "/" + output_tag + ".yaml"
-        args.tag = tag
-        args.yaml = True
-        entity_output = io.StringIO()
-        with redirect_stdout(entity_output):
-            catalog_descriptor(args)
-            with open(entity_file, 'w') as f:
-                f.write(entity_output.getvalue())
+    if any(export_type == "ALL" or export_type == "ip-allowlist" for export_type in args.types.split()):
+        print("Getting IP Allowlist definitions")
+        ip_allowlist_json=json_directory + "/ip-allowlist.json"
+        ip_allowlist_output = io.StringIO()
+        with redirect_stdout(ip_allowlist_output):
+            ip_allowlist_get(args)
+            with open(ip_allowlist_json, 'w') as f:
+                f.write(ip_allowlist_output.getvalue())
 
-    print("Getting IP Allowlist definitions")
-    ip_allowlist_json=json_directory + "/ip-allowlist.json"
-    ip_allowlist_output = io.StringIO()
-    with redirect_stdout(ip_allowlist_output):
-        ip_allowlist_get(args)
-        with open(ip_allowlist_json, 'w') as f:
-            f.write(ip_allowlist_output.getvalue())
+    if any(export_type == "ALL" or export_type == "scorecard" for export_type in args.types.split()):
+        print("Getting scorecards")
+        scorecards_json=json_directory + "/scorecards.json"
+        scorecards_output = io.StringIO()
+        with redirect_stdout(scorecards_output):
+            scorecards_list(args)
+            with open(scorecards_json, 'w') as f:
+                f.write(scorecards_output.getvalue())
 
-    print("Getting scorecards")
-    scorecards_json=json_directory + "/scorecards.json"
-    scorecards_output = io.StringIO()
-    with redirect_stdout(scorecards_output):
-        scorecards_list(args)
-        with open(scorecards_json, 'w') as f:
-            f.write(scorecards_output.getvalue())
+        data = json.loads(scorecards_output.getvalue())
 
-    data = json.loads(scorecards_output.getvalue())
+        # Can't sort json keys, so need to create a list first so it can be sorted.
+        scorecard_list = []
+        for scorecard in data['scorecards']:
+            scorecard_list.append(scorecard['tag'])
 
-    # Can't sort json keys, so need to create a list first so it can be sorted.
-    scorecard_list = []
-    for scorecard in data['scorecards']:
-        scorecard_list.append(scorecard['tag'])
-
-    for tag in sorted(scorecard_list):
-        print("-->  " + tag)
-        scorecard_file=scorecard_directory + "/" + tag + ".yaml"
-        args.tag=tag
-        scorecards_descriptor_output = io.StringIO()
-        with redirect_stdout(scorecards_descriptor_output):
-            scorecards_descriptor(args)
-            with open(scorecard_file, 'w') as f:
-                f.write(scorecards_descriptor_output.getvalue())
-    delattr(args, 'tag')
+        for tag in sorted(scorecard_list):
+            print("-->  " + tag)
+            scorecard_file=scorecard_directory + "/" + tag + ".yaml"
+            args.tag=tag
+            scorecards_descriptor_output = io.StringIO()
+            with redirect_stdout(scorecards_descriptor_output):
+                scorecards_descriptor(args)
+                with open(scorecard_file, 'w') as f:
+                    f.write(scorecards_descriptor_output.getvalue())
+            delattr(args, 'tag')
 
     # CORTEX teams; will not try to import IDP-backed teams.  Those would get re-imported after re-establishing the IDP integration.
-    print("Getting teams")
-    teams_json=json_directory + "/teams.json"
-    teams_output = io.StringIO()
-    with redirect_stdout(teams_output):
-        teams_list(args)
-        with open(teams_json, 'w') as f:
-            f.write(teams_output.getvalue())
-
-    data = json.loads(teams_output.getvalue())
-
-    # Can't sort json keys, so need to create a list first so it can be sorted.
-    # Has to be a dictionary because we also need to know about the type of team.
-    team_list = dict()
-    for team in data['teams']:
-        team_list[team['teamTag']] = team['type']
-
-    for team_tag, type in OrderedDict(sorted(team_list.items())).items():
-        if type != "CORTEX":
-            continue
-        print("-->  " + team_tag)
-        team_file=teams_directory + "/" + team_tag + ".json"
-        args.teamTag=team_tag
-        team_output = io.StringIO()
-        with redirect_stdout(team_output):
-            teams_get(args)
-            with open(team_file, 'w') as f:
-                f.write(team_output.getvalue())
+    # 2024-05-06 Will already have teams as entitites from catalog export, so should be no need to also export teams.
+#    print("Getting teams")
+#    teams_json=json_directory + "/teams.json"
+#    teams_output = io.StringIO()
+#    with redirect_stdout(teams_output):
+#        teams_list(args)
+#        with open(teams_json, 'w') as f:
+#            f.write(teams_output.getvalue())
+#
+#    data = json.loads(teams_output.getvalue())
+#
+#    # Can't sort json keys, so need to create a list first so it can be sorted.
+#    # Has to be a dictionary because we also need to know about the type of team.
+#    team_list = dict()
+#    for team in data['teams']:
+#        team_list[team['teamTag']] = team['type']
+#
+#    for team_tag, type in OrderedDict(sorted(team_list.items())).items():
+#        if type != "CORTEX":
+#            continue
+#        print("-->  " + team_tag)
+#        output_tag = team_tag.replace("/", "-")
+#        team_file=teams_directory + "/" + output_tag + ".json"
+#        args.teamTag=team_tag
+#        team_output = io.StringIO()
+#        with redirect_stdout(team_output):
+#            teams_get(args)
+#            with open(team_file, 'w') as f:
+#                f.write(team_output.getvalue())
 
     print("\nExport complete!")
     print("Contents available in " + args.directory)
