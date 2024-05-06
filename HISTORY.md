@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.1 (2024-05-06)
+------------------
+
+**Improvements**
+- Upgrade GH Actions from Node.js 16 to Node.js 20.
+
 0.26.0 (2024-05-06)
 ------------------
 

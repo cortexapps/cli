@@ -24,7 +24,7 @@ jobs:
       URL:     ${{ steps.git-details.outputs.URL }}
       VERSION: ${{ steps.git-details.outputs.VERSION }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.64.0
@@ -33,7 +33,7 @@ jobs:
         WITH_V: false
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
 
@@ -98,7 +98,7 @@ jobs:
       SHA:     ${{ steps.build-docker-image.outputs.SHA }}
       URL:     ${{ steps.build-docker-image.outputs.URL }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Get version info
       env:
