@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.2 (2024-05-08)
+------------------
+
+**Bugfixes**
+- change includeHierarchyFields for catalog API to be string, not boolean
+
 0.26.1 (2024-05-06)
 ------------------
 

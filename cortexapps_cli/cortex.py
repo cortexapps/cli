@@ -294,6 +294,15 @@ def add_argument_groups(subparser):
             metavar=''
     )
 
+def add_argument_hierarchyDepth(subparser):
+    subparser.add_argument(
+            '-d',
+            '--hierarchy-depth',
+            help='Depth of the parent / children hierarchy nodes. Can be \'full\' or a valid integer',
+            default='full',
+            metavar=''
+    )
+
 def add_argument_id(subparser, help_text='The id of the CQL query'):
     subparser.add_argument(
             '-i',
@@ -322,6 +331,16 @@ def add_argument_includeDrafts(subparser, help_text='Include plugin drafts.'):
             required=False,
             default=True,
             action='store_true'
+    )
+
+def add_argument_includeHierarchyFields(subparser):
+    subparser.add_argument(
+            '-i',
+            '--includeHierarchyFields',
+            help='List of sub fields to include for hierarchies. Only supports \'groups\'',
+            required=False,
+            default=argparse.SUPPRESS,
+            metavar=''
     )
 
 def add_argument_includeIncoming(subparser, help_text='Including incoming dependencies.'):
@@ -1025,22 +1044,9 @@ def subparser_catalog_list(subparser):
             action='store_true',
             required=False
     )
-    sp.add_argument(
-            '-d',
-            '--hierarchy-depth',
-            help='Depth of the parent / children hierarchy nodes. Can be \'full\' or a valid integer',
-            default='full',
-            metavar=''
-    )
+    add_argument_hierarchyDepth(sp)
     add_argument_groups(sp)
-    sp.add_argument(
-            '-i',
-            '--includeHierarchyFields',
-            help='List of sub fields to include for hierarchies. Only supports \'groups\'',
-            default=False,
-            action='store_true',
-            required=False
-    )
+    add_argument_includeHierarchyFields(sp)
     sp.add_argument(
             '-in',
             '--includeNestedFields',
@@ -1123,14 +1129,8 @@ def catalog_descriptor(args):
 
 def subparser_catalog_details(subparser):
     sp = subparser.add_parser('details', help='Retrieve entity details')
-    sp.add_argument(
-            '-i',
-            '--includeHierarchyFields',
-            help='List of sub fields to include for hierarchies. Only supports \'groups\'',
-            default=argparse.SUPPRESS,
-            metavar=''
-    )
-    add_argument_groups(sp)
+    add_argument_includeHierarchyFields(sp)
+    add_argument_hierarchyDepth(sp)
     add_argument_tag(sp)
     sp.set_defaults(func=catalog_details)
 

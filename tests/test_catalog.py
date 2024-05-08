@@ -22,6 +22,9 @@ def test_dryrun(capsys):
 def test_details(capsys):
     cli(["catalog", "details", "-t", "cli-test-service"])
 
+def test_details_hierarchy_fields(capsys):
+    cli(["catalog", "details", "-i", "groups", "-t", "cli-test-service"])
+
 def test_list(capsys):
     cli(["catalog", "list"])
 
@@ -30,6 +33,9 @@ def test_list_page(capsys):
 
 def test_list_page_size(capsys):
     cli(["catalog", "list", "-z", "100"])
+
+def test_list_include_hierarchy_fields(capsys):
+    cli(["catalog", "list", "-i", "groups", "-z", "50"])
 
 def test_list_page_and_page_size(capsys):
     cli(["catalog", "list", "-p", "0", "-z", "2"])
