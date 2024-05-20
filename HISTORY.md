@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.3 (2024-05-20)
+------------------
+
+**Bugfixes**
+- fix JSON payload formatting for docs update subcommand
+
 0.26.2 (2024-05-08)
 ------------------
 
