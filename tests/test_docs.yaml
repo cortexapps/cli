@@ -6,7 +6,7 @@ paths:
   /:
     get:
       operationId: listVersionsv2
-      summary: List API versions
+      summary: List API versions with 'full' history
       responses:
         "200":
           description: 200 response

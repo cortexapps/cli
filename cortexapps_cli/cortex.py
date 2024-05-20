@@ -73,11 +73,12 @@ def read_file(args):
 def read_json_from_yaml(args):
     if str(type(args.file)) == "<class '_io.TextIOWrapper'>":
         data = yaml.safe_load(args.file.read())
+
     else:
         with open(args.file.name, 'rb') as f:
             data = yaml.safe_load(f)
 
-    return '{ "spec": "' + str(data) + '" }'
+    return json.dumps({ "spec": "" + str(data) + "" })
 
 def check_config_file(config_file, replace_string):
     if not os.path.isfile(config_file):
