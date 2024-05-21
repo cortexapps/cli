@@ -617,6 +617,37 @@ This recipe is helpful if you want to remove all Workday teams and import from s
         cortex teams delete -t ${team}
     done
 
+-----------------------------------------------------------------------------
+Add provider for all group type owners where provider is not listed
+-----------------------------------------------------------------------------
+
+This recipe adds the value of variable named ``provider`` to any owner for which **type = GROUP** and the provider field is not listed.  This recipe can be used to address this issue from Cortex release notes:
+``Starting July 2nd (2024), any group type owners in the x-cortex-owners section of an entity descriptor will require a provider to be explicitly defined.``
+
+Adjust the value of ``provider`` accordingly.  It must be one of the providers listed in our `public docs <https://docs.cortex.io/docs/reference/basics/ownership>`_.
+
+This recipe does the following:
+
+- It runs the Cortex query as documented in the release notes to find all group type owners where the provider is not defined.  The ``cortex queries`` parameter ``-f-`` indicates that the query input comes from stdin, provided by the here document (the content provided between the two 'EOF' delimiters).
+- The recipe waits 10 minutes (denoted by parameter ``-x 600``) for the query to complete.
+- It loops over the results of the Cortex query, adding the provider listed in the ``provider`` variable for any group owner where the provider is not defined in the entity.
+- The contents of the entity descriptor are changed using yq and then passed as stdin to the cortex catalog subcommand to update the entity. 
+
+.. code:: bash
+
+    provider="GITHUB"
+    query_output="query.json"
+
+    cortex queries run -f- -w -x 600 > ${query_output} << EOF
+    jq(entity.descriptor(), "[.info.\"x-cortex-owners\" | .[] | select(.type | ascii_downcase == \"group\") | select(.provider == null)] | length") > 0
+    EOF
+
+    for entity in `cat ${query_output} | jq -r ".result[].tag"`
+    do
+       echo "entity = $entity"
+       cortex catalog descriptor -y -t ${entity} | yq "with(.info.x-cortex-owners[]; select(.type | downcase == \"group\") | select(.provider == null) | .provider = \"${provider}\" )" | cortex catalog create -f-
+    done
+
 ====================================
 
 .. |PyPI download month| image:: https://img.shields.io/pypi/dm/cortexapps-cli.svg
