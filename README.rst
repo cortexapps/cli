@@ -648,6 +648,105 @@ This recipe does the following:
        cortex catalog descriptor -y -t ${entity} | yq "with(.info.x-cortex-owners[]; select(.type | downcase == \"group\") | select(.provider == null) | .provider = \"${provider}\" )" | cortex catalog create -f-
     done
 
+-----------------------------------------------------------------------------
+Obfuscating a Cortex export
+-----------------------------------------------------------------------------
+
+This script will obfuscate a Cortex backup.  This can be helpful for on-premise customers who may need to provide data to Cortex to help identify performance or usability issues.
+
+.. code:: bash
+
+   # Works off an existing cortex CLI backup.
+   # - Create a backup with cortex CLI command: cortex backup export -z 10000
+   set -e
+   input=$1
+   output=$2
+
+   all_file=${output}/all.yaml
+   obfuscated_file=${output}/obfuscated.yaml
+
+   echo "Output directory: ${output}"
+   translate_file="${output}/translate.csv"
+
+   if [ ! -d ${output} ]; then
+      mkdir -p ${output}
+   fi
+
+   for yaml in `ls -1 ${input}/catalog/*`
+   do
+      entity=$(yq ${yaml} | yq ".info.x-cortex-tag")
+      new_entity=$(echo ${entity} | md5sum | cut -d' ' -f 1)
+      echo "${entity},${new_entity}" >> ${translate_file}
+      echo "Creating: $new_entity"
+      cat ${yaml} |\
+         yq ".info.\"x-cortex-tag\" = \"${new_entity}\" | \
+             .info.title=\"${new_entity}\" | \
+             del(.info.description) | \
+             del(.info.\"x-cortex-link\") | \
+             del(.info.\"x-cortex-links\") | \
+             del(.info.\"x-cortex-groups\") | \
+             del(.info.\"x-cortex-custom-metadata\") | \
+             del(.info.\"x-cortex-issues\") | \
+             del(.info.\"x-cortex-git\") | \
+             del(.info.\"x-cortex-slack\") | \
+             del(.info.\"x-cortex-oncall\") | \
+             with(.info; \
+                select(.\"x-cortex-team\".members != null) | .\"x-cortex-team\".members = {\"name\": \"Cortex User\", \"email\": \"user@example.com\"} \
+                 )" >> ${all_file}
+      echo "---" >> ${all_file}
+   done
+
+   # The longer strings are translated first preventing substrings from being replaced in a longer string
+   cat ${translate_file} | sort -r > ${translate_file}.tmp && echo "entity,new_entity" > ${translate_file} && cat ${translate_file}.tmp >> ${translate_file} && rm ${translate_file}.tmp
+
+   python3 - ${all_file} ${translate_file} ${obfuscated_file} << EOF
+   import csv
+   import re
+   import sys
+
+   yaml_file = sys.argv[1]
+   translate_file = sys.argv[2]
+   output = sys.argv[3]
+
+   with open(yaml_file, 'r') as f:
+        bytes = f.read() # read entire file as bytes
+        with open(translate_file, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                entity = row['entity']
+                new_entity = row['new_entity']
+                print("entity = " + entity + ", new_entity = " + new_entity)
+                bytes = bytes.replace("tag: " + entity, "tag: " + new_entity)
+                bytes = bytes.replace("name: " + entity, "name: " + new_entity)
+
+   f = open(output, "w")
+   f.write(bytes)
+   f.close()
+   EOF
+
+   # change all email addresses
+   sed -i 's/email:.*/email: user@example.com/' ${obfuscated_file}
+
+   # change all slack channel names
+   sed -i 's/channel:.*/channel: my-slack-channel/' ${obfuscated_file}
+
+   # copy export directory to new directory, without catalog YAML
+   rsync -av --exclude='catalog' ${input}/ ${output}
+   mkdir -p ${output}/catalog
+
+   # now split single file into multiple that can be passed as parameter to cortex catalog create -f
+   cd ${output}/catalog
+   yq --no-doc -s '"file_" + $index' ${obfuscated_file}
+
+   # tar it up
+   tar_file=$(basename ${output}).tar
+   cd ${output}
+   rm ${all_file}
+   rm ${translate_file} 
+   tar -cvf ${tar_file} ./*
+
+   echo "Created: ${output}/${tar_file}"
+
 ====================================
 
 .. |PyPI download month| image:: https://img.shields.io/pypi/dm/cortexapps-cli.svg
