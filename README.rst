@@ -79,7 +79,7 @@ If you have multiple Cortex instances, you can create a section for each, for ex
  api_key = REPLACE_WITH_YOUR_CORTEX_API_KEY
  base_url = https://app.cortex.mycompany.com
 
-**NOTE:** if not supplied, base_url defaults to :code:`https://app.getcortexapp.com`.
+**NOTE:** if not supplied, base_url defaults to :code:`https://api.getcortexapp.com`.
 
 The CLI will retrieve configuration data from the :code:`[default]` section unless you pass the :code:`-t/--tenant` flag.
 
@@ -99,7 +99,7 @@ Environment Variables
 The CLI supports the following environment variables.  If provided, the Cortex config file will not be read.
 
 - CORTEX_API_KEY
-- CORTEX_BASE_URL - this is optional if using Cortex cloud; defaults to `https://app.getcortexapp.com`
+- CORTEX_BASE_URL - this is optional if using Cortex cloud; defaults to `https://api.getcortexapp.com`
 
 Example:
 
