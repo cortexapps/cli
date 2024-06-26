@@ -1,4 +1,5 @@
-from cortexapps_cli.cortex import cli
+from cortex import cli
+#from cortexapps_cli.cortex import cli
 
 from contextlib import redirect_stdout
 from datetime import datetime
