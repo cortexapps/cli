@@ -1,0 +1,8 @@
+openapi: 3.0.0
+info:
+  title: Groups Entity
+  description: Entity that will be created and then used in Groups tests
+  x-cortex-tag: groups-entity
+  x-cortex-type: service
+  x-cortex-groups:
+  - public-api-test

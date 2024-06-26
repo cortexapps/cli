@@ -1,0 +1,17 @@
+info:
+  description: ""
+  title: Security health status
+  version: 1.0.0
+  x-cortex-links:
+    - name: Error Logs (api-Security health status)
+      type: logs
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Prometheus Dashboard - prod
+      type: dashboard
+  x-cortex-tag: api-security-health-status
+  x-cortex-type: api
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

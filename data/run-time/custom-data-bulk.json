@@ -1,0 +1,24 @@
+{
+  "values": {
+    "backend-worker": [
+      {
+        "key": "bulk-key-1",
+        "value": "value-1"
+      },
+      {
+        "key": "bulk-key-2",
+        "value": "value-2"
+      }
+    ],
+    "ach-payments-nacha": [
+      {
+        "key": "bulk-key-3",
+        "value": "value-3"
+      },
+      {
+        "key": "bulk-key-4",
+        "value": "value-4"
+      }
+    ]
+  }
+}

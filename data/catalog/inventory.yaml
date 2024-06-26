@@ -1,0 +1,20 @@
+info:
+  description: null
+  title: Inventory
+  version: 1.0.0
+  x-cortex-links:
+    - name: Inventory Overview
+      type: documentation
+    - name: Inventory Specs
+      type: specs
+    - name: Inventory Bug bashes
+      type: bug_bashes
+  x-cortex-tag: inventory
+  x-cortex-type: domain
+  x-cortex-children:
+    - tag: robot-item-sorter
+    - tag: stock-level-analyzer
+    - tag: alerting-stock-service
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

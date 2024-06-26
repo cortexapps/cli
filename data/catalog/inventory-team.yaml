@@ -1,0 +1,33 @@
+info:
+  description: null
+  title: Inventory Team
+  version: 1.0.0
+  x-cortex-links:
+    - name: Inventory Team Onboarding Guide
+      type: onboarding
+    - name: Inventory Team Best Practices
+      type: best_practices
+  x-cortex-tag: inventory-team
+  x-cortex-team:
+    groups:
+      - name: okta-inventory-team
+        provider: OKTA
+    members:
+      - email: greg.pett@cortex.io
+        name: Greg Pett
+        notificationsEnabled: true
+      - email: andrew.si@cortex.io
+        name: Andrew Si
+        notificationsEnabled: true
+      - email: tyler.ackerson@cortex.io
+        name: Tyler Ackerson
+        notificationsEnabled: true
+      - email: wojciech.garncarz@cortex.io
+        name: Wojciech Garncarz
+        notificationsEnabled: true
+      - email: lukasz.blaszczyk@cortex.io
+        name: Lukasz Blaszczyk
+        notificationsEnabled: true
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

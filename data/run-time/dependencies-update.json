@@ -1,0 +1,7 @@
+{
+  "description": "This is the updated description of the dependency",
+  "metadata": {
+    "newField": "newField data",
+    "newField1": "newField1 data"
+  }
+}

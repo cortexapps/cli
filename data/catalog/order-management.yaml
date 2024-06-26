@@ -1,0 +1,19 @@
+info:
+  description: null
+  title: Order Management
+  version: 1.0.0
+  x-cortex-links:
+    - name: Order Management Overview
+      type: documentation
+    - name: Order Management Specs
+      type: specs
+    - name: Order Management Bug bashes
+      type: bug_bashes
+  x-cortex-tag: order-management
+  x-cortex-type: domain
+  x-cortex-children:
+    - tag: warehousing
+    - tag: checkout
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

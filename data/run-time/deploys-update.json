@@ -1,0 +1,14 @@
+{
+  "customData": {
+     "test-field-1": "value1"
+  },
+  "deployer": {
+    "email": "test-user@example.com",
+    "name": "Test Deployer"
+  },
+  "environment": "testEnv",
+  "sha": "SHA-456789",
+  "timestamp": "2023-11-29T22:55:38.284Z",
+  "title": "deploy-001",
+  "type": "DEPLOY"
+}

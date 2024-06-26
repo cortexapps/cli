@@ -1,23 +1,26 @@
-"""
-Tests for teams commands.
-"""
-from cortexapps_cli.cortex import cli
+from common import *
 
-def test_dependencies(capsys):
-    cli(["dependencies", "delete-all", "-r", "dependency-service"])
-    cli(["dependencies", "add", "-r", "dependency-service", "-e",
-          "test-service", "-m", "GET", "-p", "/2.0/users/{username}", "-f", "tests/test_dependencies.json"])
+def test(capsys):
+    callerTag = "fraud-analyzer"
+    calleeTag = "backend-worker"
 
-    cli(["dependencies", "delete", "-r", "dependency-service", "-e", "test-service", "-m", "GET", "-p", "/2.0/users/{username}"])
+    cli(["-q", "dependencies", "delete-all", "-r", callerTag])
 
-    cli(["dependencies", "add-in-bulk", "-f", "tests/test_dependencies_bulk.json"])
+    cli_command(capsys, ["dependencies", "add-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
 
-    cli(["dependencies", "get", "-r", "dependency-service", "-e", "test-service", "-m", "GET", "-p", "/2.0/users/{username}"])
+    cli_command(capsys, ["dependencies", "add", "-r", callerTag, "-e",
+          calleeTag, "-m", "GET", "-p", "/api/v1/audit-logs", "-f", "data/run-time/dependencies.json"])
+    cli_command, (["dependencies", "update", "-r", callerTag, "-e", calleeTag, "-m", "GET", "-p", "/api/v1/audit-logs", "-f", "data/run-time/dependencies-update.json"])
+    response = cli_command(capsys, ["dependencies", "get", "-r", "fraud-analyzer", "-e", "backend-worker", "-m", "GET", "-p", "/api/v1/github/configurations"])
+    assert response["callerTag"] == callerTag, "callerTag should be " + callerTag
+    assert response["calleeTag"] == calleeTag, "calleeTag should be " + calleeTag
 
-    cli(["dependencies", "get-all", "-r", "dependency-service", "-o"])
+    cli_command(capsys, ["dependencies", "get", "-r", "fraud-analyzer", "-e", "backend-worker", "-m", "GET", "-p", "/api/v1/github/configurations"])
 
-    cli(["dependencies", "update", "-r", "dependency-service", "-e", "test-service", "-m", "GET", "-p", "/2.0/users/{username}", "-f", "tests/test_dependencies_update.json"])
+    response = cli_command(capsys, ["dependencies", "get-all", "-r", "fraud-analyzer", "-o"])
+    assert any(dependency['callerTag'] == callerTag and dependency['path'] == "/api/v1/github/configurations" for dependency in response["dependencies"])
 
-    cli(["dependencies", "add-in-bulk", "-f", "tests/test_dependencies_bulk.json"])
-    cli(["dependencies", "delete-in-bulk", "-f", "tests/test_dependencies_bulk.json"])
-    cli(["dependencies", "delete-all", "-r", "dependency-service"])
+    cli(["-q", "dependencies", "delete", "-r", "fraud-analyzer", "-e", "backend-worker", "-m", "GET", "-p", "/api/v1/audit-logs"])
+    cli(["-q", "dependencies", "add-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
+    cli(["-q", "dependencies", "delete-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
+    cli(["-q", "dependencies", "delete-all", "-r", "fraud-analyzer"])

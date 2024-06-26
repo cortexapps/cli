@@ -1,32 +1,34 @@
-"""
-Tests for deploys commands.
-"""
-from cortexapps_cli.cortex import cli
-import json
+from common import *
 
-def _add_deploy():
-    cli(["deploys", "add", "-t", "cli-test-service", "-f", "tests/test_deploys.json"])
+def _add_deploy(capsys):
+    cli_command(capsys, ["deploys", "add", "-t", "shipping-integrations", "-f", "data/run-time/deploys.json"])
 
 def test_deploys(capsys):
-    # This has to be the first call to the cli because we want to capture the output and capsys
-    # captures output collectively.
-    cli(["deploys", "add", "-t", "cli-test-service", "-f", "tests/test_deploys_uuid.json"])
-    out, err = capsys.readouterr()
-    out = json.loads(out)
-    uuid = out['uuid']
+    response = cli_command(capsys, ["deploys", "add", "-t", "shipping-integrations", "-f", "data/run-time/deploys-uuid.json"])
+    uuid = response['uuid']
 
-    cli(["-d", "deploys", "update-by-uuid", "-t", "cli-test-service", "-u", uuid, "-f", "tests/test_deploys_update.json"])
+    response = cli_command(capsys, ["deploys", "list", "-t", "shipping-integrations"])
+    assert any(deploy['uuid'] == uuid for deploy in response['deployments']), "Should find a deploy with uuid"
 
-    cli(["deploys", "delete-by-uuid", "-t", "cli-test-service", "-u", uuid])
+    cli_command(capsys, ["deploys", "update-by-uuid", "-t", "shipping-integrations", "-u", uuid, "-f", "data/run-time/deploys-update.json"])
+    response = cli_command(capsys, ["deploys", "list", "-t", "shipping-integrations"])
+    deploy = [deploy for deploy in response['deployments'] if deploy['uuid'] == uuid]
+    assert deploy[0]['sha'] == "SHA-456789", "Should find a deploy with sha"
 
-    _add_deploy()
+    cli_command(capsys, ["deploys", "delete-by-uuid", "-t", "shipping-integrations", "-u", uuid])
+    response = cli_command(capsys, ["deploys", "list", "-t", "shipping-integrations"])
+    assert not any(deploy['uuid'] == uuid for deploy in response['deployments']), "Should not find a deploy with uuid"
 
-    cli(["deploys", "list", "-t", "cli-test-service"])
+    _add_deploy(capsys)
+    cli_command(capsys, ["deploys", "delete", "-t", "shipping-integrations", "-s", "SHA-123456"])
+    response = cli_command(capsys, ["deploys", "list", "-t", "shipping-integrations"])
+    assert not any(deploy['sha'] == "SHA-123456" for deploy in response['deployments']), "Should not find a deploy with sha that was deleted"
 
-    cli(["deploys", "delete", "-t", "cli-test-service", "-s", "SHA-123456"])
+    _add_deploy(capsys)
+    cli_command(capsys, ["deploys", "delete-filter", "-y", "DEPLOY"])
+    assert not any(deploy['type'] == "DEPLOY" for deploy in response['deployments']), "Should not find a deploy type 'DEPLOY' sha that was deleted"
 
-    _add_deploy()
-    cli(["deploys", "delete-filter", "-y", "DEPLOY"])
-
-    _add_deploy()
-    cli(["deploys", "delete-all"])
+    _add_deploy(capsys)
+    cli_command(capsys, ["deploys", "delete-all"])
+    response = cli_command(capsys, ["deploys", "list", "-t", "shipping-integrations"])
+    assert len(response['deployments']) == 0, "All deployments for entity should be deleted"

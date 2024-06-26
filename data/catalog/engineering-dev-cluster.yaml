@@ -1,0 +1,17 @@
+info:
+  description: ""
+  title: engineering-dev-cluster
+  version: 1.0.0
+  x-cortex-links:
+    - name: Error Logs (engineering-dev-cluster)
+      type: logs
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Prometheus Dashboard - prod
+      type: dashboard
+  x-cortex-tag: engineering-dev-cluster
+  x-cortex-type: k8s-cluster
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

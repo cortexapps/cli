@@ -1,0 +1,33 @@
+info:
+  description: null
+  title: Profile Team
+  version: 1.0.0
+  x-cortex-links:
+    - name: Profile Team Onboarding Guide
+      type: onboarding
+    - name: Profile Team Best Practices
+      type: best_practices
+  x-cortex-tag: profile-team
+  x-cortex-team:
+    groups:
+      - name: okta-profile-team
+        provider: OKTA
+    members:
+      - email: cristina.buenahora@cortex.io
+        name: Cristina Buenahora
+        notificationsEnabled: true
+      - email: david.barnes@cortex.io
+        name: David Barnes
+        notificationsEnabled: true
+      - email: hanna.vigil@cortex.io
+        name: Hanna Vigil
+        notificationsEnabled: true
+      - email: stormy.adams@cortex.io
+        name: Stormy Adams
+        notificationsEnabled: true
+      - email: igor.rog@cortex.io
+        name: Igor Rog
+        notificationsEnabled: true
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

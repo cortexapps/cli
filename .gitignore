@@ -1,5 +1,5 @@
 .cache
-.coverage
+.coverage*
 __pycache__/
 build/
 develop-eggs/
@@ -9,3 +9,4 @@ htmlcov/
 coverage.json
 .github/workflows/test.yml
 .export
+report.html

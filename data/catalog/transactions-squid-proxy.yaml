@@ -1,0 +1,19 @@
+info:
+  description: Production squid proxy used to route transaction traffic
+  title: Transaction Squid Proxy
+  version: 1.0.0
+  x-cortex-links:
+    - name: Error Logs (transaction-squid-proxy)
+      type: logs
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Prometheus Dashboard - prod
+      type: dashboard
+  x-cortex-tag: transaction-squid-proxy
+  x-cortex-type: squid-proxy
+  x-cortex-definition:
+    ip: 206.61.17.15
+    vpc: us-east-2
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

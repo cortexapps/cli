@@ -1,21 +1,23 @@
-"""
-Tests for plugins commands.
-"""
-from cortexapps_cli.cortex import cli
-import pytest
+from common import *
 
-@pytest.mark.skip(reason="Needs fix for CET-8598")
 def test(capsys):
-    cli(["plugins", "get"])
-    out, err = capsys.readouterr()
-    if (str(out).find('{"tag":"my-test-plugin"') != -1):
-        cli(["plugins", "delete", "-t", "my-test-plugin"])
-    cli(["plugins", "create", "-f", "tests/test_plugins.json"])
+    pluginTag = "public-api-test-plugin"
 
-    cli(["plugins", "get"])
+    response = cli_command(capsys, ["plugins", "get"])
+    if any(plugin['tag'] == pluginTag for plugin in response['plugins']):
+        cli(["plugins", "delete", "-t", pluginTag])
 
-    cli(["plugins", "update", "-t", "my-test-plugin", "-f", "tests/test_plugins_update.json"])
+    cli_command(capsys, ["plugins", "create", "-f", "data/run-time/test_plugins.json"])
 
-    cli(["plugins", "get-by-tag", "-t", "my-test-plugin"])
+    response = cli_command(capsys, ["plugins", "get"])
+    assert any(plugin['tag'] == pluginTag for plugin in response['plugins']), "Plugin " + plugin + " returned in get"
 
-    cli(["plugins", "delete", "-t", "my-test-plugin"])
+    cli_command(capsys, ["plugins", "update", "-t", pluginTag, "-f", "data/run-time//test_plugins_update.json"])
+
+    response = cli_command(capsys, ["plugins", "get-by-tag", "-t", pluginTag])
+    assert response['tag'] == pluginTag, "Plugin " + plugin + " returned by get-by-tag"
+    assert response['description'] == "Just testing plugin updates", "Plugin " + plugin + " description updated"
+
+    cli(["-q", "plugins", "delete", "-t", pluginTag])
+    response = cli_command(capsys, ["plugins", "get"])
+    assert not any(plugin['tag'] == pluginTag for plugin in response['plugins']), "Plugin " + plugin + " returned in get"

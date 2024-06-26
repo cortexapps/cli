@@ -1,0 +1,21 @@
+info:
+  description: null
+  title: Recommendations
+  version: 1.0.0
+  x-cortex-links:
+    - name: Recommendations Overview
+      type: documentation
+    - name: Recommendations Specs
+      type: specs
+    - name: Recommendations Bug bashes
+      type: bug_bashes
+  x-cortex-tag: recommendations
+  x-cortex-type: domain
+  x-cortex-children:
+    - tag: recommendation-engine
+    - tag: recommendation-engine-kafka
+    - tag: feed-calculator-job
+    - tag: new-item-fanout-service
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0
