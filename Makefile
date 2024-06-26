@@ -87,6 +87,7 @@ FEATURE_FLAG_ENVSUBST := $(FEATURE_FLAGS:%=$(BUILD_DIR)/ff/envsubst/%)
 PYTHON_VENV = ~/.venv/cortex-cli-test
 
 all: info setup feature-flags-dump load-data github test-api ## Setup environment, load data and test
+all-cli: all test-cli
 
 .PHONY: info
 info:
@@ -233,10 +234,8 @@ $(FEATURE_FLAG_EXPORT): | $(BUILD_DIR)/ff
 github: $(BUILD_DIR)/github ## Configure Cortex GitHub integration, create GitHub webhook
 
 $(BUILD_DIR)/github: | $(BUILD_DIR)
-	echo "current directory = $(PWD)"
-	pwd
-	ls -l
-	. $(PYTHON_VENV)/bin/activate; PYTHONPATH=./cortexapps_cli:./tests python3 tests/github_setup.py
+	#. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests python3 tests/github_setup.py
+	. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests pytest tests/github_setup.py
 	touch $@
 
 $(BUILD_DIR):

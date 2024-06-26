@@ -4,3 +4,4 @@ pyyaml >= 6.0.1
 pytest-html
 pytest >= 7.4.3
 pytest-cov >= 4.1.0
+requests >= 2.32.0

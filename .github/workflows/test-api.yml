@@ -38,16 +38,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        echo "jeff, current directory = $(pwd)"
-        ls -l
-        pwd
         python -m pip install -r requirements.txt
 
     - name: Test with pytest
       run: |
-        echo "current directory = $(pwd)"
-        ls -l
-        pwd
         make
 
     - name: Pytest Report

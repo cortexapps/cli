@@ -67,4 +67,4 @@ jobs:
 
     - name: Test with pytest
       run: |
-        make test
+        make all-cli

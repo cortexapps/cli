@@ -52,3 +52,7 @@ addopts = "--cov=cortexapps_cli --cov-append --cov-report term-missing"
 testpaths = [
     "tests"
 ]
+
+[tool.setuptools]
+packages = ["cortexapps_cli", "tests"]
+py-modules = ["cortexapps_cli", "tests"] # dash, not underscore
