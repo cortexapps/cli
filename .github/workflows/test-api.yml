@@ -1,7 +1,6 @@
 name: Test API
 
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: "0 12,15,18,21 * * *" 
@@ -18,7 +17,7 @@ env:
   CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL_STAGING }}
   GH_PAT: ${{ secrets.GH_PAT }}
   GH_WEBHOOK_SECRET: ${{ secrets.GH_WEBHOOK_SECRET_STAGING }}
-  CORTEX_GH_WEBHOOK_URL: ${{ secrets.CORTEX_GH_WEBHOOK_ALIAS_STAGING }}
+  CORTEX_GH_WEBHOOK_URL: ${{ vars.CORTEX_GH_WEBHOOK_URL_STAGING }}
 
 jobs:
   test:
@@ -39,10 +38,16 @@ jobs:
 
     - name: Install dependencies
       run: |
+        echo "jeff, current directory = $(pwd)"
+        ls -l
+        pwd
         python -m pip install -r requirements.txt
 
     - name: Test with pytest
       run: |
+        echo "current directory = $(pwd)"
+        ls -l
+        pwd
         make
 
     - name: Pytest Report

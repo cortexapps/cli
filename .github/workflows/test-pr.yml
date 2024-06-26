@@ -17,6 +17,7 @@ env:
   CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL }}
   GH_PAT: ${{ secrets.GH_PAT }}
   GH_WEBHOOK_SECRET: ${{ secrets.GH_WEBHOOK_SECRET }}
+  CORTEX_GH_WEBHOOK_URL: ${{ vars.CORTEX_GH_WEBHOOK_URL }}
 
 jobs:
   test:

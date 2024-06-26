@@ -30,9 +30,7 @@ pytest-cov = "^5.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
-#pytest-xdist = "^3.4.0"
 pytest-xdist = "^3.6.1"
-#responses = "^0.24.1"
 responses = "^0.25.3"
 
 [build-system]

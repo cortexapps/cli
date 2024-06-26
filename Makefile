@@ -233,7 +233,10 @@ $(FEATURE_FLAG_EXPORT): | $(BUILD_DIR)/ff
 github: $(BUILD_DIR)/github ## Configure Cortex GitHub integration, create GitHub webhook
 
 $(BUILD_DIR)/github: | $(BUILD_DIR)
-	. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests python3 tests/github_setup.py
+	echo "current directory = $(PWD)"
+	pwd
+	ls -l
+	. $(PYTHON_VENV)/bin/activate; PYTHONPATH=./cortexapps_cli:./tests python3 tests/github_setup.py
 	touch $@
 
 $(BUILD_DIR):
