@@ -227,13 +227,13 @@ feature-flags-clean:
 	@rm -f $(FEATURE_FLAG_EXPORT)
 
 $(FEATURE_FLAG_EXPORT): | $(BUILD_DIR)/ff
-	. $(PYTHON_VENV)/bin/activate; python tests/feature_flag_dump.py $@
+	. $(PYTHON_VENV)/bin/activate; python3 tests/feature_flag_dump.py $@
 
 .PHONY: github
 github: $(BUILD_DIR)/github ## Configure Cortex GitHub integration, create GitHub webhook
 
 $(BUILD_DIR)/github: | $(BUILD_DIR)
-	. $(PYTHON_VENV)/bin/activate; python tests/github_setup.py
+	. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests python3 tests/github_setup.py
 	touch $@
 
 $(BUILD_DIR):

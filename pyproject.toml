@@ -25,13 +25,15 @@ urllib3 = ">= 2.2.2"
 cortex = "cortexapps_cli.cortex:cli"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^7.4.3"
-pytest-cov = "^4.1.0"
+pytest = "^8.2.2"
+pytest-cov = "^5.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
-pytest-xdist = "^3.4.0"
-responses = "^0.24.1"
+#pytest-xdist = "^3.4.0"
+pytest-xdist = "^3.6.1"
+#responses = "^0.24.1"
+responses = "^0.25.3"
 
 [build-system]
 requires = ["poetry-core"]
@@ -45,7 +47,7 @@ Homepage = "https://github.com/cortexapps/cli"
 
 [tool.pytest.ini_options]
 markers = [
-    "serial",
+    "serial"
 ]
 minversion = "7.4.3"
 addopts = "--cov=cortexapps_cli --cov-append --cov-report term-missing"
