@@ -4,7 +4,7 @@
 UNAME_S := $(shell uname -s)
 
 ifeq ($(CORTEX_CLI),) ## Cortex CLI, defaults to CLI in the repository
-export CORTEX_CLI := python3 ./cortexapps_cli/cortex.py -q
+export CORTEX_CLI := $(PYTHON_VENV)/bin/activate; python3 ./cortexapps_cli/cortex.py -q
 endif
 
 ifeq ($(CORTEX_GH_ALIAS),) ## Github alias defined in Cortex GitHub integration, defaults to public-api-test
