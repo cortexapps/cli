@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.5 (2024-06-27)
+------------------
+
+**Bugfixes**
+- Fix bug with scorecards not being included in 'backup export'.
+
 0.26.4 (2024-06-26)
 ------------------
 
