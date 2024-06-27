@@ -3,8 +3,10 @@
 #
 UNAME_S := $(shell uname -s)
 
+PYTHON_VENV = ~/.venv/cortex-cli-test
+
 ifeq ($(CORTEX_CLI),) ## Cortex CLI, defaults to CLI in the repository
-export CORTEX_CLI := $(PYTHON_VENV)/bin/activate; python3 ./cortexapps_cli/cortex.py -q
+export CORTEX_CLI := . $(PYTHON_VENV)/bin/activate; python3 ./cortexapps_cli/cortex.py -q
 endif
 
 ifeq ($(CORTEX_GH_ALIAS),) ## Github alias defined in Cortex GitHub integration, defaults to public-api-test
@@ -83,8 +85,6 @@ CUSTOM_RESOURCE_TARGETS := $(CUSTOM_RESOURCES:data/resource-definitions/%.json=$
 FEATURE_FLAG_VARS := $(shell env | grep CORTEX_FF | cut -d= -f1)
 FEATURE_FLAGS = $(patsubst CORTEX_FF_%,%,$(FEATURE_FLAG_VARS))
 FEATURE_FLAG_ENVSUBST := $(FEATURE_FLAGS:%=$(BUILD_DIR)/ff/envsubst/%)
-
-PYTHON_VENV = ~/.venv/cortex-cli-test
 
 all: info setup feature-flags-dump load-data github test-api ## Setup environment, load data and test
 all-cli: all test-cli
