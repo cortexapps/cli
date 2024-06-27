@@ -9,6 +9,7 @@ h = {
 }
 
 url = os.getenv('CORTEX_BASE_URL') + "/api/internal/v1/cortex/preferences"
+print("ff url = " + url)
 
 try:
     r = requests.get(url, headers=h)
