@@ -1,0 +1,13 @@
+info:
+  title: Team D
+  x-cortex-tag: team-d
+  x-cortex-type: team
+  x-cortex-team:
+    members:
+      - email: jeff.schnitter@cortex.io
+        name: Jeff Schnitter
+        notificationsEnabled: false
+  x-cortex-groups:
+    - public-api-test
+    - letter-teams
+openapi: 3.0.0

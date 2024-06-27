@@ -1,0 +1,20 @@
+{
+  "blob": "<html></html>",
+  "contexts": [
+     {
+       "type": "GLOBAL"
+     },
+     {
+       "entityFilter": {
+         "type": "SERVICE_FILTER"
+       },
+       "type": "ENTITY"
+     }
+  ],
+  "description": "Just testin' plugin uploads",
+  "isDraft": false,
+  "minimumRoleRequired": "VIEWER",
+  "name": "Public API Test Plugin",
+  "tag": "public-api-test-plugin"
+}
+

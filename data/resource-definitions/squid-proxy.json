@@ -1,0 +1,24 @@
+{
+  "type": "squid-proxy",
+  "source": "CUSTOM",
+  "name": "Squid Proxy",
+  "description": null,
+  "schema": {
+    "type": "object",
+    "required": [
+      "ip",
+      "vpc"
+    ],
+    "properties": {
+      "ip": {
+        "type": "string"
+      },
+      "vpc": {
+        "type": "string"
+      },
+      "resources": {
+        "type": "string"
+      }
+    }
+  }
+}

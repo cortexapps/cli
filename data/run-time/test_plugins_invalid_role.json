@@ -1,0 +1,20 @@
+{
+  "blob": "<html></html>",
+  "contexts": [
+     {
+       "type": "GLOBAL"
+     },
+     {
+       "entityFilter": {
+         "type": "SERVICE_FILTER"
+       },
+       "type": "ENTITY"
+     }
+  ],
+  "description": "Just testing plugin permissions",
+  "isDraft": true,
+  "minimumRoleRequired": "ADMIN",
+  "name": "Public API Test Plugin Admin",
+  "tag": "public-api-test-plugin-admin"
+}
+

@@ -1,0 +1,23 @@
+info:
+  description: null
+  title: Data Ingestion
+  version: 1.0.0
+  x-cortex-links:
+    - name: Data Ingestion Overview
+      type: documentation
+    - name: Data Ingestion Specs
+      type: specs
+    - name: Data Ingestion Bug bashes
+      type: bug_bashes
+  x-cortex-tag: data-ingestion
+  x-cortex-type: domain
+  x-cortex-children:
+    - tag: data-calculator-batch-job
+    - tag: inventory-scraper
+    - tag: image-recognition-pipeline
+    - tag: retail-image-labeler
+    - tag: image-store-bucket
+    - tag: orders-events
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

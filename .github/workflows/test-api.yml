@@ -1,0 +1,52 @@
+name: Test API
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12,15,18,21 * * *" 
+
+# Only allow a single workflow to run at a time.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_STAGING }}
+  CORTEX_API_KEY_VIEWER: ${{ secrets.CORTEX_API_KEY_VIEWER_STAGING }}
+  CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL_STAGING }}
+  GH_PAT: ${{ secrets.GH_PAT }}
+  GH_WEBHOOK_SECRET: ${{ secrets.GH_WEBHOOK_SECRET_STAGING }}
+  CORTEX_GH_WEBHOOK_URL: ${{ vars.CORTEX_GH_WEBHOOK_URL_STAGING }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: trigger
+      if: github.event.action == 'Trigger from Staging'
+      run: |
+        echo "Workflow triggered by url: ${{ github.event.client_payload.url }}"
+
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements.txt
+
+    - name: Test with pytest
+      run: |
+        make
+
+    - name: Pytest Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: html-report
+        path: report.html

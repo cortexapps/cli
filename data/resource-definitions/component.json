@@ -1,0 +1,9 @@
+{
+  "type": "component",
+  "source": "CUSTOM",
+  "name": "Component",
+  "description": "Used for public-api-test data.",
+  "schema": {
+    "type": "object"
+  }
+}

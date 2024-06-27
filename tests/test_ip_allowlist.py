@@ -1,13 +1,6 @@
-"""
-Tests for ip-allowlist commands.
-"""
-from cortexapps_cli.cortex import cli
-import requests
-import pytest
-from string import Template
+from common import *
 
-def _ip_allowlist_input(tmp_path):
-    ip_address = requests.get("https://ip.me").text.strip()
+def _ip_allowlist_input(tmp_path, ip_address, description):
     f = tmp_path / "test_ip_allowlist_input.json"
     template = Template("""
         {
@@ -15,30 +8,42 @@ def _ip_allowlist_input(tmp_path):
             {
               "address": "${ip_address}",
               "description": "string"
+            },
+            {
+              "address": "127.0.0.1",
+              "description": "${description}"
             }
           ]
         }
         """)
-    content = template.substitute(ip_address=ip_address)
+    content = template.substitute(ip_address=ip_address, description=description)
     f.write_text(content)
     return f
 
-def test(capsys, tmp_path):
-    cli(["ip-allowlist", "get"])
+def test(tmp_path, capsys):
+    ip_address = requests.get("https://ip.me").text.strip()
 
-    f = _ip_allowlist_input(tmp_path)
-    cli(["ip-allowlist", "validate", "-f", str(f)])
+    description = "initial description"
+    f = _ip_allowlist_input(tmp_path, ip_address, description)
+    response = cli_command(capsys, ["ip-allowlist", "validate", "-f", str(f)])
 
-    f = _ip_allowlist_input(tmp_path)
-    cli(["ip-allowlist", "replace", "-f", str(f)])
+    # Initial replace
+    cli_command(capsys, ["ip-allowlist", "replace", "-f", str(f)])
+    response = cli_command(capsys, ["ip-allowlist", "get"])
+    assert any(entry['description'] == description for entry in response['entries']), "Allowlist entry should have expected description"
 
-    cli(["ip-allowlist", "replace", "-f", "tests/test_ip_allowlist_empty.json"])
+    # Updated replace
+    updated_description = "updated description"
+    f = _ip_allowlist_input(tmp_path, ip_address, updated_description)
+    cli_command(capsys, ["ip-allowlist", "replace", "-f", str(f)])
+    response = cli_command(capsys, ["ip-allowlist", "get"])
+    assert any(entry['description'] == updated_description for entry in response['entries']), "Allowlist entry should be updated"
+
+    cli_command(capsys, ["ip-allowlist", "replace", "-f", "data/run-time/ip_allowlist_empty.json"])
 
     with pytest.raises(SystemExit) as excinfo:
-        cli(["ip-allowlist", "validate", "-f", "tests/test_ip_allowlist_invalid.json"])
-        out, err = capsys.readouterr()
-        response = json.loads(out)
-        #print(err)
-        #assert err.partition('\n')[0] == "Unauthorized", "Invalid api key should show Unauthorized message"
-        assert out == "Bad Request"
-        assert excinfo.value.code == 400
+       cli(["-q", "catalog", "ip-allowlist", "-f", "data/run-time/ip_allowlist_invalid.json"])
+       out, err = capsys.readouterr()
+
+       assert out == "Not Found"
+       assert excinfo.value.code == 404

@@ -1,0 +1,22 @@
+info:
+  description: null
+  title: Profiles
+  version: 1.0.0
+  x-cortex-links:
+    - name: Profiles Overview
+      type: documentation
+    - name: Profiles Specs
+      type: specs
+    - name: Profiles Bug bashes
+      type: bug_bashes
+  x-cortex-tag: profiles
+  x-cortex-type: domain
+  x-cortex-children:
+    - tag: user-profile-metadata-service
+    - tag: profile-management
+    - tag: profile-pictures
+    - tag: user-profile-metadata-service-bucket
+    - tag: admin-customer-support
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

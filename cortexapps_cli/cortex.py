@@ -26,7 +26,7 @@ def version():
     try:
         with open("pyproject.toml", "rb") as f:
             pyproject = tomllib.load(f)
-        version = pyproject["project"]["version"]
+        version = pyproject["tool"]["poetry"]["version"]
     except Exception as e:
         version = importlib.metadata.version('cortexapps_cli')
     return version

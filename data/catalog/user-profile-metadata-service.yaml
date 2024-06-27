@@ -1,0 +1,41 @@
+info:
+  description: null
+  title: User profile metadata service
+  version: 1.0.0
+  x-cortex-links:
+    - name: Load Balancer Logs (user-profile-metadata-service)
+      type: logs
+      description: Access and error logs for the nginx load balancer
+    - name: Design Document (Architecture)
+      type: documentation
+      description: presented at Arch Review 23/Aug/23
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Grafana Dashboard - staging
+      type: dashboard
+      description: Developer staging environment for user-profile-metadata-service
+    - name: Production logs
+      type: logs
+      description: Datadog query for logs from all prod hosts
+    - name: Monitoring Dashboard - prod
+      type: dashboard
+      description: System status and performance metrics
+    - name: User Documentation
+      type: documentation
+      description: User documentation for the application
+    - name: Deployment History
+      type: logs
+      description: Deployment history for April 2024
+    - name: Error Monitoring Dashboard
+      type: dashboard
+      description: Error tracking and resolution dashboard
+    - name: Infrastructure Settings
+      type: settings
+      description: Infrastructure configuration and settings
+  x-cortex-tag: user-profile-metadata-service
+  x-cortex-type: service
+  x-cortex-groups:
+    - public-api-test
+  x-cortex-custom-metadata:
+    hasSecurityScans: true
+openapi: 3.0.0

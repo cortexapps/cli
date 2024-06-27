@@ -1,0 +1,19 @@
+{
+  "blob": "<html></html>",
+  "contexts": [
+     {
+       "type": "GLOBAL"
+     },
+     {
+       "entityFilter": {
+         "type": "SERVICE_FILTER"
+       },
+       "type": "ENTITY"
+     }
+  ],
+  "description": "Just testing plugin updates",
+  "isDraft": false,
+  "minimumRoleRequired": "VIEWER",
+  "name": "Public API Test Plugin"
+}
+

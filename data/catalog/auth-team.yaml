@@ -1,0 +1,27 @@
+info:
+  description: null
+  title: Authentication Team
+  version: 1.0.0
+  x-cortex-links:
+    - name: Authentication Team Onboarding Guide
+      type: onboarding
+    - name: Authentication Team Best Practices
+      type: best_practices
+  x-cortex-tag: auth-team
+  x-cortex-groups:
+    - public-api-test
+  x-cortex-team:
+    members:
+      - email: nikhil.unni@cortex.io
+        name: Nikhil Unni
+        notificationsEnabled: true
+      - email: aditya.bansal@cortex.io
+        name: Aditya Bansal
+        notificationsEnabled: true
+      - email: eyal.foni@cortex.io
+        name: Eyal Foni
+        notificationsEnabled: true
+      - email: jaroslaw.gaworecki@cortex.io
+        name: Jarosław Gaworecki
+        notificationsEnabled: true
+openapi: 3.0.0

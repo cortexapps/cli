@@ -1,0 +1,17 @@
+info:
+  description: ""
+  title: Australia
+  version: 1.0.0
+  x-cortex-links:
+    - name: Error Logs (api-Australia)
+      type: logs
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Prometheus Dashboard - prod
+      type: dashboard
+  x-cortex-tag: api-australia
+  x-cortex-type: api
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

@@ -1,0 +1,31 @@
+info:
+  description: null
+  title: Data
+  version: 1.0.0
+  x-cortex-links:
+    - name: Data Onboarding Guide
+      type: onboarding
+    - name: Data Best Practices
+      type: best_practices
+  x-cortex-tag: data
+  x-cortex-type: team
+  x-cortex-team:
+    groups:
+      - name: okta-data
+        provider: OKTA
+    members:
+      - email: nikhil.unni@cortex.io
+        name: Nikhil Unni
+        notificationsEnabled: true
+      - email: jennie.chen@cortex.io
+        name: Jennie Chen
+        notificationsEnabled: true
+      - email: eyal.foni@cortex.io
+        name: Eyal Foni
+        notificationsEnabled: true
+      - email: mikolaj.stepniewski@cortex.io
+        name: Mikołaj Stępniewski
+        notificationsEnabled: true
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

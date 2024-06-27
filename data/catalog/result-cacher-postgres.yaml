@@ -1,0 +1,21 @@
+info:
+  description: null
+  title: Result Cacher Postgres
+  version: 1.0.0
+  x-cortex-links:
+    - name: Error Logs (result-cacher-postgres)
+      type: logs
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Prometheus Dashboard - prod
+      type: dashboard
+  x-cortex-tag: result-cacher-postgres
+  x-cortex-type: rds
+  x-cortex-definition:
+    containsPii: false
+    dbFamily: sqlite
+    region: us-east-2
+    version: 10.1.7
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

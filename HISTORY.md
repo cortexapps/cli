@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.4 (2024-06-26)
+------------------
+
+**Improvements**
+- Test modifications for better coverage of Cortex public API.
+
 0.26.3 (2024-05-20)
 ------------------
 

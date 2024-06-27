@@ -1,0 +1,26 @@
+info:
+  description: null
+  title: Experience
+  version: 1.0.0
+  x-cortex-links:
+    - name: Experience Overview
+      type: documentation
+    - name: Experience Specs
+      type: specs
+    - name: Experience Bug bashes
+      type: bug_bashes
+  x-cortex-tag: experience
+  x-cortex-type: domain
+  x-cortex-owners:
+  - name: search-experience
+    type: GROUP
+    provider: CORTEX
+  x-cortex-children:
+    - tag: autocomplete-parser
+    - tag: autocomplete
+    - tag: results-cacher
+    - tag: result-cacher-postgres
+    - tag: query-analyzer
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

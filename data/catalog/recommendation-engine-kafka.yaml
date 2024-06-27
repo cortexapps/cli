@@ -1,0 +1,20 @@
+info:
+  description: null
+  title: Recommendation Engine Kafka
+  version: 1.0.0
+  x-cortex-links:
+    - name: Error Logs (recommendation-engine-kafka)
+      type: logs
+    - name: Grafana Dashboard - prod
+      type: dashboard
+    - name: Prometheus Dashboard - prod
+      type: dashboard
+  x-cortex-tag: recommendation-engine-kafka
+  x-cortex-type: kafka-topic
+  x-cortex-definition:
+    cluster: staging
+    serializationTool: avro
+    topicName: eats-event
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

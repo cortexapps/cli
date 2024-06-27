@@ -1,0 +1,22 @@
+info:
+  description: null
+  title: Payments
+  version: 1.0.0
+  x-cortex-links:
+    - name: Payments Overview
+      type: documentation
+    - name: Payments Specs
+      type: specs
+    - name: Payments Bug bashes
+      type: bug_bashes
+  x-cortex-tag: payments
+  x-cortex-type: domain
+  x-cortex-children:
+    - tag: transaction-store
+    - tag: credit-card-transaction-processor
+    - tag: ach-payments-nacha
+    - tag: fraud-analyzer
+    - tag: transaction-squid-proxy
+  x-cortex-groups:
+    - public-api-test
+openapi: 3.0.0

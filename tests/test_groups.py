@@ -1,14 +1,14 @@
-"""
-Tests for groups commands.
-"""
-from cortexapps_cli.cortex import cli
+from common import *
 
-def test_groups_add():
-    cli(["groups", "add", "-t", "test-service", "-f", "tests/test-groups.json"])
+def test(capsys):
+    cli_command(capsys, ["catalog", "create", "-f", "data/run-time/groups-entity.yaml"])
 
-def test_groups_get():
-    cli(["groups", "get", "-t", "test-service"])
+    cli_command(capsys, ["groups", "add", "-t", "groups-entity", "-f", "data/run-time/groups.json"])
 
-def test_groups_delete():
-    cli(["groups", "delete", "-t", "test-service", "-f", "tests/test-groups.json"])
-    cli(["groups", "get", "-t", "test-service"])
+    response = cli_command(capsys, ["groups", "get", "-t", "groups-entity"])
+    assert any(group['tag'] == "group1" for group in response['groups']), "Entity should have 'group1' as a group"
+
+    cli(["-q", "groups", "delete", "-t", "groups-entity", "-f", "data/run-time/groups.json"])
+
+    response = cli_command(capsys, ["groups", "get", "-t", "groups-entity"])
+    assert not any(group['tag'] == "group1" for group in response['groups']), "Entity should NOT have 'group1' as a group"
