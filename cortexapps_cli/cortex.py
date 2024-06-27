@@ -809,6 +809,9 @@ def export(args):
                 f1 = open(catalog_directory + "/" + output_tag + ".yaml", 'w')
                 f1.write(str(descriptor) + "\n")
 
+    # Remove page from args so we don't paginate subsequent calls.
+    delattr(args, 'page')
+
     if any(export_type == "ALL" or export_type == "ip-allowlist" for export_type in args.types.split()):
         print("Getting IP Allowlist definitions")
         ip_allowlist_json=json_directory + "/ip-allowlist.json"

@@ -208,8 +208,10 @@ endif
 
 	@. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests pytest -rA -n auto -m "not serial" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing $(PYTEST_PARMS)
 
-test-cli: feature-flags test-api ## Run pytest for CLI-specific tests in the 'tests' directory
-	@. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests pytest -rA -n 0 -m " serial" --cov=cortexapps_cli --cov-append --cov-report term-missing $(PYTEST_PARMS)
+test-cli: feature-flags test-api cli-tests ## Run pytest for CLI-specific tests in the 'tests' directory
+
+cli-tests: ## Run pytest for CLI-specific tests in the 'tests' directory
+	@. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests pytest -rA -n 0 -m "serial" --cov=cortexapps_cli --cov-append --cov-report term-missing $(PYTEST_PARMS)
 
 .PHONY: clean
 clean: clean-data

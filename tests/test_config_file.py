@@ -76,6 +76,12 @@ def test_export(capsys, delete_cortex_api_key):
     sys.stdout.write(last_line + "\n\n")
     assert "rich-sandbox" in out 
 
+    export_directory = last_line.replace("Contents available in ", "")
+    
+    assert len(os.listdir(export_directory + "/catalog")) > 0, "catalog directory has files"
+    assert len(os.listdir(export_directory + "/scorecards")) > 0, "scorecards directory has files"
+    assert len(os.listdir(export_directory + "/resource-definitions")) > 0, "resource-definitions directory has files"
+
 @pytest.mark.serial
 def test_config_file_bad_api_key(tmp_path, capsys, delete_cortex_api_key):
     f = tmp_path / "cortex_config_bad_api_key"
