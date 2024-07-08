@@ -2,6 +2,15 @@ name: Test API
 
 on:
   workflow_dispatch:
+    inputs:
+      url:
+        description: 'Triggering URL'
+        required: true
+        default: 'cli'
+      action:
+        description: 'Action that triggers this workflow'
+        required: true
+        default: 'scheduled'
   schedule:
     - cron: "0 12,15,18,21 * * *" 
 
@@ -25,9 +34,9 @@ jobs:
     steps:
 
     - name: trigger
-      if: github.event.action == 'Trigger from Staging'
+      if: github.event.inputs.action == 'Trigger from Staging'
       run: |
-        echo "Workflow triggered by url: ${{ github.event.client_payload.url }}"
+        echo "Workflow triggered by url: ${{ github.event.inputs.url }}"
 
     - uses: actions/checkout@v4
 
