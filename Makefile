@@ -107,6 +107,8 @@ tools: brew jq python3
 
 .PHONY: brew
 brew: $(BUILD_TOOLS_DIR)/brew | $(BUILD_TOOLS_DIR)
+
+$(BUILD_TOOLS_DIR)/brew:
 ifeq ($(UNAME_S),Darwin)
 	@which brew > /dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 endif
@@ -114,6 +116,8 @@ endif
 
 .PHONY: jq
 jq: $(BUILD_TOOLS_DIR)/jq | $(BUILD_TOOLS_DIR)
+
+$(BUILD_TOOLS_DIR)/jq:
 ifeq ($(UNAME_S),Darwin)
 	@which jq > /dev/null || brew install jq
 else
