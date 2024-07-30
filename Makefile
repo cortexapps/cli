@@ -108,7 +108,7 @@ tools: brew jq python3
 .PHONY: brew
 brew: $(BUILD_TOOLS_DIR)/brew | $(BUILD_TOOLS_DIR)
 
-$(BUILD_TOOLS_DIR)/brew:
+$(BUILD_TOOLS_DIR)/brew: | $(BUILD_TOOLS_DIR)
 ifeq ($(UNAME_S),Darwin)
 	@which brew > /dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 endif
@@ -134,7 +134,6 @@ ifeq ($(UNAME_S),Darwin)
 else
 	@which python3 > /dev/null || (echo "python3 is not installed"; exit 1)
 endif
-	echo "should not see this in python3 target"
 	@touch $@
 
 .PHONY: venv
