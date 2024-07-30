@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.6 (2024-07-30)
+------------------
+
+**Bugfixes**
+- Make page_size an optional parameter to support pagination changes rolling out to Cortex APIs.
+
 0.26.5 (2024-06-27)
 ------------------
 

@@ -91,7 +91,7 @@ def test_config_file_bad_api_key(tmp_path, capsys, delete_cortex_api_key):
         """
     f.write_text(content)
     with pytest.raises(SystemExit) as excinfo:
-        cli(["-c", str(f), "teams", "list"])
+        cli(["-c", str(f), "catalog", "list", "-t", "backend-worker"])
         out, err = capsys.readouterr()
         assert err.partition('\n')[0] == "Unauthorized", "Invalid api key should show Unauthorized message"
 

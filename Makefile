@@ -69,6 +69,7 @@ endif
 # Configuration variables
 #
 BUILD_DIR = build/$(BUILD_SUBDIR)
+BUILD_TOOLS_DIR = $(BUILD_DIR)/tools
 export FEATURE_FLAG_EXPORT=$(BUILD_DIR)/ff/feature-flags.json
 DATA_DIR = data
 ENTITIES := $(shell find $(DATA_DIR) -type f)
@@ -105,26 +106,32 @@ setup: tools venv ## Setup python virtual environment for testing
 tools: brew jq python3
 
 .PHONY: brew
-brew:
+brew: $(BUILD_TOOLS_DIR)/brew | $(BUILD_TOOLS_DIR)
 ifeq ($(UNAME_S),Darwin)
 	@which brew > /dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 endif
+	@touch $@
 
 .PHONY: jq
-jq:
+jq: $(BUILD_TOOLS_DIR)/jq | $(BUILD_TOOLS_DIR)
 ifeq ($(UNAME_S),Darwin)
 	@which jq > /dev/null || brew install jq
 else
 	@which jq > /dev/null || (echo "jq is not installed"; exit)
 endif
+	@touch $@
 
 .PHONY: python3
-python3:
+python3: ${BUILD_TOOLS_DIR}/python3 | $(BUILD_TOOLS_DIR)
+
+${BUILD_TOOLS_DIR}/python3:
 ifeq ($(UNAME_S),Darwin)
 	@which python3 > /dev/null || brew install python3
 else
 	@which python3 > /dev/null || (echo "python3 is not installed"; exit 1)
 endif
+	echo "should not see this in python3 target"
+	@touch $@
 
 .PHONY: venv
 venv: $(PYTHON_VENV)
@@ -151,7 +158,7 @@ archive-entities: $(ARCHIVE_TARGETS) | $(BUILD_DIR)
 .PHONY: catalog-entities
 catalog-entities: $(CATALOG_TARGETS) | $(BUILD_DIR)
 
-$(BUILD_DIR)/%.archive: python3
+$(BUILD_DIR)/%.archive: $(BUILD_TOOLS_DIR)/python3
 	@$(CORTEX_CLI) catalog archive -t $(notdir $(basename $@))
 	@touch $@
 
@@ -162,7 +169,7 @@ $(BUILD_DIR)/%.yaml: data/catalog/%.yaml $(CUSTOM_RESOURCE_TARGETS)
 .PHONY: resource-definitions
 resource-definitions: $(CUSTOM_RESOURCE_TARGETS) | $(BUILD_DIR)
 
-$(BUILD_DIR)/%.json: data/resource-definitions/%.json python3 | $(BUILD_DIR)
+$(BUILD_DIR)/%.json: data/resource-definitions/%.json | $(BUILD_DIR)
 	$(CORTEX_CLI) catalog delete-by-type -t $(notdir $(basename $@))
 	($(CORTEX_CLI) resource-definitions get -t $(notdir $(basename $@)) && $(CORTEX_CLI) resource-definitions delete -t $(notdir $(basename $@)) )  || :
 	$(CORTEX_CLI) resource-definitions create -f $<
@@ -217,7 +224,7 @@ cli-tests: ## Run pytest for CLI-specific tests in the 'tests' directory
 clean: clean-data
 	@rm -rf $(BUILD_DIR)
 
-clean-data: jq ${ENTITIES}
+clean-data: $(BUILD_TOOLS_DIR)/jq ${ENTITIES}
 	for entity in $(shell $(CORTEX_CLI) catalog list -g public-api-test | jq -r '.entities[].tag'); do \
 		$(CORTEX_CLI) catalog delete -t $$entity; echo "Deleted: $$entity";\
 	done
@@ -246,6 +253,9 @@ $(BUILD_DIR)/ff:
 	@mkdir -p $@
 
 $(BUILD_DIR)/ff/source:
+	@mkdir -p $@
+
+$(BUILD_TOOLS_DIR):
 	@mkdir -p $@
 
 $(BUILD_DIR)/ff/envsubst:
