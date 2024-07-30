@@ -423,13 +423,13 @@ def add_argument_page(subparser, help_text='Page number to return, 0 indexed'):
             metavar=''
     )
 
-def add_argument_page_size(subparser, help_text='Page size for results, default = 50'):
+def add_argument_page_size(subparser, help_text='Page size for results'):
     subparser.add_argument(
             '-z',
             '--pageSize',
             help=help_text,
             required=False,
-            default=50,
+            default=argparse.SUPPRESS,
             metavar=''
     )
 
@@ -607,7 +607,8 @@ def exit(r, method, expected_rc=200, err=None):
         debug_json(r, method)
         if err:
             print(f'{method} {r.url} => {r.status_code} {r.reason}')
-            print(err)
+            if err != None:
+                print(err)
         
         if not config.get('is_importing', False) or r.status_code != 409 or r.status_code != 400:
             sys.exit(r.status_code)
@@ -643,12 +644,17 @@ def get(url, headers={}):
     api_key(headers)
 
     err = None
+    details = None
     try:
         r = requests.get(config['url'] + url, headers=headers)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
         err = e.response.text
-    exit(r, 'GET')
+        if err != "":
+            if details in e.response.json():
+               details = e.response.json()['details']
+    exit(r, 'GET', err = details)
+
 
 def put(url, headers={}, payload=""):
     api_key(headers)
