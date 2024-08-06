@@ -11,8 +11,6 @@ on:
         description: 'Action that triggers this workflow'
         required: true
         default: 'scheduled'
-  schedule:
-    - cron: "0 12,15,18,21 * * *" 
 
 # Only allow a single workflow to run at a time.
 # https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
