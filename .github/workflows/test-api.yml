@@ -51,6 +51,26 @@ jobs:
       run: |
         make
 
+    - name: Notify slack success
+      if: success()
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_ERROR_REPORTING_BOT_TOKEN }}
+      uses: voxmedia/github-action-slack-notify-build@v1
+      with:
+        channel: jeff-test
+        status: SUCCESS
+        color: good
+
+    - name: Notify slack fail
+      if: failure()
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_ERROR_REPORTING_BOT_TOKEN }}
+      uses: voxmedia/github-action-slack-notify-build@v1
+      with:
+        channel: jeff-test-failures
+        status: FAILED
+        color: danger
+
     - name: Pytest Report
       uses: actions/upload-artifact@v4
       if: always()
@@ -58,30 +78,3 @@ jobs:
         name: html-report
         path: report.html
 
-  slack-notify:
-    name: Notify Slack of Build Status
-    if: always()
-    needs:
-      - test
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Notify slack success
-        if: success()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_ERROR_REPORTING_BOT_TOKEN }}
-        uses: voxmedia/github-action-slack-notify-build@v1
-        with:
-          channel: jeff-test
-          status: SUCCESS
-          color: good
-
-      - name: Notify slack fail
-        if: failure()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_ERROR_REPORTING_BOT_TOKEN }}
-        uses: voxmedia/github-action-slack-notify-build@v1
-        with:
-          channel: jeff-test-failures
-          status: FAILED
-          color: danger
