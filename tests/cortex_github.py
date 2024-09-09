@@ -66,7 +66,7 @@ class CortexGithub:
   def read_entity_template(self, file):
       with open (file, 'r') as f:
          template = Template(f.read())
-      return textwrap.dedent(template.substitute(today=today(), org=self.org, repo=self.repo.name, alias=self.alias))
+      return textwrap.dedent(template.substitute(environment=os.getenv('CORTEX_ENV'), tenant=os.getenv('CORTEX_TENANT'), today=today(), org=self.org, repo=self.repo.name, alias=self.alias))
 
 
   # Wait max_attempts * sleep_interval for git commit to appear in gitops-logs
