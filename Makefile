@@ -223,6 +223,9 @@ test-cli: feature-flags test-api cli-tests ## Run pytest for CLI-specific tests 
 cli-tests: ## Run pytest for CLI-specific tests in the 'tests' directory
 	@. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests pytest -rA -n 0 -m "serial" --cov=cortexapps_cli --cov-append --cov-report term-missing $(PYTEST_PARMS)
 
+test-git: feature-flags github ## Run pytest for git tests in the 'tests' directory
+	@. $(PYTHON_VENV)/bin/activate; PYTHONPATH=cortexapps_cli:tests pytest -k test_git
+
 .PHONY: clean
 clean: clean-data
 	@rm -rf $(BUILD_DIR)

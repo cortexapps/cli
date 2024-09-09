@@ -25,6 +25,7 @@ env:
   GH_PAT: ${{ secrets.GH_PAT }}
   GH_WEBHOOK_SECRET: ${{ secrets.GH_WEBHOOK_SECRET_STAGING }}
   CORTEX_GH_WEBHOOK_URL: ${{ vars.CORTEX_GH_WEBHOOK_URL_STAGING }}
+  CORTEX_TENANT: jeff-staging
 
 jobs:
   test:
