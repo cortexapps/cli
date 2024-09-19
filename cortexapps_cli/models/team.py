@@ -185,7 +185,6 @@ class Team:
 
         return data
 
-
 def main():
     # Creating manually
     team_manual = Team(

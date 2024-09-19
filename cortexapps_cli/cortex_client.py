@@ -19,6 +19,7 @@ class CortexClient:
 
         if not response.ok:
             try:
+                # try to parse the error message
                 error = response.json()
                 status = response.status_code
                 message = error.get('message', 'Unknown error')
@@ -28,10 +29,11 @@ class CortexClient:
                 print(error_str)
                 raise typer.Exit(code=1)
             except json.JSONDecodeError:
+                # if we can't parse the error message, just raise the HTTP error
                 response.raise_for_status()
         if raw:
             return response
-        
+
         try:
             return response.json()
         except json.JSONDecodeError:
@@ -53,3 +55,60 @@ class CortexClient:
 
     def delete(self, endpoint, headers={}, raw=False):
         return self.request('DELETE', endpoint, headers=headers, raw=raw)
+    
+    def fetch(self, endpoint, params={}, headers={}):
+        # do paginated fetch, page number is indexed at 0
+        # param page is page number, param pageSize is page size, default 250
+        page = 0
+        page_size = 250
+        entities = []
+        while True:
+            response = self.get(endpoint, params={**params, 'page': page, 'pageSize': page_size}, headers=headers)
+            if 'entities' not in response or not response['entities']:
+                break
+            entities.extend(response['entities'])
+            if response['totalPages'] == page + 1:
+                break
+            page += 1
+        return {
+            "total": len(entities),
+            "page": 0,
+            "totalPages": 1 if entities else 0,
+            "entities": entities,
+        }
+
+    def get_entity(self, entity_tag: str, entity_type: str = ''):
+        match entity_type.lower():
+            case 'team' | 'teams':
+                path_for_type = 'teams'
+            case _:
+                path_for_type = 'catalog'
+
+        return self.get(f'api/v1/{path_for_type}/{entity_tag}')
+
+    def delete_entity(self, entity_tag: str, entity_type: str = ''):
+        match entity_type.lower():
+            case 'team' | 'teams':
+                path_for_type = 'teams'
+            case _:
+                path_for_type = 'catalog'
+
+        return self.delete(f'api/v1/{path_for_type}/{entity_tag}')
+
+    def archive_entity(self, entity_tag: str, entity_type: str = ''):
+        match entity_type.lower():
+            case 'team' | 'teams':
+                path_for_type = 'teams'
+            case _:
+                path_for_type = 'catalog'
+
+        return self.put(f'api/v1/{path_for_type}/{entity_tag}/archive')
+
+    def unarchive_entity(self, entity_tag: str, entity_type: str = ''):
+        match entity_type.lower():
+            case 'team' | 'teams':
+                path_for_type = 'teams'
+            case _:
+                path_for_type = 'catalog'
+
+        return self.put(f'api/v1/{path_for_type}/{entity_tag}/unarchive')

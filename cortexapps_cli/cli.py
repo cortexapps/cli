@@ -8,23 +8,25 @@ import tomllib
 import configparser
 
 from cortexapps_cli.cortex_client import CortexClient
+
 import cortexapps_cli.commands.teams as teams
+import cortexapps_cli.commands.catalog as catalog
 
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
 # add subcommands
 app.add_typer(teams.app, name="teams")
+app.add_typer(catalog.app, name="catalog")
 
 # global options
 @app.callback()
-def global_callback(ctx: typer.Context,
-                    # verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose mode"),
-                    api_key: str = typer.Option(None, "--api-key", "-k", help="API key", envvar="CORTEX_API_KEY"),
-                    url: str = typer.Option("https://api.getcortexapp.com", "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
-                    config_file: str = typer.Option(os.path.join(os.path.expanduser('~'), '.cortex', 'config'), "--config", "-c", help="Config file path", envvar="CORTEX_CONFIG"),
-                    tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant alias", envvar="CORTEX_TENANT_ALIAS"),
-                    ):
-
+def global_callback(
+    ctx: typer.Context,
+    api_key: str = typer.Option(None, "--api-key", "-k", help="API key", envvar="CORTEX_API_KEY"),
+    url: str = typer.Option("https://api.getcortexapp.com", "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
+    config_file: str = typer.Option(os.path.join(os.path.expanduser('~'), '.cortex', 'config'), "--config", "-c", help="Config file path", envvar="CORTEX_CONFIG"),
+    tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant alias", envvar="CORTEX_TENANT_ALIAS"),
+):
     if not ctx.obj:
         ctx.obj = {}
 
@@ -59,9 +61,6 @@ def global_callback(ctx: typer.Context,
     api_key = api_key.strip('"\' ')
     url = url.strip('"\' /')
 
-    # ctx.obj["verbose"] = verbose
-    ctx.obj["api_key"] = api_key
-    ctx.obj["base_url"] = url
     ctx.obj["client"] = CortexClient(api_key, url)
 
 @app.command()

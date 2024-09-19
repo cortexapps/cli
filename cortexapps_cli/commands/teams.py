@@ -99,7 +99,7 @@ def get(
     Get a team
     """
     client = ctx.obj["client"]
-    r = client.get(f"api/v1/teams/{team_tag}")
+    r = client.get_entity(team_tag, 'team')
     print_json(json.dumps(r))
 
 @app.command()
@@ -111,7 +111,7 @@ def delete(
     Delete a team
     """
     client = ctx.obj["client"]
-    client.delete(f"api/v1/teams/{team_tag}")
+    client.delete_entity(team_tag, 'team')
 
 @app.command()
 def archive(
@@ -122,7 +122,7 @@ def archive(
     Archive a team
     """
     client = ctx.obj["client"]
-    r = client.put(f"api/v1/teams/{team_tag}/archive")
+    r = client.archive_entity(team_tag, 'team')
     print_json(json.dumps(r))
 
 @app.command()
@@ -134,7 +134,7 @@ def unarchive(
     Unarchive a team
     """
     client = ctx.obj["client"]
-    r = client.put(f"api/v1/teams/{team_tag}/unarchive")
+    r = client.unarchive_entity(team_tag, 'team')
     print_json(json.dumps(r))
 
 @app.command()
