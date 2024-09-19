@@ -1,0 +1,78 @@
+import typer
+from typing_extensions import Annotated
+
+import os
+import sys
+import importlib.metadata
+import tomllib
+import configparser
+
+from cortexapps_cli.cortex_client import CortexClient
+import cortexapps_cli.commands.teams as teams
+
+app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
+
+# add subcommands
+app.add_typer(teams.app, name="teams")
+
+# global options
+@app.callback()
+def global_callback(ctx: typer.Context,
+                    # verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose mode"),
+                    api_key: str = typer.Option(None, "--api-key", "-k", help="API key", envvar="CORTEX_API_KEY"),
+                    url: str = typer.Option("https://api.getcortexapp.com", "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
+                    config_file: str = typer.Option(os.path.join(os.path.expanduser('~'), '.cortex', 'config'), "--config", "-c", help="Config file path", envvar="CORTEX_CONFIG"),
+                    tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant alias", envvar="CORTEX_TENANT_ALIAS"),
+                    ):
+
+    if not ctx.obj:
+        ctx.obj = {}
+
+    if not os.path.isfile(config_file):
+        # no config file found
+        if not api_key:
+            raise typer.BadParameter("No API key provided and no config file found")
+        create_config = False
+        
+        # check if we are in a terminal, if so, ask the user if they want to create a config file
+        if sys.stdin.isatty() and sys.stdout.isatty():
+            create_config = typer.confirm("No config file found. Do you want to create one?")
+
+        if create_config:
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+            with open(config_file, "w") as f:
+                f.write(f"[{tenant}]\n")
+                f.write(f"api_key = {api_key}\n")
+                f.write(f"base_url = {url}\n")
+    else:
+        # config file found
+        # if api_key is provided, use that in preference to the config file
+        if not api_key:
+            config = configparser.ConfigParser()
+            config.read(config_file)
+            if tenant not in config:
+                raise typer.BadParameter(f"Tenant {tenant} not found in config file")
+            api_key = config[tenant]["api_key"]
+            url = config[tenant]["base_url"] or url
+
+    # strip any quotes or spaces from the api_key and url
+    api_key = api_key.strip('"\' ')
+    url = url.strip('"\' /')
+
+    # ctx.obj["verbose"] = verbose
+    ctx.obj["api_key"] = api_key
+    ctx.obj["base_url"] = url
+    ctx.obj["client"] = CortexClient(api_key, url)
+
+@app.command()
+def version():
+    try:
+        with open("pyproject.toml", "rb") as f:
+            pyproject = tomllib.load(f)
+        version = pyproject["tool"]["poetry"]["version"]
+    except Exception as e:
+        version = importlib.metadata.version('cortexapps_cli')
+    print(version)
+
+if __name__ == "__main__":
+    app()

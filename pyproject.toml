@@ -20,9 +20,11 @@ python = "^3.11"
 requests = ">= 2.32.3, < 3"
 pyyaml = ">= 6.0.1, < 7"
 urllib3 = ">= 2.2.2"
+typer = "^0.12.5"
 
 [tool.poetry.scripts]
 cortex = "cortexapps_cli.cortex:cli"
+cortex2 = "cortexapps_cli.cli:app"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.2.2"

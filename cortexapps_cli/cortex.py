@@ -19,7 +19,7 @@ import time
 import tomllib
 import yaml
 
-config={}
+config = {}
 
 # borrowed from https://github.com/python-poetry/poetry/issues/273
 def version():
@@ -36,30 +36,30 @@ def version():
 #
 # Potentially, you can override the help class to customize this, https://medium.com/@george.shuklin/simple-implementation-of-help-command-a634711b70e
 def validate_input(argv, parser):
-    if len(argv)==0:
-       parser.print_help()
-       sys.exit(2)
-  
+    if len(argv) == 0:
+        parser.print_help()
+        sys.exit(2)
+
     if argv[0] == "-h" or argv[0] == "--help" or argv[0] == "-v" or argv[0] == "--version":
-       return
+        return
 
     if argv[0] == "integrations":
-       if len(argv) == 1:
-          print("ERROR! Command provided with no parameters.\n")
-          print("Try " + argv[0]  + " -h for help")
-          sys.exit(2)
-       if argv[1] == "-h" or argv[1] == "--help":
-          return
-       if len(argv) == 2:
-          print("ERROR! Command provided with no parameters.\n")
-          print("Try " + argv[0] + " " + argv[1] + " -h for help")
-          sys.exit(2)
-       return
+        if len(argv) == 1:
+            print("ERROR! Command provided with no parameters.\n")
+            print("Try " + argv[0] + " -h for help")
+            sys.exit(2)
+        if argv[1] == "-h" or argv[1] == "--help":
+            return
+        if len(argv) == 2:
+            print("ERROR! Command provided with no parameters.\n")
+            print("Try " + argv[0] + " " + argv[1] + " -h for help")
+            sys.exit(2)
+        return
 
     if len(argv) == 1:
-       print("ERROR! Command provided with no parameters.\n")
-       print("Try " + argv[0] + " -h for help")
-       sys.exit(2)
+        print("ERROR! Command provided with no parameters.\n")
+        print("Try " + argv[0] + " -h for help")
+        sys.exit(2)
 
 def read_file(args):
     # Check if file was passed as stdin
@@ -78,7 +78,7 @@ def read_json_from_yaml(args):
         with open(args.file.name, 'rb') as f:
             data = yaml.safe_load(f)
 
-    return json.dumps({ "spec": "" + str(data) + "" })
+    return json.dumps({"spec": "" + str(data) + ""})
 
 def check_config_file(config_file, replace_string):
     if not os.path.isfile(config_file):
@@ -86,7 +86,7 @@ def check_config_file(config_file, replace_string):
         response = input()
         if response == "Y" or response == "y":
             if not os.path.isdir(os.path.dirname(config_file)):
-               os.mkdir(os.path.dirname(config_file), 0o700)
+                os.mkdir(os.path.dirname(config_file), 0o700)
             cortex_config_contents = textwrap.dedent('''\
                 [default]
                 api_key = {replace}
@@ -102,7 +102,7 @@ def check_config_file(config_file, replace_string):
             sys.exit(0)
         else:
             sys.exit(0)
-        
+
 # If CORTEX_API_KEY environment variable is defined, will not check for existence of a cortex
 # config file.
 def get_config(config, args, argv, parser, replace_string):
@@ -143,442 +143,442 @@ def get_config(config, args, argv, parser, replace_string):
     config.update({"debug": args.debug})
     config.update({"noObfuscate": args.noObfuscate})
 
-    #args = parser.parse_args(argv)
+    # args = parser.parse_args(argv)
 
-    #return args
+    # return args
 
 def add_argument_accountId(subparser):
     subparser.add_argument(
-            '-a', 
-            '--accountId', 
-            help='AWS account Id',
-            required=True,
-            default=True,
-            metavar=''
+        '-a',
+        '--accountId',
+        help='AWS account Id',
+        required=True,
+        default=True,
+        metavar=''
     )
 
 def add_argument_alias(subparser, help_text="The github configuration alias defined in Cortex"):
     subparser.add_argument(
-            '-a', 
-            '--alias', 
-            help=help_text,
-            required=True,
-            default=True,
-            metavar=''
+        '-a',
+        '--alias',
+        help=help_text,
+        required=True,
+        default=True,
+        metavar=''
     )
 
 def add_argument_callee_tag(subparser, help_text='The entity tag (x-cortex-tag) that identifies the callee entity.'):
     subparser.add_argument(
-            '-e',
-            '--calleeTag',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-e',
+        '--calleeTag',
+        help=help_text,
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_caller_tag(subparser, help_text='The entity tag (x-cortex-tag) that identifies the caller entity.'):
     subparser.add_argument(
-            '-r',
-            '--callerTag',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-r',
+        '--callerTag',
+        help=help_text,
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_departmentTag(subparser):
     subparser.add_argument(
-            '-d', 
-            '--departmentTag', 
-            help='The department entity tag',
-            required=True,
-            default=True,
-            metavar=''
+        '-d',
+        '--departmentTag',
+        help='The department entity tag',
+        required=True,
+        default=True,
+        metavar=''
     )
 
 def add_argument_discovery_audit_type(subparser):
     subparser.add_argument(
-            '-t', 
-            '--type', 
-            help='Filter based on type of the vent',
-            required=False,
-            choices=['NEW_REPOSITORY', 'REPOSITORY_DELETED', 'REPOSITORY_ARCHIVED', 'NEW_K8S_RESOURCE', 'NEW_APM_RESOURCE', 'APM_RESOURCE_NOT_DETECTED', 'NEW_ECS_RESOURCE', 'ECS_RESOURCE_NOT_DETECTED', 'NEW_AWS_RESOURCE', 'AWS_RESOURCE_NOT_DETECTED', 'NEW_GOOGLE_CLOUD_RESOURCE', 'GOOGLE_CLOUD_RESOURCE_NOT_DETECTED'],
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-t',
+        '--type',
+        help='Filter based on type of the vent',
+        required=False,
+        choices=['NEW_REPOSITORY', 'REPOSITORY_DELETED', 'REPOSITORY_ARCHIVED', 'NEW_K8S_RESOURCE', 'NEW_APM_RESOURCE', 'APM_RESOURCE_NOT_DETECTED', 'NEW_ECS_RESOURCE', 'ECS_RESOURCE_NOT_DETECTED', 'NEW_AWS_RESOURCE', 'AWS_RESOURCE_NOT_DETECTED', 'NEW_GOOGLE_CLOUD_RESOURCE', 'GOOGLE_CLOUD_RESOURCE_NOT_DETECTED'],
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_discovery_audit_source(subparser):
     subparser.add_argument(
-            '-s', 
-            '--source', 
-            help='Filter based on integration source',
-            required=False,
-            choices=['AWS', 'AZURE_DEVOPS', 'BITBUCKET', 'DATADOG', 'DYNATRACE', 'ECS', 'GCP', 'GITHUB', 'GITLAB', 'INSTANA', 'K8S', 'LIGHTSTEP', 'LAMBDA', 'NEWRELIC', 'SERVICENOW'],
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-s',
+        '--source',
+        help='Filter based on integration source',
+        required=False,
+        choices=['AWS', 'AZURE_DEVOPS', 'BITBUCKET', 'DATADOG', 'DYNATRACE', 'ECS', 'GCP', 'GITHUB', 'GITLAB', 'INSTANA', 'K8S', 'LIGHTSTEP', 'LAMBDA', 'NEWRELIC', 'SERVICENOW'],
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_end_time(subparser, help_text='End time for audit log retrieve'):
     subparser.add_argument(
-            '-e',
-            '--endTime',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-e',
+        '--endTime',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_entity_tag(subparser, help_text='The entity tag (x-cortex-tag) that identifies the entity.', required=True):
     subparser.add_argument(
-            '-e',
-            '--entityTag',
-            help=help_text,
-            required=required,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-e',
+        '--entityTag',
+        help=help_text,
+        required=required,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_environment(subparser, help_text='The environment name of the deployment to delete.'):
     subparser.add_argument(
-            '-e',
-            '--environment',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-e',
+        '--environment',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_export_directory(subparser):
     subparser.add_argument(
-            '-d', 
-            '--directory', 
-            help="Directory where export will be created; defaults to ~/.cortex/export/<DATE>",
-            required=False,
-            default=os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
-            metavar=''
+        '-d',
+        '--directory',
+        help="Directory where export will be created; defaults to ~/.cortex/export/<DATE>",
+        required=False,
+        default=os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
+        metavar=''
     )
     subparser.add_argument(
-            '-default-directory', 
-            '--default-directory', 
-            help=argparse.SUPPRESS,
-            required=False,
-            default=os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        '-default-directory',
+        '--default-directory',
+        help=argparse.SUPPRESS,
+        required=False,
+        default=os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     )
 
 def add_argument_file(subparser, help_text):
     subparser.add_argument(
-            '-f', 
-            '--file', 
-            required=True,
-            help=help_text + "; can be passed as stdin with -, example: -f-",
-            default=argparse.SUPPRESS,
-            type=argparse.FileType('r'),
-            metavar=''
+        '-f',
+        '--file',
+        required=True,
+        help=help_text + "; can be passed as stdin with -, example: -f-",
+        default=argparse.SUPPRESS,
+        type=argparse.FileType('r'),
+        metavar=''
     )
 
 def add_argument_force(subparser, help_text='When true, overrides values that were defined in the catalog descriptor. Will be overwritten the next time the catalog descriptor is processed.'):
     subparser.add_argument(
-            '-o',
-            '--force',
-            help=help_text,
-            action='store_true',
-            default='false'
+        '-o',
+        '--force',
+        help=help_text,
+        action='store_true',
+        default='false'
     )
 
 def add_argument_groups(subparser):
     subparser.add_argument(
-            '-g', 
-            '--groups', 
-            help='Filter based on groups, which correspond to the x-cortex-groups field in the Catalog Descriptor. Accepts a comma-delimited list of groups',
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-g',
+        '--groups',
+        help='Filter based on groups, which correspond to the x-cortex-groups field in the Catalog Descriptor. Accepts a comma-delimited list of groups',
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_hierarchyDepth(subparser):
     subparser.add_argument(
-            '-d',
-            '--hierarchy-depth',
-            help='Depth of the parent / children hierarchy nodes. Can be \'full\' or a valid integer',
-            default='full',
-            metavar=''
+        '-d',
+        '--hierarchy-depth',
+        help='Depth of the parent / children hierarchy nodes. Can be \'full\' or a valid integer',
+        default='full',
+        metavar=''
     )
 
 def add_argument_id(subparser, help_text='The id of the CQL query'):
     subparser.add_argument(
-            '-i',
-            '--id',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-i',
+        '--id',
+        help=help_text,
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_import_directory(subparser):
     subparser.add_argument(
-            '-d', 
-            '--directory', 
-            help="Directory containing export contents",
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-d',
+        '--directory',
+        help="Directory containing export contents",
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_includeDrafts(subparser, help_text='Include plugin drafts.'):
     subparser.add_argument(
-            '-i',
-            '--includeDrafts',
-            help=help_text,
-            required=False,
-            default=True,
-            action='store_true'
+        '-i',
+        '--includeDrafts',
+        help=help_text,
+        required=False,
+        default=True,
+        action='store_true'
     )
 
 def add_argument_includeHierarchyFields(subparser):
     subparser.add_argument(
-            '-i',
-            '--includeHierarchyFields',
-            help='List of sub fields to include for hierarchies. Only supports \'groups\'',
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-i',
+        '--includeHierarchyFields',
+        help='List of sub fields to include for hierarchies. Only supports \'groups\'',
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_includeIncoming(subparser, help_text='Including incoming dependencies.'):
     subparser.add_argument(
-            '-i',
-            '--includeIncoming',
-            help=help_text,
-            required=False,
-            default=True,
-            action='store_true'
+        '-i',
+        '--includeIncoming',
+        help=help_text,
+        required=False,
+        default=True,
+        action='store_true'
     )
 
 def add_argument_includeIgnored(subparser, help_text='Flag to include ignored events in result.'):
     subparser.add_argument(
-            '-i',
-            '--includeIgnored',
-            help=help_text,
-            required=False,
-            default=False,
-            action='store_true'
+        '-i',
+        '--includeIgnored',
+        help=help_text,
+        required=False,
+        default=False,
+        action='store_true'
     )
 
 def add_argument_includeOutgoing(subparser, help_text='Including outgoing dependencies.'):
     subparser.add_argument(
-            '-o',
-            '--includeOutgoing',
-            help=help_text,
-            required=False,
-            default=False,
-            action='store_true'
+        '-o',
+        '--includeOutgoing',
+        help=help_text,
+        required=False,
+        default=False,
+        action='store_true'
     )
 
 def add_argument_includeTeamsWithoutMembers(subparser):
     subparser.add_argument(
-            '-i', 
-            '--includeTeamsWithoutMembers', 
-            help='Include teams without members',
-            required=False,
-            default=False,
-            action='store_true'
+        '-i',
+        '--includeTeamsWithoutMembers',
+        help='Include teams without members',
+        required=False,
+        default=False,
+        action='store_true'
     )
 
 def add_argument_key(subparser, help_text='Key to retrieve.'):
     subparser.add_argument(
-            '-k',
-            '--key',
-            help=help_text,
-            required=True,
-            metavar=''
+        '-k',
+        '--key',
+        help=help_text,
+        required=True,
+        metavar=''
     )
 
 def add_argument_method(subparser, help_text='The http method type of the dependency.'):
     subparser.add_argument(
-            '-m',
-            '--method',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-m',
+        '--method',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_name(subparser, help_text='The name of the thing'):
     subparser.add_argument(
-            '-n',
-            '--name',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-n',
+        '--name',
+        help=help_text,
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_page(subparser, help_text='Page number to return, 0 indexed'):
     subparser.add_argument(
-            '-p',
-            '--page',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-p',
+        '--page',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_page_size(subparser, help_text='Page size for results'):
     subparser.add_argument(
-            '-z',
-            '--pageSize',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-z',
+        '--pageSize',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_path(subparser, help_text='The path of the dependency.'):
     subparser.add_argument(
-            '-p',
-            '--path',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-p',
+        '--path',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_role(subparser):
     subparser.add_argument(
-            '-r', 
-            '--role', 
-            help='AWS role',
-            required=True,
-            default=True,
-            metavar=''
+        '-r',
+        '--role',
+        help='AWS role',
+        required=True,
+        default=True,
+        metavar=''
     )
 
 def add_argument_scorecard_tag(subparser):
     subparser.add_argument(
-            '-s',
-            '--scorecardTag',
-            help='Unique tag for the Scorecard',
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-s',
+        '--scorecardTag',
+        help='Unique tag for the Scorecard',
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_sha(subparser, help_text='The sha string of the deployment to delete.'):
     subparser.add_argument(
-            '-s',
-            '--sha',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-s',
+        '--sha',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_show_drafts(subparser, help_text='Include draft scorecards'):
     subparser.add_argument(
-            '-s',
-            '--showDrafts',
-            help=help_text,
-            required=False,
-            action='store_true'
+        '-s',
+        '--showDrafts',
+        help=help_text,
+        required=False,
+        action='store_true'
     )
 
 def add_argument_start_time(subparser, help_text='Start time for audit log retrieve'):
     subparser.add_argument(
-            '-s',
-            '--startTime',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-s',
+        '--startTime',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_tag(subparser, help_text='The entity tag (x-cortex-tag) that identifies the entity.'):
     subparser.add_argument(
-            '-t',
-            '--tag',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-t',
+        '--tag',
+        help=help_text,
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_teamTag(subparser, help_text='The tag identifing the team.'):
     subparser.add_argument(
-            '-t',
-            '--teamTag',
-            help=help_text,
-            required=True,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-t',
+        '--teamTag',
+        help=help_text,
+        required=True,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_timestamp(subparser, help_text='Date-time of events to include.'):
     subparser.add_argument(
-            '-i',
-            '--timestamp',
-            help=help_text,
-            required=False,
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-i',
+        '--timestamp',
+        help=help_text,
+        required=False,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_timeout(subparser, help_text='Time in seconds to wait before timeout.'):
     subparser.add_argument(
-            '-x',
-            '--timeout',
-            help=help_text,
-            required=False,
-            default=120,
-            metavar=''
+        '-x',
+        '--timeout',
+        help=help_text,
+        required=False,
+        default=120,
+        metavar=''
     )
 
 def add_argument_type(subparser, option="-t", help_text='The resource type.', required=True):
     subparser.add_argument(
-            option,
-            '--type',
-            help=help_text,
-            required=required,
-            default=argparse.SUPPRESS,
-            metavar=''
+        option,
+        '--type',
+        help=help_text,
+        required=required,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_types(subparser, option="-t", help_text='Comma-separated list of entity types.', required=True, default=argparse.SUPPRESS):
     subparser.add_argument(
-            option,
-            '--types',
-            help=help_text,
-            required=required,
-            default=default,
-            metavar=''
+        option,
+        '--types',
+        help=help_text,
+        required=required,
+        default=default,
+        metavar=''
     )
 
 def add_argument_uuid(subparser, option="-u", help_text='UUID of custom event.', required=True):
     subparser.add_argument(
-            option,
-            '--uuid',
-            help=help_text,
-            required=required,
-            default=argparse.SUPPRESS,
-            metavar=''
+        option,
+        '--uuid',
+        help=help_text,
+        required=required,
+        default=argparse.SUPPRESS,
+        metavar=''
     )
 
 def add_argument_wait(subparser, help_text='Wait for query to complete.'):
     subparser.add_argument(
-            '-w',
-            '--wait',
-            help=help_text,
-            required=False,
-            default=False,
-            action='store_true'
+        '-w',
+        '--wait',
+        help=help_text,
+        required=False,
+        default=False,
+        action='store_true'
     )
 def add_argument_yaml(subparser, help_text='When true, returns the YAML representation of the descriptor.'):
     subparser.add_argument(
-            '-y',
-            '--yaml',
-            help=help_text,
-            action='store_true',
-            default=False,
-            required=False
+        '-y',
+        '--yaml',
+        help=help_text,
+        action='store_true',
+        default=False,
+        required=False
     )
 
 def debug_json(r, method):
@@ -609,7 +609,7 @@ def exit(r, method, expected_rc=200, err=None):
             print(f'{method} {r.url} => {r.status_code} {r.reason}')
             if err != None:
                 print(err)
-        
+
         if not config.get('is_importing', False) or r.status_code != 409 or r.status_code != 400:
             sys.exit(r.status_code)
     else:
@@ -630,12 +630,12 @@ def default_headers(content_type='application/json', other={}):
         content_type = content_type + ";" + charset_utf8
 
     h = {
-        'Content-Type': content_type 
+        'Content-Type': content_type
     }
-    
+
     for k, v in other.items():
         h[k] = v
-    
+
     return h
 
 # There might be a more efficient use of the requests library to combine
@@ -652,8 +652,8 @@ def get(url, headers={}):
         err = e.response.text
         if err != "":
             if details in e.response.json():
-               details = e.response.json()['details']
-    exit(r, 'GET', err = details)
+                details = e.response.json()['details']
+    exit(r, 'GET', err=details)
 
 
 def put(url, headers={}, payload=""):
@@ -683,7 +683,7 @@ def post(url, headers={}, payload="", expected_rc=200):
 
     err = None
     try:
-        r = requests.post(config['url'] + url, headers=headers,data=payload)
+        r = requests.post(config['url'] + url, headers=headers, data=payload)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
         err = e.response.text
@@ -698,10 +698,10 @@ def parse_opts(args, ignore_tags=[]):
         if k in ['tenant', 'debug', 'noObfuscate', 'func', 'config'] + ignore_tags:
             continue
         if len(opts) == 0:
-           char="?"
+            char = "?"
         else:
-           char="&"
-        opts=opts + char + k + "=" + str(v)
+            char = "&"
+        opts = opts + char + k + "=" + str(v)
 
     # convert python args to valid JSON
     return opts.replace("True", "true").replace("False", "false")
@@ -747,11 +747,11 @@ def export(args):
     if args.directory == args.default_directory:
         args.directory = args.directory + "-" + args.tenant
 
-    catalog_directory=args.directory + "/catalog"
-    json_directory=args.directory + "/json"
-    scorecard_directory=args.directory + "/scorecards"
-    teams_directory=args.directory + "/teams"
-    resource_definitions_directory=args.directory + "/resource-definitions"
+    catalog_directory = args.directory + "/catalog"
+    json_directory = args.directory + "/json"
+    scorecard_directory = args.directory + "/scorecards"
+    teams_directory = args.directory + "/teams"
+    resource_definitions_directory = args.directory + "/resource-definitions"
 
     directory_list = [catalog_directory, json_directory, resource_definitions_directory, scorecard_directory, teams_directory]
 
@@ -760,7 +760,7 @@ def export(args):
             os.makedirs(directory, exist_ok=True)
 
     print("Getting resource definitions")
-    resource_definitions_json=json_directory + "/resource-definitions.json"
+    resource_definitions_json = json_directory + "/resource-definitions.json"
     resource_definitions_output = io.StringIO()
     with redirect_stdout(resource_definitions_output):
         resource_definitions_list(args)
@@ -772,10 +772,10 @@ def export(args):
     resource_types_list = []
     for t in data['definitions']:
         resource_types_list.append(t['type'])
- 
+
     for resource_type in sorted(resource_types_list):
         print("-->  " + resource_type)
-        resource_file=resource_definitions_directory + "/" + resource_type + ".json"
+        resource_file = resource_definitions_directory + "/" + resource_type + ".json"
         args.type = resource_type
         resource_definition_output = io.StringIO()
         with redirect_stdout(resource_definition_output):
@@ -790,7 +790,7 @@ def export(args):
     args.yaml = True
 
     while not this_page == total_pages:
-        descriptors=json_directory + "/descriptors-" + str(this_page) + ".json"
+        descriptors = json_directory + "/descriptors-" + str(this_page) + ".json"
         catalog_output = io.StringIO()
         with redirect_stdout(catalog_output):
             save_types = args.types
@@ -820,7 +820,7 @@ def export(args):
 
     if any(export_type == "ALL" or export_type == "ip-allowlist" for export_type in args.types.split()):
         print("Getting IP Allowlist definitions")
-        ip_allowlist_json=json_directory + "/ip-allowlist.json"
+        ip_allowlist_json = json_directory + "/ip-allowlist.json"
         ip_allowlist_output = io.StringIO()
         with redirect_stdout(ip_allowlist_output):
             ip_allowlist_get(args)
@@ -829,7 +829,7 @@ def export(args):
 
     if any(export_type == "ALL" or export_type == "scorecard" for export_type in args.types.split()):
         print("Getting scorecards")
-        scorecards_json=json_directory + "/scorecards.json"
+        scorecards_json = json_directory + "/scorecards.json"
         scorecards_output = io.StringIO()
         with redirect_stdout(scorecards_output):
             scorecards_list(args)
@@ -845,8 +845,8 @@ def export(args):
 
         for tag in sorted(scorecard_list):
             print("-->  " + tag)
-            scorecard_file=scorecard_directory + "/" + tag + ".yaml"
-            args.tag=tag
+            scorecard_file = scorecard_directory + "/" + tag + ".yaml"
+            args.tag = tag
             scorecards_descriptor_output = io.StringIO()
             with redirect_stdout(scorecards_descriptor_output):
                 scorecards_descriptor(args)
@@ -907,7 +907,7 @@ def import_from_export(args):
     with redirect_stdout(resource_definitions_output):
         resource_definitions_list(args)
         resource_definitions_json = json.loads(resource_definitions_output.getvalue())
- 
+
     print("Importing resource definitions")
     for file in sorted(os.listdir(resource_definitions_directory)):
         print("-->  " + file)
@@ -985,10 +985,10 @@ def catalog_archive(args):
 
 def subparser_catalog_create_or_update(subparser):
     sp = subparser.add_parser(
-            'create',
-            help='Create a catalog entity using a descriptor YAML. If the YAML refers to an entity that already exists (as referenced by the x-cortex-tag), this API will update the existing entity.',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+        'create',
+        help='Create a catalog entity using a descriptor YAML. If the YAML refers to an entity that already exists (as referenced by the x-cortex-tag), this API will update the existing entity.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=textwrap.dedent('''\
                 Additional documentation
                 ------------------------
                 https://docs.cortex.io/docs/reference/basics/entities
@@ -996,18 +996,18 @@ def subparser_catalog_create_or_update(subparser):
                 '''))
     add_argument_file(sp, 'File containing openapi descriptor for entity')
     sp.add_argument(
-            '-d',
-            '--dry-run',
-            help='When true, this endpoint only validates the descriptor contents and returns any errors or warnings.',
-            action='store_true',
-            default='false'
+        '-d',
+        '--dry-run',
+        help='When true, this endpoint only validates the descriptor contents and returns any errors or warnings.',
+        action='store_true',
+        default='false'
     )
     sp.add_argument(
-            '-g',
-            '--github-pr',
-            help='Add a comment with validation errors on the pull request with the given ID',
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-g',
+        '--github-pr',
+        help='Add a comment with validation errors on the pull request with the given ID',
+        default=argparse.SUPPRESS,
+        metavar=''
     )
     sp.set_defaults(func=catalog_create_or_update)
 
@@ -1043,73 +1043,73 @@ def catalog_gitops_logs(args):
 
 def subparser_catalog_list(subparser):
     sp = subparser.add_parser(
-            'list',
-            help='List all entities across the Service, Resource and Domain Catalogs.\n This API returns summary data for each entity, so refer to the retrieve entity method to lookup more details for a single entity.'
+        'list',
+        help='List all entities across the Service, Resource and Domain Catalogs.\n This API returns summary data for each entity, so refer to the retrieve entity method to lookup more details for a single entity.'
     )
     sp.add_argument(
-            '-a',
-            '--includeArchived',
-            help='Whether to include archived entities in the response, default to false',
-            default=False,
-            action='store_true',
-            required=False
+        '-a',
+        '--includeArchived',
+        help='Whether to include archived entities in the response, default to false',
+        default=False,
+        action='store_true',
+        required=False
     )
     add_argument_hierarchyDepth(sp)
     add_argument_groups(sp)
     add_argument_includeHierarchyFields(sp)
     sp.add_argument(
-            '-in',
-            '--includeNestedFields',
-            help='List of sub fields to include for different types, for example team:members',
-            default=argparse.SUPPRESS,
-            metavar='',
-            required=False
+        '-in',
+        '--includeNestedFields',
+        help='List of sub fields to include for different types, for example team:members',
+        default=argparse.SUPPRESS,
+        metavar='',
+        required=False
     )
     sp.add_argument(
-            '-io',
-            '--includeOwners',
-            help='Whether to include ownership information for each entity in the response',
-            default=False,
-            action='store_true',
-            required=False
+        '-io',
+        '--includeOwners',
+        help='Whether to include ownership information for each entity in the response',
+        default=False,
+        action='store_true',
+        required=False
     )
     sp.add_argument(
-            '-l',
-            '--includeLinks',
-            help='Whether to include links for each entity in the response',
-            default=False,
-            action='store_true',
-            required=False
+        '-l',
+        '--includeLinks',
+        help='Whether to include links for each entity in the response',
+        default=False,
+        action='store_true',
+        required=False
     )
     sp.add_argument(
-            '-m',
-            '--includeMetadata',
-            help='Whether to include custom data for each entity in the response',
-            default=False,
-            action='store_true',
-            required=False
+        '-m',
+        '--includeMetadata',
+        help='Whether to include custom data for each entity in the response',
+        default=False,
+        action='store_true',
+        required=False
     )
     sp.add_argument(
-            '-o',
-            '--owners',
-            help='Filter based on owner group names, which correspond to the x-cortex-owners field in the Catalog Descriptor. Accepts a comma-delimited list of owner group names',
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-o',
+        '--owners',
+        help='Filter based on owner group names, which correspond to the x-cortex-owners field in the Catalog Descriptor. Accepts a comma-delimited list of owner group names',
+        default=argparse.SUPPRESS,
+        metavar=''
     )
     add_argument_page(sp)
     sp.add_argument(
-            '-r',
-            '--gitRepositories',
-            help='Supports only GitHub repositories in the org/repo format',
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-r',
+        '--gitRepositories',
+        help='Supports only GitHub repositories in the org/repo format',
+        default=argparse.SUPPRESS,
+        metavar=''
     )
     sp.add_argument(
-            '-t',
-            '--types',
-            help='Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.',
-            default=argparse.SUPPRESS,
-            metavar=''
+        '-t',
+        '--types',
+        help='Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.',
+        default=argparse.SUPPRESS,
+        metavar=''
     )
     add_argument_page_size(sp)
     sp.set_defaults(func=catalog_list)
@@ -1176,9 +1176,9 @@ def subparser_custom_data_opts(subparsers):
     subparser_custom_data_list(sp)
 
 def subparser_custom_data_add(subparser):
-    sp = subparser.add_parser('add', help='Add custom data for entity', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add', help='Add custom data for entity',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -1272,9 +1272,9 @@ def subparser_custom_events_opts(subparsers):
     subparser_custom_events_update_by_uuid(sp)
 
 def subparser_custom_events_create(subparser):
-    sp = subparser.add_parser('create', help='Create custom event', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('create', help='Create custom event',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -1303,7 +1303,7 @@ def custom_events_create(args):
     post("/api/v1/catalog/" + args.tag + "/custom-events", default_headers(), read_file(args))
 
 def subparser_custom_events_delete_all(subparser):
-    sp = subparser.add_parser('delete-all', help='Delete all custom events for an entity') 
+    sp = subparser.add_parser('delete-all', help='Delete all custom events for an entity')
     add_argument_tag(sp)
     add_argument_type(sp, option='-y', help_text='The custom event type, defaults to all types', required=False)
     add_argument_timestamp(sp)
@@ -1313,7 +1313,7 @@ def custom_events_delete_all(args):
     delete("/api/v1/catalog/" + args.tag + "/custom-events" + parse_opts(args), expected_rc=204)
 
 def subparser_custom_events_list(subparser):
-    sp = subparser.add_parser('list', help='List custom events for entity') 
+    sp = subparser.add_parser('list', help='List custom events for entity')
     add_argument_tag(sp)
     add_argument_type(sp, option='-y', help_text='The custom event type, defaults to all types', required=False)
     add_argument_timestamp(sp)
@@ -1323,7 +1323,7 @@ def custom_events_list(args):
     get("/api/v1/catalog/" + args.tag + "/custom-events" + parse_opts(args))
 
 def subparser_custom_events_delete_by_uuid(subparser):
-    sp = subparser.add_parser('delete-by-uuid', help='Delete custom events by UUID') 
+    sp = subparser.add_parser('delete-by-uuid', help='Delete custom events by UUID')
     add_argument_tag(sp)
     add_argument_uuid(sp)
     sp.set_defaults(func=custom_events_delete_by_uuid)
@@ -1332,7 +1332,7 @@ def custom_events_delete_by_uuid(args):
     delete("/api/v1/catalog/" + args.tag + "/custom-events/" + args.uuid, expected_rc=204)
 
 def subparser_custom_events_get_by_uuid(subparser):
-    sp = subparser.add_parser('get-by-uuid', help='Get custom event by UUID') 
+    sp = subparser.add_parser('get-by-uuid', help='Get custom event by UUID')
     add_argument_tag(sp)
     add_argument_uuid(sp)
     sp.set_defaults(func=custom_events_get_by_uuid)
@@ -1341,7 +1341,7 @@ def custom_events_get_by_uuid(args):
     get("/api/v1/catalog/" + args.tag + "/custom-events/" + args.uuid)
 
 def subparser_custom_events_update_by_uuid(subparser):
-    sp = subparser.add_parser('update-by-uuid', help='Update custom event by UUID') 
+    sp = subparser.add_parser('update-by-uuid', help='Update custom event by UUID')
     add_argument_tag(sp)
     add_argument_uuid(sp)
     add_argument_file(sp, 'File containing custom event to create')
@@ -1366,7 +1366,7 @@ def subparser_groups_add(subparser):
     sp.set_defaults(func=groups_add)
 
 def groups_add(args):
-    put("/api/v1/catalog/"+ args.tag + "/groups", default_headers(), payload=read_file(args))
+    put("/api/v1/catalog/" + args.tag + "/groups", default_headers(), payload=read_file(args))
 
 def subparser_groups_delete(subparser):
     sp = subparser.add_parser('delete', help='Delete group from entity')
@@ -1376,7 +1376,7 @@ def subparser_groups_delete(subparser):
 
 def groups_delete(args):
     headers = default_headers()
-    delete("/api/v1/catalog/"+ args.tag + "/groups", headers, read_file(args))
+    delete("/api/v1/catalog/" + args.tag + "/groups", headers, read_file(args))
 
 def subparser_groups_get(subparser):
     sp = subparser.add_parser('get', help='Get groups for entity')
@@ -1384,7 +1384,7 @@ def subparser_groups_get(subparser):
     sp.set_defaults(func=groups_get)
 
 def groups_get(args):
-    get("/api/v1/catalog/"+ args.tag + "/groups")
+    get("/api/v1/catalog/" + args.tag + "/groups")
 # Groups end
 
 # Dependencies start
@@ -1403,9 +1403,9 @@ def subparser_dependencies_opts(subparsers):
 
 def subparser_dependencies_add(subparser):
     sp = subparser.add_parser('add',
-            help='Create dependency from an entity',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Create dependency from an entity',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -1428,9 +1428,9 @@ def dependencies_add(args):
 
 def subparser_dependencies_add_in_bulk(subparser):
     sp = subparser.add_parser('add-in-bulk',
-            help='Create or update dependencies in bulk',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Create or update dependencies in bulk',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -1478,9 +1478,9 @@ def dependencies_delete_all(args):
 
 def subparser_dependencies_delete_in_bulk(subparser):
     sp = subparser.add_parser('delete-in-bulk',
-            help='Delete dependencies in bulk',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Delete dependencies in bulk',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -1630,10 +1630,10 @@ def subparser_discovery_audit_opts(subparsers):
     subparser_discovery_audit_get(sp)
 
 def subparser_discovery_audit_get(subparser):
-    sp = subparser.add_parser('get', 
-        help="This report shows you recent changes in your environment that aren't reflected in Cortex, including newly created repositories, services, and resources that we discover from your integrations or which were deleted in the environment but corresponding Cortex entities are still present.Add a deployment to an entity",
-         formatter_class=argparse.RawTextHelpFormatter, 
-         epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('get',
+                              help="This report shows you recent changes in your environment that aren't reflected in Cortex, including newly created repositories, services, and resources that we discover from your integrations or which were deleted in the environment but corresponding Cortex entities are still present.Add a deployment to an entity",
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Possible values for source, type:
                 ---------------------------------
                 source:
@@ -1745,7 +1745,7 @@ def subparser_groups_add(subparser):
 
 def groups_add(args):
     headers = default_headers()
-    put("/api/v1/catalog/"+ args.tag + "/groups", headers, payload=read_file(args))
+    put("/api/v1/catalog/" + args.tag + "/groups", headers, payload=read_file(args))
 
 def subparser_groups_delete(subparser):
     sp = subparser.add_parser('delete', help='Delete group from entity')
@@ -1755,7 +1755,7 @@ def subparser_groups_delete(subparser):
 
 def groups_delete(args):
     headers = default_headers()
-    delete("/api/v1/catalog/"+ args.tag + "/groups", headers, read_file(args))
+    delete("/api/v1/catalog/" + args.tag + "/groups", headers, read_file(args))
 
 def subparser_groups_get(subparser):
     sp = subparser.add_parser('get', help='Get groups for entity')
@@ -1763,7 +1763,7 @@ def subparser_groups_get(subparser):
     sp.set_defaults(func=groups_get)
 
 def groups_get(args):
-    get("/api/v1/catalog/"+ args.tag + "/groups")
+    get("/api/v1/catalog/" + args.tag + "/groups")
 # Groups end
 
 # Integrations start
@@ -1859,7 +1859,7 @@ def subparser_integrations_aws_add(subparser):
 
 def integrations_aws_add(args):
     headers = default_headers()
-    payload="{ \"accountId\": \"" + args.accountId + "\", \"role\": \"" + args.role + "\"}"
+    payload = "{ \"accountId\": \"" + args.accountId + "\", \"role\": \"" + args.role + "\"}"
     post("/api/v1/aws/configurations", headers, payload=payload)
 
 def subparser_integrations_aws_update(subparser):
@@ -1904,9 +1904,9 @@ def subparser_integrations_azure_resources_opts(subparser):
 
 def subparser_integrations_azure_resources_add(subparser):
     sp = subparser.add_parser('add',
-            help='Add a single configuration',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Add a single configuration',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -1926,10 +1926,10 @@ def integrations_azure_resources_add(args):
     post("/api/v1/azure-resources/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_azure_resources_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2040,10 +2040,10 @@ def integrations_coralogix_add(args):
     post("/api/v1/coralogix/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_coralogix_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2143,10 +2143,10 @@ def subparser_integrations_github_opts(subparser):
     subparser_integrations_github_validate_all(sp)
 
 def subparser_integrations_github_add(subparser):
-    sp = subparser.add_parser('add', 
-            help='Add a single configuration', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add',
+                              help='Add a single configuration',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2168,10 +2168,10 @@ def integrations_github_add(args):
     post("/api/v1/github/configurations/app", headers, payload=read_file(args))
 
 def subparser_integrations_github_add_personal(subparser):
-    sp = subparser.add_parser('add-personal', 
-            help='Add a single personal configuration', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-personal',
+                              help='Add a single personal configuration',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2310,10 +2310,10 @@ def integrations_gitlab_add(args):
     post("/api/v1/gitlab/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_gitlab_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2424,10 +2424,10 @@ def integrations_datadog_add(args):
     post("/api/v1/datadog/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_datadog_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2528,10 +2528,10 @@ def subparser_integrations_incidentio_opts(subparser):
     subparser_integrations_incidentio_validate_all(sp)
 
 def subparser_integrations_incidentio_add(subparser):
-    sp = subparser.add_parser('add', 
-            help='Add a single configuration',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add',
+                              help='Add a single configuration',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2548,10 +2548,10 @@ def integrations_incidentio_add(args):
     post("/api/v1/incidentio/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_incidentio_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2664,10 +2664,10 @@ def integrations_launchdarkly_add(args):
     post("/api/v1/launchdarkly/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_launchdarkly_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2764,10 +2764,10 @@ def subparser_integrations_newrelic_opts(subparser):
     subparser_integrations_newrelic_validate_all(sp)
 
 def subparser_integrations_newrelic_add(subparser):
-    sp = subparser.add_parser('add', 
-            help='Add a single configuration',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add',
+                              help='Add a single configuration',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2786,10 +2786,10 @@ def integrations_newrelic_add(args):
     post("/api/v1/newrelic/configuration", headers, payload=read_file(args))
 
 def subparser_integrations_newrelic_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -2897,10 +2897,10 @@ def integrations_prometheus_add(args):
     post("/api/v1/prometheus/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_prometheus_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3047,10 +3047,10 @@ def integrations_sonarqube_add(args):
     post("/api/v1/sonarqube/configuration/", headers, payload=read_file(args))
 
 def subparser_integrations_sonarqube_add_multiple(subparser):
-    sp = subparser.add_parser('add-multiple', 
-            help='Add multiple configurations', 
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('add-multiple',
+                              help='Add multiple configurations',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3148,9 +3148,9 @@ def ip_allowlist_get(args):
 
 def subparser_ip_allowlist_replace(subparser):
     sp = subparser.add_parser('replace',
-            help='Replace allowlist of IP addresses and ranges',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Replace allowlist of IP addresses and ranges',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3171,9 +3171,9 @@ def ip_allowlist_replace(args):
 
 def subparser_ip_allowlist_validate(subparser):
     sp = subparser.add_parser('validate',
-            help='Validate allowlist of IP addresses and ranges',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Validate allowlist of IP addresses and ranges',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3240,7 +3240,7 @@ def subparser_packages_list_packages(subparser):
     sp.set_defaults(func=packages_list_packages)
 
 def packages_list_packages(args):
-    get("/api/v1/catalog/"+ args.tag + "/packages")
+    get("/api/v1/catalog/" + args.tag + "/packages")
 
 def subparser_packages_go_opts(subparser):
     sp = subparser.add_subparsers(help='Go package sub-commands.')
@@ -3256,7 +3256,7 @@ def subparser_packages_upload_go(subparser):
 
 def packages_upload_go(args):
     headers = default_headers('application/text')
-    post("/api/v1/catalog/"+ args.tag + "/packages/go/gosum", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/go/gosum", headers, read_file(args))
 
 def subparser_packages_delete_go(subparser):
     sp = subparser.add_parser('delete', help='Delete go package from entity')
@@ -3265,7 +3265,7 @@ def subparser_packages_delete_go(subparser):
     sp.set_defaults(func=packages_delete_go)
 
 def packages_delete_go(args):
-    delete("/api/v1/catalog/"+ args.tag + "/packages/go" + parse_opts(args))
+    delete("/api/v1/catalog/" + args.tag + "/packages/go" + parse_opts(args))
 
 def subparser_packages_java_opts(subparser):
     sp = subparser.add_subparsers(help='Java package sub-commands.')
@@ -3282,7 +3282,7 @@ def subparser_packages_upload_java_single(subparser):
 
 def packages_upload_java_single(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/java", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/java", headers, read_file(args))
 
 def subparser_packages_upload_java_multiple(subparser):
     sp = subparser.add_parser('upload-multiple', help='Upload multiple java packages')
@@ -3292,7 +3292,7 @@ def subparser_packages_upload_java_multiple(subparser):
 
 def packages_upload_java_multiple(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/java/bulk", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/java/bulk", headers, read_file(args))
 
 def subparser_packages_delete_java(subparser):
     sp = subparser.add_parser('delete', help='Delete java package from entity')
@@ -3301,7 +3301,7 @@ def subparser_packages_delete_java(subparser):
     sp.set_defaults(func=packages_delete_java)
 
 def packages_delete_java(args):
-    delete("/api/v1/catalog/"+ args.tag + "/packages/java" + parse_opts(args))
+    delete("/api/v1/catalog/" + args.tag + "/packages/java" + parse_opts(args))
 
 def subparser_packages_python_opts(subparser):
     sp = subparser.add_subparsers(help='Python package sub-commands.')
@@ -3318,7 +3318,7 @@ def subparser_packages_upload_python_pipfile(subparser):
 
 def packages_upload_python_pipfile(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/python/pipfile", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/python/pipfile", headers, read_file(args))
 
 def subparser_packages_upload_python_requirements(subparser):
     sp = subparser.add_parser('upload-requirements', help='Upload python requirements.txt file')
@@ -3328,7 +3328,7 @@ def subparser_packages_upload_python_requirements(subparser):
 
 def packages_upload_python_requirements(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/python/requirements", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/python/requirements", headers, read_file(args))
 
 def subparser_packages_delete_python(subparser):
     sp = subparser.add_parser('delete', help='Delete python package from entity')
@@ -3337,7 +3337,7 @@ def subparser_packages_delete_python(subparser):
     sp.set_defaults(func=packages_delete_python)
 
 def packages_delete_python(args):
-    delete("/api/v1/catalog/"+ args.tag + "/packages/python" + parse_opts(args))
+    delete("/api/v1/catalog/" + args.tag + "/packages/python" + parse_opts(args))
 
 def subparser_packages_node_opts(subparser):
     sp = subparser.add_subparsers(help='Node package sub-commands.')
@@ -3355,7 +3355,7 @@ def subparser_packages_upload_node_package(subparser):
 
 def packages_upload_node_package(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/node/package-json", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/node/package-json", headers, read_file(args))
 
 def subparser_packages_upload_node_package_lock(subparser):
     sp = subparser.add_parser('upload-package-lock', help='Upload node package-lock.json file')
@@ -3365,7 +3365,7 @@ def subparser_packages_upload_node_package_lock(subparser):
 
 def packages_upload_node_package_lock(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/node/package-lock", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/node/package-lock", headers, read_file(args))
 
 def subparser_packages_upload_node_yarn_lock(subparser):
     sp = subparser.add_parser('upload-yarn-lock', help='Upload yarn.lock file')
@@ -3375,7 +3375,7 @@ def subparser_packages_upload_node_yarn_lock(subparser):
 
 def packages_upload_node_yarn_lock(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/node/yarn-lock", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/node/yarn-lock", headers, read_file(args))
 
 def subparser_packages_delete_node(subparser):
     sp = subparser.add_parser('delete', help='Delete node package from entity')
@@ -3384,7 +3384,7 @@ def subparser_packages_delete_node(subparser):
     sp.set_defaults(func=packages_delete_node)
 
 def packages_delete_node(args):
-    delete("/api/v1/catalog/"+ args.tag + "/packages/node" + parse_opts(args))
+    delete("/api/v1/catalog/" + args.tag + "/packages/node" + parse_opts(args))
 
 def subparser_packages_nuget_opts(subparser):
     sp = subparser.add_subparsers(help='NuGet package sub-commands.')
@@ -3401,7 +3401,7 @@ def subparser_packages_upload_nuget_csproj(subparser):
 
 def packages_upload_nuget_csproj(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/dotnet/nuget/csproj", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/dotnet/nuget/csproj", headers, read_file(args))
 
 def subparser_packages_upload_nuget_packages_lock(subparser):
     sp = subparser.add_parser('upload-packages-lock', help='Upload Nuget packages.lock.json')
@@ -3411,7 +3411,7 @@ def subparser_packages_upload_nuget_packages_lock(subparser):
 
 def packages_upload_nuget_packages_lock(args):
     headers = default_headers()
-    post("/api/v1/catalog/"+ args.tag + "/packages/dotnet/nuget/packages-lock", headers, read_file(args))
+    post("/api/v1/catalog/" + args.tag + "/packages/dotnet/nuget/packages-lock", headers, read_file(args))
 
 def subparser_packages_delete_nuget(subparser):
     sp = subparser.add_parser('delete', help='Delete nuget package from entity')
@@ -3420,7 +3420,7 @@ def subparser_packages_delete_nuget(subparser):
     sp.set_defaults(func=packages_delete_nuget)
 
 def packages_delete_nuget(args):
-    delete("/api/v1/catalog/"+ args.tag + "/packages/dotnet/nuget" + parse_opts(args))
+    delete("/api/v1/catalog/" + args.tag + "/packages/dotnet/nuget" + parse_opts(args))
 # Packages end
 
 # Plugins start
@@ -3436,9 +3436,9 @@ def subparser_plugins_opts(subparsers):
 
 def subparser_plugins_create(subparser):
     sp = subparser.add_parser('create',
-            help='Create a new plugin',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Create a new plugin',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3493,9 +3493,9 @@ def plugins_get_by_tag(args):
 
 def subparser_plugins_update(subparser):
     sp = subparser.add_parser('update',
-            help='Create a new plugin',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Create a new plugin',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3535,8 +3535,8 @@ def subparser_queries_opts(subparsers):
 
 def subparser_queries_run(subparser):
     sp = subparser.add_parser('run', help='Run CQL query',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Query input can be provided either as a JSON-formatted file or in a file
                 containing the query text that would be used in Query Builder in the Cortex UI.
                 In the latter case, the text will be converted into the expected JSON format
@@ -3571,46 +3571,46 @@ def subparser_queries_run(subparser):
 def queries_run(args):
     headers = default_headers()
     if hasattr(args, "wait"):
-       query_output = io.StringIO()
-       with redirect_stdout(query_output):
-           delattr(args, 'wait')
-           queries_run(args)
-           out = json.loads(query_output.getvalue())
+        query_output = io.StringIO()
+        with redirect_stdout(query_output):
+            delattr(args, 'wait')
+            queries_run(args)
+            out = json.loads(query_output.getvalue())
 
-       jobId = out['jobId']
-       sleep_interval = 2
-       max_attempts = int(args.timeout)//sleep_interval
-       args.id = jobId
+        jobId = out['jobId']
+        sleep_interval = 2
+        max_attempts = int(args.timeout) // sleep_interval
+        args.id = jobId
 
-       done = False
-       for attempt in range(1, max_attempts):
-           query_check_output = io.StringIO()
-           with redirect_stdout(query_check_output):
-              queries_get(args)
-              out = json.loads(query_check_output.getvalue())
-              status = out['status']
-              if status == "DONE":
-                  done = True
-                  break
-              else:
-                  if attempt == max_attempts:
-                     break
-                  time.sleep(sleep_interval)
+        done = False
+        for attempt in range(1, max_attempts):
+            query_check_output = io.StringIO()
+            with redirect_stdout(query_check_output):
+                queries_get(args)
+                out = json.loads(query_check_output.getvalue())
+                status = out['status']
+                if status == "DONE":
+                    done = True
+                    break
+                else:
+                    if attempt == max_attempts:
+                        break
+                    time.sleep(sleep_interval)
 
-       if not done:
-           print("failed to find job id " + jobId + " in DONE state within " + str(args.timeout) + " seconds")
-           print(str(out))
-           sys.exit(2)
-       else:
-           print(str(json.dumps(out)))
+        if not done:
+            print("failed to find job id " + jobId + " in DONE state within " + str(args.timeout) + " seconds")
+            print(str(out))
+            sys.exit(2)
+        else:
+            print(str(json.dumps(out)))
     else:
-       # Support input being in JSON format or bare CQL.
-       payload = read_file(args)
-       if payload[0] != "{":
-          data = {}
-          data['query'] = payload
-          payload = str(json.dumps(data))
-       post("/api/v1/queries", headers, payload=payload)
+        # Support input being in JSON format or bare CQL.
+        payload = read_file(args)
+        if payload[0] != "{":
+            data = {}
+            data['query'] = payload
+            payload = str(json.dumps(data))
+        post("/api/v1/queries", headers, payload=payload)
 
 def subparser_queries_get(subparser):
     sp = subparser.add_parser('get', help='Get results of a CQL query')
@@ -3634,9 +3634,9 @@ def subparser_resource_definitions_opts(subparsers):
 
 def subparser_resource_definitions_create(subparser):
     sp = subparser.add_parser('create',
-            help='Create definition',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+                              help='Create definition',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3825,10 +3825,10 @@ def subparser_teams_hierarchies_opts(subparsers):
     subparser_teams_hierarchies_relationships(sp)
 
 def subparser_teams_hierarchies_create(subparser):
-    sp = subparser.add_parser('create', 
-            help='Create a department',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+    sp = subparser.add_parser('create',
+                              help='Create a department',
+                              formatter_class=argparse.RawTextHelpFormatter,
+                              epilog=textwrap.dedent('''\
                 Format of JSON-formatted configuration file:
                 --------------------------------------------
                 {
@@ -3964,17 +3964,17 @@ def teams_update_members(args):
 # if args comes in from sys.argv.
 def cli(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
-            prog='cortex CLI',
-            description='Cortex command line interface',
-            formatter_class=argparse.RawTextHelpFormatter, 
-            epilog=textwrap.dedent('''\
+        prog='cortex CLI',
+        description='Cortex command line interface',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=textwrap.dedent('''\
                 Type 'man cortex' for additional details.
                 '''))
     parser.add_argument('-c', '--config', help='Config location, default = ~/.cortex/config', default=os.path.expanduser('~') + '/.cortex/config')
     parser.add_argument('-d', '--debug', help='Writes request debug information as JSON to stderr', action='store_true')
     parser.add_argument('-n', '--noObfuscate', help='Do not obfuscate bearer token when debugging', action='store_true')
     parser.add_argument('-q', '--quiet', help='Suppress warning messages when overriding tenant settings with environment variables', action='store_true')
-    parser.add_argument('-t', '--tenant', default='default', help='tenant name defined in ~/.cortex/config, defaults to \'default\'',metavar='')
+    parser.add_argument('-t', '--tenant', default='default', help='tenant name defined in ~/.cortex/config, defaults to \'default\'', metavar='')
     parser.add_argument('-v', '--version', action='version', version=version())
     sp = parser.add_subparsers(help='sub-command help')
 
@@ -4003,7 +4003,7 @@ def cli(argv=sys.argv[1:]):
     replace_string = "REPLACE_WITH_YOUR_CORTEX_API_KEY"
     validate_input(argv, parser)
     args = parser.parse_args(argv)
-    #args = get_config(config, args, argv, parser, replace_string)
+    # args = get_config(config, args, argv, parser, replace_string)
     get_config(config, args, argv, parser, replace_string)
     args.func(args)
 
