@@ -8,6 +8,18 @@ class CortexClient:
         self.api_key = api_key
         self.base_url = base_url
 
+    def data_key_for_endpoint(self, endpoint):
+        end_endpoint = endpoint.split('/')[-1]
+        match end_endpoint:
+            case 'catalog':
+                return 'entities'
+            case 'audit-logs':
+                return 'logs'
+            case 'deploys':
+                return 'deployments'
+            case _:
+                return end_endpoint
+
     def request(self, method, endpoint, params={}, headers={}, data=None, raw=False):
         req_headers = {
             'Authorization': f'Bearer {self.api_key}',
@@ -47,34 +59,35 @@ class CortexClient:
     def get(self, endpoint, params={}, headers={}, raw=False):
         return self.request('GET', endpoint, params=params, headers=headers, raw=raw)
 
-    def post(self, endpoint, data={}, headers={}, raw=False):
-        return self.request('POST', endpoint, data=data, headers=headers, raw=raw)
+    def post(self, endpoint, data={}, params={}, headers={}, raw=False):
+        return self.request('POST', endpoint, data=data, params=params, headers=headers, raw=raw)
 
-    def put(self, endpoint, data={}, headers={}, raw=False):
-        return self.request('PUT', endpoint, data=data, headers=headers, raw=raw)
+    def put(self, endpoint, data={}, params={}, headers={}, raw=False):
+        return self.request('PUT', endpoint, data=data, params=params, headers=headers, raw=raw)
 
-    def delete(self, endpoint, headers={}, raw=False):
-        return self.request('DELETE', endpoint, headers=headers, raw=raw)
+    def delete(self, endpoint, params={}, headers={}, raw=False):
+        return self.request('DELETE', endpoint, params=params, headers=headers, raw=raw)
     
     def fetch(self, endpoint, params={}, headers={}):
         # do paginated fetch, page number is indexed at 0
         # param page is page number, param pageSize is page size, default 250
         page = 0
         page_size = 250
-        entities = []
+        data_key = self.data_key_for_endpoint(endpoint)
+        data = []
         while True:
             response = self.get(endpoint, params={**params, 'page': page, 'pageSize': page_size}, headers=headers)
-            if 'entities' not in response or not response['entities']:
+            if data_key not in response or not response[data_key]:
                 break
-            entities.extend(response['entities'])
+            data.extend(response[data_key])
             if response['totalPages'] == page + 1:
                 break
             page += 1
         return {
-            "total": len(entities),
+            "total": len(data),
             "page": 0,
-            "totalPages": 1 if entities else 0,
-            "entities": entities,
+            "totalPages": 1 if data else 0,
+            data_key: data,
         }
 
     def get_entity(self, entity_tag: str, entity_type: str = ''):
