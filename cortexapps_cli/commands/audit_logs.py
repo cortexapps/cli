@@ -4,7 +4,7 @@ import typer
 
 from rich import print_json
 
-app = typer.Typer()
+app = typer.Typer(help="Audit log commands")
 
 class Action(str, Enum):
     CREATE = "CREATE"

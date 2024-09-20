@@ -69,6 +69,10 @@ def global_callback(
 
 @app.command()
 def version():
+
+    """
+    Show the version and exit.
+    """
     try:
         with open("pyproject.toml", "rb") as f:
             pyproject = tomllib.load(f)

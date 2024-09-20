@@ -4,7 +4,7 @@ from typing_extensions import Annotated
 
 from rich import print_json
 
-app = typer.Typer()
+app = typer.Typer(help="Custom data commands")
 
 @app.command()
 def add(

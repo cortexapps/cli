@@ -7,7 +7,7 @@ from enum import Enum
 
 from cortexapps_cli.models.team import Team
 
-app = typer.Typer()
+app = typer.Typer(help="Teams commands")
 
 class TeamType(str, Enum):
     CORTEX = "CORTEX"

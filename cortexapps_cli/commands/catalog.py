@@ -2,7 +2,7 @@ import typer
 
 from rich import print_json
 
-app = typer.Typer()
+app = typer.Typer(help="Catalog commands")
 
 @app.command()
 def list(
