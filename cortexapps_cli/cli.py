@@ -9,16 +9,18 @@ import configparser
 
 from cortexapps_cli.cortex_client import CortexClient
 
-import cortexapps_cli.commands.teams as teams
-import cortexapps_cli.commands.catalog as catalog
 import cortexapps_cli.commands.audit_logs as audit_logs
+import cortexapps_cli.commands.catalog as catalog
+import cortexapps_cli.commands.custom_data as custom_data
+import cortexapps_cli.commands.teams as teams
 
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
 # add subcommands
-app.add_typer(teams.app, name="teams")
-app.add_typer(catalog.app, name="catalog")
 app.add_typer(audit_logs.app, name="audit-logs")
+app.add_typer(catalog.app, name="catalog")
+app.add_typer(custom_data.app, name="custom-data")
+app.add_typer(teams.app, name="teams")
 
 # global options
 @app.callback()

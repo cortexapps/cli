@@ -125,10 +125,10 @@ def get(
     ctx: typer.Context,
     actions: list[Action] | None = typer.Option(None, "--actions", "-a", help="The audit action"),
     actorApiKeyIdentifiers: list[str] | None = typer.Option(None, "--actorApiKeyIdentifiers", "-ak", help="API key name associated with audit event"),
-    actorEmails: list[str] | None = typer.Option(None, "--actorEmails", "-ae", help="email address associated with audit event"),
-    actorIpAddresses: list[str] | None = typer.Option(None, "--actorIpAddresses", "-ai", help="source IP Addresses associated with audit event"),
-    actorRequestTypes: list[ActorRequestType] | None = typer.Option(None, "--actorRequestTypes", "-ar", help="request event associated with audit event"),
-    actorTypes: list[ActorType] | None = typer.Option(None, "--actorTypes", "-at", help="actor that triggered the audit event"),
+    actorEmails: list[str] | None = typer.Option(None, "--actorEmails", "-ae", help="Email address associated with audit event"),
+    actorIpAddresses: list[str] | None = typer.Option(None, "--actorIpAddresses", "-ai", help="Source IP Addresses associated with audit event"),
+    actorRequestTypes: list[ActorRequestType] | None = typer.Option(None, "--actorRequestTypes", "-ar", help="Request event associated with audit event"),
+    actorTypes: list[ActorType] | None = typer.Option(None, "--actorTypes", "-at", help="Actor that triggered the audit event"),
     end_time: datetime = typer.Option(None, "--endTime", "-e", help="End time of audit logs to retrieve", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
     objectIdentifiers: list[str] | None = typer.Option(None, "--objectIdentifiers", "-oi", help="The name of the Cortex object that was modified, ie x-cortex-tag value, metadata field name, etc."),
     objectTypes: list[ObjectType] | None = typer.Option(None, "--objectTypes", "-ot", help="ObjectTypes"),
@@ -136,6 +136,9 @@ def get(
     page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
     start_time: datetime = typer.Option(None, "--startTime", "-s", help="Start time of audit logs to retrieve", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
 ):
+    """
+    Note: To see the complete list of possible values, please reference the available filter options for audit logs under Settings in the app.
+    """
     client = ctx.obj["client"]
 
     params = {

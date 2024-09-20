@@ -10,6 +10,7 @@ class CortexClient:
 
     def data_key_for_endpoint(self, endpoint):
         end_endpoint = endpoint.split('/')[-1]
+        print("ep = " + end_endpoint)
         match end_endpoint:
             case 'catalog':
                 return 'entities'
@@ -17,6 +18,8 @@ class CortexClient:
                 return 'logs'
             case 'deploys':
                 return 'deployments'
+            case 'custom-data':
+                return ''
             case _:
                 return end_endpoint
 
@@ -77,9 +80,13 @@ class CortexClient:
         data = []
         while True:
             response = self.get(endpoint, params={**params, 'page': page, 'pageSize': page_size}, headers=headers)
-            if data_key not in response or not response[data_key]:
-                break
-            data.extend(response[data_key])
+            # Some endpoints just return an array as the root element.
+            if data_key == '':
+                data.extend(response)
+            else:  
+                if data_key not in response or not response[data_key]:
+                    break
+                data.extend(response[data_key])
             if response['totalPages'] == page + 1:
                 break
             page += 1
