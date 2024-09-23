@@ -10,7 +10,6 @@ class CortexClient:
 
     def data_key_for_endpoint(self, endpoint):
         end_endpoint = endpoint.split('/')[-1]
-        print("ep = " + end_endpoint)
         match end_endpoint:
             case 'catalog':
                 return 'entities'
@@ -20,6 +19,8 @@ class CortexClient:
                 return 'deployments'
             case 'custom-data':
                 return ''
+            case 'custom-events':
+                return 'events'
             case _:
                 return end_endpoint
 

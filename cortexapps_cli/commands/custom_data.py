@@ -22,11 +22,7 @@ def add(
     client = ctx.obj["client"]
 
     params = {
-        "description": description,
         "force": force,
-        "key": key,
-        "tag": tag,
-        "value": value
     }
 
     if file_input:
@@ -84,8 +80,7 @@ def delete(
 
     params = {
         "force": force,
-        "key": key,
-        "tag": tag,
+        "key": key
     }
 
     r = client.delete("api/v1/catalog/" + tag + "/custom-data", params=params)
@@ -101,12 +96,7 @@ def get(
     """
     client = ctx.obj["client"]
 
-    params = {
-        "key": key,
-        "tag": tag
-    }
-
-    r = client.get("api/v1/catalog/" + tag + "/custom-data/" + key, params=params)
+    r = client.get("api/v1/catalog/" + tag + "/custom-data/" + key)
 
     print_json(data=r)
 
@@ -124,14 +114,14 @@ def list(
 
     params = {
         "page": page,
-        "pageSize": page_size,
-        "tag": tag
+        "pageSize": page_size
     }
 
     if page is None:
         # if page is not specified, we want to fetch all pages
         # Not working: https://cortex1.atlassian.net/browse/CET-13655
         #r = client.fetch("api/v1/catalog/" + tag + "/custom-data", params=params)
+        r = client.get("api/v1/catalog/" + tag + "/custom-data", params=params)
         pass
     else:
         # if page is specified, we want to fetch only that page

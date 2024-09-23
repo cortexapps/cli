@@ -12,6 +12,7 @@ from cortexapps_cli.cortex_client import CortexClient
 import cortexapps_cli.commands.audit_logs as audit_logs
 import cortexapps_cli.commands.catalog as catalog
 import cortexapps_cli.commands.custom_data as custom_data
+import cortexapps_cli.commands.custom_events as custom_events
 import cortexapps_cli.commands.teams as teams
 
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
@@ -20,6 +21,7 @@ app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 app.add_typer(audit_logs.app, name="audit-logs")
 app.add_typer(catalog.app, name="catalog")
 app.add_typer(custom_data.app, name="custom-data")
+app.add_typer(custom_events.app, name="custom-events")
 app.add_typer(teams.app, name="teams")
 
 # global options
