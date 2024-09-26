@@ -12,7 +12,10 @@ app = typer.Typer()
 def parse_multi_value_option(option: List[str] | None) -> dict:
     if option is None:
         return {}
-    return dict([param.split('=') for param in option])
+    try:
+        return dict([param.split('=') for param in option])
+    except:
+        raise typer.BadParameter("Invalid parameter format, use Name=value")
 
 def guess_content_type(data: str) -> str:
     try:
