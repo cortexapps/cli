@@ -1,5 +1,6 @@
 import json
 import yaml
+import sys
 from typing import List, Optional
 
 import typer
@@ -106,6 +107,8 @@ def post(
     data = "".join([line for line in input])
     content_type = content_type or guess_content_type(data)
     r = client.post(endpoint, headers=req_headers, params=req_params, data=data, raw_body=True, content_type=content_type)
+    if input == sys.stdin and sys.stdin.isatty() and sys.stdout.isatty():
+        print("")
     print_json(json.dumps(r))
 
 @app.command()
@@ -126,4 +129,6 @@ def put(
     data = "".join([line for line in input])
     content_type = content_type or guess_content_type(data)
     r = client.put(endpoint, headers=req_headers, params=req_params, data=data, raw_body=True, content_type=content_type)
+    if input == sys.stdin and sys.stdin.isatty() and sys.stdout.isatty():
+        print("")
     print_json(json.dumps(r))
