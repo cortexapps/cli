@@ -1,4 +1,4 @@
-FROM python:3.13.0b2-slim
+FROM python:3.13.0rc2-slim
 
 RUN pip install --upgrade pip
 RUN apt update && apt install -y jq yq
