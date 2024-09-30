@@ -21,6 +21,8 @@ class CortexClient:
                 return ''
             case 'custom-events':
                 return 'events'
+            case 'dependencies':
+                return 'dependencies'
             case _:
                 return end_endpoint
 
@@ -73,10 +75,10 @@ class CortexClient:
         return self.request('POST', endpoint, data=data, params=params, headers=headers, raw_body=raw_body, raw_response=raw_response, content_type=content_type)
 
     def put(self, endpoint, data={}, params={}, headers={}, raw_body=False, raw_response=False, content_type='application/json'):
-        return self.request('PUT', endpoint, data=data, params=params, headers=headers, raw_bodyy=raw_body, raw_response=raw_response, content_type=content_type)
+        return self.request('PUT', endpoint, data=data, params=params, headers=headers, raw_body=raw_body, raw_response=raw_response, content_type=content_type)
 
-    def delete(self, endpoint, params={}, headers={}, raw_response=False):
-        return self.request('DELETE', endpoint, params=params, headers=headers, raw_response=raw_response)
+    def delete(self, endpoint, data={}, params={}, headers={}, raw_response=False):
+        return self.request('DELETE', endpoint, data=data, params=params, headers=headers, raw_response=raw_response)
 
     def fetch(self, endpoint, params={}, headers={}):
         # do paginated fetch, page number is indexed at 0

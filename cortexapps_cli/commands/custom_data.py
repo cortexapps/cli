@@ -5,6 +5,20 @@ from typing_extensions import Annotated
 from rich import print_json
 
 app = typer.Typer(help="Custom data commands")
+# Need a helper function to parse custom_data.
+# cannot do this in type: list[Tuple[str, str]] | None  = typer.Option(None)
+# Results in: 
+# AssertionError: List types with complex sub-types are not currently supported
+#
+# borrowed from https://github.com/fastapi/typer/issues/387
+def _parse_key_value(values):
+    if values is None:
+        return ""
+    result = {}
+    for value in values:
+        k, v = value.split('=')
+        result[k] = v
+    return result.items()
 
 @app.command()
 def add(
