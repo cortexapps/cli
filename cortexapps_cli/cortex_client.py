@@ -8,19 +8,35 @@ class CortexClient:
         self.api_key = api_key
         self.base_url = base_url
 
+    # Might need to rethink logic.  Not all gets have an indicator as the
+    # last path element, ie custom-metrics.
     def data_key_for_endpoint(self, endpoint):
-        end_endpoint = endpoint.split('/')[-1]
+        api_paths = endpoint.split('/')
+        if "eng-intel" in api_paths:
+            return 'data'
+
+        #end_endpoint = endpoint.split('/')[-1]
+        end_endpoint = api_paths[-1]
         match end_endpoint:
+            # https://api.getcortexapp.com/api/v1/catalog
             case 'catalog':
                 return 'entities'
+            # https://api.getcortexapp.com/api/v1/audit-logs
             case 'audit-logs':
                 return 'logs'
+            # https://api.getcortexapp.com/api/v1/catalog/:tagOrId/deploys
             case 'deploys':
                 return 'deployments'
+            # https://api.getcortexapp.com/api/v1/catalog/:tagOrId/custom-data
             case 'custom-data':
                 return ''
+            # https://api.getcortexapp.com/api/v1/catalog/:tagOrId/custom-events
             case 'custom-events':
                 return 'events'
+            # https://api.getcortexapp.com/api/v1/eng-intel/custom-metrics/:customMetricKey/entity/:tagOrId
+            case 'custom-metrics':
+                return 'data'
+            # https://api.getcortexapp.com/api/v1/catalog/:callerTag/dependencies
             case 'dependencies':
                 return 'dependencies'
             case _:

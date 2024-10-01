@@ -52,9 +52,6 @@ def create(
       }
     }
 
-    dependency_metadata = {
-    } 
-
     if file_input:
         data = json.loads("".join([line for line in file_input]))
 
@@ -225,9 +222,6 @@ def update(
       "metadata": {
       }
     }
-
-    dependency_metadata = {
-    } 
 
     if file_input:
         data = json.loads("".join([line for line in file_input]))
