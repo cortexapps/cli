@@ -81,10 +81,10 @@ def add(
 
     data = {
         "timestamp": timestamp,
-        "vaue": value
+        "value": value
     }
 
-    params = _convert_datetime_to_string(params)
+    data = _convert_datetime_to_string(data)
 
     r = client.post("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, data=data)
 
@@ -93,7 +93,7 @@ def add_in_bulk(
     ctx: typer.Context,
     custom_metric_key: str = typer.Option(..., "--custom-metric-key", "-k", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing custom event; can be passed as stdin with -, example: -f-")] = None,
-    series: list[str] | None  = typer.Option(None, "--custom", "-c", callback=_parse_key_value, help="List of timestamp=value pairs."),
+    series: list[str] | None  = typer.Option(None, "--value", "-v", callback=_parse_key_value, help="List of timestamp=value pairs."),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
 ):
     """
@@ -124,7 +124,7 @@ def delete(
     custom_metric_key: str = typer.Option(..., "--custom-metric-key", "-k", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     start_date: datetime = typer.Option(None, "--start-date", "-s", help="Start date for the deletion (inclusive)", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
-    end_date: datetime = typer.Option(None, "--end-date", "-s", help="End date for the deletion (inclusive)", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
+    end_date: datetime = typer.Option(None, "--end-date", "-e", help="End date for the deletion (inclusive)", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
 ):
     """
     Delete custom metric data points for entity

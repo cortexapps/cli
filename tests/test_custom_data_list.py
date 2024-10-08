@@ -1,6 +1,6 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["catalog", "details", "-t", "backend-worker"])
+def test():
+    response = json_response(["catalog", "details", "-t", "backend-worker"])
     list = [metadata for metadata in response['metadata'] if metadata['key'] == "cicd"]
     assert list[0]['value'] == "circle-ci"

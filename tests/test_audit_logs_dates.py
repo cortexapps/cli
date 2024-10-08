@@ -1,7 +1,7 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    start_date = yesterday()
+def test():
     end_date = today()
-    response = cli_command(capsys, ["audit-logs", "get", "-s", start_date, "-e", end_date])
+    start_date = yesterday()
+    response = json_response(["audit-logs", "get", "-s", start_date, "-e", end_date])
     assert (len(response['logs']) > 0)

@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["audit-logs", "get",])
+def test():
+    response = json_response(["audit-logs", "get"])
     assert (len(response['logs']) > 0)
