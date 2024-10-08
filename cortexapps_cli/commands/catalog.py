@@ -1,27 +1,120 @@
 import typer
+from typing import Optional, List
+from typing_extensions import Annotated
 
-from rich import print_json
+from cortexapps_cli.utils import print_output
 
 app = typer.Typer(help="Catalog commands")
 
-@app.command()
-def list(
+class ListCommandOptions:
+    table_output = Annotated[
+        Optional[bool],
+        typer.Option("--table", help="Output the response as a table", show_default=False)
+    ]
+    csv_output = Annotated[
+        Optional[bool],
+        typer.Option("--csv", help="Output the response as CSV", show_default=False)
+    ]
+    columns = Annotated[
+        Optional[List[str]],
+        typer.Option("--columns", "-C", help="Columns to include in the table, in the format HeaderName=jsonpath", show_default=False)
+    ]
+    filter = Annotated[
+        Optional[List[str]],
+        typer.Option("--filter", "-F", help="Filters to apply on rows, in the format jsonpath=regex", show_default=False)
+    ]
+    page = Annotated[
+        Optional[int],
+        typer.Option("--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages", show_default=False)
+    ]
+    page_size = Annotated[
+        Optional[int],
+        typer.Option("--page-size", "-z", help="Page size for results", show_default=False)
+    ]
+
+
+class CatalogCommandOptions:
+    include_archived = Annotated[
+        Optional[bool],
+        typer.Option("--include-archived", "-a", help="Include archived entities", show_default=False)
+    ]
+    hierarchy_depth = Annotated[
+        Optional[str],
+        typer.Option("--hierarchy-depth", "-d", help="Depth of the parent / children hierarchy nodes. Can be 'full' or a valid integer", show_default=False)
+    ]
+    groups = Annotated[
+        Optional[str],
+        typer.Option("--groups", "-g", help="Filter based on groups, which correspond to the x-cortex-groups field in the Catalog Descriptor. Accepts a comma-delimited list of groups", show_default=False)
+    ]
+    owners = Annotated[
+        Optional[str],
+        typer.Option("--owners", "-o", help="Filter based on owner group names, which correspond to the x-cortex-owners field in the Catalog Descriptor. Accepts a comma-delimited list of owner group names", show_default=False)
+    ]
+    include_hierarchy_fields = Annotated[
+        Optional[str],
+        typer.Option("--include-hierarchy-fields", "-i", help="List of sub fields to include for hierarchies. Only supports 'groups'", show_default=False)
+    ]
+    include_nested_fields = Annotated[
+        Optional[str],
+        typer.Option("--include-nested-fields", "-in", help="List of sub fields to include for different types, for example team:members", show_default=False)
+    ]
+    include_owners = Annotated[
+        Optional[bool],
+        typer.Option("--include-owners", "-io", help="Include ownership information for each entity in the response", show_default=False)
+    ]
+    include_links = Annotated[
+        Optional[bool],
+        typer.Option("--include-links", "-l", help="Include links for each entity in the response", show_default=False)
+    ]
+    include_metadata = Annotated[
+        Optional[bool],
+        typer.Option("--include-metadata", "-m", help="Include custom data for each entity in the response", show_default=False)
+    ]
+    git_repositories = Annotated[
+        Optional[str],
+        typer.Option("--git-repositories", "-r", help="Supports only GitHub repositories in the org/repo format", show_default=False)
+    ]
+    types = Annotated[
+        Optional[str],
+        typer.Option("--types", "-t", help="Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.", show_default=False)
+    ]
+
+@app.command(name="list")
+def catalog_list(
     ctx: typer.Context,
-    include_archived: bool = typer.Option(False, "--include-archived", "-a", help="Include archived entities"),
-    hierarchy_depth: str = typer.Option('full', "--hierarchy-depth", "-d", help="Depth of the parent / children hierarchy nodes. Can be 'full' or a valid integer"),
-    groups: str = typer.Option(None, "--groups", "-g", help="Filter based on groups, which correspond to the x-cortex-groups field in the Catalog Descriptor. Accepts a comma-delimited list of groups"),
-    owners: str = typer.Option(None, "--owners", "-o", help="Filter based on owner group names, which correspond to the x-cortex-owners field in the Catalog Descriptor. Accepts a comma-delimited list of owner group names"),
-    include_hierarchy_fields: str = typer.Option(None, "--include-hierarchy-fields", "-i", help="List of sub fields to include for hierarchies. Only supports 'groups'"),
-    include_nested_fields: str = typer.Option(None, "--include-nested-fields", "-in", help="List of sub fields to include for different types, for example team:members"),
-    include_owners: bool = typer.Option(False, "--include-owners", "-io", help="Include ownership information for each entity in the response"),
-    include_links: bool = typer.Option(False, "--include-links", "-l", help="Include links for each entity in the response"),
-    include_metadata: bool = typer.Option(False, "--include-metadata", "-m", help="Include custom data for each entity in the response"),
-    page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
-    page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
-    git_repositories: str = typer.Option(None, "--git-repositories", "-r", help="Supports only GitHub repositories in the org/repo format"),
-    types: str = typer.Option(None, "--types", "-t", help="Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor."),
+    include_archived: CatalogCommandOptions.include_archived = False,
+    hierarchy_depth: CatalogCommandOptions.hierarchy_depth = 'full',
+    groups: CatalogCommandOptions.groups = None,
+    owners: CatalogCommandOptions.owners = None,
+    include_hierarchy_fields: CatalogCommandOptions.include_hierarchy_fields = None,
+    include_nested_fields: CatalogCommandOptions.include_nested_fields = None,
+    include_owners: CatalogCommandOptions.include_owners = False,
+    include_links: CatalogCommandOptions.include_links = False,
+    include_metadata: CatalogCommandOptions.include_metadata = False,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
+    git_repositories: CatalogCommandOptions.git_repositories = None,
+    types: CatalogCommandOptions.types = None,
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filter = [],
 ):
     client = ctx.obj["client"]
+
+    if table_output and csv_output:
+        raise typer.BadParameter("Only one of --table and --csv can be specified")
+
+    if (table_output or csv_output) and not columns:
+        columns = [
+            "ID=id",
+            "Tag=tag",
+            "Name=name",
+            "Type=type",
+            "Git Repository=git.repository",
+        ]
+
+    output_format = "table" if table_output else "csv" if csv_output else "json"
 
     params = {
         "includeArchived": include_archived,
@@ -38,7 +131,7 @@ def list(
         "gitRepositories": git_repositories,
         "types": types,
     }
-    
+
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
 
@@ -50,10 +143,9 @@ def list(
     if page is None:
         # if page is not specified, we want to fetch all pages
         r = client.fetch("api/v1/catalog", params=params)
-        pass
     else:
         # if page is specified, we want to fetch only that page
         r = client.get("api/v1/catalog", params=params)
-        pass
 
-    print_json(data=r)
+    data = r if output_format == 'json' else r.get('entities', [])
+    print_output(data=data, columns=columns, filters=filters, output_format=output_format)

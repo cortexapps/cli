@@ -8,39 +8,32 @@ class CortexClient:
         self.api_key = api_key
         self.base_url = base_url
 
-    # Might need to rethink logic.  Not all gets have an indicator as the
-    # last path element, ie custom-metrics.
-    def data_key_for_endpoint(self, endpoint):
-        api_paths = endpoint.split('/')
-        if "eng-intel" in api_paths:
-            return 'data'
+    def guess_data_key(self, response: list | dict):
+        """
+        Guess the key of the data list in a paginated response.
+        
+        Args:
+        response (list or dict): The response to guess the data key from.
+        
+        Returns:
+        The key of the data list in the response.
+        """
+        if isinstance(response, list):
+            # if the response is a list, there is no data key
+            return ''
+        if isinstance(response, dict):
+            # if the response is a dict, it should have exactly one key whose value is a list
+            data_keys = [k for k, v in response.items() if isinstance(v, list)]
+            if len(data_keys) == 0:
+                # if no such key is found, raise an error
+                raise ValueError(f"Response dict does not contain a list: {response}")
+            if len(data_keys) > 1:
+                # if more than one such key is found, raise an error
+                raise ValueError(f"Response dict contains multiple lists: {response}")
+            return data_keys[0]
 
-        #end_endpoint = endpoint.split('/')[-1]
-        end_endpoint = api_paths[-1]
-        match end_endpoint:
-            # https://api.getcortexapp.com/api/v1/catalog
-            case 'catalog':
-                return 'entities'
-            # https://api.getcortexapp.com/api/v1/audit-logs
-            case 'audit-logs':
-                return 'logs'
-            # https://api.getcortexapp.com/api/v1/catalog/:tagOrId/deploys
-            case 'deploys':
-                return 'deployments'
-            # https://api.getcortexapp.com/api/v1/catalog/:tagOrId/custom-data
-            case 'custom-data':
-                return ''
-            # https://api.getcortexapp.com/api/v1/catalog/:tagOrId/custom-events
-            case 'custom-events':
-                return 'events'
-            # https://api.getcortexapp.com/api/v1/eng-intel/custom-metrics/:customMetricKey/entity/:tagOrId
-            case 'custom-metrics':
-                return 'data'
-            # https://api.getcortexapp.com/api/v1/catalog/:callerTag/dependencies
-            case 'dependencies':
-                return 'dependencies'
-            case _:
-                return end_endpoint
+        # if the response is neither a list nor a dict, raise an error
+        raise ValueError(f"Response is not a list or dict: {response}")
 
     def request(self, method, endpoint, params={}, headers={}, data=None, raw_body=False, raw_response=False, content_type='application/json'):
         req_headers = {
@@ -101,20 +94,35 @@ class CortexClient:
         # param page is page number, param pageSize is page size, default 250
         page = 0
         page_size = 250
-        data_key = self.data_key_for_endpoint(endpoint)
+        data_key = None
         data = []
         while True:
             response = self.get(endpoint, params={**params, 'page': page, 'pageSize': page_size}, headers=headers)
-            # Some endpoints just return an array as the root element.
+            if not (isinstance(response, dict) or isinstance(response, list)):
+                # something is terribly wrong; this is definitely not a paginated response
+                break
+
+            if data_key is None:
+                # first page, guess the data key
+                data_key = self.guess_data_key(response)
+
+            # Some endpoints just return an array as the root element. In those cases, data_key is ''
             if data_key == '':
+                # if the data key is empty, the response is a list; an empty list means no more data
+                if len(response) == 0:
+                    break
                 data.extend(response)
             else:
                 if data_key not in response or not response[data_key]:
                     break
                 data.extend(response[data_key])
-            if response['totalPages'] == page + 1:
-                break
+                if response['totalPages'] == page + 1:
+                    break
             page += 1
+
+        if data_key == '':
+            return data
+
         return {
             "total": len(data),
             "page": 0,
