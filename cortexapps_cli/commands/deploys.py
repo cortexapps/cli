@@ -72,6 +72,9 @@ def delete_all(
 def delete(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity"),
+    sha: str = typer.Option(None, "--sha", "-s", help="The Secure Hash Algorithm (SHA) of the deploy"),
+    environment: str = typer.Option(None, "--environment", "-e", help="The name of the environment"),
+    type: Type = typer.Option(None, "--type", "-ty", help="The type of the deploy"),
 ):
     """
     Delete deployments for entity
@@ -79,7 +82,16 @@ def delete(
 
     client = ctx.obj["client"]
 
-    client.delete("api/v1/catalog/" + tag + "/deploys")
+    params = {
+       "environment": environment,
+       "sha": sha,
+       "type": type
+    }       
+
+    # remove any params that are None
+    params = {k: v for k, v in params.items() if v is not None}
+
+    client.delete("api/v1/catalog/" + tag + "/deploys", params=params)
 
 # 'list' is a keyword in python; naming the function 'list' will cause problems like this:
 # TypeError: 'function' object is not subscriptable
@@ -129,8 +141,8 @@ def add(
     sha: str = typer.Option(None, "--sha", "-s", help="The Secure Hash Algorithm (SHA) of the deploy"),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity"),
     timestamp: datetime = typer.Option(datetime.now(), "--timestamp", "-ts", help="Timestamp of the deploy", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
-    title: str = typer.Option(..., "--title", "-ti", help="The title of the deploy"),
-    type: Type = typer.Option(..., "--type", "-ty", help="The type of the deploy"),
+    title: str = typer.Option(None, "--title", "-ti", help="The title of the deploy"),
+    type: Type = typer.Option(None, "--type", "-ty", help="The type of the deploy"),
     url: str = typer.Option(None, "--url", "-u", help="The Uniform Resource Locator(URL) of the deploy")
 ):
     """
@@ -140,23 +152,24 @@ def add(
     client = ctx.obj["client"]
 
     if file_input:
-        if customData or email or environment or name or sha or timestamp or title or type or url:
+        if email or environment or name or sha or title or type or url:
             raise typer.BadParameter("When providing a deploy input file, do not specify any other deploy event attributes")
         data = json.loads("".join([line for line in file_input]))
     else:
 
         data = {
-          "timestamp": timestamp,
-          "title": title,
-          "type": type.value,
-          "sha": sha,
-          "environment": environment,
+          "customData": {
+          },
           "deployer": {
              "email": email,
              "name": name
           },
-          "customData": {
-          }
+          "environment": environment,
+          "sha": sha,
+          "timestamp": timestamp,
+          "title": title,
+          "type": type.value,
+          "url": url
         }
 
         if customData:
@@ -191,8 +204,8 @@ def update_by_uuid(
     sha: str = typer.Option(None, "--sha", "-s", help="The Secure Hash Algorithm (SHA) of the deploy"),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity"),
     timestamp: datetime = typer.Option(datetime.now(), "--timestamp", "-ts", help="Timestamp of the deploy", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
-    title: str = typer.Option(..., "--title", "-ti", help="The title of the deploy"),
-    deploy_type: Type = typer.Option(..., "--type", "-ty", help="The type of the deploy"),
+    title: str = typer.Option(None, "--title", "-ti", help="The title of the deploy"),
+    deploy_type: Type = typer.Option(None, "--type", "-ty", help="The type of the deploy"),
     url: str = typer.Option(None, "--url", "-u", help="The Uniform Resource Locator(URL) of the deploy"),
     uuid: str = typer.Option(..., "--uuid", "-uu", help="The Universally Unique Identifier (UUID) of the deploy")
 ):
@@ -203,11 +216,13 @@ def update_by_uuid(
     client = ctx.obj["client"]
 
     if file_input:
-        if customData or email or environment or name or sha or timestamp or title or deploy_type or url:
+        if customData or email or environment or name or sha or title or deploy_type or url:
             raise typer.BadParameter("When providing a deploy input file, do not specify any other deploy event attributes")
         data = json.loads("".join([line for line in file_input]))
     else:
 
+        if not title or tag or deploy_type:
+            raise typer.BadParameter("When not providing a deploy input file, title and tag are required")
         data = {
           "environment": environment,
           "sha": sha,
