@@ -176,6 +176,11 @@ def list(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
 
+    # convert datetime type to string
+    for k, v in params.items():
+        if str(type(v)) == "<class 'datetime.datetime'>":
+           params[k] = v.strftime('%Y-%m-%dT%H:%M:%S')
+
     if page is None:
         # if page is not specified, we want to fetch all pages
         r = client.fetch("api/v1/catalog/" + tag + "/custom-events", params=params)

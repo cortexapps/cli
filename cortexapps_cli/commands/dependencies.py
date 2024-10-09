@@ -38,7 +38,6 @@ def create(
 
     client = ctx.obj["client"]
 
-
     if file_input:
         if description or metadata or method or path or caller_tag or callee_tag:
             raise typer.BadParameter("When providing a dependencies input file, do not specify any other dependency event attributes")

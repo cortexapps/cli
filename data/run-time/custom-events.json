@@ -4,7 +4,7 @@
      "test2": "someVal2"
   },
   "description": "Validate event",
-  "timestamp": "2023-10-10T13:27:51.226Z",
+  "timestamp": "2023-10-10T13:27:51",
   "title": "validate event",
   "type": "VALIDATE_SERVICE"
 }
