@@ -144,3 +144,44 @@ def catalog_list(
     data = r
     # print_output(data=data, columns=columns, filters=filters, output_format=output_format)
     print_output_with_context(ctx, data)
+
+@app.command()
+def details(
+    ctx: typer.Context,
+    hierarchy_depth: CatalogCommandOptions.hierarchy_depth = 'full',
+    include_hierarchy_fields: CatalogCommandOptions.include_hierarchy_fields = None,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filter = [],
+):
+    client = ctx.obj["client"]
+
+    if table_output and csv_output:
+        raise typer.BadParameter("Only one of --table and --csv can be specified")
+
+    if (table_output or csv_output) and not columns:
+        columns = [
+            "ID=id",
+            "Tag=tag",
+            "Name=name",
+            "Type=type",
+            "Git Repository=git.repository",
+        ]
+
+    output_format = "table" if table_output else "csv" if csv_output else "json"
+
+    params = {
+        "hierarchyDepth": hierarchy_depth,
+        "includeHierarchyFields": include_hierarchy_fields
+    }
+
+    # remove any params that are None
+    params = {k: v for k, v in params.items() if v is not None}
+
+    r = client.get("api/v1/catalog/" + tag, params=params)
+
+    data = r if output_format == 'json' else [r]
+    #print_output(data=data, columns=columns, filters=filters, output_format=output_format)
+    print_output_with_context(ctx, data)
