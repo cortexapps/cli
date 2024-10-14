@@ -17,6 +17,7 @@ import cortexapps_cli.commands.custom_metrics as custom_metrics
 import cortexapps_cli.commands.dependencies as dependencies
 import cortexapps_cli.commands.deploys as deploys
 import cortexapps_cli.commands.discovery_audit as discovery_audit
+import cortexapps_cli.commands.docs as docs
 import cortexapps_cli.commands.raw as raw
 import cortexapps_cli.commands.teams as teams
 
@@ -31,6 +32,7 @@ app.add_typer(custom_metrics.app, name="custom-metrics")
 app.add_typer(dependencies.app, name="dependencies")
 app.add_typer(deploys.app, name="deploys")
 app.add_typer(discovery_audit.app, name="discovery-audit")
+app.add_typer(docs.app, name="docs")
 app.add_typer(raw.app, name="raw")
 app.add_typer(teams.app, name="teams")
 
