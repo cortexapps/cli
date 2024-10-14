@@ -3,37 +3,12 @@ import json
 import typer
 from rich import print
 
+from cortexapps_cli.utils import guess_data_key
+
 class CortexClient:
     def __init__(self, api_key, base_url='https://api.getcortexapp.com'):
         self.api_key = api_key
         self.base_url = base_url
-
-    def guess_data_key(self, response: list | dict):
-        """
-        Guess the key of the data list in a paginated response.
-        
-        Args:
-        response (list or dict): The response to guess the data key from.
-        
-        Returns:
-        The key of the data list in the response.
-        """
-        if isinstance(response, list):
-            # if the response is a list, there is no data key
-            return ''
-        if isinstance(response, dict):
-            # if the response is a dict, it should have exactly one key whose value is a list
-            data_keys = [k for k, v in response.items() if isinstance(v, list)]
-            if len(data_keys) == 0:
-                # if no such key is found, raise an error
-                raise ValueError(f"Response dict does not contain a list: {response}")
-            if len(data_keys) > 1:
-                # if more than one such key is found, raise an error
-                raise ValueError(f"Response dict contains multiple lists: {response}")
-            return data_keys[0]
-
-        # if the response is neither a list nor a dict, raise an error
-        raise ValueError(f"Response is not a list or dict: {response}")
 
     def request(self, method, endpoint, params={}, headers={}, data=None, raw_body=False, raw_response=False, content_type='application/json'):
         req_headers = {
@@ -104,7 +79,7 @@ class CortexClient:
 
             if data_key is None:
                 # first page, guess the data key
-                data_key = self.guess_data_key(response)
+                data_key = guess_data_key(response)
 
             # Some endpoints just return an array as the root element. In those cases, data_key is ''
             if data_key == '':

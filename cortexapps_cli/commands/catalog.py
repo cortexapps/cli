@@ -2,18 +2,18 @@ import typer
 from typing import Optional, List
 from typing_extensions import Annotated
 
-from cortexapps_cli.utils import print_output
+from cortexapps_cli.utils import print_output_with_context
 
 app = typer.Typer(help="Catalog commands")
 
 class ListCommandOptions:
     table_output = Annotated[
         Optional[bool],
-        typer.Option("--table", help="Output the response as a table", show_default=False)
+        typer.Option("--table", help="Output the response as a table", show_default=False)  # , callback=table_output_cb)
     ]
     csv_output = Annotated[
         Optional[bool],
-        typer.Option("--csv", help="Output the response as CSV", show_default=False)
+        typer.Option("--csv", help="Output the response as CSV", show_default=False)  # , callback=csv_output_cb)
     ]
     columns = Annotated[
         Optional[List[str]],
@@ -31,7 +31,6 @@ class ListCommandOptions:
         Optional[int],
         typer.Option("--page-size", "-z", help="Page size for results", show_default=False)
     ]
-
 
 class CatalogCommandOptions:
     include_archived = Annotated[
@@ -76,7 +75,7 @@ class CatalogCommandOptions:
     ]
     types = Annotated[
         Optional[str],
-        typer.Option("--types", "-ty", help="Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.", show_default=False)
+        typer.Option("--types", "-t", help="Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.", show_default=False)
     ]
 
 @app.command(name="list")
@@ -102,19 +101,14 @@ def catalog_list(
 ):
     client = ctx.obj["client"]
 
-    if table_output and csv_output:
-        raise typer.BadParameter("Only one of --table and --csv can be specified")
-
-    if (table_output or csv_output) and not columns:
-        columns = [
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
             "ID=id",
             "Tag=tag",
             "Name=name",
             "Type=type",
             "Git Repository=git.repository",
         ]
-
-    output_format = "table" if table_output else "csv" if csv_output else "json"
 
     params = {
         "includeArchived": include_archived,
@@ -147,45 +141,6 @@ def catalog_list(
         # if page is specified, we want to fetch only that page
         r = client.get("api/v1/catalog", params=params)
 
-    data = r if output_format == 'json' else r.get('entities', [])
-    print_output(data=data, columns=columns, filters=filters, output_format=output_format)
-
-@app.command()
-def details(
-    ctx: typer.Context,
-    hierarchy_depth: CatalogCommandOptions.hierarchy_depth = 'full',
-    include_hierarchy_fields: CatalogCommandOptions.include_hierarchy_fields = None,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-    table_output: ListCommandOptions.table_output = False,
-    csv_output: ListCommandOptions.csv_output = False,
-    columns: ListCommandOptions.columns = [],
-    filters: ListCommandOptions.filter = [],
-):
-    client = ctx.obj["client"]
-
-    if table_output and csv_output:
-        raise typer.BadParameter("Only one of --table and --csv can be specified")
-
-    if (table_output or csv_output) and not columns:
-        columns = [
-            "ID=id",
-            "Tag=tag",
-            "Name=name",
-            "Type=type",
-            "Git Repository=git.repository",
-        ]
-
-    output_format = "table" if table_output else "csv" if csv_output else "json"
-
-    params = {
-        "hierarchyDepth": hierarchy_depth,
-        "includeHierarchyFields": include_hierarchy_fields
-    }
-
-    # remove any params that are None
-    params = {k: v for k, v in params.items() if v is not None}
-
-    r = client.get("api/v1/catalog/" + tag, params=params)
-
-    data = r if output_format == 'json' else [r]
-    print_output(data=data, columns=columns, filters=filters, output_format=output_format)
+    data = r
+    # print_output(data=data, columns=columns, filters=filters, output_format=output_format)
+    print_output_with_context(ctx, data)
