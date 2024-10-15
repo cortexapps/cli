@@ -104,7 +104,7 @@ def humanize_value(value):
         return json.dumps(value, indent=2)
     return str(value)
 
-def print_output(data, columns=None, filters=None, output_format='json'):
+def print_output(data, columns=None, filters=None, sort=None, output_format='json'):
     """
     Print output in the specified format.
 
@@ -137,6 +137,7 @@ def print_output(data, columns=None, filters=None, output_format='json'):
     if not columns:
         raise typer.BadParameter("Columns must be specified when using --table or --csv")
 
+    columns = list(columns)
     for idx, column in enumerate(columns):
         if not re.match(r"^[a-zA-Z0-9_. ]+=[a-zA-Z0-9_.]+$", column):
             if re.match(r"^[a-zA-Z0-9_.]+$", column):
@@ -153,6 +154,16 @@ def print_output(data, columns=None, filters=None, output_format='json'):
     column_headers = [x.split('=')[0] for x in columns]
     column_accessors = [x.split('=')[1] for x in columns]
     rows = []
+
+    if sort:
+        for sort_item in sort:
+            if not re.match(r"^[a-zA-Z0-9_.]+:(asc|ASC|desc|DESC)$", sort_item):
+                raise typer.BadParameter("Sort must be in the format jsonpath:asc or jsonpath:desc")
+            (jsonpath, order) = sort_item.split(':')
+            if order.lower() == 'asc':
+                table_data = sorted(table_data, key=lambda x: get_value_at_path(x, jsonpath))
+            elif order.lower() == 'desc':
+                table_data = sorted(table_data, key=lambda x: get_value_at_path(x, jsonpath), reverse=True)
 
     for item in table_data:
         if matches_filters(item, filters):
@@ -174,6 +185,7 @@ def print_output(data, columns=None, filters=None, output_format='json'):
 def print_output_with_context(ctx: typer.Context, data):
     columns = ctx.params.get('columns', None)
     filters = ctx.params.get('filters', None)
+    sort = ctx.params.get('sort', None)
     table_output = ctx.params.get('table_output', None)
     csv_output = ctx.params.get('csv_output', None)
     if table_output and csv_output:
@@ -184,4 +196,4 @@ def print_output_with_context(ctx: typer.Context, data):
         output_format = 'csv'
     else:
         output_format = 'json'
-    print_output(data, columns, filters, output_format)
+    print_output(data, columns=columns, filters=filters, sort=sort, output_format=output_format)

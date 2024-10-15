@@ -21,7 +21,10 @@ import cortexapps_cli.commands.docs as docs
 import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.teams as teams
 
-app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
+app = typer.Typer(
+    no_args_is_help=True,
+    context_settings={"help_option_names": ["-h", "--help"]}
+)
 
 # add subcommands
 app.add_typer(audit_logs.app, name="audit-logs")
