@@ -99,6 +99,9 @@ def catalog_list(
     columns: ListCommandOptions.columns = [],
     filters: ListCommandOptions.filter = [],
 ):
+    """
+    List entities in the catalog
+    """
     client = ctx.obj["client"]
 
     if (table_output or csv_output) and not ctx.params.get('columns'):
@@ -156,6 +159,9 @@ def details(
     columns: ListCommandOptions.columns = [],
     filters: ListCommandOptions.filter = [],
 ):
+    """
+    Get details for a specific entity in the catalog
+    """
     client = ctx.obj["client"]
 
     if table_output and csv_output:
