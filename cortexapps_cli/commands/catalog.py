@@ -2,35 +2,10 @@ import typer
 from typing import Optional, List
 from typing_extensions import Annotated
 
+from cortexapps_cli.command_options import ListCommandOptions
 from cortexapps_cli.utils import print_output_with_context
 
 app = typer.Typer(help="Catalog commands")
-
-class ListCommandOptions:
-    table_output = Annotated[
-        Optional[bool],
-        typer.Option("--table", help="Output the response as a table", show_default=False)  # , callback=table_output_cb)
-    ]
-    csv_output = Annotated[
-        Optional[bool],
-        typer.Option("--csv", help="Output the response as CSV", show_default=False)  # , callback=csv_output_cb)
-    ]
-    columns = Annotated[
-        Optional[List[str]],
-        typer.Option("--columns", "-C", help="Columns to include in the table, in the format HeaderName=jsonpath", show_default=False)
-    ]
-    filter = Annotated[
-        Optional[List[str]],
-        typer.Option("--filter", "-F", help="Filters to apply on rows, in the format jsonpath=regex", show_default=False)
-    ]
-    page = Annotated[
-        Optional[int],
-        typer.Option("--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages", show_default=False)
-    ]
-    page_size = Annotated[
-        Optional[int],
-        typer.Option("--page-size", "-z", help="Page size for results", show_default=False)
-    ]
 
 class CatalogCommandOptions:
     include_archived = Annotated[
@@ -90,15 +65,19 @@ def catalog_list(
     include_owners: CatalogCommandOptions.include_owners = False,
     include_links: CatalogCommandOptions.include_links = False,
     include_metadata: CatalogCommandOptions.include_metadata = False,
-    page: ListCommandOptions.page = None,
-    page_size: ListCommandOptions.page_size = 250,
     git_repositories: CatalogCommandOptions.git_repositories = None,
     types: CatalogCommandOptions.types = None,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
-    filters: ListCommandOptions.filter = [],
+    filters: ListCommandOptions.filters = [],
+    sort: ListCommandOptions.sort = [],
 ):
+    """
+    List entities in the catalog
+    """
     client = ctx.obj["client"]
 
     if (table_output or csv_output) and not ctx.params.get('columns'):
@@ -142,7 +121,6 @@ def catalog_list(
         r = client.get("api/v1/catalog", params=params)
 
     data = r
-    # print_output(data=data, columns=columns, filters=filters, output_format=output_format)
     print_output_with_context(ctx, data)
 
 @app.command()
@@ -154,15 +132,18 @@ def details(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
-    filters: ListCommandOptions.filter = [],
+    filters: ListCommandOptions.filters = [],
 ):
+    """
+    Get details for a specific entity in the catalog
+    """
     client = ctx.obj["client"]
 
     if table_output and csv_output:
         raise typer.BadParameter("Only one of --table and --csv can be specified")
 
-    if (table_output or csv_output) and not columns:
-        columns = [
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
             "ID=id",
             "Tag=tag",
             "Name=name",
@@ -183,5 +164,4 @@ def details(
     r = client.get("api/v1/catalog/" + tag, params=params)
 
     data = r if output_format == 'json' else [r]
-    #print_output(data=data, columns=columns, filters=filters, output_format=output_format)
     print_output_with_context(ctx, data)
