@@ -18,6 +18,7 @@ import cortexapps_cli.commands.dependencies as dependencies
 import cortexapps_cli.commands.deploys as deploys
 import cortexapps_cli.commands.discovery_audit as discovery_audit
 import cortexapps_cli.commands.docs as docs
+import cortexapps_cli.commands.entity_types as entity_types
 import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.teams as teams
 
@@ -36,6 +37,7 @@ app.add_typer(dependencies.app, name="dependencies")
 app.add_typer(deploys.app, name="deploys")
 app.add_typer(discovery_audit.app, name="discovery-audit")
 app.add_typer(docs.app, name="docs")
+app.add_typer(entity_types.app, name="entity-types")
 app.add_typer(rest.app, name="rest")
 app.add_typer(teams.app, name="teams")
 
@@ -56,7 +58,7 @@ def global_callback(
         if not api_key:
             raise typer.BadParameter("No API key provided and no config file found")
         create_config = False
-        
+
         # check if we are in a terminal, if so, ask the user if they want to create a config file
         if sys.stdin.isatty() and sys.stdout.isatty():
             create_config = typer.confirm("No config file found. Do you want to create one?")

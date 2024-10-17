@@ -5,7 +5,7 @@ help:
    @just -l
 
 # Run all tests
-test-all:
+test-all: load-data
    poetry run pytest -rA -n auto --cov=cortexapps_cli --cov-append --cov-report term-missing tests
 
 # Run a single test, ie: just test tests/test_catalog.py
@@ -17,7 +17,7 @@ load-data:
    #!/bin/bash
    if [[ -f .load-data-done ]]
    then 
-      echo "Not loading test data since .load-data-done file exists"
+      echo "Not loading test data since .load-data-done file exists."
       exit
    fi
 
@@ -36,4 +36,4 @@ load-data:
    {{cortex_cli_orig}} catalog archive -t robot-item-sorter
    {{cortex_cli_orig}} catalog archive -t inventory-scraper
 
-   @touch .load-data-done
+   touch .load-data-done
