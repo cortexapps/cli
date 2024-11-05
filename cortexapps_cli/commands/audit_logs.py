@@ -2,8 +2,6 @@ from datetime import datetime
 from enum import Enum
 import typer
 
-from rich import print_json
-
 app = typer.Typer(help="Audit log commands")
 
 class Action(str, Enum):
@@ -70,11 +68,4 @@ def get(
         if str(type(v)) == "<class 'list'>":
             params[k] = ','.join(v)
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/audit-logs", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/audit-logs", params=params)
-
-    print_json(data=r)
+    client.fetch_or_get("api/v1/audit-logs", page, params=params)

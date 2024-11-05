@@ -1,7 +1,5 @@
 from collections import defaultdict
 from datetime import datetime
-import json
-from rich import print_json
 import typer
 from typing_extensions import Annotated
 
@@ -56,14 +54,7 @@ def get(
 
     params = _convert_datetime_to_string(params)
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, params=params)
-
-    print_json(json.dumps(r))
+    client.fetch_or_get("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, page, params=params)
 
 @app.command()
 def add(

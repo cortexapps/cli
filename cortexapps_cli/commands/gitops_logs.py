@@ -1,6 +1,6 @@
 from enum import Enum
-import json
-from rich import print_json
+#import json
+#from rich import print_json
 import typer
 
 app = typer.Typer(help="GitOps Logs commands")
@@ -43,11 +43,4 @@ def get(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
     
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/gitops-logs", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/gitops-logs", params=params)
-
-    print_json(data=r)
+    client.fetch_or_get("api/v1/gitops-logs", page, params=params)

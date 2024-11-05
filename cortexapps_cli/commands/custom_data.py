@@ -58,7 +58,7 @@ def add(
             data["description"] = description
 
     r = client.post("api/v1/catalog/" + tag + "/custom-data", data=data, params=params)
-    print_json(json.dumps(r))
+    print_json(data=r)
 
 @app.command()
 def bulk(
@@ -78,7 +78,7 @@ def bulk(
     }
 
     r = client.put("api/v1/catalog/custom-data", data=data, params=params)
-    print_json(json.dumps(r))
+    print_json(data=r)
 
 @app.command()
 def delete(
@@ -131,14 +131,4 @@ def list(
         "pageSize": page_size
     }
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        # Not working: https://cortex1.atlassian.net/browse/CET-13655
-        #r = client.fetch("api/v1/catalog/" + tag + "/custom-data", params=params)
-        r = client.get("api/v1/catalog/" + tag + "/custom-data", params=params)
-        pass
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/catalog/" + tag + "/custom-data", params=params)
-
-    print_json(data=r)
+    client.fetch_or_get("api/v1/catalog/" + tag + "/custom-data", page, params=params)

@@ -134,14 +134,7 @@ def get_all(
 
     client = ctx.obj["client"]
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/catalog/" + caller_tag + "/dependencies", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/catalog/" + caller_tag + "/dependencies", params=params)
-
-    print_json(data=r)
+    client.fetch_or_get("api/v1/catalog/" + caller_tag + "/dependencies", page, params=params)
 
 @app.command()
 def delete(
@@ -235,4 +228,4 @@ def update(
         data["description"] = description
 
     r = client.put("api/v1/catalog/" + caller_tag + "/dependencies/" + callee_tag, data=data, params=params)
-    print_json(json.dumps(r))
+    print_json(data=r)

@@ -2,6 +2,7 @@ import requests
 import json
 import typer
 from rich import print
+from rich import print_json
 
 from cortexapps_cli.utils import guess_data_key
 
@@ -104,6 +105,16 @@ class CortexClient:
             "totalPages": 1 if data else 0,
             data_key: data,
         }
+
+    def fetch_or_get(self, endpoint, page, params={}):
+        if page is None:
+            # if page is not specified, we want to fetch all pages
+            r = self.fetch(endpoint, params=params)
+        else:
+            # if page is specified, we want to fetch only that page
+            r = self.get(endpoint, params=params)
+
+        print_json(data=r)
 
     def get_entity(self, entity_tag: str, entity_type: str = ''):
         match entity_type.lower():

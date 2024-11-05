@@ -69,7 +69,7 @@ def update_by_uuid(
            data[k] = v.strftime('%Y-%m-%dT%H:%M:%S')
 
     r = client.put("api/v1/catalog/" + tag + "/custom-events/" + uuid, data=data)
-    print_json(json.dumps(r))
+    print_json(data=r)
 
 @app.command()
 def create(
@@ -122,7 +122,7 @@ def create(
            data[k] = v.strftime('%Y-%m-%dT%H:%M:%S')
 
     r = client.post("api/v1/catalog/" + tag + "/custom-events", data=data)
-    print_json(json.dumps(r))
+    print_json(data=r)
 
 @app.command()
 def delete_all(
@@ -181,14 +181,7 @@ def list(
         if str(type(v)) == "<class 'datetime.datetime'>":
            params[k] = v.strftime('%Y-%m-%dT%H:%M:%S')
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/catalog/" + tag + "/custom-events", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/catalog/" + tag + "/custom-events", params=params)
-
-    print_json(data=r)
+    client.fetch_or_get("api/v1/catalog/" + tag + "/custom-events", page, params=params)
 
 @app.command()
 def get_by_uuid(
@@ -202,7 +195,6 @@ def get_by_uuid(
     client = ctx.obj["client"]
 
     r = client.get("api/v1/catalog/" + tag + "/custom-events/" + uuid)
-
     print_json(data=r)
 
 @app.command()

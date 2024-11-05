@@ -25,14 +25,7 @@ def get(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
     
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/catalog/" + tag_or_id + "/groups", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/catalog/" + tag_or_id + "/groups", params=params)
-
-    print_json(data=r)
+    client.fetch_or_get("api/v1/catalog/" + tag_or_id + "/groups", page, params=params)
 
 @app.command()
 def add(

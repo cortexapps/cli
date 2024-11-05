@@ -121,14 +121,7 @@ def deploys_list(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/catalog/" + tag + "/deploys", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/catalog/" + tag + "/deploys", params=params)
-
-    print_json(json.dumps(r))
+    client.fetch_or_get("api/v1/catalog/" + tag + "/deploys", page, params=params)
 
 @app.command()
 def add(
@@ -177,7 +170,7 @@ def add(
         data["timestamp"] = data["timestamp"].strftime('%Y-%m-%dT%H:%M:%SZ')
 
     r = client.post("api/v1/catalog/" + tag + "/deploys", data=data)
-    print_json(json.dumps(r))
+    print_json(data=r)
 
 @app.command()
 def delete_by_uuid(
@@ -245,4 +238,4 @@ def update_by_uuid(
         data["timestamp"] = data["timestamp"].strftime('%Y-%m-%dT%H:%M:%SZ')
 
     r = client.put("api/v1/catalog/" + tag + "/deploys/" + uuid, data=data)
-    print_json(json.dumps(r))
+    print_json(data=r)
