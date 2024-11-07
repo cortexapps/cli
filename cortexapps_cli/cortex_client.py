@@ -151,3 +151,6 @@ class CortexClient:
                 path_for_type = 'catalog'
 
         return self.put(f'api/v1/{path_for_type}/{entity_tag}/unarchive')
+
+    def read_file(self, file):
+        return file.read()
