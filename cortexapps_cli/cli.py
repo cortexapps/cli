@@ -24,6 +24,7 @@ import cortexapps_cli.commands.groups as groups
 import cortexapps_cli.commands.ip_allowlist as ip_allowlist
 import cortexapps_cli.commands.on_call as on_call
 import cortexapps_cli.commands.packages as packages
+import cortexapps_cli.commands.plugins as plugins
 import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.teams as teams
 
@@ -48,6 +49,7 @@ app.add_typer(groups.app, name="groups")
 app.add_typer(ip_allowlist.app, name="ip-allowlist")
 app.add_typer(on_call.app, name="on-call")
 app.add_typer(packages.app, name="packages")
+app.add_typer(plugins.app, name="plugins")
 app.add_typer(rest.app, name="rest")
 app.add_typer(teams.app, name="teams")
 
