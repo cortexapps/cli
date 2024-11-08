@@ -27,6 +27,7 @@ import cortexapps_cli.commands.packages as packages
 import cortexapps_cli.commands.plugins as plugins
 import cortexapps_cli.commands.queries as queries
 import cortexapps_cli.commands.rest as rest
+import cortexapps_cli.commands.scim as scim
 import cortexapps_cli.commands.teams as teams
 
 app = typer.Typer(
@@ -53,6 +54,7 @@ app.add_typer(packages.app, name="packages")
 app.add_typer(plugins.app, name="plugins")
 app.add_typer(queries.app, name="queries")
 app.add_typer(rest.app, name="rest")
+app.add_typer(scim.app, name="scim")
 app.add_typer(teams.app, name="teams")
 
 # global options

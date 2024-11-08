@@ -62,6 +62,9 @@ class CortexClient:
     def put(self, endpoint, data={}, params={}, headers={}, raw_body=False, raw_response=False, content_type='application/json'):
         return self.request('PUT', endpoint, data=data, params=params, headers=headers, raw_body=raw_body, raw_response=raw_response, content_type=content_type)
 
+    def patch(self, endpoint, data={}, params={}, headers={}, raw_body=False, raw_response=False, content_type='application/json'):
+        return self.request('PATCH', endpoint, data=data, params=params, headers=headers, raw_body=raw_body, raw_response=raw_response, content_type=content_type)
+
     def delete(self, endpoint, data={}, params={}, headers={}, raw_response=False):
         return self.request('DELETE', endpoint, data=data, params=params, headers=headers, raw_response=raw_response)
 
