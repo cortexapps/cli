@@ -1,0 +1,27 @@
+tag: test-scorecard
+name: Test Scorecard
+description: Used to test Cortex CLI
+draft: false
+ladder:
+  name: Default Ladder
+  levels:
+  - name: You Made It
+    rank: 1
+    description: "My boring description"
+    color: 7cf376
+rules:
+- title: Is Definitely False
+  expression: custom("testField") == "100"
+  weight: 1
+  level: You Made It
+  filter:
+    category: SERVICE
+- title: Has Custom Data
+  expression: custom("testField") != null
+  weight: 1
+  level: You Made It
+  filter:
+    category: SERVICE
+filter:
+  query: 'entity.tag() == "test-service"'
+  category: SERVICE
