@@ -998,6 +998,7 @@ def subparser_catalog_create_or_update(subparser):
     sp.add_argument(
             '-d',
             '--dry-run',
+            dest="dryRun",
             help='When true, this endpoint only validates the descriptor contents and returns any errors or warnings.',
             action='store_true',
             default='false'
