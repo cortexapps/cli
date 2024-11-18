@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.26.7 (2024-11-18)
+------------------
+
+**Bugfixes**
+- Fix dryRun query parameter for catalog create command.
+
 0.26.6 (2024-07-30)
 ------------------
 
