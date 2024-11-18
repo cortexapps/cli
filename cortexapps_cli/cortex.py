@@ -997,7 +997,7 @@ def subparser_catalog_create_or_update(subparser):
     add_argument_file(sp, 'File containing openapi descriptor for entity')
     sp.add_argument(
             '-d',
-            '--dry-run',
+            '--dryRun',
             help='When true, this endpoint only validates the descriptor contents and returns any errors or warnings.',
             action='store_true',
             default='false'
