@@ -1,7 +1,7 @@
 from common import *
 
 def test(capsys):
-    cli(["-q", "catalog", "create", "-f", "data/run-time/create-dryrun.yaml", "--dryRun"])
+    cli(["-q", "catalog", "create", "-f", "data/run-time/create-dryrun.yaml", "--dry-run"])
     # Need to clear captured system output from the above commands to clear the way for the next one.
     capsys.readouterr()
 
