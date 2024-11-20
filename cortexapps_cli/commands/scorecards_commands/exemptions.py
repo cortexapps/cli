@@ -56,6 +56,7 @@ def deny(
     tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     scorecard_tag: str = typer.Option(..., "--scorecard-tag", "-s", help="Unique tag for the scorecard"),
     rule_identifier: str = typer.Option(..., "--rule-id", "-ri", help="Identifier of the Scorecard rule to request exemption for"),
+    reason: str = typer.Option(..., "--reason", "-r", help="Reason for creating exemption"),
 ):
     """
     Deny Scorecard rule exemption
@@ -64,7 +65,8 @@ def deny(
     client = ctx.obj["client"]
 
     data = {
-       "ruleIdentifier": rule_identifier
+       "ruleIdentifier": rule_identifier,
+       "reason": reason
     }       
     
     r = client.put("api/v1/scorecards/" + scorecard_tag + "/entity/" + tag_or_id + "/exemption/deny", data=data)
