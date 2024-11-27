@@ -50,7 +50,7 @@ def add(
     client = ctx.obj["client"]
 
     if file_input:
-        if alias or is_default or host or organization_slug or personal_access_token or file_input:
+        if alias or is_default or host or organization_slug or personal_access_token or username:
             raise typer.BadParameter("When providing a custom event definition file, do not specify any other custom event attributes")
         data = json.loads("".join([line for line in file_input]))
     else:

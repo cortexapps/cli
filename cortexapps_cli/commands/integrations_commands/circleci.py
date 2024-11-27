@@ -3,18 +3,16 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
-app = typer.Typer(help="Azure Devops commands",
+app = typer.Typer(help="CircleCI commands",
                   no_args_is_help=True)
 
 @app.command()
 def add(
     ctx: typer.Context,
     alias: str = typer.Option(..., "--alias", "-a", help="Alias for this configuration"),
+    api_key: str = typer.Option(..., "--api-key", "-api", help="API key"),
     host: str = typer.Option(None, "--host", "-h", help="Optional host name"),
     is_default: bool = typer.Option(False, "--is-default", "-i", help="If this is the default configuration"),
-    organization_slug: str = typer.Option(..., "--organization-slug", "-o", help="Identifier for organization"),
-    personal_access_token: str = typer.Option(..., "--pat", "-p", help="Personal Access Token"),
-    username: str = typer.Option(..., "--username", "-u", help="Username"),
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing configurations, if command line options not used; can be passed as stdin with -, example: -f-")] = None,
 ):
     """
@@ -24,23 +22,21 @@ def add(
     client = ctx.obj["client"]
 
     if file_input:
-        if alias or is_default or host or organization_slug or personal_access_token or username:
+        if alias or api_key or is_default or host:
             raise typer.BadParameter("When providing a custom event definition file, do not specify any other custom event attributes")
         data = json.loads("".join([line for line in file_input]))
     else:
         data = {
            "alias": alias,
+           "apiKey": api_key,
            "host": host,
            "isDefault": is_default,
-           "organizationSlug": organization_slug,
-           "personalAccessToken": personal_access_token,
-           "username": username
         }       
 
         # remove any data elements that are None - can only be is_default
         data = {k: v for k, v in data.items() if v is not None}
     
-    r = client.post("api/v1/azure-devops/configuration", data=data)
+    r = client.post("api/v1/circleci/configuration", data=data)
     print_json(data=r)
 
 @app.command()
@@ -70,7 +66,7 @@ def delete(
 
     client = ctx.obj["client"]
 
-    r = client.delete("api/v1/azure-devops/configuration/" + alias)
+    r = client.delete("api/v1/circleci/configuration/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -83,7 +79,7 @@ def delete_all(
 
     client = ctx.obj["client"]
 
-    r = client.delete("api/v1/azure-devops/configurations")
+    r = client.delete("api/v1/circleci/configurations")
     print_json(data=r)
 
 @app.command()
@@ -97,7 +93,7 @@ def get(
 
     client = ctx.obj["client"]
 
-    r = client.get("api/v1/azure-devops/configuration/" + alias)
+    r = client.get("api/v1/circleci/configuration/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -110,7 +106,7 @@ def get_all(
 
     client = ctx.obj["client"]
 
-    r = client.get("api/v1/azure-devops/configurations")
+    r = client.get("api/v1/circleci/configurations")
     print_json(data=r)
 
 @app.command()
@@ -123,7 +119,7 @@ def get_default(
 
     client = ctx.obj["client"]
 
-    r = client.get("api/v1/azure-devops/default-configuration")
+    r = client.get("api/v1/circleci/default-configuration")
     print_json(data=r)
 
 
@@ -144,7 +140,7 @@ def update(
        "isDefault": is_default
     }
 
-    r = client.put("api/v1/azure-devops/configuration/" + alias, data=data)
+    r = client.put("api/v1/circleci/configuration/" + alias, data=data)
     print_json(data=r)
 
 @app.command()
@@ -158,7 +154,7 @@ def validate(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/azure-devops/configurations/validate" + alias)
+    r = client.post("api/v1/circleci/configurations/validate" + alias)
     print_json(data=r)
 
 @app.command()
@@ -171,5 +167,5 @@ def validate_all(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/azure-devops/configurations")
+    r = client.post("api/v1/circleci/configurations")
     print_json(data=r)
