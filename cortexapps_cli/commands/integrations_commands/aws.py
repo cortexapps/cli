@@ -166,7 +166,7 @@ def validate_all(
 @app.command()
 def list_types(
     ctx: typer.Context,
-    include_disabled: bool = typer.Option(False, "--include-disabled", "-i", help="When true, includes all AWS types supported"),
+    include_disabled: bool = typer.Option(False, "--include-disabled", "-i", help="When true, includes all types supported"),
     page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
     page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results")
 ):

@@ -8,6 +8,7 @@ import os
 import pytest
 from typer.testing import CliRunner
 from unittest import mock
+import responses
 
 runner = CliRunner()
 

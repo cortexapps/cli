@@ -54,8 +54,8 @@ def test_integrations_aws_validate_all():
 
 @responses.activate
 def test_integrations_list_types():
-    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/aws/types", json=[{'total': 1, 'types': [{'type': 'AWS::EC2::Instance'}]}], status=200)
-    cli(["integrations", "aws", "validate-all"])
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/aws/types", json=[{'total': 1, 'types': [{'type': 'AWS::EC2::Instance'}]}], status=200)
+    cli(["integrations", "aws", "list-types"])
 
 @responses.activate
 def test_integrations_aws_update_types():
