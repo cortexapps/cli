@@ -3,6 +3,8 @@ import json
 import typer
 from rich import print
 from rich import print_json
+from rich.markdown import Markdown
+from rich.console import Console
 
 from cortexapps_cli.utils import guess_data_key
 
@@ -23,6 +25,10 @@ class CortexClient:
         if not raw_body:
             if content_type == 'application/json' and isinstance(data, dict):
                 req_data = json.dumps(data)
+
+        #print("JEFF, requests, params = " + str(params))
+        #params = json.dumps(params)
+        #print("JEFF, requests, now params = " + str(params))
 
         response = requests.request(method, url, params=params, headers=req_headers, data=req_data)
 

@@ -5,6 +5,7 @@ from typing_extensions import Annotated
 from rich import print_json
 
 app = typer.Typer(help="Custom data commands")
+
 # Need a helper function to parse custom_data.
 # cannot do this in type: list[Tuple[str, str]] | None  = typer.Option(None)
 # Results in: 
@@ -28,10 +29,46 @@ def add(
     key: str = typer.Option(None, "--key", "-k", help="The custom data key to create (only if file input not provided)."),
     value: str = typer.Option(None, "--value", "-v", help="The value of the custom data key (only if file input not provided)."),
     description: str = typer.Option(None, "--description", "-d", help="The description of the custom data key (only if file input not provided)."),
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity.")
 ):
     """
     Add custom data for entity
+
+    Format of JSON-formatted configuration file:
+
+    {
+      "description": "string",
+      "key": "my-key",
+      "value": {
+        "nested": {
+          "objects": "are ok"
+        }
+      }
+    }
+
+    Examples:
+    ---------
+    Single value:
+    {
+      "description": "A field to store CI/CD tool",
+      "key": "ci-cd-tool",
+      "value": "Jenkins"
+      }
+    }
+
+    Nested values:
+    {
+    "description": "Custom field to store build metrics",
+      "key": "build-metrics",
+      "value": {
+        "2023-08-01": {
+          "success-rate": "50"
+        },
+        "2023-08-02": {
+          "success-rate": "67"
+        }
+      }
+    }
     """
     client = ctx.obj["client"]
 

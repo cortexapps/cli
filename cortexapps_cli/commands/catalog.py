@@ -165,3 +165,80 @@ def details(
 
     data = r if output_format == 'json' else [r]
     print_output_with_context(ctx, data)
+
+@app.command()
+def archive(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Archive an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.put("api/v1/catalog/" + tag + "/archive")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def unarchive(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Unarchive an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.put("api/v1/catalog/" + tag + "/unarchive")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def delete(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Delete an entity
+    """
+    client = ctx.obj["client"]
+
+    client.delete("api/v1/catalog/" + tag)
+
+@app.command()
+def delete_by_type(
+    ctx: typer.Context,
+    types: CatalogCommandOptions.types = None,
+):
+    """
+    Dangerous operation that will delete all entities that are of the given type
+    """
+    client = ctx.obj["client"]
+
+    #TODO: check if types is a regex of form: ([-A-Za-z]+,)+
+
+    params = {
+        "types": types
+    }
+
+    client.delete("api/v1/catalog", params=params)
+
+
+@app.command()
+def descriptor(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    yaml: bool = typer.Option(False, "--yaml", "-y", help="When true, returns the YAML representation of the descriptor."),
+):
+    """
+    Retrieve entity descriptor
+    """
+    client = ctx.obj["client"]
+
+    params = {
+        "yaml": yaml
+    }
+
+    print("params = " + str(params))
+
+    r = client.get("api/v1/catalog/" + tag + "/openapi", params=params)
+    print_output_with_context(ctx, r)
