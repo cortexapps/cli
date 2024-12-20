@@ -9,6 +9,7 @@ import configparser
 
 from cortexapps_cli.cortex_client import CortexClient
 
+import cortexapps_cli.commands.api_keys as api_keys
 import cortexapps_cli.commands.audit_logs as audit_logs
 import cortexapps_cli.commands.catalog as catalog
 import cortexapps_cli.commands.custom_data as custom_data
@@ -39,6 +40,7 @@ app = typer.Typer(
 )
 
 # add subcommands
+app.add_typer(api_keys.app, name="api-keys")
 app.add_typer(audit_logs.app, name="audit-logs")
 app.add_typer(catalog.app, name="catalog")
 app.add_typer(custom_data.app, name="custom-data")

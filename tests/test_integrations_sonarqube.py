@@ -4,13 +4,34 @@ from tests.helpers.utils import *
 # we let the API handle validation -- we don't need valid input files.
 def _dummy_file(tmp_path):
     f = tmp_path / "test_integrations_sonarqube_add.json"
-    f.write_text("foobar")
+
+    content = """
+    {
+      "configurations": [
+        {
+          "alias": "multiple-1",
+          "host": "cortex.io",
+          "isDefault": false,
+          "token": "string"
+        },
+        {
+          "alias": "multiple-2",
+          "host": "cortex.io",
+          "isDefault": false,
+          "token": "string"
+        }
+      ]
+    }
+    """
+
+    f.write_text(content)
+
     return f
 
 @responses.activate
 def test_integrations_sonarqube_add():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configuration", json={}, status=200)
-    cli(["integrations", "sonarqube", "add", "-a", "myAlias", "-h", "my.host.com", "--api-key", "123456", "-i"])
+    cli(["integrations", "sonarqube", "add", "-a", "myAlias", "-h", "cortex.io", "--api-key", "123456", "-i"])
 
 @responses.activate
 def test_integrations_sonarqube_add_multiple(tmp_path):

@@ -26,10 +26,6 @@ class CortexClient:
             if content_type == 'application/json' and isinstance(data, dict):
                 req_data = json.dumps(data)
 
-        #print("JEFF, requests, params = " + str(params))
-        #params = json.dumps(params)
-        #print("JEFF, requests, now params = " + str(params))
-
         response = requests.request(method, url, params=params, headers=req_headers, data=req_data)
 
         if not response.ok:

@@ -9,6 +9,7 @@ import pytest
 from typer.testing import CliRunner
 from unittest import mock
 import responses
+import yaml
 
 runner = CliRunner()
 

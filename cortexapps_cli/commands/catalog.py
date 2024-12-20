@@ -44,6 +44,14 @@ class CatalogCommandOptions:
         Optional[bool],
         typer.Option("--include-metadata", "-m", help="Include custom data for each entity in the response", show_default=False)
     ]
+    dry_run = Annotated[
+        Optional[bool],
+        typer.Option("--dry-run", "-dry", help="When true, only validates the descriptor contents and returns any errors or warnings", show_default=False)
+    ]
+    append_arrays = Annotated[
+        Optional[bool],
+        typer.Option("--append-arrays", "-aa", help="Default merge behavior is to replace arrays, set this to true to append arrays instead. For simple types, duplicate values will be removed from the merged array", show_default=False)
+    ]
     git_repositories = Annotated[
         Optional[str],
         typer.Option("--git-repositories", "-r", help="Supports only GitHub repositories in the org/repo format", show_default=False)
@@ -235,10 +243,100 @@ def descriptor(
     client = ctx.obj["client"]
 
     params = {
-        "yaml": yaml
+        "yaml": str(yaml).lower()
     }
 
-    print("params = " + str(params))
-
     r = client.get("api/v1/catalog/" + tag + "/openapi", params=params)
+    if yaml:
+       print(r)
+    else:
+       print_output_with_context(ctx, r)
+
+@app.command()
+def create(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing YAML content of entity; can be passed as stdin with -, example: -f-")] = None,
+    dry_run: CatalogCommandOptions.dry_run = False,
+):
+    """
+    Create entity
+    """
+    client = ctx.obj["client"]
+
+    params = {
+        "dryRun": dry_run
+    }
+
+    r = client.post("api/v1/open-api", data=file_input.read(), params=params, content_type="application/openapi;charset=UTF-8")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def patch(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help=" File containing YAML content of entity; can be passed as stdin with -, example: -f-")] = None,
+    delete_marker_value = typer.Option("__delete__", "--delete-marker-value", "-dmv", help="Delete keys with this value from the merged yaml, defaults to __delete__, if any values match this, they will not be included in merged YAML. For example my_value: __delete__ will remove my_value from the merged YAML."),
+    dry_run: CatalogCommandOptions.dry_run = False,
+    append_arrays: CatalogCommandOptions.append_arrays = False,
+):
+    """
+    Creates or updates an entity. If the YAML refers to an entity that already exists (as referenced by the x-cortex-tag), this API will merge the specified changes into the existing entity
+    """
+    client = ctx.obj["client"]
+
+    params = {
+        "dryRun":dry_run,
+        "appendArrays": append_arrays,
+        "deleteMarkerValue": delete_marker_value
+    }
+
+    r = client.patch("api/v1/open-api", data=file_input.read(), params=params, content_type="application/openapi;charset=UTF-8")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def list_descriptors(
+    ctx: typer.Context,
+    yaml: bool = typer.Option(False, "--yaml", "-y", help="When true, returns the YAML representation of the descriptor."),
+    types: CatalogCommandOptions.types = None,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
+):
+    """
+    List entity descriptors
+    """
+    client = ctx.obj["client"]
+
+    params = {
+        "yaml": yaml,
+        "types": types,
+        "pageSize": page_size,
+        "page": page
+    }
+
+    r = client.get("api/v1/catalog/descriptors", params=params)
+    print_output_with_context(ctx, r)
+
+@app.command()
+def gitops_log(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Retrieve most recent GitOps log for entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/catalog/" + tag + "/gitops-logs")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def scorecard_scores(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Retrieve entity Scorecard scores
+    """
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/catalog/" + tag + "/scorecards")
     print_output_with_context(ctx, r)
