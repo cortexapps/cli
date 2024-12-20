@@ -42,7 +42,7 @@ class DiscoverySource(str, Enum):
     SERVICENOW = "SERVICENOW"
     SERVICENOW_DOMAIN = "SERVICENOW_DOMAIN"
 
-app = typer.Typer(help="Discovery Audit commands")
+app = typer.Typer(help="Discovery Audit commands", no_args_is_help=True)
 
 @app.command()
 def get(

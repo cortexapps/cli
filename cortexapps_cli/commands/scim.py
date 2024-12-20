@@ -4,7 +4,7 @@ from rich import print_json
 import typer
 import urllib.parse
 
-app = typer.Typer(help="SCIM commands")
+app = typer.Typer(help="SCIM commands", no_args_is_help=True)
 
 # As of November 2024, sortBy and sortOrder are not supported in our code and result in a 501 error
 # Not sure how domain is supposed to be used so leaving it out too

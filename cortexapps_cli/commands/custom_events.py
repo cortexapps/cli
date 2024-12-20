@@ -5,7 +5,7 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
-app = typer.Typer(help="Custom events commands")
+app = typer.Typer(help="Custom events commands", no_args_is_help=True)
 
 # Need a helper function to parse custom_data.
 # cannot do this in type: list[Tuple[str, str]] | None  = typer.Option(None)

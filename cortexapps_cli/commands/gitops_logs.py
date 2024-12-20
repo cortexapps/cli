@@ -3,7 +3,7 @@ from enum import Enum
 #from rich import print_json
 import typer
 
-app = typer.Typer(help="GitOps Logs commands")
+app = typer.Typer(help="GitOps Logs commands", no_args_is_help=True)
 
 class Operation(str, Enum):
     ARCHIVED = "ARCHIVED"

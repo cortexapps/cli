@@ -7,7 +7,7 @@ import cortexapps_cli.commands.packages_commands.python as python
 import cortexapps_cli.commands.packages_commands.node as node
 import cortexapps_cli.commands.packages_commands.nuget as nuget
 
-app = typer.Typer(help="Packages commands")
+app = typer.Typer(help="Packages commands", no_args_is_help=True)
 app.add_typer(go.app, name="go")
 app.add_typer(java.app, name="java")
 app.add_typer(python.app, name="python")

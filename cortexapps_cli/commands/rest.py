@@ -7,7 +7,7 @@ import typer
 from typing_extensions import Annotated
 
 from rich import print_json
-app = typer.Typer(help="REST API commands")
+app = typer.Typer(help="REST API commands", no_args_is_help=True)
 
 def parse_multi_value_option(option: List[str] | None) -> dict:
     if option is None:

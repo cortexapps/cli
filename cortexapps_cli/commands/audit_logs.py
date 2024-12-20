@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 import typer
 
-app = typer.Typer(help="Audit log commands")
+app = typer.Typer(help="Audit log commands", no_args_is_help=True)
 
 class Action(str, Enum):
     CREATE = "CREATE"

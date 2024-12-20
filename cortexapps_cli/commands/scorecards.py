@@ -5,8 +5,7 @@ from typing_extensions import Annotated
 
 import cortexapps_cli.commands.scorecards_commands.exemptions as exemptions
 
-app = typer.Typer(help="Scorecards commands",
-                  no_args_is_help=True)
+app = typer.Typer(help="Scorecards commands", no_args_is_help=True)
 app.add_typer(exemptions.app, name="exemptions")
 
 @app.command()

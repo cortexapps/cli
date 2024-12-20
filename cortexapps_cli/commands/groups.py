@@ -2,7 +2,7 @@ import json
 from rich import print_json
 import typer
 
-app = typer.Typer(help="Groups commands")
+app = typer.Typer(help="Groups commands", no_args_is_help=True)
 
 @app.command()
 def get(

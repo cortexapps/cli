@@ -4,8 +4,7 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
-app = typer.Typer(help="Datadog commands",
-                  no_args_is_help=True)
+app = typer.Typer(help="Datadog commands", no_args_is_help=True)
 
 class Region(str, Enum):
     US1 = "US1"

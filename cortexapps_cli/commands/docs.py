@@ -4,7 +4,7 @@ import typer
 from typing_extensions import Annotated
 import yaml
 
-app = typer.Typer(help="Docs commands")
+app = typer.Typer(help="Docs commands", no_args_is_help=True)
 
 @app.command()
 def get(

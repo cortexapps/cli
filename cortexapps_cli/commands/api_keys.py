@@ -5,7 +5,7 @@ from enum import Enum
 from typing_extensions import Annotated
 from cortexapps_cli.utils import print_output_with_context
 
-app = typer.Typer(help="API Keys commands")
+app = typer.Typer(help="API Keys commands", no_args_is_help=True)
 
 class DefaultRole(str, Enum):
     ADMIN = "ADMIN"

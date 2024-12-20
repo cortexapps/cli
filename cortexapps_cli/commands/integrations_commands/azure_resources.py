@@ -3,8 +3,7 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
-app = typer.Typer(help="Azure Resources commands",
-                  no_args_is_help=True)
+app = typer.Typer(help="Azure Resources commands", no_args_is_help=True)
 
 # Make this a common client function?
 

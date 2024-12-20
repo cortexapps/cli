@@ -18,8 +18,7 @@ import cortexapps_cli.commands.integrations_commands.pagerduty as pagerduty
 import cortexapps_cli.commands.integrations_commands.prometheus as prometheus
 import cortexapps_cli.commands.integrations_commands.sonarqube as sonarqube
 
-app = typer.Typer(help="Integrations commands",
-                  no_args_is_help=True)
+app = typer.Typer(help="Integrations commands", no_args_is_help=True)
 app.add_typer(aws.app, name="aws")
 app.add_typer(azure_resources.app, name="azure-resources")
 app.add_typer(azure_devops.app, name="azure-devops")

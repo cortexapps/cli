@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 from cortexapps_cli.command_options import ListCommandOptions
 from cortexapps_cli.utils import print_output_with_context
 
-app = typer.Typer(help="Catalog commands")
+app = typer.Typer(help="Catalog commands", no_args_is_help=True)
 
 class CatalogCommandOptions:
     include_archived = Annotated[

@@ -6,7 +6,7 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
-app = typer.Typer(help="Entity Types commands")
+app = typer.Typer(help="Entity Types commands", no_args_is_help=True)
 
 @app.command()
 def list(

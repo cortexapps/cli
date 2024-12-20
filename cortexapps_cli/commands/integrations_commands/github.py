@@ -3,8 +3,7 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
-app = typer.Typer(help="GitHub commands",
-                  no_args_is_help=True)
+app = typer.Typer(help="GitHub commands", no_args_is_help=True)
 
 @app.command()
 def add(

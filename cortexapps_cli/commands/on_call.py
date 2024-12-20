@@ -2,7 +2,7 @@ import typer
 import json
 from rich import print_json
 
-app = typer.Typer(help="On Call commands")
+app = typer.Typer(help="On Call commands", no_args_is_help=True)
 
 @app.command()
 def get(

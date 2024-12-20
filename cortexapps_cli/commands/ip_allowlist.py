@@ -1,6 +1,6 @@
 import typer
 
-app = typer.Typer(help="IP Allowlist commands")
+app = typer.Typer(help="IP Allowlist commands", no_args_is_help=True)
 
 @app.command()
 def get(
