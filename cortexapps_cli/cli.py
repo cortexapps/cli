@@ -22,6 +22,7 @@ import cortexapps_cli.commands.docs as docs
 import cortexapps_cli.commands.entity_types as entity_types
 import cortexapps_cli.commands.gitops_logs as gitops_logs
 import cortexapps_cli.commands.groups as groups
+import cortexapps_cli.commands.integrations as integrations
 import cortexapps_cli.commands.ip_allowlist as ip_allowlist
 import cortexapps_cli.commands.on_call as on_call
 import cortexapps_cli.commands.packages as packages
@@ -30,8 +31,8 @@ import cortexapps_cli.commands.queries as queries
 import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.scim as scim
 import cortexapps_cli.commands.scorecards as scorecards
-import cortexapps_cli.commands.integrations as integrations
 import cortexapps_cli.commands.teams as teams
+import cortexapps_cli.commands.workflows as workflows
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -53,6 +54,7 @@ app.add_typer(docs.app, name="docs")
 app.add_typer(entity_types.app, name="entity-types")
 app.add_typer(gitops_logs.app, name="gitops-logs")
 app.add_typer(groups.app, name="groups")
+app.add_typer(integrations.app, name="integrations")
 app.add_typer(ip_allowlist.app, name="ip-allowlist")
 app.add_typer(on_call.app, name="on-call")
 app.add_typer(packages.app, name="packages")
@@ -61,8 +63,8 @@ app.add_typer(queries.app, name="queries")
 app.add_typer(rest.app, name="rest")
 app.add_typer(scim.app, name="scim")
 app.add_typer(scorecards.app, name="scorecards")
-app.add_typer(integrations.app, name="integrations")
 app.add_typer(teams.app, name="teams")
+app.add_typer(workflows.app, name="workflows")
 
 # global options
 @app.callback()

@@ -5,6 +5,7 @@ from rich import print
 from rich import print_json
 from rich.markdown import Markdown
 from rich.console import Console
+import urllib.parse
 
 from cortexapps_cli.utils import guess_data_key
 
