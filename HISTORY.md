@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.27.0 (2025-01-04)
+------------------
+
+**Improvements**
+- Add support for catalog patch command.
+
 0.26.7 (2024-11-18)
 ------------------
 

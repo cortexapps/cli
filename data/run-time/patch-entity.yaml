@@ -1,0 +1,6 @@
+openapi: 3.0.0
+info:
+  x-cortex-tag: patch-entity
+  x-cortex-custom-metadata:
+    owners:
+    - owner-2
