@@ -597,7 +597,8 @@ def debug_json(r, method):
         print(json_data, file=sys.stderr)
 
 def exit(r, method, expected_rc=200, err=None):
-    if r.status_code != expected_rc:
+    # Quick fix for catalog patch; will fix with typer change.
+    if r.status_code != expected_rc and r.status_code != 201:
         sys.stderr.write(r.reason + "\n")
         if r.status_code == 401:
             if config['config_file'] == "ENVIRONMENT":
@@ -688,6 +689,17 @@ def post(url, headers={}, payload="", expected_rc=200):
     except requests.exceptions.RequestException as e:
         err = e.response.text
     exit(r, 'POST', expected_rc, err)
+
+def patch(url, headers={}, payload="", expected_rc=200):
+    api_key(headers)
+
+    err = None
+    try:
+        r = requests.patch(config['url'] + url, headers=headers,data=payload)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        err = e.response.text
+    exit(r, 'PATCH', expected_rc, err)
 
 # Generate HTTP API options.  Everything in the Namespace argparse object is
 # added to the URL with the exception of those listed in the array below.
@@ -972,6 +984,7 @@ def subparser_catalog_opts(subparsers):
     subparser_catalog_gitops_logs(sp)
     subparser_catalog_list(sp)
     subparser_catalog_list_descriptors(sp)
+    subparser_catalog_patch(sp)
     subparser_catalog_scorecard_scores(sp)
     subparser_catalog_unarchive(sp)
 
@@ -1147,6 +1160,52 @@ def subparser_catalog_details(subparser):
 
 def catalog_details(args):
     get("/api/v1/catalog/" + args.tag + parse_opts(args))
+
+def subparser_catalog_patch(subparser):
+    sp = subparser.add_parser(
+            'patch',
+            help='Creates or updates an entity using OpenAPI. If the YAML refers to an entity that already exists (as referenced by the x-cortex-tag), this API will merge the specified changes into the existing entity.')
+    add_argument_file(sp, 'File containing openapi descriptor for entity')
+    sp.add_argument(
+            '-m',
+            '--delete-marker-value',
+            dest='deleteMarkerValue',
+            help='Delete keys with this value from the merged yaml, e.g. __delete__, if any values match this, they will not be included in merged YAML. For example my_value: __delete__ will remove my_value from the merged YAML.',
+            required=False,
+            default="__delete__",
+            metavar=''
+    )
+    sp.add_argument(
+            '-d',
+            '--dry-run',
+            dest="dryRun",
+            help='When true, this endpoint only validates the descriptor contents and returns any errors or warnings.',
+            action='store_true',
+            default='false'
+    )
+    sp.add_argument(
+            '-a',
+            '--append-arrays',
+            dest="appendArrays",
+            help='Default merge behavior is to replace arrays, set this to true to append arrays instead. For simple types, duplicate values will be removed from the merged array',
+            action='store_true',
+            default='false'
+    )
+    sp.add_argument(
+            '-n',
+            '--fail-if-entity-does-not-exist',
+            dest="failIfEntityDoesNotExist",
+            help='Default behavior is to upsert the entity, if set command will fail (404) if the entity specified in x-cortex-tag does not exist.',
+            action='store_true',
+            default='false'
+    )
+    sp.set_defaults(func=catalog_patch)
+
+def catalog_patch(args):
+    patch(
+        "/api/v1/open-api" + parse_opts(args),
+        default_headers('application/openapi'), read_file(args)
+    )
 
 def subparser_catalog_scorecard_scores(subparser):
     sp = subparser.add_parser('scorecard-scores', help='Retrieve entity Scorecard scores')
