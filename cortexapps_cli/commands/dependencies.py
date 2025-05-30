@@ -117,6 +117,7 @@ def get_all(
     include_outgoing: bool = typer.Option(False, "--include-outgoing", "-o", help="Include outgoing dependencies"),
     page: int = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
     page_size: int = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    prt: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
 ):
     """
     Retrieve all dependencies for an entity
@@ -134,7 +135,7 @@ def get_all(
 
     client = ctx.obj["client"]
 
-    client.fetch_or_get("api/v1/catalog/" + caller_tag + "/dependencies", page, params=params)
+    client.fetch_or_get("api/v1/catalog/" + caller_tag + "/dependencies", page, prt, params=params)
 
 @app.command()
 def delete(
@@ -169,7 +170,7 @@ def get(
     path: str = typer.Option(None, "--path", "-p", help="The path of the dependency")
 ):
     """
-    Retrieve dependency betweek entities
+    Retrieve dependency between entities
     """
 
     params = {

@@ -1,6 +1,27 @@
 Release History
 ===============
 
+1.0.0 (2025-0x-yy)
+------------------
+
+**Improvements**
+- Added sub-commands:
+
+**Breaking Changes**
+- custom-events -i <timestamp> changed to -ts <timestamp>
+- groups -> no support for adding groups with JSON file, add groups via comma-separated list on command line
+- plugins get changed to-> list, 
+
+**TODO**
+- Do a full reconciliation of all flags
+- DONE: Add -debug flag
+- Test input files, env vars
+- Add support for adding groups via JSON file?
+- Check all get/list sub-commands
+- sort by date: TypeError: '<' not supported between instances of 'NoneType' and 'NoneType' 
+
+
+
 0.26.6 (2024-07-30)
 ------------------
 

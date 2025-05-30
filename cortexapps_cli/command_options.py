@@ -31,3 +31,9 @@ class ListCommandOptions:
         Optional[int],
         typer.Option("--page-size", "-z", help="Page size for results", show_default=False)
     ]
+
+class CommandOptions:
+    _print = Annotated[
+        Optional[bool],
+        typer.Option("--print", help="If result should be printed to the terminal", hidden=True)
+    ]

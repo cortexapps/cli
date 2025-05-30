@@ -2,8 +2,8 @@ import typer
 from typing import Optional, List
 from typing_extensions import Annotated
 
-from cortexapps_cli.command_options import ListCommandOptions
-from cortexapps_cli.utils import print_output_with_context
+from cortexapps_cli.command_options import ListCommandOptions, CommandOptions
+from cortexapps_cli.utils import print_output_with_context, print_output
 
 app = typer.Typer(help="Catalog commands", no_args_is_help=True)
 
@@ -82,6 +82,7 @@ def catalog_list(
     columns: ListCommandOptions.columns = [],
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
+    _print: CommandOptions._print = True,
 ):
     """
     List entities in the catalog
@@ -128,8 +129,11 @@ def catalog_list(
         # if page is specified, we want to fetch only that page
         r = client.get("api/v1/catalog", params=params)
 
-    data = r
-    print_output_with_context(ctx, data)
+    if _print:
+        data = r
+        print_output_with_context(ctx, data)
+    else:
+        return(r)
 
 @app.command()
 def details(
@@ -236,6 +240,7 @@ def descriptor(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     yaml: bool = typer.Option(False, "--yaml", "-y", help="When true, returns the YAML representation of the descriptor."),
+    _print: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
 ):
     """
     Retrieve entity descriptor
@@ -247,10 +252,17 @@ def descriptor(
     }
 
     r = client.get("api/v1/catalog/" + tag + "/openapi", params=params)
-    if yaml:
-       print(r)
+    if _print:
+        if yaml:
+           print(r)
+        else:
+           print_output_with_context(ctx, r)
+           #print(r)
     else:
-       print_output_with_context(ctx, r)
+        if yaml:
+           return(r)
+        else:
+           print_output_with_context(ctx, r)
 
 @app.command()
 def create(
@@ -299,6 +311,7 @@ def list_descriptors(
     types: CatalogCommandOptions.types = None,
     page: ListCommandOptions.page = None,
     page_size: ListCommandOptions.page_size = 250,
+    _print: CommandOptions._print = True,
 ):
     """
     List entity descriptors
@@ -312,8 +325,9 @@ def list_descriptors(
         "page": page
     }
 
-    r = client.get("api/v1/catalog/descriptors", params=params)
-    print_output_with_context(ctx, r)
+    r = client.fetch_or_get("api/v1/catalog/descriptors", page, _print, params=params)
+    if not _print:
+        return(r)
 
 @app.command()
 def gitops_log(

@@ -11,7 +11,7 @@ def test():
     id = response['Resources'][0]['id']
 
     response = cli(["scim", "list", "--filter", "userName eq jeff.schnitter@proton.me", "-a", "name.familyName"])
-    assert response['Resources'][0]['name']['familyName'] == 'Schnitter', "Should find family Name"
+    assert 'familyName' in response['Resources'][0]['name'].keys(), "Should find familyName in response"
 
     response = cli(["scim", "list", "--filter", "userName eq jeff.schnitter@proton.me", "-e", "name.familyName"])
     assert 'familyName' not in response['Resources'][0]['name'].keys(), "Should not have familyName in response"

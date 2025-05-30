@@ -5,14 +5,20 @@ from rich import print
 from rich import print_json
 from rich.markdown import Markdown
 from rich.console import Console
+import logging
 import urllib.parse
 
 from cortexapps_cli.utils import guess_data_key
 
+
 class CortexClient:
-    def __init__(self, api_key, base_url='https://api.getcortexapp.com'):
+    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com'):
         self.api_key = api_key
+        self.tenant = tenant
         self.base_url = base_url
+
+        logging.basicConfig(level=numeric_level)
+        self.logger = logging.getLogger(__name__)
 
     def request(self, method, endpoint, params={}, headers={}, data=None, raw_body=False, raw_response=False, content_type='application/json'):
         req_headers = {
@@ -28,6 +34,11 @@ class CortexClient:
                 req_data = json.dumps(data)
 
         response = requests.request(method, url, params=params, headers=req_headers, data=req_data)
+
+        self.logger.debug(f"Request Headers: {response.request.headers}")
+        self.logger.debug(f"Response Status Code: {response.status_code}")
+        self.logger.debug(f"Response Headers: {response.headers}")
+        self.logger.debug(f"Response Content: {response.text}")
 
         if not response.ok:
             try:
@@ -56,8 +67,8 @@ class CortexClient:
             else:
                 return None
 
-    def get(self, endpoint, params={}, headers={}, raw_response=False):
-        return self.request('GET', endpoint, params=params, headers=headers, raw_response=raw_response)
+    def get(self, endpoint, params={}, headers={}, raw_response=False, content_type='application/yaml'):
+        return self.request('GET', endpoint, params=params, headers=headers, raw_response=raw_response, content_type=content_type)
 
     def post(self, endpoint, data={}, params={}, headers={}, raw_body=False, raw_response=False, content_type='application/json'):
         return self.request('POST', endpoint, data=data, params=params, headers=headers, raw_body=raw_body, raw_response=raw_response, content_type=content_type)
@@ -112,7 +123,7 @@ class CortexClient:
             data_key: data,
         }
 
-    def fetch_or_get(self, endpoint, page, params={}):
+    def fetch_or_get(self, endpoint, page, prt, params={}):
         if page is None:
             # if page is not specified, we want to fetch all pages
             r = self.fetch(endpoint, params=params)
@@ -120,7 +131,11 @@ class CortexClient:
             # if page is specified, we want to fetch only that page
             r = self.get(endpoint, params=params)
 
-        print_json(data=r)
+        if prt:
+            print_json(data=r)
+        else:
+            return(r)
+
 
     def get_entity(self, entity_tag: str, entity_type: str = ''):
         match entity_type.lower():

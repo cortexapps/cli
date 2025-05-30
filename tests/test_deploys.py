@@ -14,17 +14,19 @@ def test_deploys():
     result = cli(["deploys", "add", "-t", "shipping-integrations", "-f", "data/run-time/deploys-uuid.json"])
     uuid = result['uuid']
 
+    print("uuid = " + uuid)
+
     _add_deploy()
     result = cli(["deploys", "list", "-t", "shipping-integrations"])
     assert any(deploy['uuid'] == uuid for deploy in result['deployments']), "Should find a deploy with uuid"
     assert result['total'] == 2, "Two deploys should be returned for entity"
 
-    cli(["deploys", "update-by-uuid", "-t", "shipping-integrations", "-uu", uuid, "-f", "data/run-time/deploys-update.json"])
+    cli(["deploys", "update-by-uuid", "-t", "shipping-integrations", "-u", uuid, "-f", "data/run-time/deploys-update.json"])
     result = cli(["deploys", "list", "-t", "shipping-integrations"])
     deploy = [deploy for deploy in result['deployments'] if deploy['uuid'] == uuid]
     assert deploy[0]['sha'] == "SHA-456789", "Should find a deploy with sha"
  
-    cli(["deploys", "delete-by-uuid", "-t", "shipping-integrations", "-uu", uuid])
+    cli(["deploys", "delete-by-uuid", "-t", "shipping-integrations", "-u", uuid])
     result = cli(["deploys", "list", "-t", "shipping-integrations"])
     assert not any(deploy['uuid'] == uuid for deploy in result['deployments']), "Should not find a deploy with uuid"
     assert result['total'] == 1, "Following delete-by-uuid, only one deploy should be returned for entity"

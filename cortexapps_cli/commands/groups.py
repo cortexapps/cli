@@ -10,6 +10,7 @@ def get(
     tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
     page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    prt: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
 ):
     """
     Get groups for entity.
@@ -25,7 +26,7 @@ def get(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
     
-    client.fetch_or_get("api/v1/catalog/" + tag_or_id + "/groups", page, params=params)
+    client.fetch_or_get("api/v1/catalog/" + tag_or_id + "/groups", page, prt, params=params)
 
 @app.command()
 def add(

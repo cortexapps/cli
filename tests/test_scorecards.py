@@ -73,6 +73,7 @@ def test_scorecards_drafts():
 @mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
 def test_exemption_that_will_be_approved():
     rule_id = _get_rule("Has Custom Data")
+    print("rule_id = " + rule_id)
 
     response = cli(["scorecards", "exemptions", "request", "-s", "test-scorecard", "-t", "test-service", "-r", "test approve", "-ri", rule_id, "-d", "100"])
     assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
@@ -80,6 +81,7 @@ def test_exemption_that_will_be_approved():
 @pytest.mark.usefixtures('test_exemption_that_will_be_approved')
 def test_approve_exemption():
     rule_id = _get_rule("Has Custom Data")
+    print("rule_id = " + rule_id)
 
     response = cli(["scorecards", "exemptions", "approve", "-s", "test-scorecard", "-t", "test-service", "-ri", rule_id])
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'APPROVED', "exemption state should be APPROVED"
@@ -90,6 +92,7 @@ def test_approve_exemption():
 @mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
 def test_exemption_that_will_be_denied():
     rule_id = _get_rule("Is Definitely False")
+    print("rule_id = " + rule_id)
 
     response = cli(["scorecards", "exemptions", "request", "-s", "test-scorecard", "-t", "test-service", "-r", "test deny", "-ri", rule_id, "-d", "100"])
     assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
@@ -97,6 +100,7 @@ def test_exemption_that_will_be_denied():
 @pytest.mark.usefixtures('test_exemption_that_will_be_denied')
 def test_deny_exemption():
     rule_id = _get_rule("Is Definitely False")
+    print("rule_id = " + rule_id)
 
     response = cli(["scorecards", "exemptions", "deny", "-s", "test-scorecard", "-t", "test-service", "-r", "I deny, therefore I am", "-ri", rule_id])
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"

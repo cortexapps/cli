@@ -19,8 +19,16 @@ _check-vars:
    fi
 
 # Run all tests
-test-all: _check-vars load-data
-   poetry run pytest -rA -n auto --cov=cortexapps_cli --cov-append --cov-report term-missing tests
+test-all: _check-vars load-data test-parallel test-serial
+
+# Run tests that can run in parallel
+test-parallel: _check-vars load-data
+   PYTHONPATH=. poetry run pytest -rA -n auto -m "not serial" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
+
+# Run tests that have to run sequentially
+test-serial: _check-vars load-data
+   #@if [ -f .coverage ]; then rm .coverage; fi
+   PYTHONPATH=. poetry run pytest -rA -n auto -m "serial" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
 
 # Run a single test, ie: just test tests/test_catalog.py
 test testname: _check-vars
@@ -29,6 +37,10 @@ test testname: _check-vars
 # Run all tests for an API function, assumes all tests named test_<command>*
 test-suite command: _check-vars
    poetry run pytest -k test_{{command}}
+
+# Run all tests in a directory
+test-dir dir: _check-vars
+   poetry run pytest {{dir}}
 
 # Load data from 'data' directory into Cortex
 load-data:

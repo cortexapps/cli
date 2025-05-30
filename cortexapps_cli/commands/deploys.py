@@ -106,6 +106,7 @@ def deploys_list(
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity"),
     page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
     page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    prt: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
 ):
     """
     List deployments for entity
@@ -121,7 +122,7 @@ def deploys_list(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
 
-    client.fetch_or_get("api/v1/catalog/" + tag + "/deploys", page, params=params)
+    client.fetch_or_get("api/v1/catalog/" + tag + "/deploys", page, prt, params=params)
 
 @app.command()
 def add(
@@ -136,7 +137,7 @@ def add(
     timestamp: datetime = typer.Option(datetime.now(), "--timestamp", "-ts", help="Timestamp of the deploy", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
     title: str = typer.Option(None, "--title", "-ti", help="The title of the deploy"),
     type: Type = typer.Option(None, "--type", "-ty", help="The type of the deploy"),
-    url: str = typer.Option(None, "--url", "-u", help="The Uniform Resource Locator(URL) of the deploy")
+    url: str = typer.Option(None, "--url", help="The Uniform Resource Locator(URL) of the deploy")
 ):
     """
     Add deployment for entity
@@ -176,7 +177,7 @@ def add(
 def delete_by_uuid(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity"),
-    uuid: str = typer.Option(..., "--uuid", "-uu", help="The Universally Unique Identifier (UUID) of the deploy")
+    uuid: str = typer.Option(..., "--uuid", "-u", help="The Universally Unique Identifier (UUID) of the deploy")
 ):
     """
     Delete deployment by uuid
@@ -199,8 +200,8 @@ def update_by_uuid(
     timestamp: datetime = typer.Option(datetime.now(), "--timestamp", "-ts", help="Timestamp of the deploy", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
     title: str = typer.Option(None, "--title", "-ti", help="The title of the deploy"),
     deploy_type: Type = typer.Option(None, "--type", "-ty", help="The type of the deploy"),
-    url: str = typer.Option(None, "--url", "-u", help="The Uniform Resource Locator(URL) of the deploy"),
-    uuid: str = typer.Option(..., "--uuid", "-uu", help="The Universally Unique Identifier (UUID) of the deploy")
+    url: str = typer.Option(None, "--url", help="The Uniform Resource Locator(URL) of the deploy"),
+    uuid: str = typer.Option(..., "--uuid", "-u", help="The Universally Unique Identifier (UUID) of the deploy")
 ):
     """
     Update deployment for entity

@@ -1,6 +1,8 @@
 import json
 import typer
 from typing_extensions import Annotated
+from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.utils import print_output_with_context, print_output
 
 from rich import print_json
 
@@ -154,9 +156,16 @@ def get(
 @app.command()
 def list(
     ctx: typer.Context,
-    page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
-    page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    #page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
+    #page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filters = [],
+    sort: ListCommandOptions.sort = [],
 ):
     """
     List custom data for entity
@@ -168,4 +177,23 @@ def list(
         "pageSize": page_size
     }
 
-    client.fetch_or_get("api/v1/catalog/" + tag + "/custom-data", page, params=params)
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "Id=id",
+            "Key=key",
+            "Value=value",
+            "Date=dateUpdated",
+            "Source=source",
+        ]
+
+    #client.fetch_or_get("api/v1/catalog/" + tag + "/custom-data", page, params=params)
+
+    if page is None:
+        # if page is not specified, we want to fetch all pages
+        r = client.fetch("api/v1/catalog/" + tag + "/custom-data", params=params)
+    else:
+        # if page is specified, we want to fetch only that page
+        r = client.get("api/v1/catalog/" + tag + "/custom-data", params=params)
+
+    data = r
+    print_output_with_context(ctx, data)

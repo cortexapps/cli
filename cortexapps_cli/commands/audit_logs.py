@@ -1,8 +1,13 @@
 from datetime import datetime
 from enum import Enum
 import typer
+from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.utils import print_output_with_context, print_output
 
-app = typer.Typer(help="Audit log commands", no_args_is_help=True)
+app = typer.Typer(
+    help="Audit log commands",
+    no_args_is_help=True
+)
 
 class Action(str, Enum):
     CREATE = "CREATE"
@@ -31,12 +36,17 @@ def get(
     actorIpAddresses: list[str] | None = typer.Option(None, "--actorIpAddresses", "-ai", help="Source IP Addresses associated with audit event"),
     actorRequestTypes: list[ActorRequestType] | None = typer.Option(None, "--actorRequestTypes", "-ar", help="Request event associated with audit event"),
     actorTypes: list[ActorType] | None = typer.Option(None, "--actorTypes", "-at", help="Actor that triggered the audit event"),
-    end_time: datetime = typer.Option(None, "--endTime", "-e", help="End time of audit logs to retrieve", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
+    end_time: datetime = typer.Option(None, "--end-time", "-e", help="End time of audit logs to retrieve", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
     objectIdentifiers: list[str] | None = typer.Option(None, "--objectIdentifiers", "-oi", help="The name of the Cortex object that was modified, ie x-cortex-tag value, metadata field name, etc."),
     objectTypes: list[str] | None = typer.Option(None, "--objectTypes", "-ot", help="ObjectTypes"),
-    page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
-    page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
-    start_time: datetime = typer.Option(None, "--startTime", "-s", help="Start time of audit logs to retrieve", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
+    start_time: datetime = typer.Option(None, "--start-time", "-s", help="Start time of audit logs to retrieve", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filters = [],
+    sort: ListCommandOptions.sort = [],
 ):
     """
     Note: To see the complete list of possible values, please reference the available filter options for audit logs under Settings in the app.
@@ -68,4 +78,19 @@ def get(
         if str(type(v)) == "<class 'list'>":
             params[k] = ','.join(v)
 
-    client.fetch_or_get("api/v1/audit-logs", page, params=params)
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "Action=action",
+            "ObjectType=objectType",
+            "ActorIdentifier=actorIdentifier",
+            "ObjectIdentifier=objectIdentifier",
+            "IpAddress=ipAddress",
+            "Timestamp=timestamp",
+        ]
+    
+    if page is None:
+        r = client.fetch("api/v1/audit-logs", params=params)
+    else:
+        r = client.get("api/v1/audit-logs", params=params)
+
+    print_output_with_context(ctx, r)

@@ -1,16 +1,28 @@
-import json
+from cortexapps_cli.command_options import CommandOptions
+from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.utils import print_output_with_context, print_output
 from rich import print_json
-import typer
 from typing_extensions import Annotated
+import json
+import typer
 
-app = typer.Typer(help="Plugins commands", no_args_is_help=True)
+app = typer.Typer(
+    help="Plugins commands",
+    no_args_is_help=True
+)
 
 @app.command()
 def list(
     ctx: typer.Context,
     include_drafts: bool = typer.Option(False, "--include-drafts", "-i", help="Also include plugins that are in draft mode"),
-    page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
-    page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    _print: CommandOptions._print = True,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filters = [],
+    sort: ListCommandOptions.sort = [],
 ):
     """
     Retrieve a list of all plugins, excluding drafts
@@ -26,7 +38,33 @@ def list(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
     
-    client.fetch_or_get("api/v1/plugins", page, params=params)
+    #if _print:
+    #    client.fetch_or_get("api/v1/plugins", page, _print, params=params)
+    #else:
+    #    return client.fetch_or_get("api/v1/plugins", page, _print, params=params)
+
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "Name=name",
+            "Tag=tag",
+            "Description=description",
+        ]
+
+    # remove any params that are None
+    params = {k: v for k, v in params.items() if v is not None}
+    
+    if page is None:
+        # if page is not specified, we want to fetch all pages
+        r = client.fetch("api/v1/plugins", params=params)
+    else:
+        # if page is specified, we want to fetch only that page
+        r = client.get("api/v1/plugins", params=params)
+
+    if _print:
+        data = r
+        print_output_with_context(ctx, data)
+    else:
+        return(r)
 
 @app.command()
 def create(
@@ -57,16 +95,25 @@ def delete(
 @app.command()
 def get(
     ctx: typer.Context,
-    tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity.")
+    tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    include_blob: bool = typer.Option(False, "--include-blob", "-i", help="When true, returns the plugin blob.  Defaults to false."),
+    _print: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
 ):
     """
     Retrieve the metadata of a plugin by tag
     """
 
     client = ctx.obj["client"]
+
+    params = {
+       "includeBlob": include_blob,
+    }       
     
-    r = client.get("api/v1/plugins/" + tag_or_id)
-    print_json(data=r)
+    r = client.get("api/v1/plugins/" + tag_or_id, params=params)
+    if _print:
+        print_json(data=r)
+    else:
+        return(r)
 
 @app.command()
 def replace(

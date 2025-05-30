@@ -35,6 +35,7 @@ def get(
     end_date: datetime = typer.Option(None, "--end-date", "-s", help="End date for the filter (inclusive)", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
     page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
     page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    prt: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
 ):
     """
     List custom metrics data points for an entity
@@ -54,7 +55,7 @@ def get(
 
     params = _convert_datetime_to_string(params)
 
-    client.fetch_or_get("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, page, params=params)
+    client.fetch_or_get("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, page, prt, params=params)
 
 @app.command()
 def add(

@@ -4,8 +4,14 @@ import json
 from rich import print_json
 import typer
 from typing_extensions import Annotated
+from cortexapps_cli.command_options import CommandOptions
+from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.utils import print_output_with_context, print_output
 
-app = typer.Typer(help="Custom events commands", no_args_is_help=True)
+app = typer.Typer(
+    help="Custom events commands",
+     no_args_is_help=True
+)
 
 # Need a helper function to parse custom_data.
 # cannot do this in type: list[Tuple[str, str]] | None  = typer.Option(None)
@@ -155,11 +161,17 @@ def delete_all(
 @app.command()
 def list(
     ctx: typer.Context,
-    page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
-    page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     event: str = typer.Option(None, "--type", "-y", help="The type of the custom event, defaults to all."),
     timestamp: datetime = typer.Option(None, "--timestamp", "-ts", help="Optional timestamp of custom events to delete.", formats=["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]),
+    _print: CommandOptions._print = True,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filters = [],
+    sort: ListCommandOptions.sort = [],
 ):
     """
     List custom events for entity
@@ -181,7 +193,31 @@ def list(
         if str(type(v)) == "<class 'datetime.datetime'>":
            params[k] = v.strftime('%Y-%m-%dT%H:%M:%S')
 
-    client.fetch_or_get("api/v1/catalog/" + tag + "/custom-events", page, params=params)
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "UUID=uuid",
+            "title=title",
+            "Description=description",
+            "Url=url",
+            "Timestamp=timestamp",
+            "Type=type",
+            "customData=customData",
+        ]
+
+    if page is None:
+        # if page is not specified, we want to fetch all pages
+        r = client.fetch("api/v1/catalog/" + tag + "/custom-events", params=params)
+    else:
+        # if page is specified, we want to fetch only that page
+        r = client.get("api/v1/catalog/" + tag + "/custom-events", params=params)
+
+    if _print:
+        data = r
+        print_output_with_context(ctx, data)
+    else:
+        return(r)
+
+    #client.fetch_or_get("api/v1/catalog/" + tag + "/custom-events", page, prt, params=params)
 
 @app.command()
 def get_by_uuid(

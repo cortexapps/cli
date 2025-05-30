@@ -6,11 +6,13 @@ import sys
 import importlib.metadata
 import tomllib
 import configparser
+import logging
 
 from cortexapps_cli.cortex_client import CortexClient
 
 import cortexapps_cli.commands.api_keys as api_keys
 import cortexapps_cli.commands.audit_logs as audit_logs
+import cortexapps_cli.commands.backup as backup
 import cortexapps_cli.commands.catalog as catalog
 import cortexapps_cli.commands.custom_data as custom_data
 import cortexapps_cli.commands.custom_events as custom_events
@@ -43,6 +45,7 @@ app = typer.Typer(
 # add subcommands
 app.add_typer(api_keys.app, name="api-keys")
 app.add_typer(audit_logs.app, name="audit-logs")
+app.add_typer(backup.app, name="backup")
 app.add_typer(catalog.app, name="catalog")
 app.add_typer(custom_data.app, name="custom-data")
 app.add_typer(custom_events.app, name="custom-events")
@@ -74,9 +77,14 @@ def global_callback(
     url: str = typer.Option("https://api.getcortexapp.com", "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
     config_file: str = typer.Option(os.path.join(os.path.expanduser('~'), '.cortex', 'config'), "--config", "-c", help="Config file path", envvar="CORTEX_CONFIG"),
     tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant alias", envvar="CORTEX_TENANT_ALIAS"),
+    log_level: Annotated[str, typer.Option("--log-level", "-l", help="Set the logging level")] = "INFO"
 ):
     if not ctx.obj:
         ctx.obj = {}
+
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f"Invalid log level: {log_level}")
 
     if not os.path.isfile(config_file):
         # no config file found
@@ -109,7 +117,7 @@ def global_callback(
     api_key = api_key.strip('"\' ')
     url = url.strip('"\' /')
 
-    ctx.obj["client"] = CortexClient(api_key, url)
+    ctx.obj["client"] = CortexClient(api_key, tenant, numeric_level, url)
 
 @app.command()
 def version():
