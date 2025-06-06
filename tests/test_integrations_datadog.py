@@ -34,9 +34,9 @@ def test_integrations_datadog_get():
     cli(["integrations", "datadog", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_datadog_get_all():
+def test_integrations_datadog_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/datadog/configurations", json={}, status=200)
-    cli(["integrations", "datadog", "get-all"])
+    cli(["integrations", "datadog", "list"])
 
 @responses.activate
 def test_integrations_datadog_get_default():

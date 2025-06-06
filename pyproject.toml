@@ -24,8 +24,7 @@ typer = "^0.12.5"
 click = "<8.2"
 
 [tool.poetry.scripts]
-cortex = "cortexapps_cli.cortex:cli"
-cortex2 = "cortexapps_cli.cli:app"
+cortex = "cortexapps_cli.cli:app"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.2.2"

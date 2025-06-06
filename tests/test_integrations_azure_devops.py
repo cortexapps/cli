@@ -34,9 +34,9 @@ def test_integrations_azure_devops_get():
     cli(["integrations", "azure-devops", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_azure_devops_get_all():
+def test_integrations_azure_devops_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/azure-devops/configurations", json={}, status=200)
-    cli(["integrations", "azure-devops", "get-all"])
+    cli(["integrations", "azure-devops", "list"])
 
 @responses.activate
 def test_integrations_azure_devops_get_default():

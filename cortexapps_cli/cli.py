@@ -24,6 +24,7 @@ import cortexapps_cli.commands.docs as docs
 import cortexapps_cli.commands.entity_types as entity_types
 import cortexapps_cli.commands.gitops_logs as gitops_logs
 import cortexapps_cli.commands.groups as groups
+import cortexapps_cli.commands.initiatives as initiatives
 import cortexapps_cli.commands.integrations as integrations
 import cortexapps_cli.commands.ip_allowlist as ip_allowlist
 import cortexapps_cli.commands.on_call as on_call
@@ -57,6 +58,7 @@ app.add_typer(docs.app, name="docs")
 app.add_typer(entity_types.app, name="entity-types")
 app.add_typer(gitops_logs.app, name="gitops-logs")
 app.add_typer(groups.app, name="groups")
+app.add_typer(initiatives.app, name="initiatives")
 app.add_typer(integrations.app, name="integrations")
 app.add_typer(ip_allowlist.app, name="ip-allowlist")
 app.add_typer(on_call.app, name="on-call")

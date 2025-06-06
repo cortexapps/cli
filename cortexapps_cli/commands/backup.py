@@ -199,9 +199,8 @@ def export(
 ):
     """
     Export tenant
-
-
     """
+
     export_types = sorted(list(set(export_types)))
 
     client = ctx.obj["client"]
@@ -233,42 +232,66 @@ def _import_ip_allowlist(directory):
                 print("   Importing: " + filename)
                 ip_allowlist.get(ctx, file=file_path, force=False, _print=False)
 
-def _import_entity_types(directory):
+def _import_entity_types(ctx, force, directory):
     if os.path.isdir(directory):
-        print("FOUND: " + directory)
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                print("   Importing: " + filename)
+                entity_types.create(ctx, file_input=open(file_path), force=force)
 
-def _import_catalog(directory):
+def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
-        print("FOUND: " + directory)
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                print("   Importing: " + filename)
+                catalog.create(ctx, file_input=open(file_path))
 
-def _import_plugins(directory):
+def _import_plugins(ctx, directory):
     if os.path.isdir(directory):
-        print("FOUND: " + directory)
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                print("   Importing: " + filename)
+                plugins.create(ctx, file_input=open(file_path))
 
-def _import_scorecards(directory):
+def _import_scorecards(ctx, directory):
     if os.path.isdir(directory):
-        print("FOUND: " + directory)
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                print("   Importing: " + filename)
+                scorecards.create(ctx, file_input=open(file_path), dry_run=False)
 
-def _import_workflows(directory):
+def _import_workflows(ctx, directory):
     if os.path.isdir(directory):
-        print("FOUND: " + directory)
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                print("   Importing: " + filename)
+                workflows.create(ctx, file_input=open(file_path))
 
 @app.command("import")
 def import_tenant(
     ctx: typer.Context,
     directory: str = typer.Option(..., "--directory", "-d", help="Location of import directory."),
+    force: bool = typer.Option(False, "--force", help="Recreate entities if they already exist."),
 ):
     """
     Import data into tenant
-
     """
+
     client = ctx.obj["client"]
 
-    print("import directory = " + directory)
     _import_ip_allowlist(directory + "/ip-allowlist")
-    _import_entity_types(directory + "/entity-types")
-    _import_catalog(directory + "/catalog")
-    _import_plugins(directory + "/plugins")
-    _import_scorecards(directory + "/scorecards")
-    _import_workflows(directory + "/workflows")
-
+    _import_entity_types(ctx, force, directory + "/entity-types")
+    _import_catalog(ctx, directory + "/catalog")
+    _import_plugins(ctx, directory + "/plugins")
+    _import_scorecards(ctx, directory + "/scorecards")
+    _import_workflows(ctx, directory + "/workflows")

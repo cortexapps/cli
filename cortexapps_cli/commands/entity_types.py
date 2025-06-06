@@ -77,6 +77,7 @@ def delete(
 def create(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing custom entity definition; can be passed as stdin with -, example: -f-")] = None,
+    force: bool = typer.Option(False, "--force", help="Recreate entity if it already exists."),
 ):
     """
     Create entity type
@@ -85,13 +86,34 @@ def create(
     client = ctx.obj["client"]
     data = json.loads("".join([line for line in file_input]))
 
-    r = client.post("api/v1/catalog/definitions/" + entity_type)
-    print_json(data=r)
+    entity_type = data['type']
+    entities = list(ctx=ctx, _print=False, include_built_in=False)
+
+    # Check if any definition has type == 'tool-test'
+    exists = any(entity.get('type') == entity_type for entity in entities.get('definitions', []))
+    if entities is None or not exists:
+       client.post("api/v1/catalog/definitions", data=data)
+
+@app.command()
+def update(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing custom entity definition; can be passed as stdin with -, example: -f-")] = None,
+    entity_type: str = typer.Option(..., "--type", "-t", help="The entity type"),
+):
+    """
+    Update entity type
+    """
+
+    client = ctx.obj["client"]
+    data = json.loads("".join([line for line in file_input]))
+
+    r = client.update("api/v1/catalog/definitions/" + entity_type, data=data)
 
 @app.command()
 def get(
     ctx: typer.Context,
     entity_type: str = typer.Option(..., "--type", "-t", help="The entity type"),
+    _print: CommandOptions._print = True,
 ):
     """
     Retrieve entity type
@@ -100,4 +122,7 @@ def get(
     client = ctx.obj["client"]
 
     r = client.get("api/v1/catalog/definitions/" + entity_type)
-    print_json(data=r)
+    if _print:
+        print_json(data=r)
+    else:
+        return r

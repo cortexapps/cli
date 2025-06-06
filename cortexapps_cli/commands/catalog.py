@@ -189,7 +189,6 @@ def archive(
     client = ctx.obj["client"]
 
     r = client.put("api/v1/catalog/" + tag + "/archive")
-    print_output_with_context(ctx, r)
 
 @app.command()
 def unarchive(

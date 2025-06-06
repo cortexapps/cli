@@ -1,3 +1,0 @@
-{
-   "query": "tag = \"cli-test-service\" and custom(\"testField\") != null"
-}

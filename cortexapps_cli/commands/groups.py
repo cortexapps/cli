@@ -1,6 +1,7 @@
 import json
 from rich import print_json
 import typer
+from typing_extensions import Annotated
 
 app = typer.Typer(help="Groups commands", no_args_is_help=True)
 
@@ -32,7 +33,8 @@ def get(
 def add(
     ctx: typer.Context,
     tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-    groups: str = typer.Option(..., "--groups", "-g", help="Comma-delimited list of groups to add to the entity")
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing keys to update; can be passed as stdin with -, example: -f-")] = None,
+    groups: str = typer.Option(None, "--groups", "-g", help="Comma-delimited list of groups to add to the entity")
 ):
     """
     Add groups to entity.
@@ -40,9 +42,18 @@ def add(
 
     client = ctx.obj["client"]
 
-    data = {
-       "groups": [{"tag": x.strip()} for x in groups.split(',')]
-    }
+    if file_input and groups:
+        raise typer.BadParameter("Only one of --table and --csv can be specified")
+
+    if not file_input and not groups:
+        raise typer.BadParameter("Only one of --file-input or --groups is required")
+
+    if file_input:
+        data = json.loads("".join([line for line in file_input]))
+    else:
+        data = {
+            "groups": [{"tag": x.strip()} for x in groups.split(',')]
+        }
     
     r = client.put("api/v1/catalog/" + tag_or_id + "/groups", data=data)
     print_json(data=r)
@@ -51,7 +62,8 @@ def add(
 def delete(
     ctx: typer.Context,
     tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-    groups: str = typer.Option(..., "--groups", "-g", help="Comma-delimited list of groups to delete from the entity")
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing keys to update; can be passed as stdin with -, example: -f-")] = None,
+    groups: str = typer.Option(None, "--groups", "-g", help="Comma-delimited list of groups to delete from the entity")
 ):
     """
     Delete groups from entity.
@@ -59,8 +71,17 @@ def delete(
 
     client = ctx.obj["client"]
 
-    data = {
-       "groups": [{"tag": x.strip()} for x in groups.split(',')]
-    }
-    
+    if file_input and groups:
+        raise typer.BadParameter("Only one of --table and --csv can be specified")
+
+    if not file_input and not groups:
+        raise typer.BadParameter("Only one of --file-input or --groups is required")
+
+    if file_input:
+        data = json.loads("".join([line for line in file_input]))
+    else:
+        data = {
+            "groups": [{"tag": x.strip()} for x in groups.split(',')]
+        }
+
     r = client.delete("api/v1/catalog/" + tag_or_id + "/groups", data=data)

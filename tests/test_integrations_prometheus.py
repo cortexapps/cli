@@ -34,9 +34,9 @@ def test_integrations_prometheus_get():
     cli(["integrations", "prometheus", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_prometheus_get_all():
+def test_integrations_prometheus_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/prometheus/configurations", json={}, status=200)
-    cli(["integrations", "prometheus", "get-all"])
+    cli(["integrations", "prometheus", "list"])
 
 @responses.activate
 def test_integrations_prometheus_get_default():

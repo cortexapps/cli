@@ -105,7 +105,7 @@ def get(
     print_json(data=r)
 
 @app.command()
-def get_all(
+def list(
     ctx: typer.Context,
 ):
     """

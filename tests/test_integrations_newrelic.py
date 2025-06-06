@@ -34,9 +34,9 @@ def test_integrations_newrelic_get():
     cli(["integrations", "newrelic", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_newrelic_get_all():
+def test_integrations_newrelic_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configurations", json={}, status=200)
-    cli(["integrations", "newrelic", "get-all"])
+    cli(["integrations", "newrelic", "list"])
 
 @responses.activate
 def test_integrations_newrelic_get_default():

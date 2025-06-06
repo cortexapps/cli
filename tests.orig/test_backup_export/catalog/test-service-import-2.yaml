@@ -1,5 +1,0 @@
-openapi: 3.0.1
-info:
-  title: Test Service Import 2
-  x-cortex-tag: test-service-import-2
-  x-cortex-type: service

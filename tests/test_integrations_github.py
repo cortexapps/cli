@@ -34,9 +34,9 @@ def test_integrations_github_get():
     cli(["integrations", "github", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_github_get_all():
+def test_integrations_github_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations", json={}, status=200)
-    cli(["integrations", "github", "get-all"])
+    cli(["integrations", "github", "list"])
 
 @responses.activate
 def test_integrations_github_get_default():

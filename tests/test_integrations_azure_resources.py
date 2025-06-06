@@ -34,9 +34,9 @@ def test_integrations_azure_resources_get():
     cli(["integrations", "azure-resources", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_azure_resources_get_all():
+def test_integrations_azure_resources_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/azure-resources/configurations", json={}, status=200)
-    cli(["integrations", "azure-resources", "get-all"])
+    cli(["integrations", "azure-resources", "list"])
 
 @responses.activate
 def test_integrations_azure_resources_get_default():

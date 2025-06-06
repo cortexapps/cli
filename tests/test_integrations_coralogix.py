@@ -34,9 +34,9 @@ def test_integrations_coralogix_get():
     cli(["integrations", "coralogix", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_coralogix_get_all():
+def test_integrations_coralogix_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/coralogix/configurations", json={}, status=200)
-    cli(["integrations", "coralogix", "get-all"])
+    cli(["integrations", "coralogix", "list"])
 
 @responses.activate
 def test_integrations_coralogix_get_default():

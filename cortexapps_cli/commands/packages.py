@@ -24,8 +24,6 @@ app.add_typer(nuget.app, name="nuget")
 def list(
     ctx: typer.Context,
     tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-    page: ListCommandOptions.page = None,
-    page_size: ListCommandOptions.page_size = 250,
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
@@ -38,14 +36,6 @@ def list(
 
     client = ctx.obj["client"]
 
-    params = {
-       "page": page,
-       "pageSize": page_size
-    }       
-
-    # remove any params that are None
-    params = {k: v for k, v in params.items() if v is not None}
-
     if (table_output or csv_output) and not ctx.params.get('columns'):
         ctx.params['columns'] = [
             "Id=id",
@@ -55,13 +45,8 @@ def list(
             "DateCreated=dateCreated",
         ]
 
-    if page is None:
-        # if page is not specified, we want to fetch all pages
-        r = client.fetch("api/v1/catalog/" + tag_or_id + "/packages", params=params)
-    else:
-        # if page is specified, we want to fetch only that page
-        r = client.get("api/v1/catalog/" + tag_or_id + "/packages", params=params)
-
+    # NOTE: packages list is not paginated, so no if-else that includes client.fetch.
+    r = client.get("api/v1/catalog/" + tag_or_id + "/packages")
     print_output_with_context(ctx, r)
 
 @app.command()

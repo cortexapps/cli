@@ -34,9 +34,9 @@ def test_integrations_circle_ci_get():
     cli(["integrations", "circleci", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_circle_ci_get_all():
+def test_integrations_circle_ci_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/circleci/configurations", json={}, status=200)
-    cli(["integrations", "circleci", "get-all"])
+    cli(["integrations", "circleci", "list"])
 
 @responses.activate
 def test_integrations_circle_ci_get_default():

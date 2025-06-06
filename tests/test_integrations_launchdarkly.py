@@ -34,9 +34,9 @@ def test_integrations_launchdarkly_get():
     cli(["integrations", "launchdarkly", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_launchdarkly_get_all():
+def test_integrations_launchdarkly_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/launchdarkly/configurations", json={}, status=200)
-    cli(["integrations", "launchdarkly", "get-all"])
+    cli(["integrations", "launchdarkly", "list"])
 
 @responses.activate
 def test_integrations_launchdarkly_get_default():

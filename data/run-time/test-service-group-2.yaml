@@ -1,0 +1,8 @@
+openapi: 3.0.1
+info:
+  title: Test Service Group 2
+  x-cortex-tag: test-service-group-2
+  x-cortex-type: service
+  x-cortex-groups:
+  - cli-test
+  - cli-test-group-2

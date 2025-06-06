@@ -92,8 +92,8 @@ def get(
     r = client.get("api/v1/aws/configurations/" + accountId)
     print_json(data=r)
 
-@app.command()
-def get_all(
+@app.command("list")
+def aws_list(
     ctx: typer.Context,
 ):
     """

@@ -125,8 +125,8 @@ def get(
     r = client.get("api/v1/azure-resources/configuration/" + alias)
     print_json(data=r)
 
-@app.command()
-def get_all(
+@app.command("list")
+def azure_resources_list(
     ctx: typer.Context,
 ):
     """

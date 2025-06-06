@@ -55,9 +55,9 @@ def test_integrations_sonarqube_get():
     cli(["integrations", "sonarqube", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_sonarqube_get_all():
+def test_integrations_sonarqube_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configurations", json={}, status=200)
-    cli(["integrations", "sonarqube", "get-all"])
+    cli(["integrations", "sonarqube", "list"])
 
 @responses.activate
 def test_integrations_sonarqube_get_default():

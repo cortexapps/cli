@@ -3,7 +3,6 @@ info:
   title: Create Entity
   description: Entity that will be created to test catalog create entity
   x-cortex-tag: create-entity
-  x-cortex-type: component
+  x-cortex-type: service
   x-cortex-groups:
-  - public-api-test
-  x-cortex-definition: {}
+  - cli-test

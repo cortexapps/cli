@@ -1,5 +1,7 @@
 from tests.helpers.utils import *
 
 def test():
-    response = cli(["catalog", "details", "-t", "backend-worker", "-i", "groups"])
-    assert response['tag'] == "backend-worker"
+    cli(["catalog", "create", "-f", "data/run-time/test-service.yaml"])
+
+    response = cli(["catalog", "details", "-t", "test-service", "-i", "groups"])
+    assert response['tag'] == "test-service"

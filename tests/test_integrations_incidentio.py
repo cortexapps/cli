@@ -34,9 +34,9 @@ def test_integrations_incidentio_get():
     cli(["integrations", "incidentio", "get", "-a", "test"])
 
 @responses.activate
-def test_integrations_incidentio_get_all():
+def test_integrations_incidentio_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/incidentio/configurations", json={}, status=200)
-    cli(["integrations", "incidentio", "get-all"])
+    cli(["integrations", "incidentio", "list"])
 
 @responses.activate
 def test_integrations_incidentio_get_default():

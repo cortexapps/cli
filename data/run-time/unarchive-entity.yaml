@@ -3,7 +3,6 @@ info:
   title: Unarchive Entity
   description: Entity that will be created, archived and then un-archived.
   x-cortex-tag: unarchive-entity
-  x-cortex-type: component
+  x-cortex-type: service
   x-cortex-groups:
-  - public-api-test
-  x-cortex-definition: {}
+  - cli-test

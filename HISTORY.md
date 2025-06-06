@@ -9,16 +9,24 @@ Release History
 
 **Breaking Changes**
 - custom-events -i <timestamp> changed to -ts <timestamp>
-- groups -> no support for adding groups with JSON file, add groups via comma-separated list on command line
-- plugins get changed to-> list, 
+- plugins get changed to -> list, 
+- plugins get-by-tag changed to -> get
+- resource-definitions -> entity-types
+  delete -ty -> delete -t
 
 **TODO**
 - Do a full reconciliation of all flags
 - DONE: Add -debug flag
-- Test input files, env vars
-- Add support for adding groups via JSON file?
-- Check all get/list sub-commands
-- sort by date: TypeError: '<' not supported between instances of 'NoneType' and 'NoneType' 
+- DONE: Test input files, env vars
+- DONE: Add support for adding groups via JSON file?
+- DONE: Check all get/list sub-commands
+  could change get-all to list, but prefer to make no change
+- backup export -> don't include cloud entities
+- backup import -> need to complete
+- deleting existing entity types -> would be good to loop over entity types with a certain filter
+  base initially on name prefix
+- warning about using env vars
+
 
 
 

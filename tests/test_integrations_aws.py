@@ -32,9 +32,9 @@ def test_integrations_aws_get():
     cli(["integrations", "aws", "get", "-a", "123456"])
 
 @responses.activate
-def test_integrations_aws_get_all():
+def test_integrations_aws_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/aws/configurations", status=200)
-    cli(["integrations", "aws", "get-all"])
+    cli(["integrations", "aws", "list"])
 
 @responses.activate
 def test_integrations_aws_update():

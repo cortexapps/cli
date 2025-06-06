@@ -1,5 +1,7 @@
 from tests.helpers.utils import *
 
 def test():
-    response = cli( ["catalog", "details", "-t", "backend-worker"])
-    assert response['tag'] == 'backend-worker', "Entity details should be returned"
+    cli(["catalog", "create", "-f", "data/run-time/test-service.yaml"])
+
+    response = cli( ["catalog", "details", "-t", "test-service"])
+    assert response['tag'] == 'test-service', "Entity details should be returned"

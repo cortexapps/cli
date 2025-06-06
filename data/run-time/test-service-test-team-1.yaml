@@ -1,0 +1,11 @@
+openapi: 3.0.1
+info:
+  title: Test Service Team 1
+  x-cortex-tag: test-service-team-1
+  x-cortex-type: service
+  x-cortex-owners:
+  - name: test-team-1
+    type: GROUP
+    provider: CORTEX
+  x-cortex-groups:
+  - cli-test

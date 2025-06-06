@@ -17,7 +17,7 @@ app.add_typer(exemptions.app, name="exemptions")
 @app.command()
 def create(
     ctx: typer.Context,
-    input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing YAML representation of scorecard, can be passed as stdin with -, example: -f-")] = None,
+    file_input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing YAML representation of scorecard, can be passed as stdin with -, example: -f-")] = None,
     dry_run: bool = typer.Option(False, "--dry-run", "-d", help="When true, this endpoint only validates the descriptor contents and returns any errors or warnings"),
 ):
     """
@@ -33,7 +33,7 @@ def create(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
     
-    client.post("api/v1/scorecards/descriptor", params=params, data=input.read(), content_type="application/yaml;charset=UTF-8")
+    client.post("api/v1/scorecards/descriptor", params=params, data=file_input.read(), content_type="application/yaml;charset=UTF-8")
 
 @app.command()
 def delete(

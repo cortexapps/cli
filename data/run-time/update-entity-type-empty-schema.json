@@ -1,5 +1,5 @@
 {
-  "description": "This is a test resource definition.",
-  "name": "Public API Type With Empty Schema -- Update",
+  "description": "This is a test entity type definition.",
+  "name": "CLI Test With Empty Schema -- Update",
   "schema": {}
 }
