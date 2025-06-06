@@ -14,7 +14,7 @@
   "description": "Just testin' plugin uploads",
   "isDraft": false,
   "minimumRoleRequired": "VIEWER",
-  "name": "Public API Test Plugin",
-  "tag": "public-api-test-plugin"
+  "name": "CLI Test Plugin",
+  "tag": "cli-test-plugin"
 }
 

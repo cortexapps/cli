@@ -5,4 +5,4 @@ info:
   x-cortex-tag: groups-entity
   x-cortex-type: service
   x-cortex-groups:
-  - public-api-test
+  - cli-test

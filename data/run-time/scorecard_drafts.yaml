@@ -1,5 +1,5 @@
-tag: public-api-test-draft-scorecard
-name: Public API Test Draft Scorecard
+tag: cli-test-draft-scorecard
+name: CLI Test Draft Scorecard
 description: Used to test Scorecard drafts with Cortex public API
 draft: true
 ladder:
@@ -17,5 +17,5 @@ rules:
   filter:
     category: SERVICE
 filter:
-  query: 'entity.tag() == "user-profile-metadata-service"'
+  query: 'entity.tag() == "test-service"'
   category: SERVICE
