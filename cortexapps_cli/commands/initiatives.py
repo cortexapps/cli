@@ -20,67 +20,6 @@ def create(
     Create an Initiative.  API key must have the Edit Initiative permission.
     """
     
-description
-levels
-rules
-exclude-groups
-include-groups
-query
-types-include
-types-exclude
-isdraft
-name
-notification-disabled
-notification-replyto
-notification-time-interval
-notification-time-unit
-scorecard-tag
-target-date
-{
-  "description": "text",
-  "emphasizedLevels": [
-    {
-      "rank": 1
-    }
-  ],
-  "emphasizedRules": [
-    {
-      "expression": "text"
-    }
-  ],
-  "filter": {
-    "groups": {
-      "exclude": [
-        "text"
-      ],
-      "include": [
-        "text"
-      ]
-    },
-    "query": "text",
-    "types": {
-      "exclude": [
-        "text"
-      ],
-      "include": [
-        "text"
-      ]
-    }
-  },
-  "isDraft": true,
-  "name": "text",
-  "notificationSchedule": {
-    "isDisabled": true,
-    "replyToEmails": [
-      "text"
-    ],
-    "timeInterval": 1,
-    "timeUnit": "text"
-  },
-  "scorecardTag": "text",
-  "targetDate": "2025-06-10"
-}
-
     client = ctx.obj["client"]
 
     params = {
