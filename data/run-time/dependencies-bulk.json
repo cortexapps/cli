@@ -1,6 +1,6 @@
 {
 "values": {
-  "test-service-caller": [
+  "cli-test-service-caller": [
      {
        "description": "dependency description",
        "metadata": {
@@ -9,7 +9,7 @@
        },
        "method": "GET",
        "path": "/api/v1/github/configurations",
-       "tag": "test-service-callee"
+       "tag": "cli-test-service-callee"
      }
   ]
 }

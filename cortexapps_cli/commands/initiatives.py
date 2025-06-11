@@ -14,12 +14,72 @@ app = typer.Typer(
 @app.command()
 def create(
     ctx: typer.Context,
-    input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing YAML representation of scorecard, can be passed as stdin with -, example: -f-")] = None,
-    dry_run: bool = typer.Option(False, "--dry-run", "-d", help="When true, this endpoint only validates the descriptor contents and returns any errors or warnings"),
+    file_input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing JSON body of request, can be passed as stdin with -, example: -f-")] = None,
 ):
     """
-    Create or update a Scorecard using the descriptor YAML. The operation is determined by the existence of a Scorecard with the same tag as passed in the descriptor.
+    Create an Initiative.  API key must have the Edit Initiative permission.
     """
+    
+description
+levels
+rules
+exclude-groups
+include-groups
+query
+types-include
+types-exclude
+isdraft
+name
+notification-disabled
+notification-replyto
+notification-time-interval
+notification-time-unit
+scorecard-tag
+target-date
+{
+  "description": "text",
+  "emphasizedLevels": [
+    {
+      "rank": 1
+    }
+  ],
+  "emphasizedRules": [
+    {
+      "expression": "text"
+    }
+  ],
+  "filter": {
+    "groups": {
+      "exclude": [
+        "text"
+      ],
+      "include": [
+        "text"
+      ]
+    },
+    "query": "text",
+    "types": {
+      "exclude": [
+        "text"
+      ],
+      "include": [
+        "text"
+      ]
+    }
+  },
+  "isDraft": true,
+  "name": "text",
+  "notificationSchedule": {
+    "isDisabled": true,
+    "replyToEmails": [
+      "text"
+    ],
+    "timeInterval": 1,
+    "timeUnit": "text"
+  },
+  "scorecardTag": "text",
+  "targetDate": "2025-06-10"
+}
 
     client = ctx.obj["client"]
 
@@ -30,7 +90,7 @@ def create(
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
     
-    client.post("api/v1/scorecards/descriptor", params=params, data=input.read(), content_type="application/yaml;charset=UTF-8")
+    client.post("api/v1/initiatives", params=params, data=input.read())
 
 @app.command()
 def delete(
@@ -56,6 +116,7 @@ def list(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
 ):
@@ -81,7 +142,7 @@ def list(
             "Name=name",
             "Description=description",
             "TargetDate=targetDate",
-            "ScorecardTag=scorecardtag",
+            "ScorecardTag=scorecardTag",
             "ScorecardName=scorecardName",
             "IsDraft=isDraft",
         ]

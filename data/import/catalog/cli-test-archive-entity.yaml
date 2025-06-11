@@ -1,0 +1,8 @@
+openapi: 3.0.0
+info:
+  title: Archive Entity
+  description: Entity that will be created and then archived to test catalog archive entity
+  x-cortex-tag: cli-test-archive-entity
+  x-cortex-type: service
+  x-cortex-groups:
+  - cli-test

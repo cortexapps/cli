@@ -104,7 +104,7 @@ def humanize_value(value):
         return json.dumps(value, indent=2)
     return str(value)
 
-def print_output(data, columns=None, filters=None, sort=None, output_format='json'):
+def print_output(data, columns=None, filters=None, sort=None, output_format='json', no_headers=False):
     """
     Print output in the specified format.
 
@@ -113,6 +113,7 @@ def print_output(data, columns=None, filters=None, sort=None, output_format='jso
     columns: A list of columns to include in the output.
     filters: A list of filters to apply to the data.
     output_format: The format to print the data in.
+    no_headers: if column headers should not be shown
     """
 
     if output_format is None:
@@ -178,8 +179,9 @@ def print_output(data, columns=None, filters=None, sort=None, output_format='jso
         console = Console()
         console.print(table)
     elif output_format == 'csv':
-        csv_writer = csv.writer(sys.stdout)
-        csv_writer.writerow(column_headers)
+        csv_writer = csv.writer(sys.stdout, lineterminator='\n')
+        if not no_headers:
+            csv_writer.writerow(column_headers)
         csv_writer.writerows(rows)
 
 def print_output_with_context(ctx: typer.Context, data):
@@ -188,6 +190,7 @@ def print_output_with_context(ctx: typer.Context, data):
     sort = ctx.params.get('sort', None)
     table_output = ctx.params.get('table_output', None)
     csv_output = ctx.params.get('csv_output', None)
+    no_headers = ctx.params.get('no_headers', None)
     if table_output and csv_output:
         raise typer.BadParameter("Only one of --table and --csv can be specified")
     if table_output:
@@ -196,4 +199,4 @@ def print_output_with_context(ctx: typer.Context, data):
         output_format = 'csv'
     else:
         output_format = 'json'
-    print_output(data, columns=columns, filters=filters, sort=sort, output_format=output_format)
+    print_output(data, columns=columns, filters=filters, sort=sort, output_format=output_format, no_headers=no_headers)

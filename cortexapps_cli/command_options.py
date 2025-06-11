@@ -19,6 +19,10 @@ class ListCommandOptions:
         Optional[List[str]],
         typer.Option("--filter", "-F", help="Filters to apply on rows, in the format jsonpath=regex", show_default=False)
     ]
+    no_headers = Annotated[
+        Optional[bool],
+        typer.Option("--no-headers", help="For csv output type only: don't print header columns.", show_default=False)
+    ]
     sort = Annotated[
         Optional[List[str]],
         typer.Option("--sort", "-S", help="Sort order to apply on rows, in the format jsonpath:asc or jsonpath:desc", show_default=False)

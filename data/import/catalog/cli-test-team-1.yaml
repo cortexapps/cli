@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: Test Team 1
+  x-cortex-tag: cli-test-team-1
+  x-cortex-type: team
+  x-cortex-team:
+    members:
+      - email: bubbles.harnis@trailer-park.io
+        name: Bubbles Harnis
+        notificationsEnabled: false
+  x-cortex-groups:
+    - cli-test

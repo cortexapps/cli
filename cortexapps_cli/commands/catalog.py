@@ -80,6 +80,7 @@ def catalog_list(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
     _print: CommandOptions._print = True,
@@ -143,6 +144,7 @@ def details(
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
+    no_headers: ListCommandOptions.no_headers = False,
     columns: ListCommandOptions.columns = [],
     filters: ListCommandOptions.filters = [],
 ):
@@ -268,6 +270,7 @@ def create(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing YAML content of entity; can be passed as stdin with -, example: -f-")] = None,
     dry_run: CatalogCommandOptions.dry_run = False,
+    _print: CommandOptions._print = True,
 ):
     """
     Create entity
@@ -279,7 +282,8 @@ def create(
     }
 
     r = client.post("api/v1/open-api", data=file_input.read(), params=params, content_type="application/openapi;charset=UTF-8")
-    print_output_with_context(ctx, r)
+    if _print:
+        print_output_with_context(ctx, r)
 
 @app.command()
 def patch(

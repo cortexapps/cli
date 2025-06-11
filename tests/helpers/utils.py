@@ -42,5 +42,3 @@ def cli(params, return_type=ReturnType.JSON):
             return result
         case ReturnType.STDOUT:
             return result.stdout
-        case ReturnType.STDERR:
-            return result.stderr

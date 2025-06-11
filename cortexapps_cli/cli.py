@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import typer
 from typing_extensions import Annotated
 
@@ -113,7 +115,10 @@ def global_callback(
             if tenant not in config:
                 raise typer.BadParameter(f"Tenant {tenant} not found in config file")
             api_key = config[tenant]["api_key"]
-            url = config[tenant]["base_url"] or url
+            if url not in config[tenant]:
+                url = url
+            else:
+                url = config[tenant]["base_url"]
 
     # strip any quotes or spaces from the api_key and url
     api_key = api_key.strip('"\' ')

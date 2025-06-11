@@ -1,0 +1,9 @@
+openapi: 3.0.0
+info:
+  title: Test Domain Parent
+  x-cortex-tag: cli-test-domain-parent
+  x-cortex-type: domain
+  x-cortex-groups:
+  - cli-test
+  x-cortex-children:
+  - tag: cli-test-domain-child

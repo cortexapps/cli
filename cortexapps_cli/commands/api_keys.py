@@ -25,6 +25,7 @@ def list(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
 ):

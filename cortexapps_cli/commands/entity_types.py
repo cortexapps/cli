@@ -21,6 +21,7 @@ def list(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
 ):
@@ -42,7 +43,7 @@ def list(
     if (table_output or csv_output) and not ctx.params.get('columns'):
         ctx.params['columns'] = [
             "Type=type",
-            "Source=tag",
+            "Source=source",
             "Name=name",
             "Description=description",
         ]

@@ -5,46 +5,47 @@ import yaml
 # TODO: check for and revoke any PENDING exemptions.
 @mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY']})
 def _get_rule(title):
-    response =  cli(["scorecards", "get", "-s", "test-scorecard"])
+    response =  cli(["scorecards", "get", "-s", "cli-test-scorecard"])
     rule_id = [rule['identifier'] for rule in response['scorecard']['rules'] if rule['title'] == title]
     return rule_id[0]
 
 def test_scorecards():
-    cli(["scorecards", "create", "-f", "tests/test_scorecards.yaml"])
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-scorecard.yaml"])
 
     response = cli(["scorecards", "list"])
-    assert any(scorecard['tag'] == 'test-scorecard' for scorecard in response['scorecards']), "Should find scorecard with tag test-scorecard"
+    assert any(scorecard['tag'] == 'cli-test-scorecard' for scorecard in response['scorecards']), "Should find scorecard with tag cli-test-scorecard"
 
-    response = cli(["scorecards", "shield", "-s", "test-scorecard", "-t", "test-service"])
+    response = cli(["scorecards", "shield", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
     assert "img.shields.io" in response['value'], "shields url should be included in string"
 
-    response =  cli(["scorecards", "get", "-s", "test-scorecard"])
-    assert response['scorecard']['tag'] == "test-scorecard", "JSON response should have scorecard tag"
+    response =  cli(["scorecards", "get", "-s", "cli-test-scorecard"])
+    assert response['scorecard']['tag'] == "cli-test-scorecard", "JSON response should have scorecard tag"
 
-    response = cli(["scorecards", "descriptor", "-s", "test-scorecard"], return_type=ReturnType.STDOUT)
+    response = cli(["scorecards", "descriptor", "-s", "cli-test-scorecard"], return_type=ReturnType.STDOUT)
     assert "Used to test Cortex CLI" in response, "description of scorecard found in descriptor"
 
     # cannot rely on a scorecard evaluation being complete, so not performing any validation
-    cli(["scorecards", "next-steps", "-s", "test-scorecard", "-t", "test-service"])
+    cli(["scorecards", "next-steps", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
 
-    response = cli(["scorecards", "scores", "-s", "test-scorecard", "-t", "test-service"])
-    assert response['scorecardTag'] == "test-scorecard", "Should get valid response that include test-scorecard"
+    # cannot rely on a scorecard evaluation being complete, so not performing any validation
+    #response = cli(["scorecards", "scores", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
+    #assert response['scorecardTag'] == "cli-test-scorecard", "Should get valid response that include cli-test-scorecard"
  
 #    # Not sure if we can run this cli right away.  Newly-created Scorecard might not be evaluated yet.
 #    # 2024-05-06, additionally now blocked by CET-8882
-#    # cli(["scorecards", "scores", "-t", "test-scorecard", "-e", "test-service"])
+#    # cli(["scorecards", "scores", "-t", "cli-test-scorecard", "-e", "cli-test-service"])
 #
-#    cli(["scorecards", "scores", "-t", "test-scorecard"])
+#    cli(["scorecards", "scores", "-t", "cli-test-scorecard"])
  
 def test_scorecards_drafts():
-    cli(["scorecards", "create", "-f", "tests/test_scorecards_draft.yaml"])
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-draft-scorecard.yaml"])
 
     response = cli(["scorecards", "list", "-s"])
-    assert any(scorecard['tag'] == 'test-scorecard-draft' for scorecard in response['scorecards'])
+    assert any(scorecard['tag'] == 'cli-test-draft-scorecard' for scorecard in response['scorecards'])
 
-    cli(["scorecards", "delete", "-s", "test-scorecard-draft"])
+    cli(["scorecards", "delete", "-s", "cli-test-draft-scorecard"])
     response = cli(["scorecards", "list", "-s"])
-    assert not(any(scorecard['tag'] == 'test-scorecard-draft' for scorecard in response['scorecards'])), "should not find deleted scorecard"
+    assert not(any(scorecard['tag'] == 'cli-test-draft-scorecard' for scorecard in response['scorecards'])), "should not find deleted scorecard"
 
 # Challenges with testing exemptions:
 #
@@ -66,7 +67,7 @@ def test_scorecards_drafts():
 #   subsequent test using an ADMIN role to act on the exemption
 #
 # So this is how we'll roll for now . . .
-# - Automated tests currently run in known tenants that have the 'test-scorecard' in an evaluated state.
+# - Automated tests currently run in known tenants that have the 'cli-test-scorecard' in an evaluated state.
 # - So we can semi-reliably count on an evaluated scorecard to exist.
 
 @pytest.fixture(scope='session')
@@ -75,7 +76,7 @@ def test_exemption_that_will_be_approved():
     rule_id = _get_rule("Has Custom Data")
     print("rule_id = " + rule_id)
 
-    response = cli(["scorecards", "exemptions", "request", "-s", "test-scorecard", "-t", "test-service", "-r", "test approve", "-ri", rule_id, "-d", "100"])
+    response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test approve", "-ri", rule_id, "-d", "100"])
     assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
 
 @pytest.mark.usefixtures('test_exemption_that_will_be_approved')
@@ -83,9 +84,9 @@ def test_approve_exemption():
     rule_id = _get_rule("Has Custom Data")
     print("rule_id = " + rule_id)
 
-    response = cli(["scorecards", "exemptions", "approve", "-s", "test-scorecard", "-t", "test-service", "-ri", rule_id])
+    response = cli(["scorecards", "exemptions", "approve", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-ri", rule_id])
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'APPROVED', "exemption state should be APPROVED"
-    response = cli(["scorecards", "exemptions", "revoke", "-s", "test-scorecard", "-t", "test-service", "-r", "I revoke you", "-ri", rule_id])
+    response = cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "I revoke you", "-ri", rule_id])
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"
 
 @pytest.fixture(scope='session')
@@ -94,7 +95,7 @@ def test_exemption_that_will_be_denied():
     rule_id = _get_rule("Is Definitely False")
     print("rule_id = " + rule_id)
 
-    response = cli(["scorecards", "exemptions", "request", "-s", "test-scorecard", "-t", "test-service", "-r", "test deny", "-ri", rule_id, "-d", "100"])
+    response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test deny", "-ri", rule_id, "-d", "100"])
     assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
 
 @pytest.mark.usefixtures('test_exemption_that_will_be_denied')
@@ -102,5 +103,5 @@ def test_deny_exemption():
     rule_id = _get_rule("Is Definitely False")
     print("rule_id = " + rule_id)
 
-    response = cli(["scorecards", "exemptions", "deny", "-s", "test-scorecard", "-t", "test-service", "-r", "I deny, therefore I am", "-ri", rule_id])
+    response = cli(["scorecards", "exemptions", "deny", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "I deny, therefore I am", "-ri", rule_id])
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"

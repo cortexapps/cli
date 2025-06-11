@@ -1,0 +1,19 @@
+{
+ "blob": "<html><h1>This is a simple plugin</h1></html>",
+ "contexts": [
+     {
+       "type": "GLOBAL"
+     },
+     {
+       "entityFilter": {
+         "type": "SERVICE_FILTER"
+       },
+       "type": "ENTITY"
+     }
+   ],
+  "description": "Simple Plugin",
+  "isDraft": false,
+  "minimumRoleRequired": "VIEWER",
+  "name": "CLI Test Plugin",
+  "tag": "cli-test-plugin"
+}

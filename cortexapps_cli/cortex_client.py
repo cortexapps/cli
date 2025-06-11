@@ -54,6 +54,7 @@ class CortexClient:
             except json.JSONDecodeError:
                 # if we can't parse the error message, just raise the HTTP error
                 response.raise_for_status()
+
         if raw_response:
             return response
 

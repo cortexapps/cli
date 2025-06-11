@@ -11,6 +11,22 @@ app = typer.Typer(
     no_args_is_help=True
 )
 
+def _is_valid_yaml(filepath):
+    try:
+        yaml.safe_load(filepath)
+        filepath.seek(0)
+        return True
+    except yaml.YAMLError:
+        return False
+
+def _is_valid_json(filepath):
+    try:
+        json.load(filepath)
+        filepath.seek(0)
+        return True
+    except json.JSONDecodeError:
+        return False
+
 @app.command()
 def list(
     ctx: typer.Context,
@@ -22,6 +38,7 @@ def list(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
 ):
@@ -114,7 +131,14 @@ def create(
     """
 
     client = ctx.obj["client"]
-    data = json.loads("".join([line for line in file_input]))
 
-    r = client.post("api/v1/workflows", data=data)
-    print_output_with_context(ctx, r)
+    if _is_valid_json(file_input):
+        content_type="application/json"
+        data = json.loads("".join([line for line in file_input]))
+    elif _is_valid_yaml(file_input):
+        data=file_input.read()
+        content_type="application/yaml"
+    else:
+        raise typer.BadParameter("Input file is neither valid JSON nor YAML.")
+
+    r = client.post("api/v1/workflows", data=data, content_type=content_type)

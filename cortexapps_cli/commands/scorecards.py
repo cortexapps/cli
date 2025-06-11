@@ -52,14 +52,13 @@ def delete(
 def list(
     ctx: typer.Context,
     show_drafts: bool = typer.Option(False, "--show-drafts", "-s", help="Whether scorecard in draft mode should be included"),
-    #page: int | None = typer.Option(None, "--page", "-p", help="Page number to return, 0 indexed - omit to fetch all pages"),
-    #page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
     _print: CommandOptions._print = True,
     page: ListCommandOptions.page = None,
     page_size: ListCommandOptions.page_size = 250,
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
 ):
@@ -85,11 +84,6 @@ def list(
             "Description=description",
             "IsDraft=isDraft",
         ]
-
-    #if _print:
-    #    client.fetch_or_get("api/v1/scorecards", page, _print, params=params)
-    #else:
-    #    return client.fetch_or_get("api/v1/scorecards", page, _print, params=params)
 
     if page is None:
         # if page is not specified, we want to fetch all pages

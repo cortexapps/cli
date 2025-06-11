@@ -1,0 +1,10 @@
+openapi: 3.0.1
+info:
+  title: Test Service Metadata
+  x-cortex-tag: cli-test-service-metadata
+  x-cortex-type: service
+  x-cortex-groups:
+  - cli-test
+  - include-metadata-test
+  x-cortex-custom-metadata:
+    foo: bar

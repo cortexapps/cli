@@ -1,7 +1,0 @@
-openapi: 3.0.1
-info:
-  title: Test Service Caller
-  x-cortex-tag: test-service-caller
-  x-cortex-type: service
-  x-cortex-groups:
-    - cli-test

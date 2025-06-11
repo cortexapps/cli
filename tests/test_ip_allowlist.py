@@ -2,7 +2,7 @@ from tests.helpers.utils import *
 import requests
 
 def test(capsys, tmp_path):
-    ip_address = requests.get("https://ip.me").text.strip()
+    ip_address = "0.0.0.0/0"
     ip_param = ip_address + ":My current IP"
     cli(["ip-allowlist", "validate", "-a", ip_param])
     cli(["ip-allowlist", "replace", "-a", ip_param])

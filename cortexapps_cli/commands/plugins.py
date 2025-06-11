@@ -5,6 +5,8 @@ from rich import print_json
 from typing_extensions import Annotated
 import json
 import typer
+import re
+from urllib.error import HTTPError
 
 app = typer.Typer(
     help="Plugins commands",
@@ -21,6 +23,7 @@ def list(
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
     columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
     filters: ListCommandOptions.filters = [],
     sort: ListCommandOptions.sort = [],
 ):
@@ -37,11 +40,6 @@ def list(
 
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
-    
-    #if _print:
-    #    client.fetch_or_get("api/v1/plugins", page, _print, params=params)
-    #else:
-    #    return client.fetch_or_get("api/v1/plugins", page, _print, params=params)
 
     if (table_output or csv_output) and not ctx.params.get('columns'):
         ctx.params['columns'] = [
@@ -69,7 +67,8 @@ def list(
 @app.command()
 def create(
     ctx: typer.Context,
-    plugin_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing contents of plugin using schema defined at https://docs.cortex.io/docs/api/create-plugin")] = None
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing contents of plugin using schema defined at https://docs.cortex.io/docs/api/create-plugin")] = None,
+    force: bool = typer.Option(False, "--force", help="Recreate entity if it already exists."),
 ):
     """
     Create a new plugin
@@ -77,7 +76,20 @@ def create(
 
     client = ctx.obj["client"]
     
-    client.post("api/v1/plugins", data=plugin_input.read())
+    data = json.loads(file_input.read())
+
+    if force:
+        plugins = list(ctx, _print=False)
+        plugin_tags = [plugin["tag"] for plugin in plugins["plugins"]]
+
+        tag = data['tag']
+        if tag in plugin_tags:
+            # Remove the 'tag' attribute if it exists
+            data.pop("tag", None)
+            r = client.put("api/v1/plugins/" + tag, data, raw_response=True)
+    else:
+        #r = client.post("api/v1/plugins", data=file_input.read(), raw_response=True)
+        r = client.post("api/v1/plugins", data, raw_response=True)
 
 @app.command()
 def delete(
@@ -113,12 +125,24 @@ def get(
     if _print:
         print_json(data=r)
     else:
-        return(r)
+        # Optionally replace raw newlines inside known problem keys
+        #fixed = str(r).replace('\n', '\\n')  # crude but often works
+
+        #data = json.loads(fixed)
+        #return(json.dumps(data, indent=2))
+        #raw_text = r.text
+
+        # Replace unescaped newlines inside string values with escaped \n
+        # WARNING: This is a heuristic and assumes newlines only appear in strings
+        #safe_text = re.sub(r'(?<!\\)\n', r'\\n', raw_text)
+
+        #data = json.loads(safe_text)  # Now safe to load
+        return(json.dumps(r, indent=2))
 
 @app.command()
 def replace(
     ctx: typer.Context,
-    plugin_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing contents of plugin using schema defined at https://docs.cortex.io/docs/api/create-plugin")] = None,
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing contents of plugin using schema defined at https://docs.cortex.io/docs/api/create-plugin")] = None,
     tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity.")
 ):
     """
@@ -127,4 +151,4 @@ def replace(
 
     client = ctx.obj["client"]
     
-    client.put("api/v1/plugins/"+ tag_or_id, data=plugin_input.read())
+    client.put("api/v1/plugins/"+ tag_or_id, data=file_input.read())

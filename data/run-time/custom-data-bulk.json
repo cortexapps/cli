@@ -1,6 +1,6 @@
 {
   "values": {
-    "test-service-caller": [
+    "cli-test-service-caller": [
       {
         "key": "bulk-key-1",
         "value": "value-1"
@@ -10,7 +10,7 @@
         "value": "value-2"
       }
     ],
-    "test-service-callee": [
+    "cli-test-service-callee": [
       {
         "key": "bulk-key-3",
         "value": "value-3"

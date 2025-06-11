@@ -15,17 +15,20 @@ Release History
   delete -ty -> delete -t
 
 **TODO**
-- Do a full reconciliation of all flags
+- DONE: Do a full reconciliation of all flags
 - DONE: Add -debug flag
 - DONE: Test input files, env vars
 - DONE: Add support for adding groups via JSON file?
 - DONE: Check all get/list sub-commands
   could change get-all to list, but prefer to make no change
 - backup export -> don't include cloud entities
-- backup import -> need to complete
-- deleting existing entity types -> would be good to loop over entity types with a certain filter
+- DONE: backup import -> need to complete
+- DONE: deleting existing entity types -> would be good to loop over entity types with a certain filter
   base initially on name prefix
+  --> UPDATE: fix was to incorporate force when creating, force will delete existing entity type
 - warning about using env vars
+- DONE: default cortex_base_url = https://api.getcortexapp.com
+- DONE: csv export -> option to not show header line, get rid of EOL
 
 
 
