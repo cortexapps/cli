@@ -1,37 +1,25 @@
 Release History
 ===============
 
-1.0.0 (2025-0x-yy)
+1.0.0 (2025-06-13)
 ------------------
 
 **Improvements**
+- A complete re-write centered around the [typer library](https://typer.tiangolo.com/) and better code modularization
 - Added sub-commands:
+  - api-keys
+  - custom-metrics
+  - initiatives
+  - workflows
+- Removed sub-commands:
+  - team hieararchies
+- added `--table` and `--csv` options to list commands
 
 **Breaking Changes**
-- custom-events -i <timestamp> changed to -ts <timestamp>
-- plugins get changed to -> list, 
-- plugins get-by-tag changed to -> get
-- resource-definitions -> entity-types
-  delete -ty -> delete -t
-
-**TODO**
-- DONE: Do a full reconciliation of all flags
-- DONE: Add -debug flag
-- DONE: Test input files, env vars
-- DONE: Add support for adding groups via JSON file?
-- DONE: Check all get/list sub-commands
-  could change get-all to list, but prefer to make no change
-- backup export -> don't include cloud entities
-- DONE: backup import -> need to complete
-- DONE: deleting existing entity types -> would be good to loop over entity types with a certain filter
-  base initially on name prefix
-  --> UPDATE: fix was to incorporate force when creating, force will delete existing entity type
-- warning about using env vars
-- DONE: default cortex_base_url = https://api.getcortexapp.com
-- DONE: csv export -> option to not show header line, get rid of EOL
-
-
-
+- custom-events -i timestamp changed to -ts timestamp
+- plugins `get` command changed to `list` 
+- plugins `get-by-tag` subcommand changed to `get`
+- `resource-definitions` command changed to `entity-types`
 
 0.26.6 (2024-07-30)
 ------------------
