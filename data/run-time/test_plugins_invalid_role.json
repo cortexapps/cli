@@ -14,7 +14,7 @@
   "description": "Just testing plugin permissions",
   "isDraft": true,
   "minimumRoleRequired": "ADMIN",
-  "name": "Public API Test Plugin Admin",
-  "tag": "public-api-test-plugin-admin"
+  "name": "CLI Test Plugin Admin",
+  "tag": "cli-test-plugin-admin"
 }
 

@@ -1,18 +1,15 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    cli_command(capsys, ["catalog", "create", "-f", "data/run-time/docs-entity.yaml"])
+def test_docs():
+    cli(["docs", "update", "-t", "cli-test-service", "-f", "data/run-time/docs.yaml"])
 
-    cli_command(capsys, ["docs", "update", "-t", "docs-entity", "-f", "data/run-time/docs.yaml"])
+    response = cli(["docs", "get", "-t", "cli-test-service"])
+    spec = json.loads(response['spec'])
+    assert spec['info']['title'] == "Simple API overview", "Returned spec should have a title named 'Simple API overview'"
 
-    response = cli_command(capsys, ["docs", "get", "-t", "docs-entity"])
-    spec = yaml.safe_load(response['spec'])
-    assert spec['info']['title'] == "Simple API overview", "API spec should have been retrieved"
+    cli(["docs", "delete", "-t", "cli-test-service"])
 
-    cli_command(capsys, ["-q", "docs", "delete", "-t", "docs-entity"], "none")
-    with pytest.raises(SystemExit) as excinfo:
-       cli(["-q", "docs", "get", "-t", "docs-entity"])
-       out, err = capsys.readouterr()
-
-       assert out == "Not Found"
-       assert excinfo.value.code == 404
+    result = cli(["docs", "get", "-t", "cli-test-service"], ReturnType.RAW)
+    out = result.stdout
+    assert "HTTP Error 404: Not Found" in out, "An HTTP 404 error code should be thrown"
+    assert result.exit_code == 1

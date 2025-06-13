@@ -1,6 +1,26 @@
 Release History
 ===============
 
+1.0.0 (2025-06-13)
+------------------
+
+**Improvements**
+- A complete re-write centered around the [typer library](https://typer.tiangolo.com/) and better code modularization
+- Added sub-commands:
+  - api-keys
+  - custom-metrics
+  - initiatives
+  - workflows
+- Removed sub-commands:
+  - team hieararchies
+- added `--table` and `--csv` options to list commands
+
+**Breaking Changes**
+- custom-events -i timestamp changed to -ts timestamp
+- plugins `get` command changed to `list` 
+- plugins `get-by-tag` subcommand changed to `get`
+- `resource-definitions` command changed to `entity-types`
+
 0.27.0 (2025-01-04)
 ------------------
 

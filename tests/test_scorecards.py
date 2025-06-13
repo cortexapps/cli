@@ -1,30 +1,107 @@
-from common import *
+from tests.helpers.utils import *
+import yaml
 
-@pytest.mark.skipif(enable_cql_v2() == False, reason="Account flag ENABLE_CQL_V2 is not not set.")
-def test_scorecards(capsys):
-    scorecardTag = "public-api-test-scorecard"
-    entityTag = "user-profile-metadata-service"
+# Get rule id to be used in exemption tests.
+# TODO: check for and revoke any PENDING exemptions.
+@mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY']})
+def _get_rule(title):
+    response =  cli(["scorecards", "get", "-s", "cli-test-scorecard"])
+    rule_id = [rule['identifier'] for rule in response['scorecard']['rules'] if rule['title'] == title]
+    return rule_id[0]
 
-    response = cli_command(capsys, ["scorecards", "create", "-f", "data/run-time/scorecard.yaml"])
-    assert response['scorecard']['tag'] == scorecardTag, "Scorecard with tag public-api-test-scorecard should be created"
+def test_scorecards():
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-scorecard.yaml"])
 
-    response = cli_command(capsys, ["scorecards", "list"])
-    assert any(scorecard['tag'] == scorecardTag for scorecard in response['scorecards']), scorecard + " should be in list of scorecards"
+    response = cli(["scorecards", "list"])
+    assert any(scorecard['tag'] == 'cli-test-scorecard' for scorecard in response['scorecards']), "Should find scorecard with tag cli-test-scorecard"
 
-    response = cli_command(capsys, ["scorecards", "shield", "-s", scorecardTag, "-t", entityTag])
-    # Dear future (hopefully smarter) self, feel free to enhance the regex to search for the correct brackets and parentheses in the regular expression.
-    assert re.search(".*Public API Test Scorecard.*https://img.shields.io.*", response['value']), "Value includes scorecard name and shields URL"
+    response = cli(["scorecards", "shield", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
+    assert "img.shields.io" in response['value'], "shields url should be included in string"
 
-    response = cli_command(capsys, ["scorecards", "get", "-t", scorecardTag])
-    assert response['scorecard']['tag'] == scorecardTag, "Can retrieve tag of scorecard"
-    assert response['scorecard']['levels'][0]['level']['name'] == 'Gold', "Can retrieve level name defined in scorecard"
+    response =  cli(["scorecards", "get", "-s", "cli-test-scorecard"])
+    assert response['scorecard']['tag'] == "cli-test-scorecard", "JSON response should have scorecard tag"
 
-    response = cli_command(capsys, ["scorecards", "descriptor", "-t", scorecardTag], "text")
-    assert yaml.safe_load(response)['tag'] == scorecardTag, "Can get tag from YAML descriptor"
+    response = cli(["scorecards", "descriptor", "-s", "cli-test-scorecard"], return_type=ReturnType.STDOUT)
+    assert "Used to test Cortex CLI" in response, "description of scorecard found in descriptor"
+
+    # cannot rely on a scorecard evaluation being complete, so not performing any validation
+    cli(["scorecards", "next-steps", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
+
+    # cannot rely on a scorecard evaluation being complete, so not performing any validation
+    #response = cli(["scorecards", "scores", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
+    #assert response['scorecardTag'] == "cli-test-scorecard", "Should get valid response that include cli-test-scorecard"
  
-#    cli(["scorecards", "next-steps", "-t", "public-api-test-scorecard", "-e", "user-profile-metadata-service"])
-
 #    # Not sure if we can run this cli right away.  Newly-created Scorecard might not be evaluated yet.
-#    cli(["scorecards", "scores", "-t", "public-api-test-scorecard", "-e", "user-profile-metadata-service"])
+#    # 2024-05-06, additionally now blocked by CET-8882
+#    # cli(["scorecards", "scores", "-t", "cli-test-scorecard", "-e", "cli-test-service"])
+#
+#    cli(["scorecards", "scores", "-t", "cli-test-scorecard"])
  
-#    cli(["scorecards", "scores", "-t", "public-api-test-scorecard"])
+def test_scorecards_drafts():
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-draft-scorecard.yaml"])
+
+    response = cli(["scorecards", "list", "-s"])
+    assert any(scorecard['tag'] == 'cli-test-draft-scorecard' for scorecard in response['scorecards'])
+
+    cli(["scorecards", "delete", "-s", "cli-test-draft-scorecard"])
+    response = cli(["scorecards", "list", "-s"])
+    assert not(any(scorecard['tag'] == 'cli-test-draft-scorecard' for scorecard in response['scorecards'])), "should not find deleted scorecard"
+
+# Challenges with testing exemptions:
+#
+# - exemptions require scorecards that have evaluated with failing rules;
+#   testing assumes no tenanted data, so this condition needs to be created as part of the test
+#
+# - there is no public API to force evaluation of a scorecard; can look into possibility of using
+#   an internal endpoint for this
+#
+# - could create a scorecard as part of the test and wait for it to complete, but completion time for
+#   evaluating a scorecard is non-deterministic and, as experienced with query API tests, completion
+#   time can be 15 minutes or more, which will increase the time to complete testing by a factor of 5x
+#   or more
+#
+# - exemptions requested by an API key with the Cortex ADMIN role are auto-approved, so the exemption must
+#   be requested with a key that has non-ADMIN privileges
+#
+#   This means there are dependencies on running a test using a VIEWER role to request the exemption and a
+#   subsequent test using an ADMIN role to act on the exemption
+#
+# So this is how we'll roll for now . . .
+# - Automated tests currently run in known tenants that have the 'cli-test-scorecard' in an evaluated state.
+# - So we can semi-reliably count on an evaluated scorecard to exist.
+
+@pytest.fixture(scope='session')
+@mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
+def test_exemption_that_will_be_approved():
+    rule_id = _get_rule("Has Custom Data")
+    print("rule_id = " + rule_id)
+
+    response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test approve", "-ri", rule_id, "-d", "100"])
+    assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
+
+@pytest.mark.usefixtures('test_exemption_that_will_be_approved')
+def test_approve_exemption():
+    rule_id = _get_rule("Has Custom Data")
+    print("rule_id = " + rule_id)
+
+    response = cli(["scorecards", "exemptions", "approve", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-ri", rule_id])
+    assert response['exemptions'][0]['exemptionStatus']['status'] == 'APPROVED', "exemption state should be APPROVED"
+    response = cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "I revoke you", "-ri", rule_id])
+    assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"
+
+@pytest.fixture(scope='session')
+@mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
+def test_exemption_that_will_be_denied():
+    rule_id = _get_rule("Is Definitely False")
+    print("rule_id = " + rule_id)
+
+    response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test deny", "-ri", rule_id, "-d", "100"])
+    assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
+
+@pytest.mark.usefixtures('test_exemption_that_will_be_denied')
+def test_deny_exemption():
+    rule_id = _get_rule("Is Definitely False")
+    print("rule_id = " + rule_id)
+
+    response = cli(["scorecards", "exemptions", "deny", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "I deny, therefore I am", "-ri", rule_id])
+    assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"

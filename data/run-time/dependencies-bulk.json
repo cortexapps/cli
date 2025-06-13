@@ -1,6 +1,6 @@
 {
 "values": {
-  "fraud-analyzer": [
+  "cli-test-service-caller": [
      {
        "description": "dependency description",
        "metadata": {
@@ -9,7 +9,7 @@
        },
        "method": "GET",
        "path": "/api/v1/github/configurations",
-       "tag": "backend-worker"
+       "tag": "cli-test-service-callee"
      }
   ]
 }

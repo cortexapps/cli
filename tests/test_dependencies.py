@@ -1,26 +1,25 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    callerTag = "fraud-analyzer"
-    calleeTag = "backend-worker"
+def test():
+    callerTag = "cli-test-service-caller"
+    calleeTag = "cli-test-service-callee"
 
-    cli(["-q", "dependencies", "delete-all", "-r", callerTag])
+    cli(["dependencies", "delete-all", "-r", callerTag])
 
-    cli_command(capsys, ["dependencies", "add-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
+    cli(["dependencies", "add-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
 
-    cli_command(capsys, ["dependencies", "add", "-r", callerTag, "-e",
-          calleeTag, "-m", "GET", "-p", "/api/v1/audit-logs", "-f", "data/run-time/dependencies.json"])
-    cli_command, (["dependencies", "update", "-r", callerTag, "-e", calleeTag, "-m", "GET", "-p", "/api/v1/audit-logs", "-f", "data/run-time/dependencies-update.json"])
-    response = cli_command(capsys, ["dependencies", "get", "-r", "fraud-analyzer", "-e", "backend-worker", "-m", "GET", "-p", "/api/v1/github/configurations"])
-    assert response["callerTag"] == callerTag, "callerTag should be " + callerTag
-    assert response["calleeTag"] == calleeTag, "calleeTag should be " + calleeTag
+    cli(["dependencies", "create", "-r", callerTag, "-e", calleeTag, "-m", "GET", "-p", "/api/v1/audit-logs"])
+    cli(["dependencies", "update", "-r", callerTag, "-e", calleeTag, "-m", "GET", "-p", "/api/v1/audit-logs", "-f", "data/run-time/dependencies-update.json"])
+    result = cli(["dependencies", "get", "-r", "cli-test-service-caller", "-e", "cli-test-service-callee", "-m", "GET", "-p", "/api/v1/github/configurations"])
+    assert result["callerTag"] == callerTag, "callerTag should be " + callerTag
+    assert result["calleeTag"] == calleeTag, "calleeTag should be " + calleeTag
 
-    cli_command(capsys, ["dependencies", "get", "-r", "fraud-analyzer", "-e", "backend-worker", "-m", "GET", "-p", "/api/v1/github/configurations"])
+    cli(["dependencies", "get", "-r", "cli-test-service-caller", "-e", "cli-test-service-callee", "-m", "GET", "-p", "/api/v1/github/configurations"])
 
-    response = cli_command(capsys, ["dependencies", "get-all", "-r", "fraud-analyzer", "-o"])
-    assert any(dependency['callerTag'] == callerTag and dependency['path'] == "/api/v1/github/configurations" for dependency in response["dependencies"])
+    result = cli(["dependencies", "get-all", "-r", "cli-test-service-caller", "-o"])
+    assert any(dependency['callerTag'] == callerTag and dependency['path'] == "/api/v1/github/configurations" for dependency in result["dependencies"])
 
-    cli(["-q", "dependencies", "delete", "-r", "fraud-analyzer", "-e", "backend-worker", "-m", "GET", "-p", "/api/v1/audit-logs"])
-    cli(["-q", "dependencies", "add-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
-    cli(["-q", "dependencies", "delete-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
-    cli(["-q", "dependencies", "delete-all", "-r", "fraud-analyzer"])
+    cli(["dependencies", "delete", "-r", "cli-test-service-caller", "-e", "cli-test-service-callee", "-m", "GET", "-p", "/api/v1/audit-logs"])
+    cli(["dependencies", "add-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
+    cli(["dependencies", "delete-in-bulk", "-f", "data/run-time/dependencies-bulk.json"])
+    cli(["dependencies", "delete-all", "-r", "cli-test-service-caller"])

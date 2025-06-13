@@ -1,28 +1,68 @@
-from common import *
+from tests.helpers.utils import *
 
-# When trying to put python and node tests in separate tests running in parallel, got 409 Conflict HTTP errors,
-# even when using different entity tag.
-def test(capsys):
-    cli_command(capsys, ["packages", "go", "upload", "-t", "sso-integration", "-f", "data/run-time/packages_go.sum"])
-    packages(capsys, "go", "GO", "3.3.0", "github.com/gofrs/uuid", "sso-integration")
+def test_packages():
+    cli(["packages", "go", "upload", "-t", "cli-test-service", "-f", "tests/test_packages_go.sum"])
 
-    cli_command(capsys, ["packages", "python", "upload-pipfile", "-t", "sso-integration", "-f", "data/run-time/packages_python_pipfile.lock"])
-    packages(capsys, "python", "PYTHON", "2022.12.7", "certifi", "sso-integration")
+    cli(["packages", "java", "upload-single", "-t", "cli-test-service", "-f", "tests/test_packages_java_single.json"])
 
-    cli_command(capsys, ["packages", "python", "upload-requirements", "-t", "sso-integration", "-f", "data/run-time/packages_python_requirements.txt"])
-    packages(capsys, "python", "PYTHON", "1.0.6", "contourpy", "sso-integration")
+    cli(["packages", "java", "upload-multiple", "-t", "cli-test-service", "-f", "tests/test_packages_java_multiple.json"])
 
-    cli_command(capsys, ["packages", "node", "upload-package", "-t", "sso-integration", "-f", "data/run-time/packages_node_package.json"])
-    packages(capsys, "node", "NODE", "^4.1.11", "clean-css", "sso-integration")
+    # upload-pipfile will replace any existing PYTHON package entries for an entity.  It's assumed you will use either
+    # pipfile.lock or requirements.txt, but not both.
+    # So we need to test here because these packages will be overwritten by the upload-requirements command.
+    cli(["packages", "python", "upload-pipfile", "-t", "cli-test-service", "-f", "tests/test_packages_python_pipfile.lock"])
+    response = cli(["packages", "list", "-t", "cli-test-service"])
+    assert any(package['name'] == 'certifi' and package['packageType'] == "PYTHON" for package in response), "Should find Python pipfile package"
 
-    cli_command(capsys, ["packages", "node", "upload-package-lock", "-t", "sso-integration", "-f", "data/run-time/packages_node_package_lock.json"])
-    packages(capsys, "node", "NODE", "4.2.6", "@angular/common", "sso-integration")
+    cli(["packages", "python", "upload-requirements", "-t", "cli-test-service", "-f", "tests/test_packages_python_requirements.txt"])
 
-    cli_command(capsys, ["packages", "node", "upload-yarn-lock", "-t", "sso-integration", "-f", "data/run-time/packages_node_yarn.lock"])
-    packages(capsys, "node", "NODE", "6.16.5", "@types/babylon", "sso-integration")
+    # Similar store for Node as Python.  Only one file type is supported.
+    cli(["packages", "node", "upload-package-json", "-t", "cli-test-service", "-f", "tests/test_packages_node_package.json"])
+    response = cli(["packages", "list", "-t", "cli-test-service"])
+    assert any(package['name'] == 'clean-css' and package['packageType'] == "NODE" for package in response), "Should find Node package.json package"
 
-    cli_command(capsys, ["packages", "nuget", "upload-packages-lock", "-t", "sso-integration", "-f", "data/run-time/packages_nuget_packages_lock.json"])
-    packages(capsys, "nuget", "NUGET", "1.0.0", "Microsoft.NETFramework.ReferenceAssemblies", "sso-integration")
+    cli(["packages", "node", "upload-package-lock", "-t", "cli-test-service", "-f", "tests/test_packages_node_package_lock.json"])
+    response = cli(["packages", "list", "-t", "cli-test-service"])
+    assert any(package['name'] == '@angular/common' and package['packageType'] == "NODE" for package in response), "Should find Node package.lock package"
 
-    cli_command(capsys, ["packages", "nuget", "upload-csproj", "-t", "sso-integration", "-f", "data/run-time/packages_nuget.csproj"])
-    packages(capsys, "nuget", "NUGET", "7.1.1", "CsvHelper", "sso-integration")
+    cli(["packages", "node", "upload-yarn-lock", "-t", "cli-test-service", "-f", "tests/test_packages_node_yarn.lock"])
+
+    cli(["packages", "nuget", "upload-packages-lock", "-t", "cli-test-service", "-f", "tests/test_packages_nuget_packages_lock.json"])
+
+    cli(["packages", "nuget", "upload-csproj", "-t", "cli-test-service", "-f", "tests/test_packages_nuget.csproj"])
+
+    response = cli(["packages", "list", "-t", "cli-test-service"])
+    assert any(package['name'] == 'github.com/cortex.io/catalog' and package['packageType'] == "GO" for package in response), "Should find GO package"
+    assert any(package['name'] == 'io.cortex.scorecards' and package['packageType'] == "JAVA" for package in response), "Should find single-updated Java package"
+    assert any(package['name'] == 'io.cortex.teams' and package['packageType'] == "JAVA" for package in response), "Should find multiple-update Java package"
+    assert any(package['name'] == 'cycler' and package['packageType'] == "PYTHON" for package in response), "Should find Python requirement.txt package"
+    assert any(package['name'] == '@types/babylon' and package['packageType'] == "NODE" for package in response), "Should find Node yarn.lock package"
+    assert any(package['name'] == 'MicroBuild.Core' and package['packageType'] == "NUGET" for package in response), "Should find NuGet package"
+
+    cli(["packages", "go", "delete", "-t", "cli-test-service", "-n", "github.com/cortex.io/catalog"])
+
+    cli(["packages", "java", "delete", "-t", "cli-test-service", "-n", "io.cortex.scorecards"])
+    cli(["packages", "java", "delete", "-t", "cli-test-service", "-n", "io.cortex.teams"])
+
+    cli(["packages", "python", "delete", "-t", "cli-test-service", "-n", "cycler"])
+
+    cli(["packages", "node", "delete", "-t", "cli-test-service", "-n", "@types/babylon"])
+
+    cli(["packages", "nuget", "delete", "-t", "cli-test-service", "-n", "MicroBuild.Core"])
+
+    response = cli(["packages", "list", "-t", "cli-test-service"])
+
+    assert not any(package['name'] == 'github.com/cortex.io/catalog' and package['packageType'] == "GO" for package in response), "Should not find deleted GO package"
+
+    assert not any(package['name'] == 'io.cortex.scorecards' and package['packageType'] == "JAVA" for package in response), "Should not find deleted single-updated Java package"
+    assert not any(package['name'] == 'io.cortex.teams' and package['packageType'] == "JAVA" for package in response), "Should not find deleted multiple-update Java package"
+
+    assert not any(package['name'] == 'cycler' and package['packageType'] == "PYTHON" for package in response), "Should not find deleted Python requirement.txt package"
+
+    assert not any(package['name'] == '@types/babylon' and package['packageType'] == "NODE" for package in response), "Should not find deleted Node yarn.lock package"
+
+    assert not any(package['name'] == 'MicroBuild.Core' and package['packageType'] == "NUGET" for package in response), "Should not find deleted NuGet package"
+
+    cli(["packages", "delete-all", "-t", "cli-test-service"])
+    response = cli(["packages", "list", "-t", "cli-test-service"])
+    assert len(response) == 0, "Should not find any packages after delete-all"

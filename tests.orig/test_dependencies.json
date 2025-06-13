@@ -1,7 +1,0 @@
-{
-  "description": "This is a description of the dependency",
-  "metadata": {
-    "someField": "someField data",
-    "someField1": "someField1 data"
-  }
-}

@@ -1,12 +1,12 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    cli_command(capsys, ["custom-data", "add", "-t", "recommendations", "-f", "data/run-time/custom-data-delete.json"])
+def test():
+    cli(["custom-data", "add", "-t", "cli-test-service", "-f", "data/run-time/custom-data-delete.json"])
 
-    response = cli_command(capsys, ["custom-data", "get", "-t", "recommendations", "-k", "delete-me"])
-    assert response['value'] == "yes"
+    result = cli(["custom-data", "get", "-t", "cli-test-service", "-k", "delete-me"])
+    assert result['value'] == "yes"
 
-    cli(["-q", "custom-data", "delete", "-t", "recommendations", "-k", "delete-me"])
+    cli(["custom-data", "delete", "-t", "cli-test-service", "-k", "delete-me"])
 
-    response = cli_command(capsys, ["catalog", "details", "-t", "recommendations"])
-    assert not any(metadata['key'] == 'delete-me' for metadata in response['metadata'])
+    result = cli(["catalog", "details", "-t", "cli-test-service"])
+    assert not any(metadata['key'] == 'delete-me' for metadata in result['metadata'])

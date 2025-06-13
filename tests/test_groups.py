@@ -1,14 +1,10 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    cli_command(capsys, ["catalog", "create", "-f", "data/run-time/groups-entity.yaml"])
+def test_groups():
+    cli(["groups", "add", "-t", "cli-test-service", "-g", "test-group-2,test-group-3"])
+    response = cli(["groups", "get", "-t", "cli-test-service"])
+    assert any(group['tag'] == 'test-group-2' for group in response['groups']), "Should find group named test-group-2 in entity cli-test-service"
 
-    cli_command(capsys, ["groups", "add", "-t", "groups-entity", "-f", "data/run-time/groups.json"])
-
-    response = cli_command(capsys, ["groups", "get", "-t", "groups-entity"])
-    assert any(group['tag'] == "group1" for group in response['groups']), "Entity should have 'group1' as a group"
-
-    cli(["-q", "groups", "delete", "-t", "groups-entity", "-f", "data/run-time/groups.json"])
-
-    response = cli_command(capsys, ["groups", "get", "-t", "groups-entity"])
-    assert not any(group['tag'] == "group1" for group in response['groups']), "Entity should NOT have 'group1' as a group"
+    cli(["groups", "delete", "-t", "cli-test-service", "-g", "test-group-2,test-group-3"])
+    response = cli(["groups", "get", "-t", "cli-test-service"])
+    assert not(any(group['tag'] == 'test-group-2' for group in response['groups'])), "After delete, should not find group named test-group-2 in entity cli-test-service"

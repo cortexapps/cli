@@ -1,9 +1,0 @@
-{
-  "type": "k8s-cluster",
-  "source": "CUSTOM",
-  "name": "K8s Cluster",
-  "description": null,
-  "schema": {
-    "type": "object"
-  }
-}

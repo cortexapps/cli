@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: Test Team 2
+  x-cortex-tag: cli-test-team-2
+  x-cortex-type: team
+  x-cortex-team:
+    members:
+      - email: jim.lahey@trailer-park.io
+        name: Jim Lahey
+        notificationsEnabled: false
+  x-cortex-groups:
+    - cli-test

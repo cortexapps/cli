@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["catalog", "descriptor", "-t", "backend-worker"])
-    assert response['info']['x-cortex-tag'] == "backend-worker"
+def test():
+    response = cli(["catalog", "descriptor", "-t", "cli-test-service"])
+    assert response['info']['x-cortex-tag'] == "cli-test-service"

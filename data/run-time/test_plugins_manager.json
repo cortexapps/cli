@@ -14,7 +14,7 @@
   "description": "Just testing plugin permissions",
   "isDraft": true,
   "minimumRoleRequired": "MANAGER",
-  "name": "Public API Test Plugin Manager",
-  "tag": "public-api-test-plugin-manager"
+  "name": "CLI Test Plugin Manager",
+  "tag": "cli-test-plugin-manager"
 }
 

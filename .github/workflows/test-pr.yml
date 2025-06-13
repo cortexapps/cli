@@ -12,12 +12,8 @@ on:
 env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
-  CORTEX_API_KEY_RICH_SANDBOX: ${{ secrets.CORTEX_API_KEY_RICH_SANDBOX }}
   CORTEX_API_KEY_VIEWER: ${{ secrets.CORTEX_API_KEY_VIEWER }}
   CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL }}
-  GH_PAT: ${{ secrets.GH_PAT }}
-  GH_WEBHOOK_SECRET: ${{ secrets.GH_WEBHOOK_SECRET }}
-  CORTEX_GH_WEBHOOK_URL: ${{ vars.CORTEX_GH_WEBHOOK_URL }}
 
 jobs:
   test:
@@ -41,6 +37,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt update && sudo apt install just
         python -m pip install --upgrade pip
         pip install poetry poetry-audit-plugin pytest-cov pytest pytest-xdist
 
@@ -53,11 +50,6 @@ jobs:
         echo "[default]" > $HOME/.cortex/config
         echo "api_key = $CORTEX_API_KEY" >> $HOME/.cortex/config
         echo "base_url = $CORTEX_BASE_URL" >> $HOME/.cortex/config
-        echo "[rich-sandbox]" >> $HOME/.cortex/config
-        echo "api_key = $CORTEX_API_KEY_RICH_SANDBOX" >> $HOME/.cortex/config
-        pwd
-        ls -l $HOME/.cortex
-        cat $HOME/.cortex/config
       shell: bash
 
     - name: Install package
@@ -67,4 +59,4 @@ jobs:
 
     - name: Test with pytest
       run: |
-        make all-cli
+        just test-all

@@ -1,0 +1,20 @@
+name: CLI Test Workflowe
+tag: cli-test-workflow
+description: My test workflow.
+isDraft: true
+filter:
+  type: GLOBAL
+runResponseTemplate: null
+actions:
+- name: Send message
+  slug: send-message
+  schema:
+    channel: air-force
+    message: "Workflow submitted by: {{context.initiatedBy.name}}\nRoles: \n{{#context.initiatedBy.roles}}\n\
+      role name: {{name}}\n{{/context.initiatedBy.roles}}"
+    type: SLACK
+  outgoingActions: []
+  isRootAction: true
+runRestrictionPolicies: []
+iconTag: null
+

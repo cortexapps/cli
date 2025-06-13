@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["catalog", "details", "-t", "backend-worker"])
-    assert response['tag'] == 'backend-worker', "Entity details should be returned"
+def test():
+    response = cli( ["catalog", "details", "-t", "cli-test-service"])
+    assert response['tag'] == 'cli-test-service', "Entity details should be returned"

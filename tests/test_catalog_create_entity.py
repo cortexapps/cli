@@ -1,9 +1,7 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    cli(["-q", "catalog", "create", "-f", "data/run-time/create-entity.yaml"])
-    # Need to clear captured system output from the above commands to clear the way for the next one.
-    capsys.readouterr()
+def test():
+    cli(["catalog", "create", "-f", "data/import/catalog/cli-test-service.yaml"])
 
-    response = cli_command(capsys, ["catalog", "descriptor", "-t", "create-entity"])
-    assert response['info']['x-cortex-tag'] == "create-entity"
+    response = cli(["catalog", "descriptor", "-t", "cli-test-service"])
+    assert response['info']['x-cortex-tag'] == "cli-test-service"

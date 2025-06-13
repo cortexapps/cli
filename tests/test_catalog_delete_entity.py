@@ -1,16 +1,12 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    cli_command(capsys, ["catalog", "create", "-f", "data/run-time/delete-entity.yaml"])
-    response = cli_command(capsys, ["catalog", "details", "-t", "delete-entity"])
-    assert response['tag'] == 'delete-entity', "Should find newly created entity"
+def test():
+    response = cli(["catalog", "details", "-t", "cli-test-delete-entity"])
+    assert response['tag'] == 'cli-test-delete-entity', "Should find newly created entity"
 
-    cli(["-q", "catalog", "delete", "-t", "delete-entity"])
+    cli(["catalog", "delete", "-t", "cli-test-delete-entity"])
 
     # Since entity is deleted, cli command should exit with a Not Found, 404 error.
-    with pytest.raises(SystemExit) as excinfo:
-       cli(["catalog", "details", "-t", "delete-entity"])
-       out, err = capsys.readouterr()
+    response = cli(["catalog", "details", "-t", "cli-test-delete-entity"], ReturnType.RAW)
 
-       assert out == "Not Found"
-       assert excinfo.value.code == 404
+    assert "HTTP Error 404:" in response.stdout, "command fails with 403 error"

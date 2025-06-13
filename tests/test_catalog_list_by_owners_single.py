@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["catalog", "list", "-o", "payments-team"])
+def test():
+    response = cli(["catalog", "list", "-o", "cli-test-team-1"])
     assert (response['total'] == 1)

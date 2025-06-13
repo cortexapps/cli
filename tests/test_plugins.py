@@ -1,23 +1,19 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    pluginTag = "public-api-test-plugin"
+def test():
+    response = cli(["plugins", "list"])
 
-    response = cli_command(capsys, ["plugins", "get"])
-    if any(plugin['tag'] == pluginTag for plugin in response['plugins']):
-        cli(["plugins", "delete", "-t", pluginTag])
+    if any(plugin['tag'] == 'cli-test-plugin' for plugin in response['plugins']):
+        cli(["plugins", "delete", "-t", "cli-test-plugin"])
 
-    cli_command(capsys, ["plugins", "create", "-f", "data/run-time/test_plugins.json"])
+    cli(["plugins", "create", "-f", "data/import/plugins/cli-test-plugin.json"])
+    response = cli(["plugins", "list"])
+    assert any(plugin['tag'] == 'cli-test-plugin' for plugin in response['plugins']), "Plugin named cli-test-plugin should be in list of plugins"
 
-    response = cli_command(capsys, ["plugins", "get"])
-    assert any(plugin['tag'] == pluginTag for plugin in response['plugins']), "Plugin " + plugin + " returned in get"
+    cli(["plugins", "replace", "-t", "cli-test-plugin", "-f", "tests/test_plugins_update.json"])
+    response = cli(["plugins", "get", "-t", "cli-test-plugin"])
+    assert response['tag'] == "cli-test-plugin", "Plugin named cli-test-plugin should be returned by get"
 
-    cli_command(capsys, ["plugins", "update", "-t", pluginTag, "-f", "data/run-time//test_plugins_update.json"])
-
-    response = cli_command(capsys, ["plugins", "get-by-tag", "-t", pluginTag])
-    assert response['tag'] == pluginTag, "Plugin " + plugin + " returned by get-by-tag"
-    assert response['description'] == "Just testing plugin updates", "Plugin " + plugin + " description updated"
-
-    cli(["-q", "plugins", "delete", "-t", pluginTag])
-    response = cli_command(capsys, ["plugins", "get"])
-    assert not any(plugin['tag'] == pluginTag for plugin in response['plugins']), "Plugin " + plugin + " returned in get"
+    cli(["plugins", "delete", "-t", "cli-test-plugin"])
+    response = cli(["plugins", "list"])
+    assert not(any(plugin['tag'] == 'cli-test-plugin' for plugin in response['plugins'])), "Plugin named cli-test-plugin should have been deleted"

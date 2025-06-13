@@ -1,26 +1,24 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["custom-events", "create", "-t", "warehousing", "-f", "data/run-time/custom-events-configure.json"])
-    uuid = response['uuid']
+def test():
+    result = cli(["custom-events", "create", "-t", "cli-test-service", "-f", "data/run-time/custom-events-configure.json"])
+    uuid = result['uuid']
 
-    cli_command(capsys, ["custom-events", "get-by-uuid", "-t", "warehousing", "-u", uuid])
-    assert response['type'] == "CONFIG_SERVICE"
+    result = cli(["custom-events", "get-by-uuid", "-t", "cli-test-service", "-u", uuid])
+    assert result['type'] == "CONFIG_SERVICE"
 
-    cli(["-q", "custom-events", "update-by-uuid", "-t", "warehousing", "-u", uuid, "-f", "data/run-time/custom-events.json"])
-    capsys.readouterr()
+    cli(["custom-events", "update-by-uuid", "-t", "cli-test-service", "-u", uuid, "-f", "data/run-time/custom-events.json"])
 
-    response = cli_command(capsys, ["custom-events", "get-by-uuid", "-t", "warehousing", "-u", uuid])
-    assert response['type'] == "VALIDATE_SERVICE"
+    result = cli(["custom-events", "get-by-uuid", "-t", "cli-test-service", "-u", uuid])
+    assert result['type'] == "VALIDATE_SERVICE"
 
-    cli(["-q", "custom-events", "delete-by-uuid", "-t", "warehousing", "-u", uuid])
+    cli(["custom-events", "delete-by-uuid", "-t", "cli-test-service", "-u", uuid])
 
     # Custom event was deleted, so verify it cannot be retrieved.
-    with pytest.raises(SystemExit) as excinfo:
-       cli(["-q", "custom-events", "get-by-uuid", "-t", "warehousing", "-u", uuid])
-       out, err = capsys.readouterr()
+    # with pytest.raises(SystemExit) as excinfo:
+    result = cli(["custom-events", "get-by-uuid", "-t", "cli-test-service", "-u", uuid], ReturnType.RAW)
+    out = result.stdout
+    assert "HTTP Error 404: Not Found" in out, "An HTTP 404 error code should be thrown"
+    assert result.exit_code == 1
 
-       assert out == "Bad Request"
-       assert excinfo.value.code == 144
-
-    cli(["-q", "custom-events", "delete-all", "-t", "warehousing"])
+    cli(["custom-events", "delete-all", "-t", "cli-test-service"])

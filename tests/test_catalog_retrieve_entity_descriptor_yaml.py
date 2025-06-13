@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["catalog", "descriptor", "-y", "-t", "backend-worker"], "text")
-    assert yaml.safe_load(response)['info']['x-cortex-tag'] == "backend-worker"
+def test():
+    response = cli(["catalog", "descriptor", "-y", "-t", "cli-test-service"], ReturnType.STDOUT)
+    assert yaml.safe_load(response)['info']['x-cortex-tag'] == "cli-test-service"

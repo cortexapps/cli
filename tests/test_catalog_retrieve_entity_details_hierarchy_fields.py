@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
-def test(capsys):
-    response = cli_command(capsys, ["catalog", "details", "-t", "backend-worker", "-i", "groups"])
-    assert response['tag'] == "backend-worker"
+def test():
+    response = cli(["catalog", "details", "-t", "cli-test-service", "-i", "groups"])
+    assert response['tag'] == "cli-test-service"

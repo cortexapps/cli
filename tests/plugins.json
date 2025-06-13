@@ -1,0 +1,298 @@
+{
+  "total": 10,
+  "page": 0,
+  "totalPages": 1,
+  "plugins": [
+    {
+      "tag": "github-deploys",
+      "name": "GitHub Releases",
+      "description": null,
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": true,
+              "types": [
+                "service"
+              ]
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": {
+        "id": 2800,
+        "tenantId": 1,
+        "oauthUserId": "google-oauth2|105763048987093518818",
+        "name": "David Barnes",
+        "email": "david.barnes@cortex.io",
+        "dateCreated": "2022-05-16T16:38:00.288436",
+        "lastLogin": null
+      },
+      "proxyTag": "github-releases",
+      "lastUpdated": "2023-06-08T16:17:56.433869"
+    },
+    {
+      "tag": "techradar",
+      "name": "TechRadar",
+      "description": null,
+      "contexts": [
+        {
+          "type": "GLOBAL"
+        }
+      ],
+      "minimumRoleRequired": "USER",
+      "isDraft": false,
+      "createdBy": {
+        "id": 2351,
+        "tenantId": 1,
+        "oauthUserId": "google-oauth2|100446023106570979548",
+        "name": "Mike Moore",
+        "email": "mike.moore@cortex.io",
+        "dateCreated": "2022-03-21T00:08:56.574619",
+        "lastLogin": null
+      },
+      "proxyTag": null,
+      "lastUpdated": "2023-10-08T20:11:16.702748"
+    },
+    {
+      "tag": "cli-installation-and-configuration",
+      "name": "Installation and Configuration",
+      "description": "Demonstrates how to install the Cortex Command Line Interface (CLI) from MacOS homebrew.",
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": true,
+              "types": [
+                "service"
+              ]
+            },
+            "cqlFilter": {
+              "query": "entity.tag() == 'cli'",
+              "category": "Generic",
+              "cqlVersion": "2.0",
+              "type": "CQL_FILTER"
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": null,
+      "proxyTag": null,
+      "lastUpdated": "2024-06-05T20:18:41.825891"
+    },
+    {
+      "tag": "project-workflows-create-jira-ticket",
+      "name": "Create Jira Ticket",
+      "description": "Showcases creating a Jira ticket using Cortex Workflows.  Please don't share externally.",
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": false,
+              "types": [
+                "service",
+                "domain",
+                "team"
+              ]
+            },
+            "cqlFilter": {
+              "query": "entity.tag() == 'project-workflows'",
+              "category": "Generic",
+              "cqlVersion": "2.0",
+              "type": "CQL_FILTER"
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": null,
+      "proxyTag": null,
+      "lastUpdated": "2024-06-08T17:28:16.397023"
+    },
+    {
+      "tag": "xero-go-live-6-18",
+      "name": "💪 Xero Go-Live 6-18",
+      "description": null,
+      "contexts": [
+        {
+          "type": "GLOBAL"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": {
+        "id": 9320,
+        "tenantId": 1,
+        "oauthUserId": "google-oauth2|115853682294872999618",
+        "name": "Jeff Schnitter",
+        "email": "jeff.schnitter@cortex.io",
+        "dateCreated": "2023-07-24T15:08:04.185523",
+        "lastLogin": "2025-01-08T23:39:41.901175"
+      },
+      "proxyTag": null,
+      "lastUpdated": "2024-06-14T22:08:13.791927"
+    },
+    {
+      "tag": "jeff-schnitter-i-melt-with-you",
+      "name": "Favorite Song",
+      "description": "I Melt With You",
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": false,
+              "types": [
+                "service",
+                "domain",
+                "team"
+              ]
+            },
+            "cqlFilter": {
+              "query": "entity.tag() == 'jeff-schnitter'",
+              "category": "Generic",
+              "cqlVersion": "2.0",
+              "type": "CQL_FILTER"
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": null,
+      "proxyTag": null,
+      "lastUpdated": "2024-09-25T17:00:33.607194"
+    },
+    {
+      "tag": "hanna-vigil-the-black-dog",
+      "name": "Favorite Song",
+      "description": "The Black Dog",
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": false,
+              "types": [
+                "service",
+                "domain",
+                "team"
+              ]
+            },
+            "cqlFilter": {
+              "query": "entity.tag() == 'hanna-vigil'",
+              "category": "Generic",
+              "cqlVersion": "2.0",
+              "type": "CQL_FILTER"
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": null,
+      "proxyTag": null,
+      "lastUpdated": "2024-09-30T17:22:20.402398"
+    },
+    {
+      "tag": "plugin-marketplace",
+      "name": "Plugin Marketplace",
+      "description": null,
+      "contexts": [
+        {
+          "type": "GLOBAL"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": {
+        "id": 25205,
+        "tenantId": 1,
+        "oauthUserId": "google-oauth2|110738514566936908176",
+        "name": "Martin Stone",
+        "email": "martin.stone@cortex.io",
+        "dateCreated": "2024-08-05T16:41:18.839233",
+        "lastLogin": "2025-01-06T17:33:21.527241"
+      },
+      "proxyTag": null,
+      "lastUpdated": "2024-11-27T23:13:49.785416"
+    },
+    {
+      "tag": "aaron-wirick-surf-wax-america",
+      "name": "Favorite Song",
+      "description": "Surf Wax America",
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": false,
+              "types": [
+                "service",
+                "domain",
+                "team"
+              ]
+            },
+            "cqlFilter": {
+              "query": "entity.tag() == 'aaron-wirick'",
+              "category": "Generic",
+              "cqlVersion": "2.0",
+              "type": "CQL_FILTER"
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": null,
+      "proxyTag": null,
+      "lastUpdated": "2024-12-06T16:45:45.378944"
+    },
+    {
+      "tag": "doug-cooper-jealous-(labrinth)",
+      "name": "Favorite Song",
+      "description": "Jealous (labrinth)",
+      "contexts": [
+        {
+          "entityFilter": {
+            "typeFilter": {
+              "include": false,
+              "types": [
+                "service",
+                "domain",
+                "team"
+              ]
+            },
+            "cqlFilter": {
+              "query": "entity.tag() == 'doug-cooper'",
+              "category": "Generic",
+              "cqlVersion": "2.0",
+              "type": "CQL_FILTER"
+            },
+            "type": "COMPOUND_FILTER"
+          },
+          "type": "ENTITY"
+        }
+      ],
+      "minimumRoleRequired": "VIEWER",
+      "isDraft": false,
+      "createdBy": null,
+      "proxyTag": null,
+      "lastUpdated": "2025-01-08T19:59:46.187193"
+    }
+  ]
+}

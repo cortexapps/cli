@@ -10,3 +10,7 @@ coverage.json
 .github/workflows/test.yml
 .export
 report.html
+import.html
+report*.html
+.load-data-done
+

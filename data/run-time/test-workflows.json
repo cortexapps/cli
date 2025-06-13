@@ -1,0 +1,24 @@
+{
+  "name": "Hello World",
+  "tag": "hello-world",
+  "description": "Simple workflow",
+  "isDraft": true,
+  "filter": {
+    "type": "GLOBAL"
+  },
+  "runResponseTemplate": null,
+  "actions": [
+    {
+      "name": "Send Message",
+      "slug": "send-message",
+      "schema": {
+        "channel": "my-slack-channel",
+        "message": "Hello, world.",
+        "type": "SLACK"
+      },
+      "outgoingActions": [],
+      "isRootAction": true
+    }
+  ],
+  "runRestrictionPolicies": []
+}

@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: Test Service Links
+  x-cortex-tag: cli-test-service-links
+  x-cortex-type: service
+  x-cortex-link:
+  - url: https://cortex.io
+    name: Cortex
+    type: Documentation
+  x-cortex-groups:
+  - cli-test
+  - include-links-test

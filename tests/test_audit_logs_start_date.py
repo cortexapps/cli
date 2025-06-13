@@ -1,7 +1,7 @@
-from common import *
+from tests.helpers.utils import *
 
-@pytest.mark.skip(reason="Disabled until CET-15982 is resolved.")
-def test(capsys):
+#@pytest.mark.skip(reason="Disabled until CET-15982 is resolved.")
+def test():
     start_date = yesterday()
-    response = cli_command(capsys, ["audit-logs", "get", "-s", start_date])
-    assert (len(response['logs']) > 0)
+    result = cli(["audit-logs", "get", "-s", start_date])
+    assert (len(result['logs']) > 0)

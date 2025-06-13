@@ -1,0 +1,8 @@
+openapi: 3.0.0
+info:
+  title: Delete Entity
+  description: Entity that will be created and then deleted to test catalog delete entity
+  x-cortex-tag: cli-test-delete-entity
+  x-cortex-type: service
+  x-cortex-groups:
+  - cli-test

@@ -58,7 +58,7 @@ Config file
 ----------------------
 
 The CLI requires an API key for all operations.  This key is stored in a config file whose default location is `~/.cortex/config`.
-This path can be overridden with the `-c` flag.
+This path can be overridden with the `-c` flag.  You will be prompted to create the file if it does not exist.
 
 Minimal contents of the file:
 
@@ -111,73 +111,9 @@ Example:
 Commands
 ----------------------
 
-Run :code:`cortex -h` to see a list of all commands:
-
-.. code-block:
-
- usage: cortex CLI [-h] [-a] [-c CONFIG] [-d] [-n] [-t] [-v]
-                   {audit-logs,backup,catalog,custom-data,custom-events,dependencies,deploys,discovery-audit,docs,groups,integrations,ip-allowlist,on-call,packages,plugins,queries,resource-definitions,scorecards,teams-hierarchies,teams}
-                   ...
-
- Cortex command line interface
-
- positional arguments:
-   {audit-logs,backup,catalog,custom-data,custom-events,dependencies,deploys,discovery-audit,docs,groups,integrations,ip-allowlist,on-call,packages,plugins,queries,resource-definitions,scorecards,teams-hierarchies,teams}
-                         sub-command help
-     audit-logs          audit log commands
-     backup              import/export commands
-     catalog             catalog commands
-     custom-data         custom_data actions
-     custom-events       custom events actions
-     dependencies        dependencies commands 
-     deploys             deploys commands
-     discovery-audit     Discovery Audit commands
-     docs                OpenAPI doc commands
-     groups              groups commands
-     integrations        integrations sub-commands
-     ip-allowlist        IP Allowlist information
-     on-call             get on-call information
-     packages            commands to create and modify packages
-     plugins             commands to create and access plugins
-     queries             run CQL queries
-     resource-definitions
-                         resource definitions
-     scorecards          scorecards API requests
-     teams-hierarchies   commands to create and modify team hierarchies
-     teams               commands to create and modify teams
-
- options:
-   -h, --help            show this help message and exit
-   -a , --cliAlias       get CLI parms from [TENANT.aliases] in config file
-   -c CONFIG, --config CONFIG
-                         Config location, default = ~/.cortex/config
-   -d, --debug           Writes request debug information as JSON to stderr
-   -n, --noObfuscate     Do not obfuscate bearer token when debugging
-   -t , --tenant         tenant name defined in ~/.cortex/config, defaults to 'default'
-   -v, --version         show program's version number and exit
-
- Type 'man cortex' for additional details.
-
+Run :code:`cortex` to see a list of options and sub-commands.
 
 Run :code:`cortex <subcommand> -h` to see a list of all commands for each subcommand.
-
-For example:
-
-.. code:: bash
-
- cortex audit-logs -h
-
-.. code-block::
-
- usage: cortex CLI audit-logs [-h] {get} ...
-
- positional arguments:
-   {get}       audit logs help
-     get       retrieve audit logs
-
- options:
-   -h, --help  show this help message and exit
-
 
 ===================
 Examples
@@ -211,21 +147,23 @@ Your cortex config file will require api keys for both tenants.  It would look l
 
 .. code-block::
 
- Getting resource definitions
-  -->  my-resource-1
-  Getting catalog entities
+  Getting catalog
   -->  my-domain-1
   -->  my-service-1
   -->  my-service-2
-  Getting IP Allowlist definitions
+  Getting entity-types
+  -->  my-entity-type-1
+  Getting ip-allowlist
+  --> ip-allowlist
+  Getting plugins
+  --> my-plugin-1
   Getting scorecards
   -->  my-scorecard-1
-  Getting teams
-  -->  my-team-1
-  -->  my-team-2
+  Getting workflows
+  -->  my-workflow-1
 
   Export complete!
-  Contents available in /Users/myUser/.cortex/export/2023-11-19-14-58-14
+  Contents available in /Users/myUser/.cortex/export/2025-06-12-14-58-14
 
 **Import**
 
@@ -239,139 +177,23 @@ are automatically imported by Cortex.  Cortex does not have access to any keys, 
 integration configurations.
 
 
----------------------------------------------------------
-Export all services from one tenant; import into another
----------------------------------------------------------
-
-This example shows how to export services from a tenant named :code:`myTenant-dev` and import those services into a tenant
-named :code:`myTenant`.  It is similar to the full export example "`Export from one tenant; import into another`_", but only
-exports/imports services.
-
-Your cortex config file will require api keys for both tenants.  It would look like this:
-
-.. code-block::
-
- [myTenant]
- api_key = <your API Key for myTenant>
-
- [myTenant-dev]
- api_key = <your API Key for myTenant-dev>
-
-
-**Option 1: export service YAMLs to a directory and then import them**
-
-This option is helpful in case you want to save the entity YAML files.  It makes it easy to restart or retry an import
-because you will have all YAMLs saved on disk.
-
-**Export**
-
-.. code:: bash
-
- mkdir -p /tmp/cortex-export
- cd /tmp/cortex-export
- for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
- do
-    cortex -t myTenant catalog descriptor -y -t ${service} > ${service}.yaml
- done
-
-**Import**
-
-.. code:: bash
-
- cd /tmp/cortex-export
- for file in `ls -1 *.yaml`
- do
-    cortex -t myTenant-dev catalog create -f ${file}
- done
-
-**Option 2: combine the export and import in a single command**
-
-This option is simpler and doesn't require any disk operations.  However, if it fails for any reason you have to run the 
-entire export/import in its entirety.
-
-.. code:: bash
-
- for service in `cortex -t myTenant catalog list -t service | jq -r ".entities[].tag" | sort`
- do
-    echo "Processing service: ${service}"
-    cortex -t myTenant catalog descriptor -y -t ${service} | cortex -t myTenant-dev catalog create -f-
- done
-
----------------------------------------------------------
-Export all domains from one tenant; import into another
----------------------------------------------------------
-
-This example shows how to export domains from a tenant named :code:`myTenant-dev` and import those domains into a tenant
-named :code:`myTenant`.  It is similar to the full export example "`Export from one tenant; import into another`_", but only
-exports/imports domains.
-
-Your cortex config file will require api keys for both tenants.  It would look like this:
-
-.. code-block::
-
- [myTenant]
- api_key = <your API Key for myTenant>
-
- [myTenant-dev]
- api_key = <your API Key for myTenant-dev>
-
-
-**Option 1: export domain YAMLs to a directory and then import them**
-
-This option is helpful in case you want to save the entity YAML files.  It makes it easy to restart or retry an import
-because you will have all YAMLs saved on disk.
-
-**Export**
-
-.. code:: bash
-
- mkdir -p /tmp/cortex-export
- cd /tmp/cortex-export
- for domain in `cortex -t myTenant catalog list -t domain | jq -r ".entities[].tag" | sort`
- do
-    echo "creating ${domain}.yaml"
-    cortex -t myTenant catalog descriptor -y -t ${domain} > ${domain}.yaml
- done
-
-**Import**
-
-.. code:: bash
-
- cd /tmp/cortex-export
- for file in `ls -1 *.yaml`
- do
-    cortex -t myTenant-dev catalog create -f ${file}
- done
-
-**Option 2: combine the export and import in a single command**
-
-This option is simpler and doesn't require any disk operations.  However, if it fails for any reason you have to run the 
-entire export/import in its entirety.
-
-.. code:: bash
-
- for domain in `cortex -t myTenant catalog list -t domain | jq -r ".entities[].tag" | sort`
- do
-    echo "Processing domain: ${domain}"
-    cortex -t myTenant catalog descriptor -y -t ${domain} | cortex -t myTenant-dev catalog create -f-
- done
-
-
 ------------------------
 Iterate over all domains
 ------------------------
 
 .. code:: bash
 
- for domain in `cortex catalog list -t domain | jq -r ".entities[].tag" | sort`; do echo "domain = $domain"; done
+ for domain in `cortex catalog list -t domain --csv -C tag --sort tag:asc`; do echo "domain = $domain"; done
 
 ----------------------
 Iterate over all teams
 ----------------------
 
+**NOTE:** as of June 2025, requires a feature flag enabled to return team entities in the catalog API.  Work with your CSM if you need assistance.
+
 .. code:: bash
 
- for team in `cortex catalog list -t team | jq -r ".entities[].tag" | sort`; do echo "team = $team"; done
+ for team in `cortex catalog list -t team --csv -C tag --sort tag:asc`; do echo "team = $team"; done
 
 -------------------------
 Iterate over all services
@@ -379,7 +201,7 @@ Iterate over all services
 
 .. code:: bash
 
- for service in `cortex catalog list -t service | jq -r ".entities[].tag" | sort`; do echo "service = $service"; done
+ for service in `cortex catalog list -t service --csv -C tag --sort tag:asc`; do echo "service = $service"; done
 
 -----------------------------
 Get git details for a service
@@ -404,7 +226,7 @@ Add a suffix to all x-cortex-tag values for services
 
 .. code:: bash
 
- for service in `cortex catalog list -t service | jq -r ".entities[].tag" | sort`; do
+ for service in `cortex catalog list -t service --csv -C tag --sort tag:asc`; do
     cortex catalog descriptor -y -t ${service} | yq '.info.x-cortex-tag |= . + "-suffix"' | cortex catalog create -f-
  done
 
@@ -435,7 +257,7 @@ Remove a group from domains
 
 .. code:: bash
 
- for domain in `cortex catalog list -t domain -g my-old-group | jq -r ".entities[].tag" | sort`; do
+ for domain in `cortex catalog list -t domain --csv -C tag --sort tag:asc`; do
     cortex catalog descriptor -y -t ${domain} | yq -e '.info.x-cortex-groups -= [ "my-old-group" ]' | cortex catalog create -f-
  done
 
@@ -461,7 +283,7 @@ Modify all github basepath values for domain entitities, changing '-' to '_'
 
 .. code:: bash
 
-  for domain in `cortex catalog list -t domain | jq -r ".entities[].tag"`; do 
+  for domain in `cortex catalog list -t domain --csv -C tag --sort tag:asc`; do
      cortex catalog descriptor -y -t ${domain} | yq ".info.x-cortex-git.github.basepath |= sub(\"-\", \"_\")" | cortex catalog create -f-
   done
 
@@ -488,7 +310,7 @@ Create a backup of all scorecards
 
 .. code:: bash
     
-   for tag in `cortex scorecards list | jq -r ".scorecards[].tag"`
+   for tag in `cortex scorecards list --csv -C tag`
    do
       echo "backing up: ${tag}"
       cortex scorecards descriptor -t ${tag} > ${tag}.yaml
@@ -503,7 +325,7 @@ and it appends " Draft" to the end of the existing title.
 
 .. code:: bash
     
-   for tag in `cortex scorecards list | jq -r ".scorecards[].tag"`
+   for tag in `cortex scorecards list --csv -C tag`
    do
       cortex scorecards descriptor -t ${tag} | yq '.draft = true | .tag += "-draft" | .name += " Draft"' | cortex scorecards create -f-
    done
@@ -517,7 +339,7 @@ which the drafts were created and delete the drafts.
 
 .. code:: bash
     
-   for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag" | grep "\-draft$"`
+   for tag in `cortex scorecards list --csv -C tag --filter tag=.*-draft`
    do
       cortex scorecards descriptor -t ${tag} | yq '.draft = false | .tag |= sub("-draft","") | .name |= sub(" Draft", "")' | cortex scorecards create -f- && cortex scorecards delete -t ${tag}
    done
@@ -530,7 +352,7 @@ This recipe is similar to the one above, but it does not create a new scorecard 
 
 .. code:: bash
     
-   for tag in `cortex scorecards list -s | jq -r ".scorecards[].tag" | grep "\-draft$"`
+   for tag in `cortex scorecards list --csv -C tag --filter tag=.*-draft`
    do
       cortex scorecards descriptor -t ${tag} | yq '.draft = false | .tag |= sub("-draft","") | .name |= sub(" Draft", "")' > ${tag}.yaml
    done
@@ -585,37 +407,6 @@ Run this command for two different scorecards and diff the csv files to compare 
   cortex scorecards scores -t ${SCORECARD} | jq -r '.serviceScores[] | [ .service.tag, .score.ladderLevels[].level.name // "noLevel", .score.summary.score|tostring] | join(",")' | sort > /tmp/${SCORECARD}.csv
 
   sdiff -s /tmp/scorecard1.csv /tmp/scorecard2.csv
-
------------------------------------------------------------------------------
-Backup all Workday teams
------------------------------------------------------------------------------
-
-This recipe is helpful if you change your Workday report and want to save your existing teams in case you want to restore them.
-
-For each team it will create two files:
-- a JSON file that contains the Workday data
-- a Cortex team YAML file that refers to the Workday team
-
-.. code:: bash
-
-    for team in `cortex teams list | jq -r '.teams[] | select (.type == "IDP") | select (.idpGroup.provider == "WORKDAY") | .teamTag'`
-    do
-        cortex teams get -t ${team} > ${team}.json
-        cortex catalog descriptor -y -t ${team} > ${team}.yaml
-    done
-
------------------------------------------------------------------------------
-Delete all Workday teams
------------------------------------------------------------------------------
-
-This recipe is helpful if you want to remove all Workday teams and import from scratch.
-
-.. code:: bash
-
-    for team in `cortex teams list | jq -r '.teams[] | select (.type == "IDP") | select (.idpGroup.provider == "WORKDAY") | .teamTag'`
-    do
-        cortex teams delete -t ${team}
-    done
 
 -----------------------------------------------------------------------------
 Add provider for all group type owners where provider is not listed

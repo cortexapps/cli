@@ -1,0 +1,18 @@
+{
+ "blob": "<html><h1>This is my updated simple plugin</h1></html>",
+ "contexts": [
+     {
+       "type": "GLOBAL"
+     },
+     {
+       "entityFilter": {
+         "type": "SERVICE_FILTER"
+       },
+       "type": "ENTITY"
+     }
+   ],
+  "description": "Simple Updated Plugin",
+  "isDraft": false,
+  "minimumRoleRequired": "VIEWER",
+  "name": "My Updated Test Plugin"
+}

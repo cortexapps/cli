@@ -1,5 +1,5 @@
-from common import *
+from tests.helpers.utils import *
 
 def test(capsys):
-    response = cli_command(capsys, ["catalog", "list", "-g", "public-api-test", "-p", "0"])
+    response = cli(["catalog", "list", "-g", "cli-test", "-p", "0"])
     assert (len(response['entities']) > 0)
