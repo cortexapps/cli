@@ -1,12 +1,11 @@
 openapi: 3.0.0
 info:
-  title: Patch Entity
+  title: CLI Test Patch Entity
   description: Entity that will be created to test catalog patch entity
-  x-cortex-tag: patch-entity
-  x-cortex-type: component
+  x-cortex-tag: cli-test-patch-entity
+  x-cortex-type: service
   x-cortex-groups:
-  - public-api-test
-  x-cortex-definition: {}
+  - cli-test
   x-cortex-custom-metadata:
     owners:
     - owner-1

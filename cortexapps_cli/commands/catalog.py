@@ -50,7 +50,11 @@ class CatalogCommandOptions:
     ]
     append_arrays = Annotated[
         Optional[bool],
-        typer.Option("--append-arrays", "-aa", help="Default merge behavior is to replace arrays, set this to true to append arrays instead. For simple types, duplicate values will be removed from the merged array", show_default=False)
+        typer.Option("--append-arrays", "-a", help="Default merge behavior is to replace arrays, set this to true to append arrays instead. For simple types, duplicate values will be removed from the merged array", show_default=False)
+    ]
+    fail_if_not_exist = Annotated[
+        Optional[bool],
+        typer.Option("--fail-if-not-exist", "-n", help="Default behavior is to upsert the entity, if set command will fail (404) if the entity specified in x-cortex-tag does not exist.", show_default=False)
     ]
     git_repositories = Annotated[
         Optional[str],
@@ -292,6 +296,7 @@ def patch(
     delete_marker_value = typer.Option("__delete__", "--delete-marker-value", "-dmv", help="Delete keys with this value from the merged yaml, defaults to __delete__, if any values match this, they will not be included in merged YAML. For example my_value: __delete__ will remove my_value from the merged YAML."),
     dry_run: CatalogCommandOptions.dry_run = False,
     append_arrays: CatalogCommandOptions.append_arrays = False,
+    fail_if_not_exist: CatalogCommandOptions.fail_if_not_exist = False,
 ):
     """
     Creates or updates an entity. If the YAML refers to an entity that already exists (as referenced by the x-cortex-tag), this API will merge the specified changes into the existing entity
@@ -301,7 +306,8 @@ def patch(
     params = {
         "dryRun":dry_run,
         "appendArrays": append_arrays,
-        "deleteMarkerValue": delete_marker_value
+        "deleteMarkerValue": delete_marker_value,
+        "failIfEntityDoesNotExist": fail_if_not_exist
     }
 
     r = client.patch("api/v1/open-api", data=file_input.read(), params=params, content_type="application/openapi;charset=UTF-8")
