@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'cortexapps_cli/cortex.py'
+      - 'cortexapps_cli/**'
       - '.github/workflows/publish.yml'
 
 env:
