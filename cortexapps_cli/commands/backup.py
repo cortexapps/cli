@@ -65,7 +65,7 @@ def _write_file(content, file, is_json=False):
             f.write(str(content) + "\n")
     f.close()
 
-def _catalog(ctx, directory, catalog_types):
+def _export_catalog(ctx, directory, catalog_types):
     directory = _directory_name(directory, "catalog")
 
     data = catalog.list_descriptors(ctx, types=catalog_types, page_size=1000, yaml="true", _print=False)
@@ -176,11 +176,42 @@ def _parse_catalog_types(ctx, catalog_types):
 def export(
     ctx: typer.Context,
     export_types: List[str] = typer.Option(_parse_export_types("all"), "--export-types", "-e", help="some help test", callback=_parse_export_types),
-    catalog_types: str = typer.Option("all", "--catalog-types", "-c", help="Comma separated list of catalog types to export, defaults to all"),
+    catalog_types: str = typer.Option("all", "--catalog-types", "-c", help="Comma separated list of catalog types to export, defaults to service,team,domain plus all user-created entity-types"),
     directory: str = typer.Option(os.path.expanduser('~') + '/.cortex/export/' + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"), "--directory", "-d", help="Location of export directory, defaults to ~/.cortex/export/<date>-tenant"),
 ):
     """
     Export tenant
+
+    Exports the following objects:
+    - catalog
+    - entity-types
+    - ip-allowlist
+    - plugins
+    - scorecards
+    - workflows
+
+    By default, it does not export any entities that would be created by an integration, for example AWS objects.  This is because these
+    entities are maintained by the integration and do not need to be backed up.
+
+    However, these entities can be export by referencing them in the catalog-types parameter, for example this command
+    would export all AWS S3 buckets::
+
+    cortex backup export --export-types catalog --catalog-types AWS::S3::Bucket
+
+    It does not back up everything in the tenant.  For example these objects are not backed up:
+    - api-keys 
+    - custom-events
+    - custom-metadata created by the public API
+    - custom-metrics
+    - dependencies created by the API
+    - deploys
+    - docs created by the API
+    - entity-relationships created by the API
+    - groups added by the API
+    - packages
+    - secrets
+
+    In general, if there is a bulk export API method for a Cortex object, it will be included in the export.
     """
 
     export_types = sorted(list(set(export_types)))

@@ -21,15 +21,24 @@ def create(
     """
     
     client = ctx.obj["client"]
+    data = json.loads("".join([line for line in file_input]))
 
-    params = {
-       "dryRun": dry_run
-    }       
+    client.post("api/v1/initiatives", data=data)
 
-    # remove any params that are None
-    params = {k: v for k, v in params.items() if v is not None}
+@app.command()
+def update(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing JSON body of request, can be passed as stdin with -, example: -f-")] = None,
+    cid: str = typer.Option(..., "--cid", "-c", help="Unique Cortex ID for the initiative"),
+):
+    """
+    Update an Initiative.  API key must have the Edit Initiative permission.
+    """
     
-    client.post("api/v1/initiatives", params=params, data=input.read())
+    client = ctx.obj["client"]
+    data = json.loads("".join([line for line in file_input]))
+    
+    client.put("api/v1/initiatives/" + cid, data=data)
 
 @app.command()
 def delete(
@@ -60,7 +69,7 @@ def list(
     sort: ListCommandOptions.sort = [],
 ):
     """
-    List initiatives
+    List initiatives.  API key must have the View Initiatives permission.
     """
 
     client = ctx.obj["client"]
