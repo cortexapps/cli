@@ -21,12 +21,17 @@ Release History
 - plugins `get-by-tag` subcommand changed to `get`
 - `resource-definitions` command changed to `entity-types`
 
+0.27.0 (2025-01-04)
+------------------
+
+**Improvements**
+- Add support for catalog patch command.
+
 0.26.7 (2024-11-18)
 ------------------
 
 **Bugfixes**
 - Fix dryRun query parameter for catalog create command.
->>>>>>> main
 
 0.26.6 (2024-07-30)
 ------------------
