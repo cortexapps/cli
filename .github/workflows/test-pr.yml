@@ -37,7 +37,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt update && apt install just
+        sudo apt update && sudo apt install just
         python -m pip install --upgrade pip
         pip install poetry poetry-audit-plugin pytest-cov pytest pytest-xdist
 
