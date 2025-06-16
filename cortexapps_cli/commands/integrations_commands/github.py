@@ -22,7 +22,7 @@ def add(
 
     if file_input:
         if alias or api_key or is_default or host:
-            raise typer.BadParameter("When providing a custom event definition file, do not specify any other custom event attributes")
+            raise typer.BadParameter("When providing a configuration file, do not specify any other attributes")
         data = json.loads("".join([line for line in file_input]))
     else:
         data = {
@@ -167,4 +167,71 @@ def validate_all(
     client = ctx.obj["client"]
 
     r = client.post("api/v1/github/configurations")
+    print_json(data=r)
+
+@app.command()
+def add_personal(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="Alias for this configuration"),
+    access_token: str = typer.Option(..., "--access-token", "-at", help="Access Token"),
+    host: str = typer.Option(None, "--host", "-h", help="Optional host name"),
+    is_default: bool = typer.Option(False, "--is-default", "-i", help="If this is the default configuration"),
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing configurations, if command line options not used; can be passed as stdin with -, example: -f-")] = None,
+):
+    """
+    Add a single personal configuration
+    """
+
+    client = ctx.obj["client"]
+
+    if file_input:
+        if alias or access_token or is_default or host:
+            raise typer.BadParameter("When providing a configuration file, do not specify any other attributes")
+        data = json.loads("".join([line for line in file_input]))
+    else:
+        data = {
+           "alias": alias,
+           "accessToken": access_token,
+           "apiHost": host,
+           "isDefault": is_default,
+        }       
+
+        # remove any data elements that are None - can only be is_default
+        data = {k: v for k, v in data.items() if v is not None}
+    
+    r = client.post("api/v1/github/configurations/personal", data=data)
+    print_json(data=r)
+
+@app.command()
+def delete_personal(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+):
+    """
+    Delete a personal configuration
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.delete("api/v1/github/configurations/personal/" + alias)
+    print_json(data=r)
+
+@app.command()
+def update_personal(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+    is_default: bool = typer.Option(False, "--is-default", "-i", help="If this is the default configuration"),
+):
+    """
+    Update a personal configuration
+    """
+
+    client = ctx.obj["client"]
+
+    data = {
+       "alias": alias,
+       "isDefault": is_default
+    }
+
+    r = client.put("api/v1/github/configurations/personal/" + alias, data=data)
     print_json(data=r)

@@ -1,6 +1,21 @@
 Release History
 ===============
 
+1.0.2 (2025-06-16)
+------------------
+
+**Improvements**
+- Add sub-commands for integrations github (these were missed with the upgrade to 1.0.0):
+  - add-personal
+  - delete-personal
+  - update-personal
+
+1.0.1 (2025-06-16)
+------------------
+
+**Bugfixes**
+- Homebrew fix for ZIP does not support timestamps before 1980
+
 1.0.0 (2025-06-13)
 ------------------
 
