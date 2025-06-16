@@ -57,3 +57,18 @@ def test_integrations_github_validate():
 def test_integrations_github_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configuration/validate", json={}, status=200)
     cli(["integrations", "github", "validate-all"])
+
+@responses.activate
+def test_integrations_github_add_personal():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal", json={}, status=200)
+    cli(["integrations", "github", "add-personal", "-a", "myAlias", "-h", "my.host.com", "--access-token", "123456", "-i"])
+
+@responses.activate
+def test_integrations_github_update_personal():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal/test", json={}, status=200)
+    cli(["integrations", "github", "update-personal", "-a", "test", "-i"])
+
+@responses.activate
+def test_integrations_github_delete_personal():
+    responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal/test", status=200)
+    cli(["integrations", "github", "delete-personal", "-a", "test"])
