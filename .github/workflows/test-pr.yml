@@ -30,8 +30,17 @@ jobs:
       with:
         fetch-depth: 0
 
-    # This isn't used on the staging branch but serves as a test that HISTORY.md will be updated properly when
-    # the publish workflow runs..
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@1.64.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        WITH_V: false
+
+    - name: Set up Git
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+
     - name: Install git-chglog
       run: |
         curl -LO https://github.com/git-chglog/git-chglog/releases/download/v0.15.4/git-chglog_0.15.4_linux_386.tar.gz
@@ -41,14 +50,23 @@ jobs:
         git-chglog --version
 
     - name: Generate HISTORY.md
+      run: git-chglog -o HISTORY.md
+
+    - name: Commit and Push
       run: |
-        git-chglog -o HISTORY.md
-        cat HISTORY.md
+        if git diff --exit-code HISTORY.md; then
+          echo "No changelog update needed"
+        else
+          git add HISTORY.md
+          git commit -m "chore: update HISTORY.md for ${{ github.ref_name }}"
+          git push
+        fi
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
     # You can test your matrix by printing the current Python version
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
