@@ -79,6 +79,7 @@ def get(
     r = client.get("api/v1/github/configurations/app/" + alias)
     print_json(data=r)
 
+
 @app.command()
 def get_personal(
     ctx: typer.Context,
