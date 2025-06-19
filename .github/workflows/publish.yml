@@ -41,9 +41,8 @@ jobs:
 
     - name: Install git-chglog
       run: |
-        GIT_CHGLOG_VERSION="0.15.4"
-        curl -LO https://github.com/git-chglog/git-chglog/releases/download/v${GIT_CHGLOG_VERSION}/git-chglog_linux_amd64.tar.gz
-        tar -xzf git-chglog_linux_amd64.tar.gz
+        curl -LO https://github.com/git-chglog/git-chglog/releases/download/v0.15.4/git-chglog_0.15.4_linux_386.tar.gz
+        tar -xzf git-chglog_0.15.4_linux_386.tar.gz
         chmod +x git-chglog
         sudo mv git-chglog /usr/local/bin/
         git-chglog --version
