@@ -28,12 +28,24 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        ref: staging
         fetch-depth: 0
+
+    - name: Extract bump type from PR title
+      id: bump
+      run: |
+        BUMP_TYPE=$(jq -r .pull_request.title "$GITHUB_EVENT_PATH" | grep -Eo "#(patch|minor|major)" | head -n1 || echo "#patch")
+        echo "bump_type=${BUMP_TYPE/#/}" >> $GITHUB_OUTPUT
 
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.64.0
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        DEFAULT_BUMP: ${{ steps.bump.outputs.bump_type }}
+        RELEASE_BRANCHES: staging
+        PATCH_STRING_TOKEN: "#patch"
+        MINOR_STRING_TOKEN: "#minor"
+        MAJOR_STRING_TOKEN: "#major"
         WITH_V: false
 
     - name: Set up Git
