@@ -25,12 +25,41 @@ jobs:
       VERSION: ${{ steps.git-details.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.64.0
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         WITH_V: false
+
+    - name: Set up Git
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+
+    - name: Install git-chglog
+      run: |
+        GIT_CHGLOG_VERSION="0.15.4"
+        curl -LO https://github.com/git-chglog/git-chglog/releases/download/v${GIT_CHGLOG_VERSION}/git-chglog_linux_amd64.tar.gz
+        tar -xzf git-chglog_linux_amd64.tar.gz
+        chmod +x git-chglog
+        sudo mv git-chglog /usr/local/bin/
+        git-chglog --version
+
+    - name: Generate HISTORY.md
+      run: git-chglog -o HISTORY.md
+
+    - name: Commit and Push
+      run: |
+        if git diff --exit-code HISTORY.md; then
+          echo "No changelog update needed"
+        else
+          git add HISTORY.md
+          git commit -m "chore: update HISTORY.md for ${{ github.ref_name }}"
+          git push
+        fi
 
     - name: Set up Python 3.11
       uses: actions/setup-python@v5

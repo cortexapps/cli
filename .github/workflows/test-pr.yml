@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - main
+      - staging
     paths:
       - 'cortexapps_cli/**'
       - 'tests/**'
@@ -27,6 +27,24 @@ jobs:
         python-version: ["3.11"]
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # This isn't used on the staging branch but serves as a test that HISTORY.md will be updated properly when
+    # the publish workflow runs..
+    - name: Install git-chglog
+      run: |
+        curl -LO https://github.com/git-chglog/git-chglog/releases/download/v0.15.4/git-chglog_0.15.4_linux_386.tar.gz
+        tar -xzf git-chglog_0.15.4_linux_386.tar.gz
+        chmod +x git-chglog
+        sudo mv git-chglog /usr/local/bin/
+        git-chglog --version
+
+    - name: Generate HISTORY.md
+      run: |
+        git-chglog -o HISTORY.md
+        cat HISTORY.md
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:

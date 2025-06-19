@@ -35,23 +35,7 @@ def add(
         # remove any data elements that are None - can only be is_default
         data = {k: v for k, v in data.items() if v is not None}
     
-    r = client.post("api/v1/github/configuration", data=data)
-    print_json(data=r)
-
-@app.command()
-def add_multiple(
-    ctx: typer.Context,
-    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing configurations; can be passed as stdin with -, example: -f-")] = None,
-):
-    """
-    Add multiple configurations
-    """
-
-    client = ctx.obj["client"]
-
-    data = json.loads("".join([line for line in file_input]))
-
-    r = client.put("api/v1/aws/configurations", data=data)
+    r = client.post("api/v1/github/configurations/app", data=data)
     print_json(data=r)
 
 @app.command()
@@ -65,7 +49,7 @@ def delete(
 
     client = ctx.obj["client"]
 
-    r = client.delete("api/v1/github/configuration/" + alias)
+    r = client.delete("api/v1/github/configurations/app/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -87,12 +71,26 @@ def get(
     alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
 ):
     """
-    Get a configuration
+    Get a single app configuration
     """
 
     client = ctx.obj["client"]
 
-    r = client.get("api/v1/github/configuration/" + alias)
+    r = client.get("api/v1/github/configurations/app/" + alias)
+    print_json(data=r)
+
+@app.command()
+def get_personal(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+):
+    """
+    Get a personal configuration
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/github/configurations/personal/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -129,7 +127,7 @@ def update(
     is_default: bool = typer.Option(False, "--is-default", "-i", help="If this is the default configuration"),
 ):
     """
-    Update a configuration
+    Update a single app configuration
     """
 
     client = ctx.obj["client"]
@@ -139,7 +137,7 @@ def update(
        "isDefault": is_default
     }
 
-    r = client.put("api/v1/github/configuration/" + alias, data=data)
+    r = client.put("api/v1/github/configurations/app/" + alias, data=data)
     print_json(data=r)
 
 @app.command()
@@ -153,7 +151,7 @@ def validate(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/github/configurations/validate" + alias)
+    r = client.post("api/v1/github/configurations/validate/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -166,7 +164,7 @@ def validate_all(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/github/configurations")
+    r = client.post("api/v1/github/configurations/validate")
     print_json(data=r)
 
 @app.command()

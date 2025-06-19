@@ -1,3 +1,7 @@
+<!-- changelog:begin -->
+<!-- generated content will go here -->
+<!-- changelog:end -->
+
 Release History
 ===============
 
