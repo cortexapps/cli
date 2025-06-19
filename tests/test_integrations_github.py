@@ -2,7 +2,6 @@ from tests.helpers.utils import *
 
 # Since responses are all mocked and no data validation is done by the CLI --
 # we let the API handle validation -- we don't need valid input files.
-
 def _dummy_file(tmp_path):
     f = tmp_path / "test_integrations_github_add.json"
     f.write_text("foobar")
