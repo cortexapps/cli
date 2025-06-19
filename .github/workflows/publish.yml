@@ -29,12 +29,6 @@ jobs:
         ref: main
         fetch-depth: 0
 
-    - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@1.64.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        WITH_V: false
-
     - name: Set up Git
       run: |
         git config --global user.name "GitHub Actions"
@@ -62,6 +56,12 @@ jobs:
           git commit -m "chore: update HISTORY.md for ${{ github.ref_name }}"
           git push
         fi
+
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@1.64.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        WITH_V: false
 
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
