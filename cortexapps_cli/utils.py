@@ -125,7 +125,13 @@ def print_output(data, columns=None, filters=None, sort=None, output_format='jso
         if columns:
             raise typer.BadParameter("Columns can only be specified when using --table or --csv")
         if filters:
-            raise typer.BadParameter("Filters can only be specified when using --table or --csv")
+            data_key = guess_data_key(data)
+            table_data = data.get(data_key) if data_key else data
+            if not isinstance(table_data, list):
+                raise ValueError(f"Data is not a list: {table_data}")
+            filtered_data = [item for item in table_data if matches_filters(item, filters)]
+            print_json(data=filtered_data)
+            return
         print_json(data=data)
         return
 

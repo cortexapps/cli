@@ -63,16 +63,85 @@ info:
         ]
     },
     "catalog list": {
+        "csv_column_headers": ["ID", "Tag", "Name", "Type", "Git Repository"],
+        "hints": [
+            "Use --csv for CSV output",
+            "Owners will be null unless you specify --include-owners",
+            "You can get the custom data for each entity using --include-metadata",
+            "Use --filter to filter results by JSONPath expressions, e.g., --filter 'name=.*my-service.*'",
+        ],
+        "example_json_list_item": {
+            "id": "en30c6bd1d7a42943d",
+            "name": "Awesome Repo",
+            "tag": "awesome-repo",
+            "description": "the best repo",
+            "type": "service",
+            "hierarchy": {
+                "parents": [],
+                "children": []
+            },
+            "groups": [],
+            "metadata": [],
+            "lastUpdated": "2025-06-10T03:47:10.052689",
+            "links": [],
+            "isArchived": False,
+            "git": {
+                "repository": "martindstone-org3/awesome-repo",
+                "alias": "gh-relay",
+                "basepath": None,
+                "provider": "github",
+                "repositoryUrl": "https://api.github.com/martindstone-org3/awesome-repo"
+            },
+            "owners": None,
+            "slackChannels": [],
+            "members": None
+        },
+        "description": "List entities in the catalog - services, domains, teams, etc.",
         "examples": [
             {
                 "description": "List all services",
-                "arguments": {"types": "service"}
+                "arguments": {"types": "service"},
+                "note": "Default is JSON output, use --csv for CSV output"
             },
             {
                 "description": "list services with table output and filtering",
-                "arguments": {"csv": True, "types": "service", "filter": "tag=.*pattern.*"}
-            }
+                "arguments": {"csv": True, "types": "service", "filter": "tag=.*pattern.*"},
+                "note": "Use CSV output for table format; filtering uses Python regex syntax; example below for some jsonpath items that can be used",
+            },
+            {
+                "description": "list services whose names match a regex",
+                "arguments": {"csv": True, "filter": "name=.*my-service.*"},
+                "note": "Use Python regex syntax for filtering",
+            },
         ]
+    },
+    "teams update": {
+        "description": "Update a team with members, links, and metadata",
+        "hints": [
+            "Use 'teams get' to retrieve team details, then add your changes to the JSON",
+            "When adding members, the REST API does not immediately return the updated object. GET the team again to see changes.",
+            {
+                "example JSON for stdin": json.dumps({
+                    "id": "en37adfc4c00cec865",
+                    "teamTag": "martin-gautham",
+                    "catalogEntityTag": "martin-gautham",
+                    "metadata": {
+                        "name": "Martin-Gautham",
+                    },
+                    "links": [],
+                    "slackChannels": [],
+                    "cortexTeam": {
+                        "members": [
+                            {
+                                "name": "Martin Stone",
+                                "email": "martin.stone@cortex.io"
+                            }
+                        ]
+                    },
+                    "type": "CORTEX"
+                })
+            }
+        ],
     }
 }
 
@@ -98,6 +167,12 @@ COMMON_PATTERNS = {
 class FastCommandDiscovery:
     """Extract command information directly from Click/Typer without subprocess calls"""
 
+    paths_to_skip = [
+        "mcp",
+        "teams update-metadata",
+        "teams update-members",
+    ]
+
     def __init__(self, app: typer.Typer):
         self.app = app
         self.commands_cache = self._extract_all_commands()
@@ -109,9 +184,9 @@ class FastCommandDiscovery:
 
         def traverse(cmd: Command, path: List[str] = []):
             current_path = " ".join(path) if path else ""
-            
-            if current_path == "mcp":
-                # Skip the root MCP command
+
+            if current_path in self.paths_to_skip:
+                logger.info(f"Skipping command: {current_path}")
                 return
 
             logger.info(f"Processing command: {current_path}")
@@ -155,6 +230,10 @@ class FastCommandDiscovery:
                                     except (TypeError, ValueError):
                                         default_val = str(default_val)  # Convert to string if not
 
+                                # skip table output option because it confuses the llm
+                                if param.name.lower().endswith("table"):
+                                    continue
+
                                 # Ensure all values are JSON serializable
                                 opt_info = {
                                     "name": str(param.name),
@@ -166,6 +245,9 @@ class FastCommandDiscovery:
                                     "is_flag": bool(param.is_flag),
                                     "multiple": bool(param.multiple)
                                 }
+                                
+                                if param.name.lower().endswith("filters"):
+                                    opt_info["help"] = "Filtering uses Python regex syntax; format is {'filter': ['jsonpath=regex']; common patterns include name=.*str.* and tag=.*str.*}; see command examples for more"
 
                                 # Check for stdin support
                                 help_lower = (param.help or "").lower()
@@ -468,6 +550,10 @@ class CortexMCPServer:
             if isinstance(value, bool):
                 if value:
                     cmd_parts.append(f"--{key.replace('_', '-')}")
+            elif isinstance(value, (list, tuple)):
+                for item in value:
+                    cmd_parts.append(f"--{key.replace('_', '-')}")
+                    cmd_parts.append(str(item))
             else:
                 cmd_parts.append(f"--{key.replace('_', '-')}")
                 cmd_parts.append(str(value))
