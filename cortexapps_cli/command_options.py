@@ -17,7 +17,7 @@ class ListCommandOptions:
     ]
     filters = Annotated[
         Optional[List[str]],
-        typer.Option("--filter", "-F", help="Filters to apply on rows, in the format jsonpath=regex", show_default=False)
+        typer.Option("--filter", "-F", help="Filters to apply on rows, in the format jsonpath=regex (python re syntax)", show_default=False)
     ]
     no_headers = Annotated[
         Optional[bool],

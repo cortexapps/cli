@@ -39,6 +39,9 @@ import cortexapps_cli.commands.scorecards as scorecards
 import cortexapps_cli.commands.teams as teams
 import cortexapps_cli.commands.workflows as workflows
 
+# from cortexapps_cli.mcp.command import add_mcp_command
+from cortexapps_cli.mcp.server4 import create_mcp_command
+
 app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="rich",
@@ -139,6 +142,10 @@ def version():
     except Exception as e:
         version = importlib.metadata.version('cortexapps_cli')
     print(version)
+
+# Add MCP command to the app
+# add_mcp_command(app)
+create_mcp_command(app)
 
 if __name__ == "__main__":
     app()

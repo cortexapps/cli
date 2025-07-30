@@ -20,8 +20,8 @@ python = "^3.11"
 requests = "^2.32.4"
 pyyaml = ">= 6.0.1, < 7"
 urllib3 = ">= 2.2.2"
-typer = "^0.12.5"
-click = "<8.2"
+mcp = {extras = ["cli"], version = "^1.12.2"}
+typer = "^0.16.0"
 
 [tool.poetry.scripts]
 cortex = "cortexapps_cli.cli:app"
