@@ -160,7 +160,12 @@ COMMON_PATTERNS = {
         "description": "For options that accept multiple values",
         "pattern": 'Use arrays: {"option_name": ["value1", "value2"]}',
         "note": "Check 'multiple': true in option details"
-    }
+    },
+    "delete_commands": {
+        "description": "For commands that delete entities",
+        "pattern": "these can be dangerous! Use with caution",
+        "note": "Always confirm before deleting entities. maybe make the user repeat some dynamically generated text to confirm they understand the command will delete something"
+    },
 }
 
 
@@ -217,6 +222,12 @@ class FastCommandDiscovery:
                         "accepts_stdin": False,
                         "option_count": 0
                     }
+
+                    if current_path.lower().endswith("delete"):
+                        cmd_info["type"] = "delete_command"
+                        cmd_info["safety_level"] = "destructive"
+                        cmd_info["confirmation_required"] = True
+                        cmd_info["ai_instructions"] = "Always confirm before executing delete commands. Maybe make the user repeat some dynamically generated text to confirm they understand the command will delete something."
 
                     # Extract options
                     for param in cmd.params:
@@ -438,7 +449,9 @@ class CortexMCPServer:
         # Tool 4: Execute commands (unchanged)
         cortex_cli_tool = Tool(
             name="cortex_cli",
-            description="Execute any Cortex CLI command. Use other tools first to discover commands and options.",
+            description="Execute any Cortex CLI command. Use other tools first to discover commands and options. "
+                + "IMPORTANT: For any command containing 'delete', 'remove', or 'destroy', you MUST ask the user to confirm."
+                + "List commands can return large responses, so use pagination: on initial list, use --page 0 and --page-size 100, then subsequent pages with --page 1, --page 2, etc. The first page will often include a total count of items.",
             inputSchema={
                 "type": "object",
                 "properties": {
