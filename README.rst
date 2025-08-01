@@ -440,6 +440,20 @@ This recipe does the following:
     done
 
 -----------------------------------------------------------------------------
+Export all workflows
+-----------------------------------------------------------------------------
+
+This recipe creates YAML files for each Workflow.  This may be helpful if you are considering enabling GitOps for Workflows and you want to export current Workflows as a starting point.
+
+.. code:: bash
+
+    for workflow in `cortex workflows list --csv --no-headers --columns tag`
+    do
+       echo "workflow = $workflow"
+       cortex workflows get --tag $workflow --yaml > $workflow.yaml
+    done
+
+-----------------------------------------------------------------------------
 Obfuscating a Cortex export
 -----------------------------------------------------------------------------
 

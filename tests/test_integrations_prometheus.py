@@ -10,7 +10,7 @@ def _dummy_file(tmp_path):
 @responses.activate
 def test_integrations_prometheus_add():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/prometheus/configuration", json={}, status=200)
-    cli(["integrations", "prometheus", "add", "-a", "myAlias", "-h", "my.host.com", "--api-key", "123456", "-i"])
+    cli(["integrations", "prometheus", "add", "-a", "myAlias", "-h", "my.host.com", "--username", "my-user", "--password", "my-password", "-t", "my-tenant", "-i"])
 
 @responses.activate
 def test_integrations_prometheus_add_multiple(tmp_path):
