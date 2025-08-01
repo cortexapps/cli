@@ -40,17 +40,19 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
 
-    - name: Install git-chglog
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
       run: |
-        curl -LO https://github.com/git-chglog/git-chglog/releases/download/v0.15.4/git-chglog_0.15.4_linux_386.tar.gz
-        tar -xzf git-chglog_0.15.4_linux_386.tar.gz
-        chmod +x git-chglog
-        sudo mv git-chglog /usr/local/bin/
-        git-chglog --version
+        python -m pip install --upgrade pip
+        pip install poetry git-changelog
 
     - name: Generate HISTORY.md
       run: |
-        git-chglog -o HISTORY.md
+        git-changelog > HISTORY.md
         cat HISTORY.md
 
     - name: Commit and Push
@@ -62,16 +64,6 @@ jobs:
           git commit -m "chore: update HISTORY.md for ${{ github.ref_name }}"
           git push
         fi
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install poetry
 
     - name: Git details about version
       id: git-details

@@ -8,9 +8,11 @@ app = typer.Typer(help="Prometheus commands", no_args_is_help=True)
 @app.command()
 def add(
     ctx: typer.Context,
-    alias: str = typer.Option(..., "--alias", "-a", help="Alias for this configuration"),
-    api_key: str = typer.Option(..., "--api-key", "-api", help="API key"),
+    alias: str = typer.Option(None,  "--alias", "-a", help="Alias for this configuration"),
     host: str = typer.Option(None, "--host", "-h", help="Optional host name"),
+    username: str = typer.Option(None, "--username", "-u", help="username"),
+    password: str = typer.Option(None, "--password", "-p", help="password"),
+    tenant_id: str = typer.Option(None, "--tenant", "-t", help="Optional tenant id"),
     is_default: bool = typer.Option(False, "--is-default", "-i", help="If this is the default configuration"),
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing configurations, if command line options not used; can be passed as stdin with -, example: -f-")] = None,
 ):
@@ -21,19 +23,23 @@ def add(
     client = ctx.obj["client"]
 
     if file_input:
-        if alias or api_key or is_default or host:
-            raise typer.BadParameter("When providing a custom event definition file, do not specify any other custom event attributes")
+        if alias or host or username or password or tenant_id or is_default:
+            raise typer.BadParameter("When providing a prometheus definition file, do not specify any other attributes")
         data = json.loads("".join([line for line in file_input]))
     else:
+        
         data = {
            "alias": alias,
-           "apiKey": api_key,
            "host": host,
-           "isDefault": is_default,
+           "username": username,
+           "password": password,
+           "tenant_id": tenant_id,
+           "is_default": is_default
         }       
 
-        # remove any data elements that are None - can only be is_default
-        data = {k: v for k, v in data.items() if v is not None}
+        for k, v in data.items():
+            if v is None:
+                raise typer.BadParameter("Missing required parameter: " + k)
     
     r = client.post("api/v1/prometheus/configuration", data=data)
     print_json(data=r)
@@ -51,7 +57,7 @@ def add_multiple(
 
     data = json.loads("".join([line for line in file_input]))
 
-    r = client.put("api/v1/aws/configurations", data=data)
+    r = client.put("api/v1/prometheus/configurations", data=data)
     print_json(data=r)
 
 @app.command()
