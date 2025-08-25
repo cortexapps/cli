@@ -65,7 +65,7 @@ def add(
         # remove any data elements that are None - can only be is_default
         data = {k: v for k, v in data.items() if v is not None}
     
-    r = client.post("api/v1/azure-devops/configuration", data=data)
+    r = client.post("api/v1/azure-resources/configuration", data=data)
     print_json(data=r)
 
 @app.command()
@@ -81,7 +81,7 @@ def add_multiple(
 
     data = json.loads("".join([line for line in file_input]))
 
-    r = client.put("api/v1/aws/configurations", data=data)
+    r = client.put("api/v1/azure-resources/configurations", data=data)
     print_json(data=r)
 
 @app.command()
