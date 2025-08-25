@@ -55,7 +55,7 @@ def add_multiple(
 
     data = json.loads("".join([line for line in file_input]))
 
-    r = client.put("api/v1/aws/configurations", data=data)
+    r = client.put("api/v1/azure-devops/configurations", data=data)
     print_json(data=r)
 
 @app.command()
