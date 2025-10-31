@@ -18,16 +18,7 @@ Available recipes:
     test testname # Run a single test, ie: just test tests/test_catalog.py
     test-all      # Run all tests
     test-import   # Run import test, a pre-requisite for any tests that rely on test data.
-    test-parallel # Run tests that can run in parallel
-    test-serial   # Run tests that have to run sequentially
 ```
-
-## Sequential and parallel tests
-Most tests can run in a parallel but a handful have dependencies that can impact other tests,
-for example changing the scope of CORTEX_API_KEY, so they have to run sequentially.
-
-The `test-all` target runs all the tests that can be run in parallel, followed by those that
-have to run sequentially.
 
 # Commit messages
 The CLI uses [git-changelog](https://pypi.org/project/git-changelog/) to dynamically generate
