@@ -78,7 +78,7 @@ app.add_typer(workflows.app, name="workflows")
 def global_callback(
     ctx: typer.Context,
     api_key: str = typer.Option(None, "--api-key", "-k", help="API key", envvar="CORTEX_API_KEY"),
-    url: str = typer.Option("https://api.getcortexapp.com", "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
+    url: str = typer.Option(None, "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
     config_file: str = typer.Option(os.path.join(os.path.expanduser('~'), '.cortex', 'config'), "--config", "-c", help="Config file path", envvar="CORTEX_CONFIG"),
     tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant alias", envvar="CORTEX_TENANT_ALIAS"),
     log_level: Annotated[str, typer.Option("--log-level", "-l", help="Set the logging level")] = "INFO"
@@ -109,16 +109,17 @@ def global_callback(
     else:
         # config file found
         # if api_key is provided, use that in preference to the config file
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        if tenant not in config:
+            raise typer.BadParameter(f"Tenant {tenant} not found in config file")
         if not api_key:
-            config = configparser.ConfigParser()
-            config.read(config_file)
-            if tenant not in config:
-                raise typer.BadParameter(f"Tenant {tenant} not found in config file")
             api_key = config[tenant]["api_key"]
-            if url not in config[tenant]:
-                url = url
+        if not url:
+            if 'base_url' in config[tenant].keys():
+                url = config[tenant]['base_url']
             else:
-                url = config[tenant]["base_url"]
+                url = "https://api.getcortexapp.com"
 
     # strip any quotes or spaces from the api_key and url
     api_key = api_key.strip('"\' ')
