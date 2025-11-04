@@ -50,13 +50,23 @@ def _directory_name(directory, backup_type):
     return directory
 
 def _file_name(directory, tag, content, extension):
+    import time
+    start = time.time()
     print("--> " + tag)
+    print_elapsed = time.time() - start
+
     file = directory + "/" + tag + "." + extension
     if extension == "json":
         is_json = True
     else:
         is_json = False
+
+    write_start = time.time()
     _write_file(content, file, is_json)
+    write_elapsed = time.time() - write_start
+
+    if write_elapsed > 1.0 or print_elapsed > 1.0:
+        print(f"[DEBUG] {tag}: print={print_elapsed:.2f}s, write={write_elapsed:.2f}s")
 
 def _write_file(content, file, is_json=False):
     with open(file, 'w') as f:
