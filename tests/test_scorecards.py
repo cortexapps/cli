@@ -27,9 +27,10 @@ def test_scorecards():
     # cannot rely on a scorecard evaluation being complete, so not performing any validation
     cli(["scorecards", "next-steps", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
 
-    # Test trigger-evaluation command
+    # Test trigger-evaluation command (accepts both success and 409 Already evaluating)
     response = cli(["scorecards", "trigger-evaluation", "-s", "cli-test-scorecard", "-e", "cli-test-service"], return_type=ReturnType.STDOUT)
-    assert "Scorecard evaluation triggered successfully" in response, "Should receive success message when triggering evaluation"
+    assert ("Scorecard evaluation triggered successfully" in response or "Already evaluating scorecard" in response), \
+        "Should receive success message or 409 Already evaluating error"
 
     # cannot rely on a scorecard evaluation being complete, so not performing any validation
     #response = cli(["scorecards", "scores", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
