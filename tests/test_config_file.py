@@ -70,3 +70,28 @@ def test_config_file_base_url_env_var(monkeypatch, tmp_path):
     f.write_text(content)
     monkeypatch.setenv("CORTEX_BASE_URL", "https://api.getcortexapp.com")
     cli(["-c", str(f), "-t", "mySection", "entity-types", "list"])
+
+def test_no_base_url_defaults_correctly(monkeypatch, tmp_path):
+    """
+    Test that when base_url is not provided via config file or environment variable,
+    the CLI defaults to https://api.getcortexapp.com without crashing.
+
+    This reproduces the bug from issue #151 where url.strip() was called on None.
+    """
+    # Remove CORTEX_BASE_URL from environment
+    monkeypatch.delenv("CORTEX_BASE_URL", raising=False)
+
+    cortex_api_key = os.getenv('CORTEX_API_KEY')
+
+    # Create config file WITHOUT base_url
+    f = tmp_path / "cortex_config_no_base_url"
+    template = Template("""
+        [default]
+        api_key = "${cortex_api_key}"
+        """)
+    content = template.substitute(cortex_api_key=cortex_api_key)
+    f.write_text(content)
+
+    # This should not crash and should use the default URL
+    response = cli(["-c", str(f), "entity-types", "list"])
+    assert 'definitions' in response, "Should successfully call API with default URL"
