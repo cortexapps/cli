@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.1.0](https://github.com/cortexapps/cli/releases/tag/1.1.0) - 2025-11-04
+
+<small>[Compare with 1.0.6](https://github.com/cortexapps/cli/compare/1.0.6...1.1.0)</small>
+
+### Added
+
+- add: support for triggering scorecard entity evaluation ([66d73d9](https://github.com/cortexapps/cli/commit/66d73d9ec5ab6d2373736f636e53643abe06c063) by Jeff Schnitter).
+
 ## [1.0.6](https://github.com/cortexapps/cli/releases/tag/1.0.6) - 2025-10-31
 
 <small>[Compare with 1.0.5](https://github.com/cortexapps/cli/compare/1.0.5...1.0.6)</small>
