@@ -117,14 +117,19 @@ def _export_plugins(ctx, directory):
         except Exception as e:
             return (tag, None, str(e))
 
+    # Fetch all plugins in parallel
     with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_plugin, tag): tag for tag in tags_sorted}
+        results = []
         for future in as_completed(futures):
-            tag, content, error = future.result()
-            if error:
-                print(f"Failed to export plugin {tag}: {error}")
-            else:
-                _file_name(directory, tag, content, "json")
+            results.append(future.result())
+
+    # Sort results alphabetically and write in order
+    for tag, content, error in sorted(results, key=lambda x: x[0]):
+        if error:
+            print(f"Failed to export plugin {tag}: {error}")
+        else:
+            _file_name(directory, tag, content, "json")
 
 def _export_scorecards(ctx, directory):
     directory = _directory_name(directory, "scorecards")
@@ -140,14 +145,19 @@ def _export_scorecards(ctx, directory):
         except Exception as e:
             return (tag, None, str(e))
 
+    # Fetch all scorecards in parallel
     with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_scorecard, tag): tag for tag in tags_sorted}
+        results = []
         for future in as_completed(futures):
-            tag, content, error = future.result()
-            if error:
-                print(f"Failed to export scorecard {tag}: {error}")
-            else:
-                _file_name(directory, tag, content, "yaml")
+            results.append(future.result())
+
+    # Sort results alphabetically and write in order
+    for tag, content, error in sorted(results, key=lambda x: x[0]):
+        if error:
+            print(f"Failed to export scorecard {tag}: {error}")
+        else:
+            _file_name(directory, tag, content, "yaml")
 
 def _export_workflows(ctx, directory):
     directory = _directory_name(directory, "workflows")
@@ -301,14 +311,19 @@ def _import_catalog(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
+        # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_catalog_file, file_info): file_info[0] for file_info in files}
+            results = []
             for future in as_completed(futures):
-                filename, error = future.result()
-                if error:
-                    print(f"   Failed to import {filename}: {error}")
-                else:
-                    print(f"   Importing: {filename}")
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 def _import_plugins(ctx, directory):
     if os.path.isdir(directory):
@@ -326,14 +341,19 @@ def _import_plugins(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
+        # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_plugin_file, file_info): file_info[0] for file_info in files}
+            results = []
             for future in as_completed(futures):
-                filename, error = future.result()
-                if error:
-                    print(f"   Failed to import {filename}: {error}")
-                else:
-                    print(f"   Importing: {filename}")
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 def _import_scorecards(ctx, directory):
     if os.path.isdir(directory):
@@ -351,14 +371,19 @@ def _import_scorecards(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
+        # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_scorecard_file, file_info): file_info[0] for file_info in files}
+            results = []
             for future in as_completed(futures):
-                filename, error = future.result()
-                if error:
-                    print(f"   Failed to import {filename}: {error}")
-                else:
-                    print(f"   Importing: {filename}")
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 def _import_workflows(ctx, directory):
     if os.path.isdir(directory):
@@ -376,14 +401,19 @@ def _import_workflows(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
+        # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_workflow_file, file_info): file_info[0] for file_info in files}
+            results = []
             for future in as_completed(futures):
-                filename, error = future.result()
-                if error:
-                    print(f"   Failed to import {filename}: {error}")
-                else:
-                    print(f"   Importing: {filename}")
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 @app.command("import")
 def import_tenant(
