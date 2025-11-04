@@ -10,6 +10,7 @@ on:
 
 env:
   CORTEX_API_KEY:      ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+  CORTEX_BASE_URL:     ${{ vars.CORTEX_BASE_URL }}
   DOCKER_USERNAME:     jeffschnittercortex
   DOCKER_PASSWORD:     ${{ secrets.DOCKER_PASSWORD }}
   DOCKER_ORGANIZATION: cortexapp
@@ -95,6 +96,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: cortexapp/cli:latest
+    env:
+      CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+      CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL }}
     steps:
 
     - name: Post pypi deploy event to Cortex
@@ -164,6 +168,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: cortexapp/cli:latest
+    env:
+      CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+      CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL }}
     steps:
 
     - name: Post docker deploy event to Cortex
@@ -211,6 +218,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: cortexapp/cli:latest
+    env:
+      CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+      CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL }}
     steps:
 
     - name: Post homebrew deploy event to Cortex
