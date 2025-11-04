@@ -183,10 +183,25 @@ def scores(
        "entityTag": tag_or_id,
        "page": page,
        "pageSize": page_size
-    }       
+    }
 
     # remove any params that are None
     params = {k: v for k, v in params.items() if v is not None}
-    
+
     client.fetch_or_get("api/v1/scorecards/" + scorecard_tag + "/scores", page, _print, params=params)
+
+@app.command(name="trigger-evaluation")
+def trigger_evaluation(
+    ctx: typer.Context,
+    scorecard_tag: str = typer.Option(..., "--scorecard-tag", "-s", help="Unique tag for the scorecard"),
+    entity_tag: str = typer.Option(..., "--entity-tag", "-e", help="The entity's unique tag (x-cortex-tag)"),
+):
+    """
+    Trigger score evaluation for a specific entity in a scorecard
+    """
+
+    client = ctx.obj["client"]
+
+    client.post(f"api/v1/scorecards/{scorecard_tag}/entity/{entity_tag}/scores")
+    print(f"Scorecard evaluation triggered successfully for entity '{entity_tag}' in scorecard '{scorecard_tag}'")
 
