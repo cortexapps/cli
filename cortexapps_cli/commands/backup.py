@@ -71,7 +71,7 @@ def _file_name(directory, tag, content, extension):
 def _write_file(content, file, is_json=False):
     with open(file, 'w') as f:
         if is_json:
-            print(content, file=f)
+            json.dump(content, f, indent=2)
         else:
             f.write(str(content) + "\n")
     f.close()
