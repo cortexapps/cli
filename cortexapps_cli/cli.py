@@ -121,6 +121,10 @@ def global_callback(
             else:
                 url = "https://api.getcortexapp.com"
 
+    # Set default URL if not provided
+    if not url:
+        url = "https://api.getcortexapp.com"
+
     # strip any quotes or spaces from the api_key and url
     api_key = api_key.strip('"\' ')
     url = url.strip('"\' /')
