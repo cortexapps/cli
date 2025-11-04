@@ -23,6 +23,8 @@ import cortexapps_cli.commands.dependencies as dependencies
 import cortexapps_cli.commands.deploys as deploys
 import cortexapps_cli.commands.discovery_audit as discovery_audit
 import cortexapps_cli.commands.docs as docs
+import cortexapps_cli.commands.entity_relationships as entity_relationships
+import cortexapps_cli.commands.entity_relationship_types as entity_relationship_types
 import cortexapps_cli.commands.entity_types as entity_types
 import cortexapps_cli.commands.gitops_logs as gitops_logs
 import cortexapps_cli.commands.groups as groups
@@ -57,6 +59,8 @@ app.add_typer(dependencies.app, name="dependencies")
 app.add_typer(deploys.app, name="deploys")
 app.add_typer(discovery_audit.app, name="discovery-audit")
 app.add_typer(docs.app, name="docs")
+app.add_typer(entity_relationships.app, name="entity-relationships")
+app.add_typer(entity_relationship_types.app, name="entity-relationship-types")
 app.add_typer(entity_types.app, name="entity-types")
 app.add_typer(gitops_logs.app, name="gitops-logs")
 app.add_typer(groups.app, name="groups")
@@ -120,6 +124,10 @@ def global_callback(
                 url = config[tenant]['base_url']
             else:
                 url = "https://api.getcortexapp.com"
+
+    # Set default URL if not provided
+    if not url:
+        url = "https://api.getcortexapp.com"
 
     # strip any quotes or spaces from the api_key and url
     api_key = api_key.strip('"\' ')
