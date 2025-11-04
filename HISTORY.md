@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.0.6](https://github.com/cortexapps/cli/releases/tag/1.0.6) - 2025-10-31
+
+<small>[Compare with 1.0.5](https://github.com/cortexapps/cli/compare/1.0.5...1.0.6)</small>
+
+### Added
+
+- Add Stephanie to CODEOWNERS ([201daed](https://github.com/cortexapps/cli/commit/201daed2bf4b4652f846d4c2da4f849b7eccccd3) by Jeff Schnitter).
+
+### Fixed
+
+- fix: ensure base_url override is honored when parsing config file ([c9678e9](https://github.com/cortexapps/cli/commit/c9678e9e7203ba90822593688b772a57aea962dc) by Jeff Schnitter).
+
 ## [1.0.5](https://github.com/cortexapps/cli/releases/tag/1.0.5) - 2025-08-25
 
 <small>[Compare with 1.0.4](https://github.com/cortexapps/cli/compare/1.0.4...1.0.5)</small>
