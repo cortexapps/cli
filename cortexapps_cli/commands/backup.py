@@ -104,6 +104,7 @@ def _export_ip_allowlist(ctx, directory):
     _file_name(directory, "ip-allowlist", str(content), "json") 
 
 def _export_plugins(ctx, directory):
+    import time
     directory = _directory_name(directory, "plugins")
 
     list = plugins.list(ctx, _print=False, include_drafts="true", page=None, page_size=None)
@@ -112,17 +113,24 @@ def _export_plugins(ctx, directory):
 
     def fetch_plugin(tag):
         try:
+            start = time.time()
             content = plugins.get(ctx, tag_or_id=tag, include_blob="true", _print=False)
+            elapsed = time.time() - start
+            print(f"[DEBUG] Fetched {tag} in {elapsed:.2f}s")
             return (tag, content, None)
         except Exception as e:
             return (tag, None, str(e))
 
     # Fetch all plugins in parallel
+    print(f"[DEBUG] Starting parallel fetch with 30 workers for {len(tags_sorted)} plugins")
+    overall_start = time.time()
     with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_plugin, tag): tag for tag in tags_sorted}
         results = []
         for future in as_completed(futures):
             results.append(future.result())
+    overall_elapsed = time.time() - overall_start
+    print(f"[DEBUG] All fetches completed in {overall_elapsed:.2f}s")
 
     # Sort results alphabetically and write in order
     for tag, content, error in sorted(results, key=lambda x: x[0]):
