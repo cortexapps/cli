@@ -117,7 +117,7 @@ def _export_plugins(ctx, directory):
         except Exception as e:
             return (tag, None, str(e))
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_plugin, tag): tag for tag in tags_sorted}
         for future in as_completed(futures):
             tag, content, error = future.result()
@@ -140,7 +140,7 @@ def _export_scorecards(ctx, directory):
         except Exception as e:
             return (tag, None, str(e))
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_scorecard, tag): tag for tag in tags_sorted}
         for future in as_completed(futures):
             tag, content, error = future.result()
@@ -152,25 +152,19 @@ def _export_scorecards(ctx, directory):
 def _export_workflows(ctx, directory):
     directory = _directory_name(directory, "workflows")
 
-    list = workflows.list(ctx, _print=False, include_actions="false", page=None, page_size=None, search_query=None)
-    tags = [workflow["tag"] for workflow in list["workflows"]]
-    tags_sorted = sorted(tags)
+    # Get all workflows with actions in one API call
+    list = workflows.list(ctx, _print=False, include_actions="true", page=None, page_size=None, search_query=None)
+    workflows_data = sorted(list["workflows"], key=lambda x: x["tag"])
 
-    def fetch_workflow(tag):
+    # Convert JSON workflows to YAML and write them
+    for workflow in workflows_data:
+        tag = workflow["tag"]
         try:
-            content = workflows.get(ctx, tag=tag, yaml="true", _print=False)
-            return (tag, content, None)
+            # Convert the JSON workflow data to YAML format
+            workflow_yaml = yaml.dump(workflow, default_flow_style=False, sort_keys=False)
+            _file_name(directory, tag, workflow_yaml, "yaml")
         except Exception as e:
-            return (tag, None, str(e))
-
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(fetch_workflow, tag): tag for tag in tags_sorted}
-        for future in as_completed(futures):
-            tag, content, error = future.result()
-            if error:
-                print(f"Failed to export workflow {tag}: {error}")
-            else:
-                _file_name(directory, tag, content, "yaml")
+            print(f"Failed to export workflow {tag}: {e}")
 
 backupTypes = {
         "catalog",
@@ -307,7 +301,7 @@ def _import_catalog(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_catalog_file, file_info): file_info[0] for file_info in files}
             for future in as_completed(futures):
                 filename, error = future.result()
@@ -332,7 +326,7 @@ def _import_plugins(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_plugin_file, file_info): file_info[0] for file_info in files}
             for future in as_completed(futures):
                 filename, error = future.result()
@@ -357,7 +351,7 @@ def _import_scorecards(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_scorecard_file, file_info): file_info[0] for file_info in files}
             for future in as_completed(futures):
                 filename, error = future.result()
@@ -382,7 +376,7 @@ def _import_workflows(ctx, directory):
             except Exception as e:
                 return (filename, str(e))
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_workflow_file, file_info): file_info[0] for file_info in files}
             for future in as_completed(futures):
                 filename, error = future.result()
