@@ -50,23 +50,13 @@ def _directory_name(directory, backup_type):
     return directory
 
 def _file_name(directory, tag, content, extension):
-    import time
-    start = time.time()
     print("--> " + tag)
-    print_elapsed = time.time() - start
-
     file = directory + "/" + tag + "." + extension
     if extension == "json":
         is_json = True
     else:
         is_json = False
-
-    write_start = time.time()
     _write_file(content, file, is_json)
-    write_elapsed = time.time() - write_start
-
-    if write_elapsed > 1.0 or print_elapsed > 1.0:
-        print(f"[DEBUG] {tag}: print={print_elapsed:.2f}s, write={write_elapsed:.2f}s")
 
 def _write_file(content, file, is_json=False):
     with open(file, 'w') as f:
@@ -114,52 +104,32 @@ def _export_ip_allowlist(ctx, directory):
     _file_name(directory, "ip-allowlist", str(content), "json") 
 
 def _export_plugins(ctx, directory):
-    import time
-    overall_start = time.time()
-
     directory = _directory_name(directory, "plugins")
 
-    list_start = time.time()
     list = plugins.list(ctx, _print=False, include_drafts="true", page=None, page_size=None)
-    list_elapsed = time.time() - list_start
-    print(f"[DEBUG] plugins.list() took {list_elapsed:.2f}s")
-
     tags = [plugin["tag"] for plugin in list["plugins"]]
     tags_sorted = sorted(tags)
 
     def fetch_plugin(tag):
         try:
-            start = time.time()
             content = plugins.get(ctx, tag_or_id=tag, include_blob="true", _print=False)
-            elapsed = time.time() - start
-            print(f"[DEBUG] Fetched {tag} in {elapsed:.2f}s")
             return (tag, content, None)
         except Exception as e:
             return (tag, None, str(e))
 
     # Fetch all plugins in parallel
-    print(f"[DEBUG] Starting parallel fetch with 30 workers for {len(tags_sorted)} plugins")
-    fetch_start = time.time()
     with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_plugin, tag): tag for tag in tags_sorted}
         results = []
         for future in as_completed(futures):
             results.append(future.result())
-    fetch_elapsed = time.time() - fetch_start
-    print(f"[DEBUG] All fetches completed in {fetch_elapsed:.2f}s")
 
     # Sort results alphabetically and write in order
-    write_start = time.time()
     for tag, content, error in sorted(results, key=lambda x: x[0]):
         if error:
             print(f"Failed to export plugin {tag}: {error}")
         else:
             _file_name(directory, tag, content, "json")
-    write_elapsed = time.time() - write_start
-    print(f"[DEBUG] Writing files took {write_elapsed:.2f}s")
-
-    total_elapsed = time.time() - overall_start
-    print(f"[DEBUG] Total _export_plugins took {total_elapsed:.2f}s")
 
 def _export_scorecards(ctx, directory):
     directory = _directory_name(directory, "scorecards")

@@ -57,12 +57,6 @@ class CortexClient:
         self.logger.debug(f"Response Headers: {response.headers}")
         self.logger.debug(f"Response Content: {response.text}")
 
-        # Debug connection pool stats
-        adapter = self.session.get_adapter(url)
-        if hasattr(adapter, 'poolmanager') and adapter.poolmanager:
-            pool = adapter.poolmanager.connection_pool_kw
-            self.logger.debug(f"Connection pool stats: {pool}")
-
         if not response.ok:
             try:
                 # try to parse the error message
