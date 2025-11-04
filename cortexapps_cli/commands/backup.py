@@ -105,9 +105,15 @@ def _export_ip_allowlist(ctx, directory):
 
 def _export_plugins(ctx, directory):
     import time
+    overall_start = time.time()
+
     directory = _directory_name(directory, "plugins")
 
+    list_start = time.time()
     list = plugins.list(ctx, _print=False, include_drafts="true", page=None, page_size=None)
+    list_elapsed = time.time() - list_start
+    print(f"[DEBUG] plugins.list() took {list_elapsed:.2f}s")
+
     tags = [plugin["tag"] for plugin in list["plugins"]]
     tags_sorted = sorted(tags)
 
@@ -123,21 +129,27 @@ def _export_plugins(ctx, directory):
 
     # Fetch all plugins in parallel
     print(f"[DEBUG] Starting parallel fetch with 30 workers for {len(tags_sorted)} plugins")
-    overall_start = time.time()
+    fetch_start = time.time()
     with ThreadPoolExecutor(max_workers=30) as executor:
         futures = {executor.submit(fetch_plugin, tag): tag for tag in tags_sorted}
         results = []
         for future in as_completed(futures):
             results.append(future.result())
-    overall_elapsed = time.time() - overall_start
-    print(f"[DEBUG] All fetches completed in {overall_elapsed:.2f}s")
+    fetch_elapsed = time.time() - fetch_start
+    print(f"[DEBUG] All fetches completed in {fetch_elapsed:.2f}s")
 
     # Sort results alphabetically and write in order
+    write_start = time.time()
     for tag, content, error in sorted(results, key=lambda x: x[0]):
         if error:
             print(f"Failed to export plugin {tag}: {error}")
         else:
             _file_name(directory, tag, content, "json")
+    write_elapsed = time.time() - write_start
+    print(f"[DEBUG] Writing files took {write_elapsed:.2f}s")
+
+    total_elapsed = time.time() - overall_start
+    print(f"[DEBUG] Total _export_plugins took {total_elapsed:.2f}s")
 
 def _export_scorecards(ctx, directory):
     directory = _directory_name(directory, "scorecards")
