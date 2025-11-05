@@ -1,5 +1,6 @@
 from tests.helpers.utils import *
 import yaml
+import time
 
 # Get rule id to be used in exemption tests.
 # TODO: check for and revoke any PENDING exemptions.
@@ -10,7 +11,18 @@ def _get_rule(title):
     return rule_id[0]
 
 def test_scorecards():
-    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-scorecard.yaml"])
+    # Retry scorecard create in case there's an active evaluation
+    # (can happen if test_import.py just triggered an evaluation)
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-scorecard.yaml"])
+            break
+        except Exception as e:
+            if "500" in str(e) and attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s
+                continue
+            raise
 
     response = cli(["scorecards", "list"])
     assert any(scorecard['tag'] == 'cli-test-scorecard' for scorecard in response['scorecards']), "Should find scorecard with tag cli-test-scorecard"
@@ -43,7 +55,17 @@ def test_scorecards():
 #    cli(["scorecards", "scores", "-t", "cli-test-scorecard"])
  
 def test_scorecards_drafts():
-    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-draft-scorecard.yaml"])
+    # Retry scorecard create in case there's an active evaluation
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-draft-scorecard.yaml"])
+            break
+        except Exception as e:
+            if "500" in str(e) and attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s
+                continue
+            raise
 
     response = cli(["scorecards", "list", "-s"])
     assert any(scorecard['tag'] == 'cli-test-draft-scorecard' for scorecard in response['scorecards'])

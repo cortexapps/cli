@@ -1,4 +1,6 @@
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import json
 import typer
 from rich import print
@@ -20,6 +22,20 @@ class CortexClient:
         logging.basicConfig(level=numeric_level)
         self.logger = logging.getLogger(__name__)
 
+        # Create a session with connection pooling for better performance
+        self.session = requests.Session()
+
+        # Configure connection pool to support concurrent requests
+        # pool_connections: number of connection pools to cache
+        # pool_maxsize: maximum number of connections to save in the pool
+        adapter = HTTPAdapter(
+            pool_connections=10,
+            pool_maxsize=50,
+            max_retries=Retry(total=3, backoff_factor=0.3, status_forcelist=[500, 502, 503, 504])
+        )
+        self.session.mount('https://', adapter)
+        self.session.mount('http://', adapter)
+
     def request(self, method, endpoint, params={}, headers={}, data=None, raw_body=False, raw_response=False, content_type='application/json'):
         req_headers = {
             'Authorization': f'Bearer {self.api_key}',
@@ -33,7 +49,8 @@ class CortexClient:
             if content_type == 'application/json' and isinstance(data, dict):
                 req_data = json.dumps(data)
 
-        response = requests.request(method, url, params=params, headers=req_headers, data=req_data)
+        # Use session for connection pooling and reuse
+        response = self.session.request(method, url, params=params, headers=req_headers, data=req_data)
 
         self.logger.debug(f"Request Headers: {response.request.headers}")
         self.logger.debug(f"Response Status Code: {response.status_code}")

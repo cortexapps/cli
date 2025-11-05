@@ -9,6 +9,7 @@ from rich import print, print_json
 from rich.console import Console
 from enum import Enum
 import yaml
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import cortexapps_cli.commands.scorecards as scorecards
 import cortexapps_cli.commands.catalog as catalog
@@ -60,7 +61,7 @@ def _file_name(directory, tag, content, extension):
 def _write_file(content, file, is_json=False):
     with open(file, 'w') as f:
         if is_json:
-            print(content, file=f)
+            json.dump(content, f, indent=2)
         else:
             f.write(str(content) + "\n")
     f.close()
@@ -108,9 +109,27 @@ def _export_plugins(ctx, directory):
     list = plugins.list(ctx, _print=False, include_drafts="true", page=None, page_size=None)
     tags = [plugin["tag"] for plugin in list["plugins"]]
     tags_sorted = sorted(tags)
-    for tag in tags_sorted:
-        content = plugins.get(ctx, tag_or_id=tag, include_blob="true", _print=False)
-        _file_name(directory, tag, content, "json")
+
+    def fetch_plugin(tag):
+        try:
+            content = plugins.get(ctx, tag_or_id=tag, include_blob="true", _print=False)
+            return (tag, content, None)
+        except Exception as e:
+            return (tag, None, str(e))
+
+    # Fetch all plugins in parallel
+    with ThreadPoolExecutor(max_workers=30) as executor:
+        futures = {executor.submit(fetch_plugin, tag): tag for tag in tags_sorted}
+        results = []
+        for future in as_completed(futures):
+            results.append(future.result())
+
+    # Sort results alphabetically and write in order
+    for tag, content, error in sorted(results, key=lambda x: x[0]):
+        if error:
+            print(f"Failed to export plugin {tag}: {error}")
+        else:
+            _file_name(directory, tag, content, "json")
 
 def _export_scorecards(ctx, directory):
     directory = _directory_name(directory, "scorecards")
@@ -118,22 +137,44 @@ def _export_scorecards(ctx, directory):
     list = scorecards.list(ctx, show_drafts=True, page=None, page_size=None, _print=False)
     tags = [scorecard["tag"] for scorecard in list["scorecards"]]
     tags_sorted = sorted(tags)
-    for tag in tags_sorted:
-        content = scorecards.descriptor(ctx, scorecard_tag=tag, _print=False)
-        _file_name(directory, tag, content, "yaml")
+
+    def fetch_scorecard(tag):
+        try:
+            content = scorecards.descriptor(ctx, scorecard_tag=tag, _print=False)
+            return (tag, content, None)
+        except Exception as e:
+            return (tag, None, str(e))
+
+    # Fetch all scorecards in parallel
+    with ThreadPoolExecutor(max_workers=30) as executor:
+        futures = {executor.submit(fetch_scorecard, tag): tag for tag in tags_sorted}
+        results = []
+        for future in as_completed(futures):
+            results.append(future.result())
+
+    # Sort results alphabetically and write in order
+    for tag, content, error in sorted(results, key=lambda x: x[0]):
+        if error:
+            print(f"Failed to export scorecard {tag}: {error}")
+        else:
+            _file_name(directory, tag, content, "yaml")
 
 def _export_workflows(ctx, directory):
     directory = _directory_name(directory, "workflows")
 
-    list = workflows.list(ctx, _print=False, include_actions="false", page=None, page_size=None, search_query=None)
-    tags = [workflow["tag"] for workflow in list["workflows"]]
-    tags_sorted = sorted(tags)
-    for tag in tags_sorted:
+    # Get all workflows with actions in one API call
+    list = workflows.list(ctx, _print=False, include_actions="true", page=None, page_size=None, search_query=None)
+    workflows_data = sorted(list["workflows"], key=lambda x: x["tag"])
+
+    # Convert JSON workflows to YAML and write them
+    for workflow in workflows_data:
+        tag = workflow["tag"]
         try:
-            content = workflows.get(ctx, tag=tag, yaml="true", _print=False)
-            _file_name(directory, tag, content, "yaml")
-        except:
-            print("failed for " + tag)
+            # Convert the JSON workflow data to YAML format
+            workflow_yaml = yaml.dump(workflow, default_flow_style=False, sort_keys=False)
+            _file_name(directory, tag, workflow_yaml, "yaml")
+        except Exception as e:
+            print(f"Failed to export workflow {tag}: {e}")
 
 backupTypes = {
         "catalog",
@@ -257,38 +298,122 @@ def _import_entity_types(ctx, force, directory):
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
-        for filename in sorted(os.listdir(directory)):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                catalog.create(ctx, file_input=open(file_path), _print=False)
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
+
+        def import_catalog_file(file_info):
+            filename, file_path = file_info
+            try:
+                with open(file_path) as f:
+                    catalog.create(ctx, file_input=f, _print=False)
+                return (filename, None)
+            except Exception as e:
+                return (filename, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_catalog_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 def _import_plugins(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
-        for filename in sorted(os.listdir(directory)):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                plugins.create(ctx, file_input=open(file_path), force=True)
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
+
+        def import_plugin_file(file_info):
+            filename, file_path = file_info
+            try:
+                with open(file_path) as f:
+                    plugins.create(ctx, file_input=f, force=True)
+                return (filename, None)
+            except Exception as e:
+                return (filename, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_plugin_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 def _import_scorecards(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
-        for filename in sorted(os.listdir(directory)):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                scorecards.create(ctx, file_input=open(file_path), dry_run=False)
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
+
+        def import_scorecard_file(file_info):
+            filename, file_path = file_info
+            try:
+                with open(file_path) as f:
+                    scorecards.create(ctx, file_input=f, dry_run=False)
+                return (filename, None)
+            except Exception as e:
+                return (filename, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_scorecard_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 def _import_workflows(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
-        for filename in sorted(os.listdir(directory)):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                workflows.create(ctx, file_input=open(file_path))
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
+
+        def import_workflow_file(file_info):
+            filename, file_path = file_info
+            try:
+                with open(file_path) as f:
+                    workflows.create(ctx, file_input=f)
+                return (filename, None)
+            except Exception as e:
+                return (filename, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_workflow_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        for filename, error in sorted(results, key=lambda x: x[0]):
+            if error:
+                print(f"   Failed to import {filename}: {error}")
+            else:
+                print(f"   Importing: {filename}")
 
 @app.command("import")
 def import_tenant(
