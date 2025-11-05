@@ -6,6 +6,9 @@ import typer
 import json
 import os
 import tempfile
+import sys
+from io import StringIO
+from contextlib import redirect_stdout, redirect_stderr
 from rich import print, print_json
 from rich.console import Console
 from enum import Enum
@@ -410,37 +413,22 @@ def _import_entity_relationships(ctx, directory):
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
-        files = [(filename, os.path.join(directory, filename))
-                 for filename in sorted(os.listdir(directory))
-                 if os.path.isfile(os.path.join(directory, filename))]
+        files = sorted([filename for filename in os.listdir(directory)
+                       if os.path.isfile(os.path.join(directory, filename))])
 
-        def import_catalog_file(file_info):
-            filename, file_path = file_info
+        failed_count = 0
+        for filename in files:
+            file_path = os.path.join(directory, filename)
             try:
                 with open(file_path) as f:
                     catalog.create(ctx, file_input=f, _print=False)
-                return (filename, None, None)
-            except Exception as e:
-                # Capture both the error message and type
-                error_msg = str(e)
-                error_type = type(e).__name__
-                return (filename, error_type, error_msg)
-
-        # Import all files in parallel
-        with ThreadPoolExecutor(max_workers=30) as executor:
-            futures = {executor.submit(import_catalog_file, file_info): file_info[0] for file_info in files}
-            results = []
-            for future in as_completed(futures):
-                results.append(future.result())
-
-        # Print results in alphabetical order
-        failed_count = 0
-        for filename, error_type, error_msg in sorted(results, key=lambda x: x[0]):
-            if error_type:
-                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
-                failed_count += 1
-            else:
                 print(f"   Importing: {filename}")
+            except typer.Exit as e:
+                print(f"   Failed to import {filename}: HTTP error (see above)")
+                failed_count += 1
+            except Exception as e:
+                print(f"   Failed to import {filename}: {type(e).__name__} - {str(e)}")
+                failed_count += 1
 
         if failed_count > 0:
             print(f"\n   Total catalog import failures: {failed_count}")
