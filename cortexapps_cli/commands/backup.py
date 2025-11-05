@@ -337,58 +337,75 @@ def _import_entity_relationship_types(ctx, directory):
         existing_rel_types_data = entity_relationship_types.list(ctx, page=None, page_size=250, _print=False)
         existing_tags = {rt['tag'] for rt in existing_rel_types_data.get('relationshipTypes', [])}
 
+        failed_count = 0
         for filename in sorted(os.listdir(directory)):
             file_path = os.path.join(directory, filename)
             if os.path.isfile(file_path):
                 # Extract the tag from filename for cleaner output
                 tag = filename.replace('.json', '')
-                print(f"   Importing: {tag}")
 
-                # Check if relationship type already exists
-                if tag in existing_tags:
-                    # Update existing relationship type
-                    entity_relationship_types.update(ctx, tag=tag, file_input=open(file_path), _print=False)
-                else:
-                    # Create new relationship type
-                    entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
+                try:
+                    # Check if relationship type already exists
+                    if tag in existing_tags:
+                        # Update existing relationship type
+                        entity_relationship_types.update(ctx, tag=tag, file_input=open(file_path), _print=False)
+                    else:
+                        # Create new relationship type
+                        entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
+                    print(f"   Importing: {tag}")
+                except Exception as e:
+                    print(f"   Failed to import {tag}: {type(e).__name__} - {str(e)}")
+                    failed_count += 1
+
+        if failed_count > 0:
+            print(f"\n   Total entity relationship type import failures: {failed_count}")
 
 def _import_entity_relationships(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
+        failed_count = 0
         for filename in sorted(os.listdir(directory)):
             file_path = os.path.join(directory, filename)
             if os.path.isfile(file_path):
                 # Extract relationship type from filename (without .json extension)
                 rel_type = filename.replace('.json', '')
-                print(f"   Importing: {rel_type}")
 
-                # Read the relationships file
-                with open(file_path) as f:
-                    relationships = json.load(f)
+                try:
+                    # Read the relationships file
+                    with open(file_path) as f:
+                        relationships = json.load(f)
 
-                # Convert list format to the format expected by update-bulk
-                # The export saves the raw relationships list, but update-bulk needs {"relationships": [...]}
-                if isinstance(relationships, list):
-                    data = {"relationships": []}
-                    for rel in relationships:
-                        # Extract source and destination tags from sourceEntity and destinationEntity
-                        source_tag = rel.get("sourceEntity", {}).get("tag")
-                        dest_tag = rel.get("destinationEntity", {}).get("tag")
-                        data["relationships"].append({
-                            "source": source_tag,
-                            "destination": dest_tag
-                        })
+                    # Convert list format to the format expected by update-bulk
+                    # The export saves the raw relationships list, but update-bulk needs {"relationships": [...]}
+                    if isinstance(relationships, list):
+                        data = {"relationships": []}
+                        for rel in relationships:
+                            # Extract source and destination tags from sourceEntity and destinationEntity
+                            source_tag = rel.get("sourceEntity", {}).get("tag")
+                            dest_tag = rel.get("destinationEntity", {}).get("tag")
+                            data["relationships"].append({
+                                "source": source_tag,
+                                "destination": dest_tag
+                            })
 
-                    # Use update-bulk to replace all relationships for this type
-                    # Create a temporary file to pass the data
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
-                        json.dump(data, temp_file)
-                        temp_file_name = temp_file.name
+                        # Use update-bulk to replace all relationships for this type
+                        # Create a temporary file to pass the data
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                            json.dump(data, temp_file)
+                            temp_file_name = temp_file.name
 
-                    try:
-                        entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file_name), force=True, _print=False)
-                    finally:
-                        os.unlink(temp_file_name)
+                        try:
+                            entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file_name), force=True, _print=False)
+                        finally:
+                            os.unlink(temp_file_name)
+
+                    print(f"   Importing: {rel_type}")
+                except Exception as e:
+                    print(f"   Failed to import {rel_type}: {type(e).__name__} - {str(e)}")
+                    failed_count += 1
+
+        if failed_count > 0:
+            print(f"\n   Total entity relationship import failures: {failed_count}")
 
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
@@ -402,9 +419,12 @@ def _import_catalog(ctx, directory):
             try:
                 with open(file_path) as f:
                     catalog.create(ctx, file_input=f, _print=False)
-                return (filename, None)
+                return (filename, None, None)
             except Exception as e:
-                return (filename, str(e))
+                # Capture both the error message and type
+                error_msg = str(e)
+                error_type = type(e).__name__
+                return (filename, error_type, error_msg)
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -414,11 +434,16 @@ def _import_catalog(ctx, directory):
                 results.append(future.result())
 
         # Print results in alphabetical order
-        for filename, error in sorted(results, key=lambda x: x[0]):
-            if error:
-                print(f"   Failed to import {filename}: {error}")
+        failed_count = 0
+        for filename, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
+                failed_count += 1
             else:
                 print(f"   Importing: {filename}")
+
+        if failed_count > 0:
+            print(f"\n   Total catalog import failures: {failed_count}")
 
 def _import_plugins(ctx, directory):
     if os.path.isdir(directory):
