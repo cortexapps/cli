@@ -2,7 +2,7 @@ import typer
 import json
 from typing_extensions import Annotated
 from cortexapps_cli.utils import print_output_with_context
-from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.command_options import CommandOptions, ListCommandOptions
 
 app = typer.Typer(
     help="Entity Relationships commands (Beta)",
@@ -13,6 +13,7 @@ app = typer.Typer(
 def list(
     ctx: typer.Context,
     relationship_type: str = typer.Option(..., "--relationship-type", "-r", help="Relationship type tag"),
+    _print: CommandOptions._print = True,
     page: ListCommandOptions.page = None,
     page_size: ListCommandOptions.page_size = 250,
     table_output: ListCommandOptions.table_output = False,
@@ -46,7 +47,11 @@ def list(
         r = client.fetch(f"api/v1/relationships/{relationship_type}", params=params)
     else:
         r = client.get(f"api/v1/relationships/{relationship_type}", params=params)
-    print_output_with_context(ctx, r)
+
+    if _print:
+        print_output_with_context(ctx, r)
+    else:
+        return r
 
 @app.command()
 def list_destinations(
@@ -200,6 +205,7 @@ def update_bulk(
     relationship_type: str = typer.Option(..., "--relationship-type", "-r", help="Relationship type tag"),
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing relationships array; can be passed as stdin with -, example: -f-")] = ...,
     force: bool = typer.Option(False, "--force", help="Override catalog descriptor values"),
+    _print: CommandOptions._print = True,
 ):
     """
     Replace all relationships for a given relationship type
@@ -212,4 +218,5 @@ def update_bulk(
     params = {"force": force} if force else {}
 
     r = client.put(f"api/v1/relationships/{relationship_type}", data=data, params=params)
-    print_output_with_context(ctx, r)
+    if _print:
+        print_output_with_context(ctx, r)

@@ -2,7 +2,7 @@ import typer
 import json
 from typing_extensions import Annotated
 from cortexapps_cli.utils import print_output_with_context
-from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.command_options import CommandOptions, ListCommandOptions
 
 app = typer.Typer(
     help="Entity Relationship Types commands",
@@ -12,6 +12,7 @@ app = typer.Typer(
 @app.command()
 def list(
     ctx: typer.Context,
+    _print: CommandOptions._print = True,
     page: ListCommandOptions.page = None,
     page_size: ListCommandOptions.page_size = 250,
     table_output: ListCommandOptions.table_output = False,
@@ -45,7 +46,11 @@ def list(
         r = client.fetch("api/v1/relationship-types", params=params)
     else:
         r = client.get("api/v1/relationship-types", params=params)
-    print_output_with_context(ctx, r)
+
+    if _print:
+        print_output_with_context(ctx, r)
+    else:
+        return r
 
 @app.command()
 def get(
@@ -63,6 +68,7 @@ def get(
 def create(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing relationship type definition; can be passed as stdin with -, example: -f-")] = ...,
+    _print: CommandOptions._print = True,
 ):
     """
     Create a relationship type
@@ -82,7 +88,8 @@ def create(
     client = ctx.obj["client"]
     data = json.loads("".join([line for line in file_input]))
     r = client.post("api/v1/relationship-types", data=data)
-    print_output_with_context(ctx, r)
+    if _print:
+        print_output_with_context(ctx, r)
 
 @app.command()
 def update(

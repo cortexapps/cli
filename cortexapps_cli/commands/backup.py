@@ -5,6 +5,7 @@ from typing_extensions import Annotated
 import typer
 import json
 import os
+import tempfile
 from rich import print, print_json
 from rich.console import Console
 from enum import Enum
@@ -334,8 +335,10 @@ def _import_entity_relationship_types(ctx, directory):
         for filename in sorted(os.listdir(directory)):
             file_path = os.path.join(directory, filename)
             if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                entity_relationship_types.create(ctx, file_input=open(file_path))
+                # Extract the tag from filename for cleaner output
+                tag = filename.replace('.json', '')
+                print(f"   Importing: {tag}")
+                entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
 
 def _import_entity_relationships(ctx, directory):
     if os.path.isdir(directory):
@@ -345,7 +348,7 @@ def _import_entity_relationships(ctx, directory):
             if os.path.isfile(file_path):
                 # Extract relationship type from filename (without .json extension)
                 rel_type = filename.replace('.json', '')
-                print(f"   Importing relationships for: {rel_type}")
+                print(f"   Importing: {rel_type}")
 
                 # Read the relationships file
                 with open(file_path) as f:
@@ -356,21 +359,24 @@ def _import_entity_relationships(ctx, directory):
                 if isinstance(relationships, list):
                     data = {"relationships": []}
                     for rel in relationships:
-                        # Extract source and destination tags
+                        # Extract source and destination tags from sourceEntity and destinationEntity
+                        source_tag = rel.get("sourceEntity", {}).get("tag")
+                        dest_tag = rel.get("destinationEntity", {}).get("tag")
                         data["relationships"].append({
-                            "source": rel.get("source", {}).get("tag"),
-                            "destination": rel.get("destination", {}).get("tag")
+                            "source": source_tag,
+                            "destination": dest_tag
                         })
 
                     # Use update-bulk to replace all relationships for this type
-                    temp_file = typer.unstable.TempFile(mode='w', suffix='.json', delete=False)
-                    json.dump(data, temp_file)
-                    temp_file.close()
+                    # Create a temporary file to pass the data
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                        json.dump(data, temp_file)
+                        temp_file_name = temp_file.name
 
                     try:
-                        entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file.name), force=True)
+                        entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file_name), force=True, _print=False)
                     finally:
-                        os.unlink(temp_file.name)
+                        os.unlink(temp_file_name)
 
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
