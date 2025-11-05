@@ -14,6 +14,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import cortexapps_cli.commands.scorecards as scorecards
 import cortexapps_cli.commands.catalog as catalog
 import cortexapps_cli.commands.entity_types as entity_types
+import cortexapps_cli.commands.entity_relationship_types as entity_relationship_types
+import cortexapps_cli.commands.entity_relationships as entity_relationships
 import cortexapps_cli.commands.ip_allowlist as ip_allowlist
 import cortexapps_cli.commands.plugins as plugins
 import cortexapps_cli.commands.workflows as workflows
@@ -93,15 +95,39 @@ def _export_entity_types(ctx, directory):
 
     for definition in definitions_sorted:
         tag = definition['type']
-        json_string = json.dumps(definition, indent=4)
-        _file_name(directory, tag, json_string, "json")
+        _file_name(directory, tag, definition, "json")
 
 def _export_ip_allowlist(ctx, directory):
     directory = _directory_name(directory, "ip-allowlist")
     file = directory + "/ip-allowlist.json"
 
     content = ip_allowlist.get(ctx, page=None, page_size=None, _print=False)
-    _file_name(directory, "ip-allowlist", str(content), "json") 
+    _file_name(directory, "ip-allowlist", content, "json")
+
+def _export_entity_relationship_types(ctx, directory):
+    directory = _directory_name(directory, "entity-relationship-types")
+
+    data = entity_relationship_types.list(ctx, page=None, page_size=250, _print=False)
+    relationship_types_sorted = sorted(data['relationshipTypes'], key=lambda x: x["tag"])
+
+    for rel_type in relationship_types_sorted:
+        tag = rel_type['tag']
+        _file_name(directory, tag, rel_type, "json")
+
+def _export_entity_relationships(ctx, directory):
+    directory = _directory_name(directory, "entity-relationships")
+
+    # First get all relationship types
+    rel_types_data = entity_relationship_types.list(ctx, page=None, page_size=250, _print=False)
+    rel_types = [rt['tag'] for rt in rel_types_data['relationshipTypes']]
+
+    # For each relationship type, export all relationships
+    for rel_type in sorted(rel_types):
+        data = entity_relationships.list(ctx, relationship_type=rel_type, page=None, page_size=250, _print=False)
+        relationships = data.get('relationships', [])
+
+        if relationships:
+            _file_name(directory, rel_type, relationships, "json")
 
 def _export_plugins(ctx, directory):
     directory = _directory_name(directory, "plugins")
@@ -179,6 +205,8 @@ def _export_workflows(ctx, directory):
 backupTypes = {
         "catalog",
         "entity-types",
+        "entity-relationship-types",
+        "entity-relationships",
         "ip-allowlist",
         "plugins",
         "scorecards",
@@ -226,6 +254,8 @@ def export(
     Exports the following objects:
     - catalog
     - entity-types
+    - entity-relationship-types
+    - entity-relationships
     - ip-allowlist
     - plugins
     - scorecards
@@ -240,14 +270,13 @@ def export(
     cortex backup export --export-types catalog --catalog-types AWS::S3::Bucket
 
     It does not back up everything in the tenant.  For example these objects are not backed up:
-    - api-keys 
+    - api-keys
     - custom-events
     - custom-metadata created by the public API
     - custom-metrics
     - dependencies created by the API
     - deploys
     - docs created by the API
-    - entity-relationships created by the API
     - groups added by the API
     - packages
     - secrets
@@ -265,6 +294,10 @@ def export(
         _export_catalog(ctx, directory, catalog_types)
     if "entity-types" in export_types:
         _export_entity_types(ctx, directory)
+    if "entity-relationship-types" in export_types:
+        _export_entity_relationship_types(ctx, directory)
+    if "entity-relationships" in export_types:
+        _export_entity_relationships(ctx, directory)
     if "ip-allowlist" in export_types:
         _export_ip_allowlist(ctx, directory)
     if "plugins" in export_types:
@@ -294,6 +327,50 @@ def _import_entity_types(ctx, force, directory):
             if os.path.isfile(file_path):
                 print("   Importing: " + filename)
                 entity_types.create(ctx, file_input=open(file_path), force=force)
+
+def _import_entity_relationship_types(ctx, directory):
+    if os.path.isdir(directory):
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                print("   Importing: " + filename)
+                entity_relationship_types.create(ctx, file_input=open(file_path))
+
+def _import_entity_relationships(ctx, directory):
+    if os.path.isdir(directory):
+        print("Processing: " + directory)
+        for filename in sorted(os.listdir(directory)):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                # Extract relationship type from filename (without .json extension)
+                rel_type = filename.replace('.json', '')
+                print(f"   Importing relationships for: {rel_type}")
+
+                # Read the relationships file
+                with open(file_path) as f:
+                    relationships = json.load(f)
+
+                # Convert list format to the format expected by update-bulk
+                # The export saves the raw relationships list, but update-bulk needs {"relationships": [...]}
+                if isinstance(relationships, list):
+                    data = {"relationships": []}
+                    for rel in relationships:
+                        # Extract source and destination tags
+                        data["relationships"].append({
+                            "source": rel.get("source", {}).get("tag"),
+                            "destination": rel.get("destination", {}).get("tag")
+                        })
+
+                    # Use update-bulk to replace all relationships for this type
+                    temp_file = typer.unstable.TempFile(mode='w', suffix='.json', delete=False)
+                    json.dump(data, temp_file)
+                    temp_file.close()
+
+                    try:
+                        entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file.name), force=True)
+                    finally:
+                        os.unlink(temp_file.name)
 
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
@@ -429,7 +506,9 @@ def import_tenant(
 
     _import_ip_allowlist(ctx, directory + "/ip-allowlist")
     _import_entity_types(ctx, force, directory + "/entity-types")
+    _import_entity_relationship_types(ctx, directory + "/entity-relationship-types")
     _import_catalog(ctx, directory + "/catalog")
+    _import_entity_relationships(ctx, directory + "/entity-relationships")
     _import_plugins(ctx, directory + "/plugins")
     _import_scorecards(ctx, directory + "/scorecards")
     _import_workflows(ctx, directory + "/workflows")
