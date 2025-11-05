@@ -13,7 +13,7 @@ _setup:
 
 # Run all tests
 test-all: _setup test-import
-   {{pytest}} -n auto --dist loadfile -m "not setup" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
+   {{pytest}} -n auto -m "not setup" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
 
 # Run all tests serially - helpful to see if any tests seem to be hanging
 _test-all-individual:  test-import
