@@ -53,7 +53,7 @@ jobs:
 
     - name: Generate HISTORY.md
       run: |
-        git-changelog > HISTORY.md
+        git-changelog -c angular > HISTORY.md
         cat HISTORY.md
 
     - name: Commit and Push
