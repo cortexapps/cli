@@ -4,7 +4,6 @@ import time
 
 # Get rule id to be used in exemption tests.
 # TODO: check for and revoke any PENDING exemptions.
-@mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY']})
 def _get_rule(title):
     response =  cli(["scorecards", "get", "-s", "cli-test-scorecard"])
     rule_id = [rule['identifier'] for rule in response['scorecard']['rules'] if rule['title'] == title]
@@ -66,7 +65,10 @@ def test_scorecards_drafts():
 #   testing assumes no tenanted data, so this condition needs to be created as part of the test
 #
 # - there is no public API to force evaluation of a scorecard; can look into possibility of using
-#   an internal endpoint for this
+#   an internal endpoint for this 
+#   
+#   Nov 2025 - there is a public API to force evaluation of a scorecard for an entity, but there is
+#   not a way to determine when the evaluation completes.
 #
 # - could create a scorecard as part of the test and wait for it to complete, but completion time for
 #   evaluating a scorecard is non-deterministic and, as experienced with query API tests, completion
@@ -82,6 +84,7 @@ def test_scorecards_drafts():
 # So this is how we'll roll for now . . .
 # - Automated tests currently run in known tenants that have the 'cli-test-scorecard' in an evaluated state.
 # - So we can semi-reliably count on an evaluated scorecard to exist.
+# - However, we should be cleaning up test data after tests run which would invalidate these assumptions.
 
 @pytest.fixture(scope='session')
 @mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
