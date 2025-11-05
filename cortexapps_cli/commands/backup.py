@@ -332,13 +332,25 @@ def _import_entity_types(ctx, force, directory):
 def _import_entity_relationship_types(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
+
+        # Get list of existing relationship types
+        existing_rel_types_data = entity_relationship_types.list(ctx, page=None, page_size=250, _print=False)
+        existing_tags = {rt['tag'] for rt in existing_rel_types_data.get('relationshipTypes', [])}
+
         for filename in sorted(os.listdir(directory)):
             file_path = os.path.join(directory, filename)
             if os.path.isfile(file_path):
                 # Extract the tag from filename for cleaner output
                 tag = filename.replace('.json', '')
                 print(f"   Importing: {tag}")
-                entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
+
+                # Check if relationship type already exists
+                if tag in existing_tags:
+                    # Update existing relationship type
+                    entity_relationship_types.update(ctx, tag=tag, file_input=open(file_path), _print=False)
+                else:
+                    # Create new relationship type
+                    entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
 
 def _import_entity_relationships(ctx, directory):
     if os.path.isdir(directory):

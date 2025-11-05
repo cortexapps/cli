@@ -96,6 +96,7 @@ def update(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="Relationship type tag"),
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing relationship type definition; can be passed as stdin with -, example: -f-")] = ...,
+    _print: CommandOptions._print = True,
 ):
     """
     Update a relationship type
@@ -105,7 +106,8 @@ def update(
     client = ctx.obj["client"]
     data = json.loads("".join([line for line in file_input]))
     r = client.put(f"api/v1/relationship-types/{tag}", data=data)
-    print_output_with_context(ctx, r)
+    if _print:
+        print_output_with_context(ctx, r)
 
 @app.command()
 def delete(
