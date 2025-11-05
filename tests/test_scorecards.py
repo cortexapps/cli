@@ -11,18 +11,7 @@ def _get_rule(title):
     return rule_id[0]
 
 def test_scorecards():
-    # Retry scorecard create in case there's an active evaluation
-    # (can happen if test_import.py just triggered an evaluation)
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-scorecard.yaml"])
-            break
-        except Exception as e:
-            if "500" in str(e) and attempt < max_retries - 1:
-                time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s
-                continue
-            raise
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-scorecard.yaml"])
 
     response = cli(["scorecards", "list"])
     assert any(scorecard['tag'] == 'cli-test-scorecard' for scorecard in response['scorecards']), "Should find scorecard with tag cli-test-scorecard"
@@ -39,33 +28,30 @@ def test_scorecards():
     # cannot rely on a scorecard evaluation being complete, so not performing any validation
     cli(["scorecards", "next-steps", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
 
-    # Test trigger-evaluation command (accepts both success and 409 Already evaluating)
-    response = cli(["scorecards", "trigger-evaluation", "-s", "cli-test-scorecard", "-e", "cli-test-service"], return_type=ReturnType.STDOUT)
-    assert ("Scorecard evaluation triggered successfully" in response or "Already evaluating scorecard" in response), \
-        "Should receive success message or 409 Already evaluating error"
-
     # cannot rely on a scorecard evaluation being complete, so not performing any validation
     #response = cli(["scorecards", "scores", "-s", "cli-test-scorecard", "-t", "cli-test-service"])
     #assert response['scorecardTag'] == "cli-test-scorecard", "Should get valid response that include cli-test-scorecard"
- 
+
 #    # Not sure if we can run this cli right away.  Newly-created Scorecard might not be evaluated yet.
 #    # 2024-05-06, additionally now blocked by CET-8882
 #    # cli(["scorecards", "scores", "-t", "cli-test-scorecard", "-e", "cli-test-service"])
 #
 #    cli(["scorecards", "scores", "-t", "cli-test-scorecard"])
- 
+
+def test_scorecard_trigger_evaluation():
+    # Create a dedicated scorecard for trigger-evaluation testing to avoid conflicts with import
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-evaluation-scorecard.yaml"])
+
+    # Test trigger-evaluation command (accepts both success and 409 Already evaluating)
+    response = cli(["scorecards", "trigger-evaluation", "-s", "cli-test-evaluation-scorecard", "-e", "cli-test-service"], return_type=ReturnType.STDOUT)
+    assert ("Scorecard evaluation triggered successfully" in response or "Already evaluating scorecard" in response), \
+        "Should receive success message or 409 Already evaluating error"
+
+    # Clean up
+    cli(["scorecards", "delete", "-s", "cli-test-evaluation-scorecard"])
+
 def test_scorecards_drafts():
-    # Retry scorecard create in case there's an active evaluation
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-draft-scorecard.yaml"])
-            break
-        except Exception as e:
-            if "500" in str(e) and attempt < max_retries - 1:
-                time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s
-                continue
-            raise
+    cli(["scorecards", "create", "-f", "data/import/scorecards/cli-test-draft-scorecard.yaml"])
 
     response = cli(["scorecards", "list", "-s"])
     assert any(scorecard['tag'] == 'cli-test-draft-scorecard' for scorecard in response['scorecards'])
