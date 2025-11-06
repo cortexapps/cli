@@ -349,6 +349,9 @@ def _import_entity_types(ctx, force, directory):
     return ("entity-types", imported, failed)
 
 def _import_entity_relationship_types(ctx, directory):
+    results = []
+    failed_count = 0
+
     if os.path.isdir(directory):
         print("Processing: " + directory)
 
@@ -399,6 +402,9 @@ def _import_entity_relationship_types(ctx, directory):
     return ("entity-relationship-types", len(results) - failed_count, [(fp, et, em) for tag, fp, et, em in results if et])
 
 def _import_entity_relationships(ctx, directory):
+    results = []
+    failed_count = 0
+
     if os.path.isdir(directory):
         print("Processing: " + directory)
 
