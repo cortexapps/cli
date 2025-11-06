@@ -315,22 +315,38 @@ def export(
     print("Contents available in " + directory)
 
 def _import_ip_allowlist(ctx, directory):
+    imported = 0
+    failed = []
     if os.path.isdir(directory):
         print("Processing: " + directory)
         for filename in os.listdir(directory):
             file_path = os.path.join(directory, filename)
             if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                ip_allowlist.replace(ctx, file_input=open(file_path), addresses=None, force=False, _print=False)
+                try:
+                    print("   Importing: " + filename)
+                    ip_allowlist.replace(ctx, file_input=open(file_path), addresses=None, force=False, _print=False)
+                    imported += 1
+                except Exception as e:
+                    print(f"   Failed to import {filename}: {type(e).__name__} - {str(e)}")
+                    failed.append((file_path, type(e).__name__, str(e)))
+    return ("ip-allowlist", imported, failed)
 
 def _import_entity_types(ctx, force, directory):
+    imported = 0
+    failed = []
     if os.path.isdir(directory):
         print("Processing: " + directory)
         for filename in sorted(os.listdir(directory)):
             file_path = os.path.join(directory, filename)
             if os.path.isfile(file_path):
-                print("   Importing: " + filename)
-                entity_types.create(ctx, file_input=open(file_path), force=force)
+                try:
+                    print("   Importing: " + filename)
+                    entity_types.create(ctx, file_input=open(file_path), force=force)
+                    imported += 1
+                except Exception as e:
+                    print(f"   Failed to import {filename}: {type(e).__name__} - {str(e)}")
+                    failed.append((file_path, type(e).__name__, str(e)))
+    return ("entity-types", imported, failed)
 
 def _import_entity_relationship_types(ctx, directory):
     if os.path.isdir(directory):
@@ -355,11 +371,11 @@ def _import_entity_relationship_types(ctx, directory):
                 else:
                     # Create new relationship type
                     entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
-                return (tag, None, None)
+                return (tag, file_path, None, None)
             except typer.Exit as e:
-                return (tag, "HTTP", "Validation or HTTP error")
+                return (tag, file_path, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                return (tag, type(e).__name__, str(e))
+                return (tag, file_path, type(e).__name__, str(e))
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -370,7 +386,7 @@ def _import_entity_relationship_types(ctx, directory):
 
         # Print results in alphabetical order
         failed_count = 0
-        for tag, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+        for tag, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
             if error_type:
                 print(f"   Failed to import {tag}: {error_type} - {error_msg}")
                 failed_count += 1
@@ -379,6 +395,8 @@ def _import_entity_relationship_types(ctx, directory):
 
         if failed_count > 0:
             print(f"\n   Total entity relationship type import failures: {failed_count}")
+
+    return ("entity-relationship-types", len(results) - failed_count, [(fp, et, em) for tag, fp, et, em in results if et])
 
 def _import_entity_relationships(ctx, directory):
     if os.path.isdir(directory):
@@ -420,11 +438,11 @@ def _import_entity_relationships(ctx, directory):
                     finally:
                         os.unlink(temp_file_name)
 
-                return (rel_type, None, None)
+                return (rel_type, file_path, None, None)
             except typer.Exit as e:
-                return (rel_type, "HTTP", "Validation or HTTP error")
+                return (rel_type, file_path, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                return (rel_type, type(e).__name__, str(e))
+                return (rel_type, file_path, type(e).__name__, str(e))
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -435,7 +453,7 @@ def _import_entity_relationships(ctx, directory):
 
         # Print results in alphabetical order
         failed_count = 0
-        for rel_type, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+        for rel_type, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
             if error_type:
                 print(f"   Failed to import {rel_type}: {error_type} - {error_msg}")
                 failed_count += 1
@@ -444,6 +462,8 @@ def _import_entity_relationships(ctx, directory):
 
         if failed_count > 0:
             print(f"\n   Total entity relationship import failures: {failed_count}")
+
+    return ("entity-relationships", len(results) - failed_count, [(fp, et, em) for rt, fp, et, em in results if et])
 
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
@@ -457,12 +477,12 @@ def _import_catalog(ctx, directory):
             try:
                 with open(file_path) as f:
                     catalog.create(ctx, file_input=f, _print=False)
-                return (filename, None, None)
+                return (filename, file_path, None, None)
             except typer.Exit as e:
                 # typer.Exit is raised by the HTTP client on errors
-                return (filename, "HTTP", "Validation or HTTP error")
+                return (filename, file_path, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                return (filename, type(e).__name__, str(e))
+                return (filename, file_path, type(e).__name__, str(e))
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -473,7 +493,7 @@ def _import_catalog(ctx, directory):
 
         # Print results in alphabetical order
         failed_count = 0
-        for filename, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+        for filename, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
             if error_type:
                 print(f"   Failed to import {filename}: {error_type} - {error_msg}")
                 failed_count += 1
@@ -482,6 +502,8 @@ def _import_catalog(ctx, directory):
 
         if failed_count > 0:
             print(f"\n   Total catalog import failures: {failed_count}")
+
+    return ("catalog", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 def _import_plugins(ctx, directory):
     if os.path.isdir(directory):
@@ -495,9 +517,11 @@ def _import_plugins(ctx, directory):
             try:
                 with open(file_path) as f:
                     plugins.create(ctx, file_input=f, force=True)
-                return (filename, None)
+                return (filename, file_path, None, None)
+            except typer.Exit as e:
+                return (filename, file_path, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                return (filename, str(e))
+                return (filename, file_path, type(e).__name__, str(e))
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -507,11 +531,15 @@ def _import_plugins(ctx, directory):
                 results.append(future.result())
 
         # Print results in alphabetical order
-        for filename, error in sorted(results, key=lambda x: x[0]):
-            if error:
-                print(f"   Failed to import {filename}: {error}")
+        failed_count = 0
+        for filename, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
+                failed_count += 1
             else:
                 print(f"   Importing: {filename}")
+
+    return ("plugins", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 def _import_scorecards(ctx, directory):
     if os.path.isdir(directory):
@@ -525,9 +553,11 @@ def _import_scorecards(ctx, directory):
             try:
                 with open(file_path) as f:
                     scorecards.create(ctx, file_input=f, dry_run=False)
-                return (filename, None)
+                return (filename, file_path, None, None)
+            except typer.Exit as e:
+                return (filename, file_path, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                return (filename, str(e))
+                return (filename, file_path, type(e).__name__, str(e))
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -537,11 +567,15 @@ def _import_scorecards(ctx, directory):
                 results.append(future.result())
 
         # Print results in alphabetical order
-        for filename, error in sorted(results, key=lambda x: x[0]):
-            if error:
-                print(f"   Failed to import {filename}: {error}")
+        failed_count = 0
+        for filename, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
+                failed_count += 1
             else:
                 print(f"   Importing: {filename}")
+
+    return ("scorecards", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 def _import_workflows(ctx, directory):
     if os.path.isdir(directory):
@@ -555,9 +589,11 @@ def _import_workflows(ctx, directory):
             try:
                 with open(file_path) as f:
                     workflows.create(ctx, file_input=f)
-                return (filename, None)
+                return (filename, file_path, None, None)
+            except typer.Exit as e:
+                return (filename, file_path, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                return (filename, str(e))
+                return (filename, file_path, type(e).__name__, str(e))
 
         # Import all files in parallel
         with ThreadPoolExecutor(max_workers=30) as executor:
@@ -567,11 +603,15 @@ def _import_workflows(ctx, directory):
                 results.append(future.result())
 
         # Print results in alphabetical order
-        for filename, error in sorted(results, key=lambda x: x[0]):
-            if error:
-                print(f"   Failed to import {filename}: {error}")
+        failed_count = 0
+        for filename, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
+                failed_count += 1
             else:
                 print(f"   Importing: {filename}")
+
+    return ("workflows", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 @app.command("import")
 def import_tenant(
@@ -585,11 +625,67 @@ def import_tenant(
 
     client = ctx.obj["client"]
 
-    _import_ip_allowlist(ctx, directory + "/ip-allowlist")
-    _import_entity_types(ctx, force, directory + "/entity-types")
-    _import_entity_relationship_types(ctx, directory + "/entity-relationship-types")
-    _import_catalog(ctx, directory + "/catalog")
-    _import_entity_relationships(ctx, directory + "/entity-relationships")
-    _import_plugins(ctx, directory + "/plugins")
-    _import_scorecards(ctx, directory + "/scorecards")
-    _import_workflows(ctx, directory + "/workflows")
+    # Collect statistics from each import
+    all_stats = []
+    all_stats.append(_import_ip_allowlist(ctx, directory + "/ip-allowlist"))
+    all_stats.append(_import_entity_types(ctx, force, directory + "/entity-types"))
+    all_stats.append(_import_entity_relationship_types(ctx, directory + "/entity-relationship-types"))
+    all_stats.append(_import_catalog(ctx, directory + "/catalog"))
+    all_stats.append(_import_entity_relationships(ctx, directory + "/entity-relationships"))
+    all_stats.append(_import_plugins(ctx, directory + "/plugins"))
+    all_stats.append(_import_scorecards(ctx, directory + "/scorecards"))
+    all_stats.append(_import_workflows(ctx, directory + "/workflows"))
+
+    # Print summary
+    print("\n" + "="*80)
+    print("IMPORT SUMMARY")
+    print("="*80)
+
+    total_imported = 0
+    total_failed = 0
+    all_failures = []
+
+    for import_type, imported, failed in all_stats:
+        if imported > 0 or len(failed) > 0:
+            total_imported += imported
+            total_failed += len(failed)
+            print(f"\n{import_type}:")
+            print(f"  Imported: {imported}")
+            if len(failed) > 0:
+                print(f"  Failed:   {len(failed)}")
+                all_failures.extend([(import_type, f, e, m) for f, e, m in failed])
+
+    print(f"\nTOTAL: {total_imported} imported, {total_failed} failed")
+
+    if len(all_failures) > 0:
+        print("\n" + "="*80)
+        print("FAILED IMPORTS")
+        print("="*80)
+        print("\nThe following files failed to import:\n")
+
+        for import_type, file_path, error_type, error_msg in all_failures:
+            print(f"  {file_path}")
+            print(f"    Error: {error_type} - {error_msg}")
+
+        print("\n" + "="*80)
+        print("RETRY COMMANDS")
+        print("="*80)
+        print("\nTo retry failed imports, run these commands:\n")
+
+        for import_type, file_path, error_type, error_msg in all_failures:
+            if import_type == "catalog":
+                print(f"cortex catalog create -f \"{file_path}\"")
+            elif import_type == "entity-types":
+                print(f"cortex entity-types create --force -f \"{file_path}\"")
+            elif import_type == "entity-relationship-types":
+                tag = os.path.basename(file_path).replace('.json', '')
+                print(f"cortex entity-relationship-types create -f \"{file_path}\"")
+            elif import_type == "entity-relationships":
+                # These need special handling - would need the relationship type
+                print(f"# Manual retry needed for entity-relationships: {file_path}")
+            elif import_type == "plugins":
+                print(f"cortex plugins create --force -f \"{file_path}\"")
+            elif import_type == "scorecards":
+                print(f"cortex scorecards create -f \"{file_path}\"")
+            elif import_type == "workflows":
+                print(f"cortex workflows create -f \"{file_path}\"")
