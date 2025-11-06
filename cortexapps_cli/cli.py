@@ -24,6 +24,8 @@ import cortexapps_cli.commands.deploys as deploys
 import cortexapps_cli.commands.discovery_audit as discovery_audit
 import cortexapps_cli.commands.docs as docs
 import cortexapps_cli.commands.entity_types as entity_types
+import cortexapps_cli.commands.entity_relationship_types as entity_relationship_types
+import cortexapps_cli.commands.entity_relationships as entity_relationships
 import cortexapps_cli.commands.gitops_logs as gitops_logs
 import cortexapps_cli.commands.groups as groups
 import cortexapps_cli.commands.initiatives as initiatives
@@ -36,6 +38,7 @@ import cortexapps_cli.commands.queries as queries
 import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.scim as scim
 import cortexapps_cli.commands.scorecards as scorecards
+import cortexapps_cli.commands.secrets as secrets
 import cortexapps_cli.commands.teams as teams
 import cortexapps_cli.commands.workflows as workflows
 
@@ -58,6 +61,8 @@ app.add_typer(deploys.app, name="deploys")
 app.add_typer(discovery_audit.app, name="discovery-audit")
 app.add_typer(docs.app, name="docs")
 app.add_typer(entity_types.app, name="entity-types")
+app.add_typer(entity_relationship_types.app, name="entity-relationship-types")
+app.add_typer(entity_relationships.app, name="entity-relationships")
 app.add_typer(gitops_logs.app, name="gitops-logs")
 app.add_typer(groups.app, name="groups")
 app.add_typer(initiatives.app, name="initiatives")
@@ -70,6 +75,7 @@ app.add_typer(queries.app, name="queries")
 app.add_typer(rest.app, name="rest")
 app.add_typer(scim.app, name="scim")
 app.add_typer(scorecards.app, name="scorecards")
+app.add_typer(secrets.app, name="secrets")
 app.add_typer(teams.app, name="teams")
 app.add_typer(workflows.app, name="workflows")
 
