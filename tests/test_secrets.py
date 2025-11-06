@@ -15,28 +15,28 @@ def test():
 
     # Create a secret
     response = cli(["secrets", "create", "-f", "data/run-time/secret-create.json"])
-    assert response['tag'] == 'cli-test-secret', "Should create secret with tag cli-test-secret"
+    assert response['tag'] == 'cli_test_secret', "Should create secret with tag cli_test_secret"
     assert response['name'] == 'CLI Test Secret', "Should have correct name"
 
     # List secrets and verify it exists
     response = cli(["secrets", "list"])
-    assert any(secret['tag'] == 'cli-test-secret' for secret in response['secrets']), "Should find secret with tag cli-test-secret"
+    assert any(secret['tag'] == 'cli_test_secret' for secret in response['secrets']), "Should find secret with tag cli_test_secret"
 
     # Get the secret
-    response = cli(["secrets", "get", "-t", "cli-test-secret"])
-    assert response['tag'] == 'cli-test-secret', "Should get secret with correct tag"
+    response = cli(["secrets", "get", "-t", "cli_test_secret"])
+    assert response['tag'] == 'cli_test_secret', "Should get secret with correct tag"
     assert response['name'] == 'CLI Test Secret', "Should have correct name"
 
     # Update the secret
-    cli(["secrets", "update", "-t", "cli-test-secret", "-f", "data/run-time/secret-update.json"])
+    cli(["secrets", "update", "-t", "cli_test_secret", "-f", "data/run-time/secret-update.json"])
 
     # Verify the update
-    response = cli(["secrets", "get", "-t", "cli-test-secret"])
+    response = cli(["secrets", "get", "-t", "cli_test_secret"])
     assert response['name'] == 'Updated CLI Test Secret', "Should have updated name"
 
     # Delete the secret
-    cli(["secrets", "delete", "-t", "cli-test-secret"])
+    cli(["secrets", "delete", "-t", "cli_test_secret"])
 
     # Verify deletion by checking list
     response = cli(["secrets", "list"])
-    assert not any(secret['tag'] == 'cli-test-secret' for secret in response['secrets']), "Should not find deleted secret"
+    assert not any(secret['tag'] == 'cli_test_secret' for secret in response['secrets']), "Should not find deleted secret"
