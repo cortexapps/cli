@@ -474,6 +474,7 @@ def _import_catalog(ctx, directory):
 
         def import_catalog_file(file_info):
             filename, file_path = file_info
+            print(f"   Importing: {filename}")
             try:
                 with open(file_path) as f:
                     catalog.create(ctx, file_input=f, _print=False)
@@ -491,14 +492,8 @@ def _import_catalog(ctx, directory):
             for future in as_completed(futures):
                 results.append(future.result())
 
-        # Print results in alphabetical order
-        failed_count = 0
-        for filename, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
-            if error_type:
-                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
-                failed_count += 1
-            else:
-                print(f"   Importing: {filename}")
+        # Count failures
+        failed_count = sum(1 for filename, file_path, error_type, error_msg in results if error_type)
 
         if failed_count > 0:
             print(f"\n   Total catalog import failures: {failed_count}")
