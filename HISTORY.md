@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.3.0](https://github.com/cortexapps/cli/releases/tag/1.3.0) - 2025-11-05
+
+<small>[Compare with 1.2.0](https://github.com/cortexapps/cli/compare/1.2.0...1.3.0)</small>
+
+### Fixed
+
+- fix: add retry logic for scorecard create to handle active evaluations ([cc40b55](https://github.com/cortexapps/cli/commit/cc40b55ed9ef5af4146360b5a879afc6dc67fe06) by Jeff Schnitter).
+- fix: use json.dump instead of Rich print for file writing ([c66c2fe](https://github.com/cortexapps/cli/commit/c66c2fe438cc95f8343fbd4ba3cecae605c435ea) by Jeff Schnitter).
+- fix: ensure export/import output is in alphabetical order ([9055f78](https://github.com/cortexapps/cli/commit/9055f78cc4e1136da20e4e42883ff3c0f248825b) by Jeff Schnitter).
+- fix: ensure CORTEX_BASE_URL is available in publish workflow ([743579d](https://github.com/cortexapps/cli/commit/743579d760e900da693696df2841e7b710b08d39) by Jeff Schnitter).
+
 ## [1.2.0](https://github.com/cortexapps/cli/releases/tag/1.2.0) - 2025-11-04
 
 <small>[Compare with 1.1.0](https://github.com/cortexapps/cli/compare/1.1.0...1.2.0)</small>
