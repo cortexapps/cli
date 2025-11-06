@@ -340,25 +340,42 @@ def _import_entity_relationship_types(ctx, directory):
         existing_rel_types_data = entity_relationship_types.list(ctx, page=None, page_size=250, _print=False)
         existing_tags = {rt['tag'] for rt in existing_rel_types_data.get('relationshipTypes', [])}
 
-        failed_count = 0
-        for filename in sorted(os.listdir(directory)):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                # Extract the tag from filename for cleaner output
-                tag = filename.replace('.json', '')
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
 
-                try:
-                    # Check if relationship type already exists
-                    if tag in existing_tags:
-                        # Update existing relationship type
-                        entity_relationship_types.update(ctx, tag=tag, file_input=open(file_path), _print=False)
-                    else:
-                        # Create new relationship type
-                        entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
-                    print(f"   Importing: {tag}")
-                except Exception as e:
-                    print(f"   Failed to import {tag}: {type(e).__name__} - {str(e)}")
-                    failed_count += 1
+        def import_rel_type_file(file_info):
+            filename, file_path = file_info
+            tag = filename.replace('.json', '')
+            try:
+                # Check if relationship type already exists
+                if tag in existing_tags:
+                    # Update existing relationship type
+                    entity_relationship_types.update(ctx, tag=tag, file_input=open(file_path), _print=False)
+                else:
+                    # Create new relationship type
+                    entity_relationship_types.create(ctx, file_input=open(file_path), _print=False)
+                return (tag, None, None)
+            except typer.Exit as e:
+                return (tag, "HTTP", "Validation or HTTP error")
+            except Exception as e:
+                return (tag, type(e).__name__, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_rel_type_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        failed_count = 0
+        for tag, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {tag}: {error_type} - {error_msg}")
+                failed_count += 1
+            else:
+                print(f"   Importing: {tag}")
 
         if failed_count > 0:
             print(f"\n   Total entity relationship type import failures: {failed_count}")
@@ -366,46 +383,64 @@ def _import_entity_relationship_types(ctx, directory):
 def _import_entity_relationships(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
+
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
+
+        def import_relationships_file(file_info):
+            filename, file_path = file_info
+            rel_type = filename.replace('.json', '')
+            try:
+                # Read the relationships file
+                with open(file_path) as f:
+                    relationships = json.load(f)
+
+                # Convert list format to the format expected by update-bulk
+                # The export saves the raw relationships list, but update-bulk needs {"relationships": [...]}
+                if isinstance(relationships, list):
+                    data = {"relationships": []}
+                    for rel in relationships:
+                        # Extract source and destination tags from sourceEntity and destinationEntity
+                        source_tag = rel.get("sourceEntity", {}).get("tag")
+                        dest_tag = rel.get("destinationEntity", {}).get("tag")
+                        data["relationships"].append({
+                            "source": source_tag,
+                            "destination": dest_tag
+                        })
+
+                    # Use update-bulk to replace all relationships for this type
+                    # Create a temporary file to pass the data
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                        json.dump(data, temp_file)
+                        temp_file_name = temp_file.name
+
+                    try:
+                        entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file_name), force=True, _print=False)
+                    finally:
+                        os.unlink(temp_file_name)
+
+                return (rel_type, None, None)
+            except typer.Exit as e:
+                return (rel_type, "HTTP", "Validation or HTTP error")
+            except Exception as e:
+                return (rel_type, type(e).__name__, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_relationships_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
         failed_count = 0
-        for filename in sorted(os.listdir(directory)):
-            file_path = os.path.join(directory, filename)
-            if os.path.isfile(file_path):
-                # Extract relationship type from filename (without .json extension)
-                rel_type = filename.replace('.json', '')
-
-                try:
-                    # Read the relationships file
-                    with open(file_path) as f:
-                        relationships = json.load(f)
-
-                    # Convert list format to the format expected by update-bulk
-                    # The export saves the raw relationships list, but update-bulk needs {"relationships": [...]}
-                    if isinstance(relationships, list):
-                        data = {"relationships": []}
-                        for rel in relationships:
-                            # Extract source and destination tags from sourceEntity and destinationEntity
-                            source_tag = rel.get("sourceEntity", {}).get("tag")
-                            dest_tag = rel.get("destinationEntity", {}).get("tag")
-                            data["relationships"].append({
-                                "source": source_tag,
-                                "destination": dest_tag
-                            })
-
-                        # Use update-bulk to replace all relationships for this type
-                        # Create a temporary file to pass the data
-                        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
-                            json.dump(data, temp_file)
-                            temp_file_name = temp_file.name
-
-                        try:
-                            entity_relationships.update_bulk(ctx, relationship_type=rel_type, file_input=open(temp_file_name), force=True, _print=False)
-                        finally:
-                            os.unlink(temp_file_name)
-
-                    print(f"   Importing: {rel_type}")
-                except Exception as e:
-                    print(f"   Failed to import {rel_type}: {type(e).__name__} - {str(e)}")
-                    failed_count += 1
+        for rel_type, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {rel_type}: {error_type} - {error_msg}")
+                failed_count += 1
+            else:
+                print(f"   Importing: {rel_type}")
 
         if failed_count > 0:
             print(f"\n   Total entity relationship import failures: {failed_count}")
@@ -413,22 +448,37 @@ def _import_entity_relationships(ctx, directory):
 def _import_catalog(ctx, directory):
     if os.path.isdir(directory):
         print("Processing: " + directory)
-        files = sorted([filename for filename in os.listdir(directory)
-                       if os.path.isfile(os.path.join(directory, filename))])
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
 
-        failed_count = 0
-        for filename in files:
-            file_path = os.path.join(directory, filename)
+        def import_catalog_file(file_info):
+            filename, file_path = file_info
             try:
                 with open(file_path) as f:
                     catalog.create(ctx, file_input=f, _print=False)
-                print(f"   Importing: {filename}")
+                return (filename, None, None)
             except typer.Exit as e:
-                print(f"   Failed to import {filename}: HTTP error (see above)")
-                failed_count += 1
+                # typer.Exit is raised by the HTTP client on errors
+                return (filename, "HTTP", "Validation or HTTP error")
             except Exception as e:
-                print(f"   Failed to import {filename}: {type(e).__name__} - {str(e)}")
+                return (filename, type(e).__name__, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = {executor.submit(import_catalog_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        failed_count = 0
+        for filename, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
                 failed_count += 1
+            else:
+                print(f"   Importing: {filename}")
 
         if failed_count > 0:
             print(f"\n   Total catalog import failures: {failed_count}")
