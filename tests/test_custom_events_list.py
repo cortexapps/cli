@@ -1,7 +1,8 @@
 from tests.helpers.utils import *
 
 def test():
-    cli(["custom-events", "delete-all", "-t", "cli-test-service", "-y", "VALIDATE_SERVICE"])
+    # Delete all event types to ensure clean state (not just VALIDATE_SERVICE)
+    cli(["custom-events", "delete-all", "-t", "cli-test-service"])
     cli(["custom-events", "create", "-t", "cli-test-service", "-f", "data/run-time/custom-events.json"])
 
     result = cli(["custom-events", "list", "-t", "cli-test-service"])
