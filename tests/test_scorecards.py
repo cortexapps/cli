@@ -87,13 +87,22 @@ def test_scorecards_drafts():
 # - However, we should be cleaning up test data after tests run which would invalidate these assumptions.
 
 @pytest.fixture(scope='session')
-@mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
 def test_exemption_that_will_be_approved():
     rule_id = _get_rule("Has Custom Data")
     print("rule_id = " + rule_id)
 
-    response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test approve", "-ri", rule_id, "-d", "100"])
-    assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
+    # Revoke any existing exemption to make test idempotent (ignore if doesn't exist)
+    # Use admin key for revoke since viewer doesn't have permission
+    try:
+        cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "cleanup", "-ri", rule_id])
+    except Exception as e:
+        # Ignore errors - exemption may not exist
+        print(f"Cleanup: {e}")
+
+    # Request exemption with viewer key (auto-approved with admin, pending with viewer)
+    with mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']}):
+        response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test approve", "-ri", rule_id, "-d", "100"])
+        assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
 
 @pytest.mark.usefixtures('test_exemption_that_will_be_approved')
 def test_approve_exemption():
@@ -106,13 +115,22 @@ def test_approve_exemption():
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"
 
 @pytest.fixture(scope='session')
-@mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']})
 def test_exemption_that_will_be_denied():
     rule_id = _get_rule("Is Definitely False")
     print("rule_id = " + rule_id)
 
-    response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test deny", "-ri", rule_id, "-d", "100"])
-    assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
+    # Revoke any existing exemption to make test idempotent (ignore if doesn't exist)
+    # Use admin key for revoke since viewer doesn't have permission
+    try:
+        cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "cleanup", "-ri", rule_id])
+    except Exception as e:
+        # Ignore errors - exemption may not exist
+        print(f"Cleanup: {e}")
+
+    # Request exemption with viewer key (auto-approved with admin, pending with viewer)
+    with mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']}):
+        response = cli(["scorecards", "exemptions", "request", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "test deny", "-ri", rule_id, "-d", "100"])
+        assert response['exemptionStatus']['status'] == 'PENDING', "exemption state should be PENDING"
 
 @pytest.mark.usefixtures('test_exemption_that_will_be_denied')
 def test_deny_exemption():
