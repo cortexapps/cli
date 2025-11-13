@@ -25,7 +25,7 @@ test-import:
 
 # Run a single test, ie: just test tests/test_catalog.py
 test testname:
-   {{pytest}} -n auto {{testname}}
+   {{pytest}} -n auto -m "" {{testname}}
 
 # Run performance tests (rate limiting, long-running tests)
 test-perf:
