@@ -9,18 +9,83 @@ from rich.markdown import Markdown
 from rich.console import Console
 import logging
 import urllib.parse
+import time
+import threading
+import os
 
 from cortexapps_cli.utils import guess_data_key
 
 
+class TokenBucket:
+    """
+    Token bucket rate limiter for client-side rate limiting.
+
+    Allows bursts up to bucket capacity while enforcing long-term rate limit.
+    Thread-safe for concurrent use.
+    """
+    def __init__(self, rate, capacity=None):
+        """
+        Args:
+            rate: Tokens per second (e.g., 1000 req/min = 16.67 req/sec)
+            capacity: Maximum tokens in bucket (default: rate, allows 1 second burst)
+        """
+        self.rate = rate
+        self.capacity = capacity or rate
+        self.tokens = self.capacity
+        self.last_update = time.time()
+        self.lock = threading.Lock()
+
+    def acquire(self, tokens=1):
+        """
+        Acquire tokens, blocking until available.
+
+        Args:
+            tokens: Number of tokens to acquire (default: 1)
+        """
+        with self.lock:
+            while True:
+                now = time.time()
+                elapsed = now - self.last_update
+
+                # Refill tokens based on elapsed time
+                self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+                self.last_update = now
+
+                if self.tokens >= tokens:
+                    self.tokens -= tokens
+                    return
+
+                # Calculate wait time for next token
+                tokens_needed = tokens - self.tokens
+                wait_time = tokens_needed / self.rate
+
+                # Release lock and sleep
+                self.lock.release()
+                time.sleep(min(wait_time, 0.1))  # Sleep in small increments
+                self.lock.acquire()
+
+
 class CortexClient:
-    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com'):
+    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com', rate_limit=None):
         self.api_key = api_key
         self.tenant = tenant
         self.base_url = base_url
 
         logging.basicConfig(level=numeric_level)
         self.logger = logging.getLogger(__name__)
+
+        # Enable urllib3 retry logging to see when retries occur
+        urllib3_logger = logging.getLogger('urllib3.util.retry')
+        urllib3_logger.setLevel(logging.DEBUG)
+
+        # Read rate limit from environment variable or use default
+        if rate_limit is None:
+            rate_limit = int(os.environ.get('CORTEX_RATE_LIMIT', '1000'))
+
+        # Client-side rate limiter (default: 1000 req/min = 16.67 req/sec)
+        # Allows bursting up to 50 requests, then enforces rate limit
+        self.rate_limiter = TokenBucket(rate=rate_limit/60.0, capacity=50)
+        self.logger.info(f"Rate limiter initialized: {rate_limit} req/min (burst: 50)")
 
         # Create a session with connection pooling for better performance
         self.session = requests.Session()
@@ -31,7 +96,13 @@ class CortexClient:
         adapter = HTTPAdapter(
             pool_connections=10,
             pool_maxsize=50,
-            max_retries=Retry(total=3, backoff_factor=0.3, status_forcelist=[500, 502, 503, 504])
+            max_retries=Retry(
+                total=3,
+                backoff_factor=0.3,
+                status_forcelist=[500, 502, 503, 504],  # Removed 429 - we avoid it with rate limiting
+                allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+                respect_retry_after_header=True
+            )
         )
         self.session.mount('https://', adapter)
         self.session.mount('http://', adapter)
@@ -50,12 +121,29 @@ class CortexClient:
                 req_data = json.dumps(data)
 
         # Use session for connection pooling and reuse
+        # Acquire rate limit token before making request (blocks if needed)
+        self.rate_limiter.acquire()
+
+        start_time = time.time()
         response = self.session.request(method, url, params=params, headers=req_headers, data=req_data)
+        duration = time.time() - start_time
+
+        # Log slow requests or non-200 responses (likely retries happened)
+        if duration > 2.0 or response.status_code != 200:
+            self.logger.info(f"{method} {endpoint} -> {response.status_code} ({duration:.1f}s)")
+
+        # Log if retries likely occurred (duration suggests backoff delays)
+        if duration > 5.0:
+            self.logger.warning(f"⚠️  Slow request ({duration:.1f}s) - likely retries occurred")
 
         self.logger.debug(f"Request Headers: {response.request.headers}")
         self.logger.debug(f"Response Status Code: {response.status_code}")
         self.logger.debug(f"Response Headers: {response.headers}")
         self.logger.debug(f"Response Content: {response.text}")
+
+        # Check if response is OK. Note: urllib3 Retry with status_forcelist should have already
+        # retried any 429/500/502/503/504 errors. If we're here with one of those status codes,
+        # it means retries were exhausted.
 
         if not response.ok:
             try:

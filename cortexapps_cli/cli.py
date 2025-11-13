@@ -87,7 +87,8 @@ def global_callback(
     url: str = typer.Option(None, "--url", "-u", help="Base URL for the API", envvar="CORTEX_BASE_URL"),
     config_file: str = typer.Option(os.path.join(os.path.expanduser('~'), '.cortex', 'config'), "--config", "-c", help="Config file path", envvar="CORTEX_CONFIG"),
     tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant alias", envvar="CORTEX_TENANT_ALIAS"),
-    log_level: Annotated[str, typer.Option("--log-level", "-l", help="Set the logging level")] = "INFO"
+    log_level: Annotated[str, typer.Option("--log-level", "-l", help="Set the logging level")] = "INFO",
+    rate_limit: int = typer.Option(None, "--rate-limit", "-r", help="API rate limit in requests per minute (default: 1000)", envvar="CORTEX_RATE_LIMIT")
 ):
     if not ctx.obj:
         ctx.obj = {}
@@ -135,7 +136,7 @@ def global_callback(
     api_key = api_key.strip('"\' ')
     url = url.strip('"\' /')
 
-    ctx.obj["client"] = CortexClient(api_key, tenant, numeric_level, url)
+    ctx.obj["client"] = CortexClient(api_key, tenant, numeric_level, url, rate_limit)
 
 @app.command()
 def version():
