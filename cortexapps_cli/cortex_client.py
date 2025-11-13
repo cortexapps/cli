@@ -11,6 +11,7 @@ import logging
 import urllib.parse
 import time
 import threading
+import os
 
 from cortexapps_cli.utils import guess_data_key
 
@@ -65,7 +66,7 @@ class TokenBucket:
 
 
 class CortexClient:
-    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com', rate_limit=1000):
+    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com', rate_limit=None):
         self.api_key = api_key
         self.tenant = tenant
         self.base_url = base_url
@@ -77,7 +78,11 @@ class CortexClient:
         urllib3_logger = logging.getLogger('urllib3.util.retry')
         urllib3_logger.setLevel(logging.DEBUG)
 
-        # Client-side rate limiter (1000 req/min = 16.67 req/sec)
+        # Read rate limit from environment variable or use default
+        if rate_limit is None:
+            rate_limit = int(os.environ.get('CORTEX_RATE_LIMIT', '1000'))
+
+        # Client-side rate limiter (default: 1000 req/min = 16.67 req/sec)
         # Allows bursting up to 50 requests, then enforces rate limit
         self.rate_limiter = TokenBucket(rate=rate_limit/60.0, capacity=50)
         self.logger.info(f"Rate limiter initialized: {rate_limit} req/min (burst: 50)")
