@@ -38,6 +38,7 @@ import cortexapps_cli.commands.queries as queries
 import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.scim as scim
 import cortexapps_cli.commands.scorecards as scorecards
+import cortexapps_cli.commands.secrets as secrets
 import cortexapps_cli.commands.teams as teams
 import cortexapps_cli.commands.workflows as workflows
 
@@ -74,6 +75,7 @@ app.add_typer(queries.app, name="queries")
 app.add_typer(rest.app, name="rest")
 app.add_typer(scim.app, name="scim")
 app.add_typer(scorecards.app, name="scorecards")
+app.add_typer(secrets.app, name="secrets")
 app.add_typer(teams.app, name="teams")
 app.add_typer(workflows.app, name="workflows")
 
