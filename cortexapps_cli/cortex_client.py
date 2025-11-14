@@ -85,7 +85,6 @@ class CortexClient:
         # Client-side rate limiter (default: 1000 req/min = 16.67 req/sec)
         # Allows bursting up to 50 requests, then enforces rate limit
         self.rate_limiter = TokenBucket(rate=rate_limit/60.0, capacity=50)
-        self.logger.info(f"Rate limiter initialized: {rate_limit} req/min (burst: 50)")
 
         # Create a session with connection pooling for better performance
         self.session = requests.Session()
