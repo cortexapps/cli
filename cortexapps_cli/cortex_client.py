@@ -98,7 +98,7 @@ class CortexClient:
             max_retries=Retry(
                 total=3,
                 backoff_factor=0.3,
-                status_forcelist=[500, 502, 503, 504],  # Removed 429 - we avoid it with rate limiting
+                status_forcelist=[429],  # Only retry on rate limit errors
                 allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
                 respect_retry_after_header=True
             )
