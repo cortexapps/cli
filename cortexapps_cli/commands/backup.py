@@ -472,6 +472,8 @@ def _import_entity_relationships(ctx, directory):
     return ("entity-relationships", len(results) - failed_count, [(fp, et, em) for rt, fp, et, em in results if et])
 
 def _import_catalog(ctx, directory):
+    results = []
+    failed_count = 0
     if os.path.isdir(directory):
         print("Processing: " + directory)
         files = [(filename, os.path.join(directory, filename))
@@ -507,6 +509,8 @@ def _import_catalog(ctx, directory):
     return ("catalog", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 def _import_plugins(ctx, directory):
+    results = []
+    failed_count = 0
     if os.path.isdir(directory):
         print("Processing: " + directory)
         files = [(filename, os.path.join(directory, filename))
@@ -543,6 +547,8 @@ def _import_plugins(ctx, directory):
     return ("plugins", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 def _import_scorecards(ctx, directory):
+    results = []
+    failed_count = 0
     if os.path.isdir(directory):
         print("Processing: " + directory)
         files = [(filename, os.path.join(directory, filename))
@@ -579,6 +585,8 @@ def _import_scorecards(ctx, directory):
     return ("scorecards", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
 def _import_workflows(ctx, directory):
+    results = []
+    failed_count = 0
     if os.path.isdir(directory):
         print("Processing: " + directory)
         files = [(filename, os.path.join(directory, filename))
