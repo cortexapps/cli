@@ -133,6 +133,12 @@ Follow the conventions in `STYLE.md`:
 
 ## Build & Release Process
 
+### Branch Naming Convention
+Use the GitHub-recommended format: `<issue-number>-<short-description>`
+- Example: `186-fix-urllib3-cve` for issue #186
+- Use lowercase kebab-case for the description
+- Keep the description concise (3-5 words)
+
 ### Release Workflow
 1. Create feature branch for changes
 2. Merge to `staging` branch for testing
