@@ -133,6 +133,12 @@ Follow the conventions in `STYLE.md`:
 
 ## Build & Release Process
 
+### Branch Naming Convention
+Use the GitHub-recommended format: `<issue-number>-<short-description>`
+- Example: `186-fix-urllib3-cve` for issue #186
+- Use lowercase kebab-case for the description
+- Keep the description concise (3-5 words)
+
 ### Release Workflow
 1. Create feature branch for changes
 2. Merge to `staging` branch for testing
@@ -145,6 +151,16 @@ Follow the conventions in `STYLE.md`:
    - PyPI
    - Docker Hub (`cortexapp/cli:VERSION` and `cortexapp/cli:latest`)
    - Homebrew tap (`cortexapps/homebrew-tap`)
+
+### Homebrew Dependency Updates
+The `mislav/bump-homebrew-formula-action` only updates the main package URL and SHA256. It **cannot** update the `resource` blocks for Python dependencies (this is a documented limitation of the action).
+
+When updating Python dependency versions (e.g., urllib3, requests), the homebrew formula in `cortexapps/homebrew-tap` must be updated manually:
+1. Clone the `cortexapps/homebrew-tap` repository
+2. Update the resource blocks in `Formula/cortexapps-cli.rb` with new URLs and SHA256 hashes from PyPI
+3. Alternatively, use `brew update-python-resources cortexapps-cli` locally and copy the output
+
+**Important**: The `homebrew/cortexapps-cli.rb` file in this repository should be kept in sync with the tap formula for reference. Update it when making dependency changes.
 
 ### Commit Message Format
 Commits should be prefixed with:
