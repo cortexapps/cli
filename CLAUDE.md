@@ -171,6 +171,18 @@ Commits should be prefixed with:
 
 Only commits with these prefixes appear in the auto-generated `HISTORY.md`.
 
+### HISTORY.md Merge Conflicts
+The `HISTORY.md` file is auto-generated when `staging` is merged to `main`. This means:
+- `main` always has the latest HISTORY.md
+- `staging` lags behind until the next release
+- Feature branches created from `main` have the updated history
+
+When merging feature branches to `staging`, conflicts in HISTORY.md are expected. Resolve by accepting the incoming version:
+```bash
+git checkout --theirs HISTORY.md
+git add HISTORY.md
+```
+
 ### GitHub Actions
 - **`publish.yml`**: Triggered on push to `main`, handles versioning and multi-platform publishing
 - **`test-pr.yml`**: Runs tests on pull requests
