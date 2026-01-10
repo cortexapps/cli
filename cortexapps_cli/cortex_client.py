@@ -156,8 +156,12 @@ class CortexClient:
                 print(error_str)
                 raise typer.Exit(code=1)
             except json.JSONDecodeError:
-                # if we can't parse the error message, just raise the HTTP error
-                response.raise_for_status()
+                # if we can't parse the error message, print a clean error and exit
+                status = response.status_code
+                reason = response.reason or 'Unknown error'
+                error_str = f'[red][bold]HTTP Error {status}[/bold][/red]: {reason}'
+                print(error_str)
+                raise typer.Exit(code=1)
 
         if raw_response:
             return response
