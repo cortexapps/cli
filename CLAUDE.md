@@ -135,12 +135,18 @@ Follow the conventions in `STYLE.md`:
 
 ### Release Workflow
 1. Create feature branch for changes
-2. Merge to `staging` branch for testing
-3. Merge `staging` to `main` to trigger release
-4. Version bumping:
+2. Create PR to merge feature branch to `staging` for testing
+3. Create PR to merge `staging` to `main` to trigger release:
+   ```bash
+   gh pr create --base main --head staging --title "Release X.Y.Z: Description #patch|#minor|#major"
+   ```
+   - Include version number and brief description in title
+   - Use `#patch`, `#minor`, or `#major` in the title to control version bump
+   - List all changes in the PR body
+4. Version bumping (based on hashtag in PR title or commit message):
    - Default: Patch version bump
-   - `#minor` in commit message: Minor version bump
-   - `#major` in commit message: Major version bump
+   - `#minor`: Minor version bump
+   - `#major`: Major version bump
 5. Release publishes to:
    - PyPI
    - Docker Hub (`cortexapp/cli:VERSION` and `cortexapp/cli:latest`)
