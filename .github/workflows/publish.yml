@@ -66,6 +66,22 @@ jobs:
           git push
         fi
 
+    - name: Sync HISTORY.md to staging
+      run: |
+        # Sync the HISTORY.md update to staging to prevent merge conflicts
+        # when feature branches (created from main) are merged to staging
+        git fetch origin staging
+        git checkout staging
+        git checkout main -- HISTORY.md
+        if git diff --exit-code HISTORY.md; then
+          echo "staging HISTORY.md already up to date"
+        else
+          git add HISTORY.md
+          git commit -m "chore: sync HISTORY.md from main"
+          git push origin staging
+        fi
+        git checkout main
+
     - name: Git details about version
       id: git-details
       env:
