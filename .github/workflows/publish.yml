@@ -84,16 +84,12 @@ jobs:
 
     - name: Git details about version
       id: git-details
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
          version=$(git describe --tags --abbrev=0)
          echo "VERSION=${version}" >> $GITHUB_ENV
          echo "VERSION=${version}" >> $GITHUB_OUTPUT
-         pusher=$(echo "$GITHUB_CONTEXT" | jq -r ".event.pusher.name")
-         email=$(echo "$GITHUB_CONTEXT" | jq -r ".event.pusher.email")
-         echo "PUSHER=${pusher}" >> $GITHUB_OUTPUT
-         echo "EMAIL=${email}" >> $GITHUB_OUTPUT
+         echo "PUSHER=${{ github.event.pusher.name }}" >> $GITHUB_OUTPUT
+         echo "EMAIL=${{ github.event.pusher.email }}" >> $GITHUB_OUTPUT
          echo "URL=https://pypi.org/project/cortexapps-cli/${version}/" >> $GITHUB_OUTPUT
 
     - name: Publish
