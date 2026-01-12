@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.8.0](https://github.com/cortexapps/cli/releases/tag/1.8.0) - 2026-01-12
+
+<small>[Compare with 1.7.0](https://github.com/cortexapps/cli/compare/1.7.0...1.8.0)</small>
+
+### Bug Fixes
+
+- Update urllib3 to address CVE-2025-66418 and CVE-2025-66471 #patch (#188) ([4fba98b](https://github.com/cortexapps/cli/commit/4fba98bf12083faa030dfb84b2db325d55ae9afc) by Jeff Schnitter).
 
 ## [1.7.0](https://github.com/cortexapps/cli/releases/tag/1.7.0) - 2025-11-19
 
@@ -18,7 +25,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Bug Fixes
 
 - remove rate limiter initialization log message (#169) #patch ([015107a](https://github.com/cortexapps/cli/commit/015107aca15d5a4cf4eb746834bcbb7dac607e1d) by Jeff Schnitter).
-
 
 ## [1.5.0](https://github.com/cortexapps/cli/releases/tag/1.5.0) - 2025-11-13
 
