@@ -1,0 +1,7 @@
+{
+  "description": "This is a test entity type definition with invalid icon.",
+  "iconTag": "invalidIcon",
+  "name": "CLI Test With Invalid Icon",
+  "schema": {},
+  "type": "cli-test-invalid-icon"
+}

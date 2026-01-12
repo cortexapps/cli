@@ -31,12 +31,12 @@ def test_config_file_bad_api_key(monkeypatch, tmp_path):
     monkeypatch.setattr('sys.stdin', io.StringIO('y'))
     f = tmp_path / "test-config-bad-api-key.txt"
     response = cli(["-c", str(f), "-k", "invalidApiKey", "scorecards", "list"], return_type=ReturnType.RAW)
-    assert "401 Client Error: Unauthorized" in str(response), "should get Unauthorized error"
+    assert "HTTP Error 401" in response.stdout, "should get Unauthorized error"
 
 def test_environment_variable_invalid_key(monkeypatch):
     monkeypatch.setenv("CORTEX_API_KEY", "invalidKey")
     response = cli(["scorecards", "list"], return_type=ReturnType.RAW)
-    assert "401 Client Error: Unauthorized" in str(response), "should get Unauthorized error"
+    assert "HTTP Error 401" in response.stdout, "should get Unauthorized error"
 
 def test_config_file_bad_url(monkeypatch, tmp_path):
     monkeypatch.delenv("CORTEX_BASE_URL")

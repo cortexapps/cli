@@ -698,3 +698,7 @@ def import_tenant(
                 print(f"cortex scorecards create -f \"{file_path}\"")
             elif import_type == "workflows":
                 print(f"cortex workflows create -f \"{file_path}\"")
+
+    # Exit with non-zero code if any imports failed
+    if total_failed > 0:
+        raise typer.Exit(1)

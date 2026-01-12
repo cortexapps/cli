@@ -1,5 +1,6 @@
 {
   "description": "This is a test entity type definition.",
+  "iconTag": "Cortex-builtin::Basketball",
   "name": "CLI Test With Empty Schema",
   "schema": {},
   "type": "cli-test"
