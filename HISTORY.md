@@ -6,13 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.10.0](https://github.com/cortexapps/cli/releases/tag/1.10.0) - 2026-01-23
+
+<small>[Compare with 1.9.0](https://github.com/cortexapps/cli/compare/1.9.0...1.10.0)</small>
+
 ## [1.9.0](https://github.com/cortexapps/cli/releases/tag/1.9.0) - 2026-01-12
 
-<small>[Compare with 1.8.0](https://github.com/cortexapps/cli/compare/1.8.0...1.9.0)</small>
-
-## [1.8.0](https://github.com/cortexapps/cli/releases/tag/1.8.0) - 2026-01-12
-
-<small>[Compare with 1.7.0](https://github.com/cortexapps/cli/compare/1.7.0...1.8.0)</small>
+<small>[Compare with 1.7.0](https://github.com/cortexapps/cli/compare/1.7.0...1.9.0)</small>
 
 ### Bug Fixes
 
@@ -29,7 +29,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Bug Fixes
 
 - remove rate limiter initialization log message (#169) #patch ([015107a](https://github.com/cortexapps/cli/commit/015107aca15d5a4cf4eb746834bcbb7dac607e1d) by Jeff Schnitter).
-
 
 ## [1.5.0](https://github.com/cortexapps/cli/releases/tag/1.5.0) - 2025-11-13
 
