@@ -10,7 +10,29 @@ def _dummy_file(tmp_path):
 @responses.activate
 def test_integrations_newrelic_add():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configuration", json={}, status=200)
-    cli(["integrations", "newrelic", "add", "-a", "myAlias", "-h", "my.host.com", "--api-key", "123456", "-i"])
+    cli(["integrations", "newrelic", "add", "-a", "myAlias", "--account-id", "12345", "--personal-key", "NRAK-123456", "-i"])
+
+@responses.activate
+def test_integrations_newrelic_add_with_region():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configuration", json={}, status=200)
+    cli(["integrations", "newrelic", "add", "-a", "myAlias", "-acc", "12345", "-pk", "NRAK-123456", "-r", "EU"])
+
+def test_integrations_newrelic_add_invalid_key():
+    result = cli(["integrations", "newrelic", "add", "-a", "myAlias", "--account-id", "12345", "--personal-key", "invalid-key"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+    assert "must start with 'NRAK'" in result.output
+
+def test_integrations_newrelic_add_missing_required():
+    result = cli(["integrations", "newrelic", "add", "-a", "myAlias"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+    assert "are required" in result.output
+
+@responses.activate
+def test_integrations_newrelic_add_with_file(tmp_path):
+    f = tmp_path / "test_integrations_newrelic_add.json"
+    f.write_text('{"alias": "test", "accountId": "12345", "personalKey": "NRAK-123", "region": "US"}')
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configuration", json={}, status=200)
+    cli(["integrations", "newrelic", "add", "-f", str(f)])
 
 @responses.activate
 def test_integrations_newrelic_add_multiple(tmp_path):
@@ -37,6 +59,13 @@ def test_integrations_newrelic_get():
 def test_integrations_newrelic_list():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configurations", json={}, status=200)
     cli(["integrations", "newrelic", "list"])
+
+@responses.activate
+def test_integrations_newrelic_list_table():
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configurations", json={"configurations": [{"alias": "test", "accountId": "123", "region": "US", "isDefault": True}]}, status=200)
+    result = cli(["integrations", "newrelic", "list", "--table"], return_type=ReturnType.RAW)
+    assert "Alias" in result.output
+    assert "test" in result.output
 
 @responses.activate
 def test_integrations_newrelic_get_default():

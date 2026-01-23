@@ -149,6 +149,23 @@ class CortexClient:
                 # try to parse the error message
                 error = response.json()
                 status = response.status_code
+
+                # Check for validation error format with violations array
+                if 'violations' in error and isinstance(error['violations'], list):
+                    print(f'[red][bold]HTTP Error {status}[/bold][/red]: Validation failed')
+                    for violation in error['violations']:
+                        title = violation.get('title', 'Validation Error')
+                        description = violation.get('description', 'No description')
+                        violation_type = violation.get('violationType', '')
+                        pointer = violation.get('pointer', '')
+                        print(f'  [yellow]{title}[/yellow]: {description}')
+                        if pointer:
+                            print(f'    [dim]Location: {pointer}[/dim]')
+                        if violation_type:
+                            print(f'    [dim]Type: {violation_type}[/dim]')
+                    raise typer.Exit(code=1)
+
+                # Standard error format with message/details
                 message = error.get('message', 'Unknown error')
                 details = error.get('details', 'No details')
                 request_id = error.get('requestId', 'No request ID')
