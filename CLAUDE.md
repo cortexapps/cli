@@ -139,24 +139,53 @@ Use the GitHub-recommended format: `<issue-number>-<short-description>`
 - Use lowercase kebab-case for the description
 - Keep the description concise (3-5 words)
 
+### Direct Commits to Main
+Documentation-only changes (like updates to CLAUDE.md, README.md, STYLE.md) can be committed directly to `main` without going through the staging workflow.
+
 ### Release Workflow
 1. Create feature branch for changes
 2. Create PR to merge feature branch to `staging` for testing
 3. Create PR to merge `staging` to `main` to trigger release:
    ```bash
-   gh pr create --base main --head staging --title "Release X.Y.Z: Description #patch|#minor|#major"
+   gh pr create --base main --head staging --title "Release X.Y.Z: Description"
    ```
-   - Include version number and brief description in title
-   - Use `#patch`, `#minor`, or `#major` in the title to control version bump
+   - Include the expected version number and brief description in title
    - List all changes in the PR body
-4. Version bumping (based on hashtag in PR title or commit message):
-   - Default: Patch version bump
-   - `#minor`: Minor version bump
-   - `#major`: Major version bump
+4. Version bumping is automatic based on **conventional commit prefixes** in the commit history since the last tag:
+   - `feat:` prefix → **minor** version bump (new features)
+   - `fix:` prefix → **patch** version bump (bug fixes)
+   - If multiple types present, the highest wins (feat > fix)
+   - Default (no recognized prefix): patch bump
 5. Release publishes to:
    - PyPI
    - Docker Hub (`cortexapp/cli:VERSION` and `cortexapp/cli:latest`)
    - Homebrew tap (`cortexapps/homebrew-tap`)
+
+### Determining the Next Version (Claude Instructions)
+Before creating a staging-to-main release PR, Claude must:
+
+1. **Check the current version tag**:
+   ```bash
+   git fetch origin --tags
+   git describe --tags --abbrev=0
+   ```
+
+2. **Analyze commits since the last tag**:
+   ```bash
+   git log <last-tag>..origin/staging --oneline
+   ```
+
+3. **Determine the version bump** by examining commit prefixes:
+   - Any `feat:` commit → minor bump (X.Y.0 → X.(Y+1).0)
+   - Only `fix:` commits → patch bump (X.Y.Z → X.Y.(Z+1))
+
+4. **Explain the version** to the user before creating the PR:
+   > "The next version will be **X.Y.Z** because the commits include:
+   > - `feat: add --table option to newrelic list` (triggers minor bump)
+   > - `fix: correct API endpoint for validate`
+   > Since there's a `feat:` commit, this will be a minor version bump."
+
+This ensures the user understands what version will be published and why.
 
 ### Homebrew Dependency Updates
 The `mislav/bump-homebrew-formula-action` only updates the main package URL and SHA256. It **cannot** update the `resource` blocks for Python dependencies (this is a documented limitation of the action).
@@ -169,13 +198,19 @@ When updating Python dependency versions (e.g., urllib3, requests), the homebrew
 **Important**: The `homebrew/cortexapps-cli.rb` file in this repository should be kept in sync with the tap formula for reference. Update it when making dependency changes.
 
 ### Commit Message Format
-Commits should be prefixed with:
-- `add`: New features
-- `fix`: Bug fixes
-- `change`: Changes to existing features
-- `remove`: Removing features
+Commits use **conventional commit** prefixes which affect both versioning and changelog:
 
-Only commits with these prefixes appear in the auto-generated `HISTORY.md`.
+**For version bumping** (detected by github-tag-action):
+- `feat:` → triggers **minor** version bump
+- `fix:` → triggers **patch** version bump
+
+**For HISTORY.md changelog** (detected by git-changelog):
+- `add:` → appears under "Added"
+- `fix:` → appears under "Bug Fixes"
+- `change:` → appears under "Changed"
+- `remove:` → appears under "Removed"
+
+Best practice: Use `feat:` for new features (will bump minor) and `fix:` for bug fixes (will bump patch). These prefixes satisfy both the version bumping and changelog generation.
 
 ### HISTORY.md Merge Conflicts
 The `HISTORY.md` file is auto-generated when `staging` is merged to `main`. This means:
