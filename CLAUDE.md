@@ -228,6 +228,16 @@ git add HISTORY.md
 - **`publish.yml`**: Triggered on push to `main`, handles versioning and multi-platform publishing
 - **`test-pr.yml`**: Runs tests on pull requests
 
+### Branch Protection on `main`
+The `main` branch has push restrictions enabled to control who can merge:
+- **Allowed users**: `jeff-schnitter`
+- **Allowed apps**: `github-actions` (so `publish.yml` can push HISTORY.md updates)
+- **No PR requirement**: Disabled so that doc-only commits and CI-generated HISTORY.md changes can be pushed directly
+- **Force pushes**: Blocked
+- **Branch deletion**: Blocked
+
+External contributors can fork the repo and open PRs, but only allowed users can merge or push to `main`.
+
 ## Key Files
 
 - `cli.py`: Main CLI entry point and global callback

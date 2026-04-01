@@ -2,7 +2,6 @@ from tests.helpers.utils import *
 from urllib.error import HTTPError
 import pytest
 
-@pytest.mark.skip(reason="Disabled until CET-23082 is resolved.")
 def test():
     response = cli(["scim", "list"], ReturnType.STDOUT)
 
