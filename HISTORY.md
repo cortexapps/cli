@@ -6,6 +6,48 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.13.0](https://github.com/cortexapps/cli/releases/tag/1.13.0) - 2026-04-02
+
+<small>[Compare with 1.12.0](https://github.com/cortexapps/cli/compare/1.12.0...1.13.0)</small>
+
+### Bug Fixes
+
+- pass GH_TOKEN to checkout action for protected branch push ([7ad96e4](https://github.com/cortexapps/cli/commit/7ad96e4f3e3f9a5abd584059ca229058588c8a24) by Jeff Schnitter).
+
+## [1.12.0](https://github.com/cortexapps/cli/releases/tag/1.12.0) - 2026-04-02
+
+<small>[Compare with 1.11.0](https://github.com/cortexapps/cli/compare/1.11.0...1.12.0)</small>
+
+### Bug Fixes
+
+- use GH_TOKEN PAT for publish workflow git push to protected main branch ([ad8b16c](https://github.com/cortexapps/cli/commit/ad8b16c0ba1f6c4b7d671901e431b6fdaa4fa998) by Jeff Schnitter).
+
+## [1.11.0](https://github.com/cortexapps/cli/releases/tag/1.11.0) - 2026-04-02
+
+<small>[Compare with 1.10.0](https://github.com/cortexapps/cli/compare/1.10.0...1.11.0)</small>
+
+### Features
+
+- Add User-Agent header to CLI API requests (#195) ([8e94411](https://github.com/cortexapps/cli/commit/8e94411a9dc5b3e64d922ad148adcd234c6d187f) by Jeff Schnitter).
+- add entity relationships API support with optimized backup/restore (#160) ([6fc38bb](https://github.com/cortexapps/cli/commit/6fc38bbf5a4fe994f3967b6c0aad3a379b5c20ac) by Jeff Schnitter).
+- add support for Cortex Secrets API (#161) ([32c9f45](https://github.com/cortexapps/cli/commit/32c9f456e4dcde53b8df370f2e2b9ba45c9cbb8b) by Jeff Schnitter).
+
+### Bug Fixes
+
+- correct New Relic integration commands to match API (#192) ([a54f13a](https://github.com/cortexapps/cli/commit/a54f13aacebc54d8db3df0443da97600c8fa0eb1) by Jeff Schnitter).
+- only retry on 429 rate limit errors, not 5xx server errors (#179) ([a037024](https://github.com/cortexapps/cli/commit/a037024672d7721d490c1f3cfca79e6e0399a289) by Jeff Schnitter).
+- initialize results and failed_count before directory check in import functions (#178) ([b5f0c5a](https://github.com/cortexapps/cli/commit/b5f0c5a939cf15924ca46d2265513ff510c5251c) by Jeff Schnitter).
+- change default logging level from INFO to WARNING (#177) ([d7e6963](https://github.com/cortexapps/cli/commit/d7e6963d6ba3157d1690b7288991502b337dd6b9) by Jeff Schnitter).
+- only retry on 429 rate limit errors, not 5xx server errors ([b292e67](https://github.com/cortexapps/cli/commit/b292e67b1896c291b8bb63969ea97bf5a3d04d33) by Jeff Schnitter).
+- initialize results and failed_count before directory check in import functions ([4165886](https://github.com/cortexapps/cli/commit/41658862455075d01c23be72432785d9e66c0afd) by Jeff Schnitter).
+- change default logging level from INFO to WARNING ([8e58ea0](https://github.com/cortexapps/cli/commit/8e58ea0c94b4b077604d114618f21209f28a3e67) by Jeff Schnitter).
+- remove rate limiter initialization log message (#168) ([5741d35](https://github.com/cortexapps/cli/commit/5741d355451a1f1ad1e658f1974cfeb6d1dfd559) by Jeff Schnitter).
+- add client-side rate limiting and make tests idempotent (#165) #minor ([e54dca3](https://github.com/cortexapps/cli/commit/e54dca376e67a7dbc0059ff4f2f942014b308cf8) by Jeff Schnitter).
+
+### Performance Improvements
+
+- optimize test scheduling with --dist loadfile for 25% faster test runs ([0d99232](https://github.com/cortexapps/cli/commit/0d992320bdd9eecb2e0e86ebb3e7088ce81a9829) by Jeff Schnitter).
+
 ## [1.10.0](https://github.com/cortexapps/cli/releases/tag/1.10.0) - 2026-01-23
 
 <small>[Compare with 1.9.0](https://github.com/cortexapps/cli/compare/1.9.0...1.10.0)</small>
@@ -18,11 +60,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Update urllib3 to address CVE-2025-66418 and CVE-2025-66471 #patch (#188) ([4fba98b](https://github.com/cortexapps/cli/commit/4fba98bf12083faa030dfb84b2db325d55ae9afc) by Jeff Schnitter).
 
-## [1.7.0](https://github.com/cortexapps/cli/releases/tag/1.7.0) - 2025-11-19
+## [1.7.0](https://github.com/cortexapps/cli/releases/tag/1.7.0) - 2025-11-18
 
 <small>[Compare with 1.6.0](https://github.com/cortexapps/cli/compare/1.6.0...1.7.0)</small>
 
-## [1.6.0](https://github.com/cortexapps/cli/releases/tag/1.6.0) - 2025-11-14
+## [1.6.0](https://github.com/cortexapps/cli/releases/tag/1.6.0) - 2025-11-13
 
 <small>[Compare with 1.5.0](https://github.com/cortexapps/cli/compare/1.5.0...1.6.0)</small>
 
@@ -30,12 +72,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - remove rate limiter initialization log message (#169) #patch ([015107a](https://github.com/cortexapps/cli/commit/015107aca15d5a4cf4eb746834bcbb7dac607e1d) by Jeff Schnitter).
 
-
 ## [1.5.0](https://github.com/cortexapps/cli/releases/tag/1.5.0) - 2025-11-13
 
 <small>[Compare with 1.4.0](https://github.com/cortexapps/cli/compare/1.4.0...1.5.0)</small>
 
-## [1.4.0](https://github.com/cortexapps/cli/releases/tag/1.4.0) - 2025-11-06
+## [1.4.0](https://github.com/cortexapps/cli/releases/tag/1.4.0) - 2025-11-05
 
 <small>[Compare with 1.3.0](https://github.com/cortexapps/cli/compare/1.3.0...1.4.0)</small>
 
@@ -49,7 +90,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - rename test_deploys.py to test_000_deploys.py for early scheduling ([f36aae2](https://github.com/cortexapps/cli/commit/f36aae22f56317cde70a6a9df56b097edb6a6117) by Jeff Schnitter).
 - optimize test scheduling with --dist loadfile for 25% faster test runs (#157) ([8879fcf](https://github.com/cortexapps/cli/commit/8879fcfa7ee30a73f023e8bbef7d799808493319) by Jeff Schnitter).
 
-## [1.3.0](https://github.com/cortexapps/cli/releases/tag/1.3.0) - 2025-11-05
+## [1.3.0](https://github.com/cortexapps/cli/releases/tag/1.3.0) - 2025-11-04
 
 <small>[Compare with 1.2.0](https://github.com/cortexapps/cli/compare/1.2.0...1.3.0)</small>
 
@@ -127,7 +168,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.27.0](https://github.com/cortexapps/cli/compare/0.27.0...1.0.0)</small>
 
-## [0.27.0](https://github.com/cortexapps/cli/releases/tag/0.27.0) - 2025-01-05
+## [0.27.0](https://github.com/cortexapps/cli/releases/tag/0.27.0) - 2025-01-04
 
 <small>[Compare with 0.26.7](https://github.com/cortexapps/cli/compare/0.26.7...0.27.0)</small>
 
@@ -151,7 +192,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.26.4](https://github.com/cortexapps/cli/compare/0.26.4...0.26.5)</small>
 
-## [0.26.4](https://github.com/cortexapps/cli/releases/tag/0.26.4) - 2024-06-27
+## [0.26.4](https://github.com/cortexapps/cli/releases/tag/0.26.4) - 2024-06-26
 
 <small>[Compare with 0.26.3](https://github.com/cortexapps/cli/compare/0.26.3...0.26.4)</small>
 
@@ -175,7 +216,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.24.3](https://github.com/cortexapps/cli/compare/0.24.3...0.25.0)</small>
 
-## [0.24.3](https://github.com/cortexapps/cli/releases/tag/0.24.3) - 2024-04-27
+## [0.24.3](https://github.com/cortexapps/cli/releases/tag/0.24.3) - 2024-04-26
 
 <small>[Compare with 0.24.2](https://github.com/cortexapps/cli/compare/0.24.2...0.24.3)</small>
 
@@ -183,31 +224,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.24.1](https://github.com/cortexapps/cli/compare/0.24.1...0.24.2)</small>
 
-## [0.24.1](https://github.com/cortexapps/cli/releases/tag/0.24.1) - 2024-02-15
+## [0.24.1](https://github.com/cortexapps/cli/releases/tag/0.24.1) - 2024-02-14
 
 <small>[Compare with 0.24.0](https://github.com/cortexapps/cli/compare/0.24.0...0.24.1)</small>
 
-## [0.24.0](https://github.com/cortexapps/cli/releases/tag/0.24.0) - 2024-02-14
+## [0.24.0](https://github.com/cortexapps/cli/releases/tag/0.24.0) - 2024-02-13
 
 <small>[Compare with 0.23.0](https://github.com/cortexapps/cli/compare/0.23.0...0.24.0)</small>
 
-## [0.23.0](https://github.com/cortexapps/cli/releases/tag/0.23.0) - 2024-02-06
+## [0.23.0](https://github.com/cortexapps/cli/releases/tag/0.23.0) - 2024-02-05
 
 <small>[Compare with 0.22.0](https://github.com/cortexapps/cli/compare/0.22.0...0.23.0)</small>
 
-## [0.22.0](https://github.com/cortexapps/cli/releases/tag/0.22.0) - 2024-02-06
+## [0.22.0](https://github.com/cortexapps/cli/releases/tag/0.22.0) - 2024-02-05
 
 <small>[Compare with 0.21.0](https://github.com/cortexapps/cli/compare/0.21.0...0.22.0)</small>
 
-## [0.21.0](https://github.com/cortexapps/cli/releases/tag/0.21.0) - 2024-01-26
+## [0.21.0](https://github.com/cortexapps/cli/releases/tag/0.21.0) - 2024-01-25
 
 <small>[Compare with 0.20.0](https://github.com/cortexapps/cli/compare/0.20.0...0.21.0)</small>
 
-## [0.20.0](https://github.com/cortexapps/cli/releases/tag/0.20.0) - 2024-01-23
+## [0.20.0](https://github.com/cortexapps/cli/releases/tag/0.20.0) - 2024-01-22
 
 <small>[Compare with 0.19.0](https://github.com/cortexapps/cli/compare/0.19.0...0.20.0)</small>
 
-## [0.19.0](https://github.com/cortexapps/cli/releases/tag/0.19.0) - 2023-12-22
+## [0.19.0](https://github.com/cortexapps/cli/releases/tag/0.19.0) - 2023-12-21
 
 <small>[Compare with 0.18.0](https://github.com/cortexapps/cli/compare/0.18.0...0.19.0)</small>
 
@@ -231,7 +272,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.13.0](https://github.com/cortexapps/cli/compare/0.13.0...0.14.0)</small>
 
-## [0.13.0](https://github.com/cortexapps/cli/releases/tag/0.13.0) - 2023-12-01
+## [0.13.0](https://github.com/cortexapps/cli/releases/tag/0.13.0) - 2023-11-30
 
 <small>[Compare with 0.12.0](https://github.com/cortexapps/cli/compare/0.12.0...0.13.0)</small>
 
@@ -243,7 +284,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.10.0](https://github.com/cortexapps/cli/compare/0.10.0...0.11.0)</small>
 
-## [0.10.0](https://github.com/cortexapps/cli/releases/tag/0.10.0) - 2023-11-22
+## [0.10.0](https://github.com/cortexapps/cli/releases/tag/0.10.0) - 2023-11-21
 
 <small>[Compare with 0.9.0](https://github.com/cortexapps/cli/compare/0.9.0...0.10.0)</small>
 
@@ -255,7 +296,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.7.0](https://github.com/cortexapps/cli/compare/0.7.0...0.8.0)</small>
 
-## [0.7.0](https://github.com/cortexapps/cli/releases/tag/0.7.0) - 2023-11-18
+## [0.7.0](https://github.com/cortexapps/cli/releases/tag/0.7.0) - 2023-11-17
 
 <small>[Compare with 0.6.0](https://github.com/cortexapps/cli/compare/0.6.0...0.7.0)</small>
 
@@ -263,11 +304,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with 0.5.0](https://github.com/cortexapps/cli/compare/0.5.0...0.6.0)</small>
 
-## [0.5.0](https://github.com/cortexapps/cli/releases/tag/0.5.0) - 2023-11-14
+## [0.5.0](https://github.com/cortexapps/cli/releases/tag/0.5.0) - 2023-11-13
 
 <small>[Compare with 0.4.0](https://github.com/cortexapps/cli/compare/0.4.0...0.5.0)</small>
 
-## [0.4.0](https://github.com/cortexapps/cli/releases/tag/0.4.0) - 2023-11-14
+## [0.4.0](https://github.com/cortexapps/cli/releases/tag/0.4.0) - 2023-11-13
 
 <small>[Compare with 0.3.0](https://github.com/cortexapps/cli/compare/0.3.0...0.4.0)</small>
 
