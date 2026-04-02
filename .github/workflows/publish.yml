@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'cortexapps_cli/**'
-      - '.github/workflows/publish.yml'
 
 env:
   CORTEX_API_KEY:      ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
