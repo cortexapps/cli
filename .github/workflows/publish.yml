@@ -29,6 +29,7 @@ jobs:
       with:
         ref: main
         fetch-depth: 0
+        token: ${{ secrets.GH_TOKEN }}
         
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.64.0
