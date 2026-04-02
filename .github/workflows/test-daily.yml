@@ -1,0 +1,55 @@
+name: Daily Test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * 1-5'
+
+env:
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+  CORTEX_API_KEY_VIEWER: ${{ secrets.CORTEX_API_KEY_VIEWER }}
+  CORTEX_BASE_URL: ${{ vars.CORTEX_BASE_URL }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+
+    - name: Install dependencies
+      run: |
+        sudo apt update && sudo apt install just
+        python -m pip install --upgrade pip
+        pip install poetry poetry-audit-plugin pytest-cov pytest pytest-xdist
+
+    - name: Run pip-audit to check for vulnerabilities
+      run: poetry audit
+
+    - name: Create and populate .cortex/config file
+      run: |
+        mkdir $HOME/.cortex
+        echo "[default]" > $HOME/.cortex/config
+        echo "api_key = $CORTEX_API_KEY" >> $HOME/.cortex/config
+        echo "base_url = $CORTEX_BASE_URL" >> $HOME/.cortex/config
+      shell: bash
+
+    - name: Install package
+      run: |
+        poetry build
+        poetry install
+
+    - name: Test with pytest
+      run: |
+        just test-all

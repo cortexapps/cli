@@ -1,0 +1,5 @@
+openapi: 3.0.1
+info:
+  title: Delete By Type Test Entity
+  x-cortex-tag: cli-test-delete-by-type-entity
+  x-cortex-type: cli-test-delete-by-type

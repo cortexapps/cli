@@ -1,0 +1,6 @@
+{
+  "description": "Temporary entity type for testing delete-by-type.",
+  "name": "CLI Test Delete By Type",
+  "schema": {},
+  "type": "cli-test-delete-by-type"
+}
