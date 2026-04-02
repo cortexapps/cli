@@ -1,3 +1,4 @@
+import importlib.metadata
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -71,6 +72,11 @@ class CortexClient:
         self.tenant = tenant
         self.base_url = base_url
 
+        try:
+            self.version = importlib.metadata.version('cortexapps_cli')
+        except importlib.metadata.PackageNotFoundError:
+            self.version = 'unknown'
+
         logging.basicConfig(level=numeric_level)
         self.logger = logging.getLogger(__name__)
 
@@ -110,6 +116,7 @@ class CortexClient:
         req_headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': content_type,
+            'User-Agent': f'cortexapps-cli/{self.version}',
             **headers
         }
         url = '/'.join([self.base_url.rstrip('/'), endpoint.lstrip('/')])
