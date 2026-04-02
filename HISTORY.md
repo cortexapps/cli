@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.14.0](https://github.com/cortexapps/cli/releases/tag/1.14.0) - 2026-04-02
+
+<small>[Compare with 1.13.0](https://github.com/cortexapps/cli/compare/1.13.0...1.14.0)</small>
+
+### Bug Fixes
+
+- update GH Actions to Node 24 and fix dependabot security alerts ([7d2f482](https://github.com/cortexapps/cli/commit/7d2f4828210dedc1880a3730a0f57259fce3950f) by Jeff Schnitter).
+
 ## [1.13.0](https://github.com/cortexapps/cli/releases/tag/1.13.0) - 2026-04-02
 
 <small>[Compare with 1.12.0](https://github.com/cortexapps/cli/compare/1.12.0...1.13.0)</small>
