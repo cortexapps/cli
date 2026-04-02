@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - remove rate limiter initialization log message (#169) #patch ([015107a](https://github.com/cortexapps/cli/commit/015107aca15d5a4cf4eb746834bcbb7dac607e1d) by Jeff Schnitter).
 
+
 ## [1.5.0](https://github.com/cortexapps/cli/releases/tag/1.5.0) - 2025-11-13
 
 <small>[Compare with 1.4.0](https://github.com/cortexapps/cli/compare/1.4.0...1.5.0)</small>
