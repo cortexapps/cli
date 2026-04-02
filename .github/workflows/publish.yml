@@ -25,14 +25,14 @@ jobs:
       URL:     ${{ steps.git-details.outputs.URL }}
       VERSION: ${{ steps.git-details.outputs.VERSION }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         ref: main
         fetch-depth: 0
         token: ${{ secrets.GH_TOKEN }}
-        
+
     - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@1.64.0
+      uses: anothrNick/github-tag-action@1.75.0
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         WITH_V: false
@@ -44,7 +44,7 @@ jobs:
         git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: 3.11
 
@@ -140,7 +140,7 @@ jobs:
       SHA:     ${{ steps.build-docker-image.outputs.SHA }}
       URL:     ${{ steps.build-docker-image.outputs.URL }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Get version info
       env:
@@ -160,7 +160,7 @@ jobs:
         echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_ORGANIZATION }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy on Root Image
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@v0.35.0
       with:
         image-ref: ${{ env.DOCKER_IMAGE }}
         format: table
@@ -211,7 +211,7 @@ jobs:
     - pypi
     runs-on: ubuntu-latest
     steps:
-      - uses: mislav/bump-homebrew-formula-action@v3
+      - uses: mislav/bump-homebrew-formula-action@v4
         with:
           formula-name:    cortexapps-cli
           homebrew-tap:    cortexapps/homebrew-tap
