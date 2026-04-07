@@ -206,3 +206,16 @@ def run(
             break
 
     print_output(r)
+
+@app.command("get-run")
+def get_run(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag or unique identifier for the workflow"),
+    run_id: str = typer.Option(..., "--run-id", "-r", help="The run ID"),
+):
+    """
+    Get details of a workflow run.  API key must have the View workflow runs permission.
+    """
+    client = ctx.obj["client"]
+    r = client.get(f"api/v1/workflows/{tag}/runs/{run_id}")
+    print_output(r)
