@@ -4,6 +4,9 @@ pytest := 'PYTHONPATH=. poetry run pytest -rA'
 export CORTEX_API_KEY := env('CORTEX_API_KEY')
 export CORTEX_BASE_URL := env('CORTEX_BASE_URL', "https://api.getcortexapp.com")
 export CORTEX_API_KEY_VIEWER := env('CORTEX_API_KEY_VIEWER')
+export GITHUB_TEST_ORG := env('GITHUB_TEST_ORG', "")
+export GITHUB_TEST_PAT := env('GITHUB_TEST_PAT', "")
+export GITHUB_TEST_USERNAME := env('GITHUB_TEST_USERNAME', "")
 
 help:
    @just -l
@@ -27,8 +30,14 @@ test-import:
 test testname:
    {{pytest}} -n auto -m "" {{testname}}
 
+_check-functional-env:
+	@test -n "$GITHUB_TEST_ORG" || (echo "ERROR: GITHUB_TEST_ORG is not set" && exit 1)
+	@test -n "$GITHUB_TEST_PAT" || (echo "ERROR: GITHUB_TEST_PAT is not set" && exit 1)
+	@test -n "$GITHUB_TEST_USERNAME" || (echo "ERROR: GITHUB_TEST_USERNAME is not set" && exit 1)
+	@which gh > /dev/null 2>&1 || (echo "ERROR: gh CLI is not installed" && exit 1)
+
 # Run functional tests (serially by default)
-test-functional: test-functional-import
+test-functional: _check-functional-env test-functional-import
    {{pytest}} -v -s -m functional --html=report-functional.html --self-contained-html tests/functional/
 
 # Import functional test data (workflows)
