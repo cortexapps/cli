@@ -66,6 +66,7 @@ Some tests (org membership, team membership) need a GitHub username to add/remov
 | `GITHUB_TEST_ORG` | Yes | Your dedicated test GitHub org name |
 | `GITHUB_TEST_PAT` | Yes | GitHub PAT with the scopes listed above |
 | `GITHUB_TEST_USERNAME` | Yes | GitHub username for membership tests |
+| `GITHUB_INTEGRATION_ALIAS` | Yes | Cortex GitHub integration alias (find in Settings > Integrations > GitHub) |
 
 Example `.env` setup (do NOT commit this file):
 
@@ -75,6 +76,7 @@ export CORTEX_BASE_URL=https://api.getcortexapp.com
 export GITHUB_TEST_ORG=my-cortex-test-org
 export GITHUB_TEST_PAT=ghp_xxxxxxxxxxxxxxxxxxxx
 export GITHUB_TEST_USERNAME=some-github-user
+export GITHUB_INTEGRATION_ALIAS=your-github-integration-alias
 ```
 
 ## Running the Tests

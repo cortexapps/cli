@@ -11,7 +11,7 @@ actions:
   schema:
     type: ADVANCED_HTTP_REQUEST
     actionIdentifier: github.listBranches
-    integrationAlias: null
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
     inputs:
       repo: "{{context.initialContext.repo}}"
   outgoingActions: []

@@ -7,6 +7,7 @@ export CORTEX_API_KEY_VIEWER := env('CORTEX_API_KEY_VIEWER')
 export GITHUB_TEST_ORG := env('GITHUB_TEST_ORG', "")
 export GITHUB_TEST_PAT := env('GITHUB_TEST_PAT', "")
 export GITHUB_TEST_USERNAME := env('GITHUB_TEST_USERNAME', "")
+export GITHUB_INTEGRATION_ALIAS := env('GITHUB_INTEGRATION_ALIAS', "")
 
 help:
    @just -l
@@ -34,6 +35,7 @@ _check-functional-env:
 	@test -n "$GITHUB_TEST_ORG" || (echo "ERROR: GITHUB_TEST_ORG is not set" && exit 1)
 	@test -n "$GITHUB_TEST_PAT" || (echo "ERROR: GITHUB_TEST_PAT is not set" && exit 1)
 	@test -n "$GITHUB_TEST_USERNAME" || (echo "ERROR: GITHUB_TEST_USERNAME is not set" && exit 1)
+	@test -n "$GITHUB_INTEGRATION_ALIAS" || (echo "ERROR: GITHUB_INTEGRATION_ALIAS is not set" && exit 1)
 	@which gh > /dev/null 2>&1 || (echo "ERROR: gh CLI is not installed" && exit 1)
 
 # Run functional tests (serially by default)
