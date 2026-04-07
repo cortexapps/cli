@@ -27,6 +27,18 @@ test-import:
 test testname:
    {{pytest}} -n auto -m "" {{testname}}
 
+# Run functional tests (serially by default)
+test-functional: test-functional-import
+   {{pytest}} -v -s -m functional --html=report-functional.html --self-contained-html tests/functional/
+
+# Import functional test data (workflows)
+test-functional-import:
+   {{pytest}} tests/functional/test_functional_import.py --cov=cortexapps_cli --cov-report=
+
+# Clean up orphaned functional test resources from interrupted runs
+test-functional-sweep:
+   {{pytest}} -v -s tests/functional/test_gh_sweep.py
+
 # Run performance tests (rate limiting, long-running tests)
 test-perf:
    @echo "Running performance tests (this may take 60+ seconds)..."
