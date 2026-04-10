@@ -1,0 +1,22 @@
+name: "Functional Test: GitLab Update Approval Configuration"
+tag: func-test-gl-update-approval-configuration
+description: Functional test for the gitlab.updateApprovalConfiguration action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Update Approval Configuration
+  slug: update-approval-configuration
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.updateApprovalConfiguration
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      approvals_before_merge: 1
+  outgoingActions: []
+  isRootAction: true

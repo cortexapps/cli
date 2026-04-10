@@ -1,0 +1,24 @@
+name: "Functional Test: GitLab Update Project"
+tag: func-test-gl-update-project
+description: Functional test for the gitlab.updateProject action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: project-description
+  type: STRING
+actions:
+- name: Update Project
+  slug: update-project
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.updateProject
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      project_description: "{{variables.project-description}}"
+  outgoingActions: []
+  isRootAction: true

@@ -115,7 +115,7 @@ Each test:
 - Tests **abort** if the org doesn't have the `cortex-cli-functional-test` custom property
 - All created resources use the `cli-functional-test-` prefix
 - Cleanup only deletes resources matching that prefix
-- Repos get a `cli-functional-test-deletable` custom property for sweep identification
+- Repos get the `cortex-cli-functional-test = true` custom property (required by org policy, also used for sweep identification)
 
 ## Troubleshooting
 

@@ -1,0 +1,24 @@
+name: "Functional Test: GitLab Get Protected Branch"
+tag: func-test-gl-get-protected-branch
+description: Functional test for the gitlab.getProtectedBranch action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: branch-name
+  type: STRING
+actions:
+- name: Get Protected Branch
+  slug: get-protected-branch
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.getProtectedBranch
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      branchName: "{{variables.branch-name}}"
+  outgoingActions: []
+  isRootAction: true

@@ -1,6 +1,6 @@
-name: "Functional Test: GitHub List Branches"
-tag: func-test-gh-list-branches
-description: Functional test for the github.listBranches action block
+name: "Functional Test: GitHub Get Branch"
+tag: func-test-gh-get-branch
+description: Functional test for the github.getBranch action block
 isDraft: false
 isRunnableViaApi: true
 filter:
@@ -8,14 +8,17 @@ filter:
 variables:
 - slug: repo
   type: STRING
+- slug: branch
+  type: STRING
 actions:
-- name: List branches
-  slug: list-branches
+- name: Get branch
+  slug: get-branch
   schema:
     type: ADVANCED_HTTP_REQUEST
-    actionIdentifier: github.listBranches
+    actionIdentifier: github.getBranch
     integrationAlias: __GITHUB_INTEGRATION_ALIAS__
     inputs:
       repo: "{{variables.repo}}"
+      branch: "{{variables.branch}}"
   outgoingActions: []
   isRootAction: true

@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Create Reference"
+tag: func-test-gh-create-reference
+description: Functional test for the github.createReference action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: sha
+  type: STRING
+- slug: ref
+  type: STRING
+actions:
+- name: Create reference
+  slug: create-reference
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createReference
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      sha: "{{variables.sha}}"
+      ref: "{{variables.ref}}"
+  outgoingActions: []
+  isRootAction: true

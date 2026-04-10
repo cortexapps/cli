@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab List Project Variables"
+tag: func-test-gl-list-project-variables
+description: Functional test for the gitlab.listProjectVariables action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: List Project Variables
+  slug: list-project-variables
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.listProjectVariables
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

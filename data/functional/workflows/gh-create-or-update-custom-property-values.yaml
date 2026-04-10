@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Create or Update Custom Property Values"
+tag: func-test-gh-create-or-update-custom-property-values
+description: Functional test for the github.createOrUpdateCustomPropertyValues action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: properties
+  type: STRING
+actions:
+- name: Create or update custom property values
+  slug: create-or-update-custom-property-values
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createOrUpdateCustomPropertyValues
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      properties: "{{{variables.properties}}}"
+  outgoingActions: []
+  isRootAction: true

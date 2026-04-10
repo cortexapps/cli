@@ -1,6 +1,6 @@
-name: "Functional Test: GitHub List Branches"
-tag: func-test-gh-list-branches
-description: Functional test for the github.listBranches action block
+name: "Functional Test: GitHub Update Repository"
+tag: func-test-gh-update-repository
+description: Functional test for the github.updateRepository action block
 isDraft: false
 isRunnableViaApi: true
 filter:
@@ -9,11 +9,11 @@ variables:
 - slug: repo
   type: STRING
 actions:
-- name: List branches
-  slug: list-branches
+- name: Update repository
+  slug: update-repository
   schema:
     type: ADVANCED_HTTP_REQUEST
-    actionIdentifier: github.listBranches
+    actionIdentifier: github.updateRepository
     integrationAlias: __GITHUB_INTEGRATION_ALIAS__
     inputs:
       repo: "{{variables.repo}}"

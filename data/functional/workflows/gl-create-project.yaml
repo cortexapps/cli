@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Create Project"
+tag: func-test-gl-create-project
+description: Functional test for the gitlab.createProject action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project-name
+  type: STRING
+actions:
+- name: Create Project
+  slug: create-project
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createProject
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project_name: "{{variables.project-name}}"
+  outgoingActions: []
+  isRootAction: true

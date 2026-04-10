@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Add User to Team"
+tag: func-test-gh-add-user-to-team
+description: Functional test for the github.addUserToTeam action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+- slug: team
+  type: STRING
+- slug: username
+  type: STRING
+actions:
+- name: Add user to team
+  slug: add-user-to-team
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.addUserToTeam
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+      team: "{{variables.team}}"
+      username: "{{variables.username}}"
+  outgoingActions: []
+  isRootAction: true

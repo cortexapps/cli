@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Create Release"
+tag: func-test-gh-create-release
+description: Functional test for the github.createRelease action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: tag-name
+  type: STRING
+actions:
+- name: Create release
+  slug: create-release
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createRelease
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      tag_name: "{{variables.tag-name}}"
+  outgoingActions: []
+  isRootAction: true

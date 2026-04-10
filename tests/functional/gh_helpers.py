@@ -90,7 +90,7 @@ def validate_test_org(org):
         )
 
     try:
-        org_props = gh_api("GET", f"/orgs/{org}/custom-properties")
+        org_props = gh_api("GET", f"/orgs/{org}/properties/schema")
     except RuntimeError:
         org_props = []
 
@@ -115,27 +115,35 @@ def create_test_repo(org, repo_name):
     gh_api("POST", f"/orgs/{org}/repos", input_data={
         "name": repo_name,
         "auto_init": True,
-        "private": True,
+        "private": False,
         "description": "Ephemeral repo for Cortex CLI functional tests",
     })
 
-    try:
-        gh_api("PATCH", f"/orgs/{org}/properties/values", input_data={
-            "repository_names": [repo_name],
-            "properties": [
-                {"property_name": "cli-functional-test-deletable", "value": "true"}
-            ],
-        })
-    except RuntimeError:
-        pass
+    # Set required custom property (org requires this on all repos)
+    gh_api("PATCH", f"/orgs/{org}/properties/values", input_data={
+        "repository_names": [repo_name],
+        "properties": [
+            {"property_name": "cortex-cli-functional-test", "value": "true"}
+        ],
+    })
 
     return full_name
 
 
-def get_default_branch_sha(repo_full_name):
-    """Get the SHA of the HEAD commit on the default branch."""
-    result = gh_api("GET", f"/repos/{repo_full_name}/commits/main")
-    return result["sha"]
+def get_default_branch_sha(repo_full_name, retries=5, delay=2):
+    """Get the SHA of the HEAD commit on the default branch.
+
+    Retries because GitHub may not have finished initializing the repo
+    after auto_init.
+    """
+    for i in range(retries):
+        try:
+            result = gh_api("GET", f"/repos/{repo_full_name}/commits/main")
+            return result["sha"]
+        except RuntimeError:
+            if i == retries - 1:
+                raise
+            time.sleep(delay)
 
 
 def run_workflow(tag, initial_context, wait=True, timeout=120):

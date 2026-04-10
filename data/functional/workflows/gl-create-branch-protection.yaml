@@ -1,0 +1,24 @@
+name: "Functional Test: GitLab Create Branch Protection"
+tag: func-test-gl-create-branch-protection
+description: Functional test for the gitlab.createBranchProtection action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: branch-name
+  type: STRING
+actions:
+- name: Create Branch Protection
+  slug: create-branch-protection
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createBranchProtection
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      branch_name: "{{variables.branch-name}}"
+  outgoingActions: []
+  isRootAction: true

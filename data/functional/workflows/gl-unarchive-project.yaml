@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Unarchive Project"
+tag: func-test-gl-unarchive-project
+description: Functional test for the gitlab.unarchiveProject action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Unarchive Project
+  slug: unarchive-project
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.unarchiveProject
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

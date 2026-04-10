@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Create Repository"
+tag: func-test-gh-create-repository
+description: Functional test for the github.createRepository action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+- slug: repo-name
+  type: STRING
+actions:
+- name: Create repository
+  slug: create-repository
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createRepository
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+      repo_name: "{{variables.repo-name}}"
+  outgoingActions: []
+  isRootAction: true

@@ -1,0 +1,27 @@
+name: "Functional Test: GitLab Create Project Variable"
+tag: func-test-gl-create-project-variable
+description: Functional test for the gitlab.createProjectVariable action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: key
+  type: STRING
+- slug: value
+  type: STRING
+actions:
+- name: Create Project Variable
+  slug: create-project-variable
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createProjectVariable
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      key: "{{variables.key}}"
+      value: "{{variables.value}}"
+  outgoingActions: []
+  isRootAction: true

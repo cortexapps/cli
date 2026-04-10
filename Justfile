@@ -8,6 +8,8 @@ export GITHUB_TEST_ORG := env('GITHUB_TEST_ORG', "")
 export GITHUB_TEST_PAT := env('GITHUB_TEST_PAT', "")
 export GITHUB_TEST_USERNAME := env('GITHUB_TEST_USERNAME', "")
 export GITHUB_INTEGRATION_ALIAS := env('GITHUB_INTEGRATION_ALIAS', "")
+export GITLAB_TOKEN := env('GITLAB_TOKEN', "")
+export GITLAB_INTEGRATION_ALIAS := env('GITLAB_INTEGRATION_ALIAS', "")
 
 help:
    @just -l
@@ -31,20 +33,13 @@ test-import:
 test testname:
    {{pytest}} -n auto -m "" {{testname}}
 
-_check-functional-env:
-	@test -n "$GITHUB_TEST_ORG" || (echo "ERROR: GITHUB_TEST_ORG is not set" && exit 1)
-	@test -n "$GITHUB_TEST_PAT" || (echo "ERROR: GITHUB_TEST_PAT is not set" && exit 1)
-	@test -n "$GITHUB_TEST_USERNAME" || (echo "ERROR: GITHUB_TEST_USERNAME is not set" && exit 1)
-	@test -n "$GITHUB_INTEGRATION_ALIAS" || (echo "ERROR: GITHUB_INTEGRATION_ALIAS is not set" && exit 1)
-	@which gh > /dev/null 2>&1 || (echo "ERROR: gh CLI is not installed" && exit 1)
-
-# Run functional tests (serially by default)
-test-functional: _check-functional-env test-functional-import
-   {{pytest}} -v -s -m functional --html=report-functional.html --self-contained-html tests/functional/
-
 # Import functional test data (workflows)
 test-functional-import:
    {{pytest}} tests/functional/test_functional_import.py --cov=cortexapps_cli --cov-report=
+
+# Run functional tests, ie: just test-functional tests/functional/test_gh_branches.py
+test-functional *args:
+   {{pytest}} -v -s -n auto -m functional --html=report-functional.html --self-contained-html {{args}}
 
 # Clean up orphaned functional test resources from interrupted runs
 test-functional-sweep:
