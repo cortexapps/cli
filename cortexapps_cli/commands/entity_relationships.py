@@ -5,7 +5,7 @@ from cortexapps_cli.utils import print_output_with_context
 from cortexapps_cli.command_options import CommandOptions, ListCommandOptions
 
 app = typer.Typer(
-    help="Entity Relationships commands (Beta)",
+    help="Entity Relationships commands",
     no_args_is_help=True
 )
 

@@ -12,8 +12,6 @@ variables:
   type: STRING
 - slug: rule-name
   type: STRING
-- slug: approvals-required
-  type: STRING
 actions:
 - name: Update Approval Rule
   slug: update-approval-rule
@@ -25,6 +23,6 @@ actions:
       project: "{{variables.project}}"
       approvalRuleId: "{{variables.approval-rule-id}}"
       rule_name: "{{variables.rule-name}}"
-      approvals_required: "{{variables.approvals-required}}"
+      approvals_required: 2
   outgoingActions: []
   isRootAction: true

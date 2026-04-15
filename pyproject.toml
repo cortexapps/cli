@@ -27,7 +27,7 @@ click = "<8.2"
 cortex = "cortexapps_cli.cli:app"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.2.2"
+pytest = "^9.0.3"
 pytest-cov = "^5.0.0"
 
 
@@ -45,13 +45,3 @@ Homepage = "https://github.com/cortexapps/cli"
 "Bug Tracker" = "https://github.com/cortexapps/cli/issues"
 "Changes" = " https://github.com/cortexapps/cli/blob/main/HISTORY.md"
 "Documentation" = " https://github.com/cortexapps/cli/blob/main/README.rst"
-
-[tool.pytest.ini_options]
-markers = [
-    "serial"
-]
-minversion = "7.4.3"
-addopts = "--cov=cortexapps_cli --cov-append --cov-report term-missing"
-testpaths = [
-    "tests"
-]

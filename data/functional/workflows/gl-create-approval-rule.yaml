@@ -10,8 +10,6 @@ variables:
   type: STRING
 - slug: rule-name
   type: STRING
-- slug: approvals-required
-  type: STRING
 actions:
 - name: Create Approval Rule
   slug: create-approval-rule
@@ -22,6 +20,6 @@ actions:
     inputs:
       project: "{{variables.project}}"
       rule_name: "{{variables.rule-name}}"
-      approvals_required: "{{variables.approvals-required}}"
+      approvals_required: 1
   outgoingActions: []
   isRootAction: true

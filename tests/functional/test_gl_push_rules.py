@@ -10,8 +10,8 @@ def test_gl_push_rule_lifecycle(gl_test_project, import_functional_workflows):
     gitlab.deletePushRule workflow action blocks in a single flow.
 
     Note: gitlab.updatePushRule is not yet published and is skipped.
-    Push rules may require GitLab Premium. This test will fail with
-    a clear error if the feature is not available.
+    Push rules require GitLab Premium. This test is skipped if the
+    feature is not available.
     """
     project = gl_test_project
     encoded = encode_project(project)
@@ -28,7 +28,16 @@ def test_gl_push_rule_lifecycle(gl_test_project, import_functional_workflows):
             tag="func-test-gl-create-push-rule",
             initial_context={"project": project},
         )
-        assert result.get("status", "").upper() == "COMPLETED", (
+        status = result.get("status", "").upper()
+
+        # Push rules require GitLab Premium; skip if not available
+        if status == "FAILED":
+            actions = result.get("actions", [])
+            error_msg = actions[0].get("state", {}).get("errorMessage", "") if actions else ""
+            if "404" in error_msg:
+                pytest.skip("Push rules require GitLab Premium (got 404)")
+
+        assert status == "COMPLETED", (
             f"createPushRule workflow failed: {result}"
         )
 

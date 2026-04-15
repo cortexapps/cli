@@ -7,7 +7,7 @@ import typer
 import yaml
 
 app = typer.Typer(
-    help="Workflows commands",
+    help="Workflows commands (Beta)",
     no_args_is_help=True
 )
 
@@ -156,7 +156,7 @@ def run(
     timeout: int = typer.Option(300, "--timeout", help="Max seconds to wait when --wait is used"),
 ):
     """
-    Run a workflow.  API key must have the Run workflows permission.
+    (Beta) Run a workflow.  API key must have the Run workflows permission.
     The workflow must have isRunnableViaApi set to true.
     """
     import time as time_module
@@ -214,7 +214,7 @@ def get_run(
     run_id: str = typer.Option(..., "--run-id", "-r", help="The run ID"),
 ):
     """
-    Get details of a workflow run.  API key must have the View workflow runs permission.
+    (Beta) Get details of a workflow run.  API key must have the View workflow runs permission.
     """
     client = ctx.obj["client"]
     r = client.get(f"api/v1/workflows/{tag}/runs/{run_id}")

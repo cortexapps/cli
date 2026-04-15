@@ -1,0 +1,15 @@
+name: CLI Test Run Workflow
+tag: cli-test-run-workflow
+description: Minimal workflow for testing run and get-run commands.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+actions:
+- name: No-op transform
+  slug: no-op-transform
+  schema:
+    type: JQ
+    expression: '. | "ok"'
+  outgoingActions: []
+  isRootAction: true

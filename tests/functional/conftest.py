@@ -5,6 +5,14 @@ import uuid
 
 import pytest
 
+
+def pytest_collection_modifyitems(items):
+    """Auto-apply the 'functional' marker to every test in this directory."""
+    functional = pytest.mark.functional
+    for item in items:
+        if "/functional/" in str(item.fspath):
+            item.add_marker(functional)
+
 from tests.functional.gh_helpers import (
     RESOURCE_PREFIX as GH_RESOURCE_PREFIX,
     create_test_repo,

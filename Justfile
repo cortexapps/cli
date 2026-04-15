@@ -19,11 +19,11 @@ _setup:
 
 # Run all tests
 test-all: _setup test-import
-   {{pytest}} -n auto -m "not setup and not perf" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
+   {{pytest}} -n auto -m "not setup and not perf and not functional" --html=report.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
 
 # Run all tests serially - helpful to see if any tests seem to be hanging
 _test-all-individual:  test-import
-   {{pytest}} -m "not setup and not perf" --html=report-all-invidual.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
+   {{pytest}} -m "not setup and not perf and not functional" --html=report-all-invidual.html --self-contained-html --cov=cortexapps_cli --cov-append --cov-report term-missing tests
 
 # Run import test, a pre-requisite for any tests that rely on test data.
 test-import:
