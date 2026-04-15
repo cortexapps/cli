@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub List Releases"
+tag: func-test-gh-list-releases
+description: Functional test for the github.listReleases action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+actions:
+- name: List releases
+  slug: list-releases
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.listReleases
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+  outgoingActions: []
+  isRootAction: true

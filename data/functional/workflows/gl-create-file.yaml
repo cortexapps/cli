@@ -1,0 +1,33 @@
+name: "Functional Test: GitLab Create File"
+tag: func-test-gl-create-file
+description: Functional test for the gitlab.createFile action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: path
+  type: STRING
+- slug: branch
+  type: STRING
+- slug: message
+  type: STRING
+- slug: content
+  type: STRING
+actions:
+- name: Create File
+  slug: create-file
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createFile
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      path: "{{variables.path}}"
+      branch: "{{variables.branch}}"
+      message: "{{variables.message}}"
+      content: "{{variables.content}}"
+  outgoingActions: []
+  isRootAction: true

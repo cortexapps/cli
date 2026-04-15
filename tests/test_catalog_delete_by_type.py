@@ -1,6 +1,6 @@
 from tests.helpers.utils import *
 
-@pytest.mark.skip(reason="Disabled until CET-24425 is resolved.")
+#@pytest.mark.skip(reason="Disabled until CET-24425 is resolved.")
 def test():
     # Create the entity type
     cli(["entity-types", "create", "-f", "data/run-time/entity-type-delete-by-type.json"], ReturnType.RAW)

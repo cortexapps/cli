@@ -1,0 +1,28 @@
+name: "Functional Test: GitLab Update Approval Rule"
+tag: func-test-gl-update-approval-rule
+description: Functional test for the gitlab.updateApprovalRule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: approval-rule-id
+  type: STRING
+- slug: rule-name
+  type: STRING
+actions:
+- name: Update Approval Rule
+  slug: update-approval-rule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.updateApprovalRule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      approvalRuleId: "{{variables.approval-rule-id}}"
+      rule_name: "{{variables.rule-name}}"
+      approvals_required: 2
+  outgoingActions: []
+  isRootAction: true

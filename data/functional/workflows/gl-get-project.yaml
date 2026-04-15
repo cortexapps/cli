@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Get Project"
+tag: func-test-gl-get-project
+description: Functional test for the gitlab.getProject action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Get Project
+  slug: get-project
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.getProject
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

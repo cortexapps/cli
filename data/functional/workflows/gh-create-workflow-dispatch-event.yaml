@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Create Workflow Dispatch Event"
+tag: func-test-gh-create-workflow-dispatch-event
+description: Functional test for the github.createWorkflowDispatchEvent action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: ref
+  type: STRING
+- slug: workflow-id
+  type: STRING
+actions:
+- name: Create workflow dispatch event
+  slug: create-workflow-dispatch-event
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createWorkflowDispatchEvent
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      ref: "{{variables.ref}}"
+      workflow_id: "{{variables.workflow-id}}"
+  outgoingActions: []
+  isRootAction: true

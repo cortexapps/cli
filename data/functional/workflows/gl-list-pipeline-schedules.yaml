@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab List Pipeline Schedules"
+tag: func-test-gl-list-pipeline-schedules
+description: Functional test for the gitlab.listPipelineSchedules action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: List Pipeline Schedules
+  slug: list-pipeline-schedules
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.listPipelineSchedules
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

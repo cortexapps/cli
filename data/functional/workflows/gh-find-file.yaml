@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub Find File"
+tag: func-test-gh-find-file
+description: Functional test for the github.findFile action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: query
+  type: STRING
+actions:
+- name: Find file
+  slug: find-file
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.findFile
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      query: "{{variables.query}}"
+  outgoingActions: []
+  isRootAction: true

@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Get Deployment"
+tag: func-test-gh-get-deployment
+description: Functional test for the github.getDeployment action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: deployment-id
+  type: STRING
+actions:
+- name: Get deployment
+  slug: get-deployment
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.getDeployment
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      deployment_id: "{{variables.deployment-id}}"
+  outgoingActions: []
+  isRootAction: true

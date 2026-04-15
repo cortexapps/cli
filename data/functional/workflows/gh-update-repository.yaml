@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub Update Repository"
+tag: func-test-gh-update-repository
+description: Functional test for the github.updateRepository action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+actions:
+- name: Update repository
+  slug: update-repository
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.updateRepository
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+  outgoingActions: []
+  isRootAction: true

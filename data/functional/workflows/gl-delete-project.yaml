@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Delete Project"
+tag: func-test-gl-delete-project
+description: Functional test for the gitlab.deleteProject action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Delete Project
+  slug: delete-project
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.deleteProject
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

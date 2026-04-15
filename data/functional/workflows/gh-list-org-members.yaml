@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub List Org Members"
+tag: func-test-gh-list-org-members
+description: Functional test for the github.listOrgMembers action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+actions:
+- name: List org members
+  slug: list-org-members
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.listOrgMembers
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+  outgoingActions: []
+  isRootAction: true

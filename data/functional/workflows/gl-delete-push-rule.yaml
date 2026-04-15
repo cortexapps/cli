@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Delete Push Rule"
+tag: func-test-gl-delete-push-rule
+description: Functional test for the gitlab.deletePushRule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Delete Push Rule
+  slug: delete-push-rule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.deletePushRule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

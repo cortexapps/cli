@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Get Team"
+tag: func-test-gh-get-team
+description: Functional test for the github.getTeam action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+- slug: team
+  type: STRING
+actions:
+- name: Get team
+  slug: get-team
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.getTeam
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+      team: "{{variables.team}}"
+  outgoingActions: []
+  isRootAction: true

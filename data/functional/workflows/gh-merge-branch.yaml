@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Merge Branch"
+tag: func-test-gh-merge-branch
+description: Functional test for the github.mergeBranch action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: base-branch
+  type: STRING
+- slug: head-branch
+  type: STRING
+actions:
+- name: Merge branch
+  slug: merge-branch
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.mergeBranch
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      base_branch: "{{variables.base-branch}}"
+      head_branch: "{{variables.head-branch}}"
+  outgoingActions: []
+  isRootAction: true

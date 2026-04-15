@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab List Protected Branches"
+tag: func-test-gl-list-protected-branches
+description: Functional test for the gitlab.listProtectedBranches action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: List Protected Branches
+  slug: list-protected-branches
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.listProtectedBranches
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

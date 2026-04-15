@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Remove User from Team"
+tag: func-test-gh-remove-user-from-team
+description: Functional test for the github.removeUserFromTeam action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+- slug: team
+  type: STRING
+- slug: username
+  type: STRING
+actions:
+- name: Remove user from team
+  slug: remove-user-from-team
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.removeUserFromTeam
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+      team: "{{variables.team}}"
+      username: "{{variables.username}}"
+  outgoingActions: []
+  isRootAction: true

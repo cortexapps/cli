@@ -1,0 +1,24 @@
+name: "Functional Test: GitLab Delete Branch Protection"
+tag: func-test-gl-delete-branch-protection
+description: Functional test for the gitlab.deleteBranchProtection action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: branch-name
+  type: STRING
+actions:
+- name: Delete Branch Protection
+  slug: delete-branch-protection
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.deleteBranchProtection
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      branch_name: "{{variables.branch-name}}"
+  outgoingActions: []
+  isRootAction: true

@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Remove User from Org"
+tag: func-test-gh-remove-user-from-org
+description: Functional test for the github.removeUserFromOrg action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+- slug: username
+  type: STRING
+actions:
+- name: Remove user from org
+  slug: remove-user-from-org
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.removeUserFromOrg
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+      username: "{{variables.username}}"
+  outgoingActions: []
+  isRootAction: true

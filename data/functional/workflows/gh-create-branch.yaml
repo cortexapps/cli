@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Create Branch"
+tag: func-test-gh-create-branch
+description: Functional test for the github.createBranch action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: new-branch
+  type: STRING
+- slug: sha
+  type: STRING
+actions:
+- name: Create branch
+  slug: create-branch
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createBranch
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      new_branch: "{{variables.new-branch}}"
+      sha: "{{variables.sha}}"
+  outgoingActions: []
+  isRootAction: true

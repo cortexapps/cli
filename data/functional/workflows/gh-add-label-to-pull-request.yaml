@@ -1,0 +1,27 @@
+name: "Functional Test: GitHub Add Label to Pull Request"
+tag: func-test-gh-add-label-to-pull-request
+description: Functional test for the github.addLabelToPullRequest action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: pull-number
+  type: STRING
+- slug: label
+  type: STRING
+actions:
+- name: Add label to pull request
+  slug: add-label-to-pull-request
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.addLabelToPullRequest
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      pull_number: "{{variables.pull-number}}"
+      label: "{{variables.label}}"
+  outgoingActions: []
+  isRootAction: true

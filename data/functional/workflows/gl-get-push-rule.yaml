@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Get Push Rule"
+tag: func-test-gl-get-push-rule
+description: Functional test for the gitlab.getPushRule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Get Push Rule
+  slug: get-push-rule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.getPushRule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

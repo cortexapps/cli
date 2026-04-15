@@ -1,0 +1,22 @@
+name: "Functional Test: GitLab Create Push Rule"
+tag: func-test-gl-create-push-rule
+description: Functional test for the gitlab.createPushRule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Create Push Rule
+  slug: create-push-rule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createPushRule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      prevent_secrets: "true"
+  outgoingActions: []
+  isRootAction: true
