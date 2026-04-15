@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Create Team"
+tag: func-test-gh-create-team
+description: Functional test for the github.createTeam action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+- slug: team-name
+  type: STRING
+actions:
+- name: Create team
+  slug: create-team
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.createTeam
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+      team_name: "{{variables.team-name}}"
+  outgoingActions: []
+  isRootAction: true

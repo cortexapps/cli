@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub List Deployments"
+tag: func-test-gh-list-deployments
+description: Functional test for the github.listDeployments action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+actions:
+- name: List deployments
+  slug: list-deployments
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.listDeployments
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+  outgoingActions: []
+  isRootAction: true

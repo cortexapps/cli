@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Get Release by Tag"
+tag: func-test-gh-get-release-by-tag
+description: Functional test for the github.getReleaseByTag action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: tag
+  type: STRING
+actions:
+- name: Get release by tag
+  slug: get-release-by-tag
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.getReleaseByTag
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      tag: "{{variables.tag}}"
+  outgoingActions: []
+  isRootAction: true

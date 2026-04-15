@@ -1,0 +1,24 @@
+name: "Functional Test: GitLab Delete Pipeline Schedule"
+tag: func-test-gl-delete-pipeline-schedule
+description: Functional test for the gitlab.deletePipelineSchedule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: pipeline-schedule-id
+  type: STRING
+actions:
+- name: Delete Pipeline Schedule
+  slug: delete-pipeline-schedule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.deletePipelineSchedule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      pipeline_schedule_id: "{{variables.pipeline-schedule-id}}"
+  outgoingActions: []
+  isRootAction: true

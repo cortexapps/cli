@@ -1,0 +1,25 @@
+name: "Functional Test: GitLab Update Pipeline Schedule"
+tag: func-test-gl-update-pipeline-schedule
+description: Functional test for the gitlab.updatePipelineSchedule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: pipeline-schedule-id
+  type: STRING
+actions:
+- name: Update Pipeline Schedule
+  slug: update-pipeline-schedule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.updatePipelineSchedule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      pipeline_schedule_id: "{{variables.pipeline-schedule-id}}"
+      cron: "0 1 * * *"
+  outgoingActions: []
+  isRootAction: true

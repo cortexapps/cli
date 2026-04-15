@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub List Teams"
+tag: func-test-gh-list-teams
+description: Functional test for the github.listTeams action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: org
+  type: STRING
+actions:
+- name: List teams
+  slug: list-teams
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.listTeams
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      org: "{{variables.org}}"
+  outgoingActions: []
+  isRootAction: true

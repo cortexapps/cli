@@ -1,0 +1,30 @@
+name: "Functional Test: GitLab Create Pipeline Schedule"
+tag: func-test-gl-create-pipeline-schedule
+description: Functional test for the gitlab.createPipelineSchedule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: cron
+  type: STRING
+- slug: pipeline-description
+  type: STRING
+- slug: ref
+  type: STRING
+actions:
+- name: Create Pipeline Schedule
+  slug: create-pipeline-schedule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createPipelineSchedule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      cron: "{{variables.cron}}"
+      pipeline_description: "{{variables.pipeline-description}}"
+      ref: "{{variables.ref}}"
+  outgoingActions: []
+  isRootAction: true

@@ -1,0 +1,24 @@
+name: "Functional Test: GitHub Get File"
+tag: func-test-gh-get-file
+description: Functional test for the github.getFile action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: path
+  type: STRING
+actions:
+- name: Get file
+  slug: get-file
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.getFile
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      path: "{{variables.path}}"
+  outgoingActions: []
+  isRootAction: true

@@ -1,0 +1,33 @@
+name: "Functional Test: GitHub Create or Update File"
+tag: func-test-gh-create-or-update-file
+description: Functional test for the GitHub create or update file action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: commit-message
+  type: STRING
+- slug: content
+  type: STRING
+- slug: path
+  type: STRING
+- slug: branch
+  type: STRING
+actions:
+- name: Create or update file
+  slug: create-or-update-file
+  schema:
+    type: GITHUB_CREATE_OR_UPDATE_FILE
+    alias: __GITHUB_INTEGRATION_ALIAS__
+    repositoryName: "{{variables.repo}}"
+    commitMessage: "{{variables.commit-message}}"
+    content: "{{variables.content}}"
+    path: "{{variables.path}}"
+    branch: "{{variables.branch}}"
+    committer: null
+    author: null
+  outgoingActions: []
+  isRootAction: true

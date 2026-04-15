@@ -86,18 +86,21 @@ def test_scorecards_drafts():
 # - So we can semi-reliably count on an evaluated scorecard to exist.
 # - However, we should be cleaning up test data after tests run which would invalidate these assumptions.
 
+def _clear_exemption(rule_id):
+    """Clear any existing exemption regardless of state (PENDING, APPROVED, etc.)."""
+    # Deny first to clear PENDING exemptions, then revoke to clear APPROVED ones
+    for action in ("deny", "revoke"):
+        try:
+            cli(["scorecards", "exemptions", action, "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "cleanup", "-ri", rule_id], return_type=ReturnType.RAW)
+        except Exception:
+            pass
+
 @pytest.fixture(scope='session')
 def test_exemption_that_will_be_approved():
     rule_id = _get_rule("Has Custom Data")
     print("rule_id = " + rule_id)
 
-    # Revoke any existing exemption to make test idempotent (ignore if doesn't exist)
-    # Use admin key for revoke since viewer doesn't have permission
-    try:
-        cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "cleanup", "-ri", rule_id])
-    except Exception as e:
-        # Ignore errors - exemption may not exist
-        print(f"Cleanup: {e}")
+    _clear_exemption(rule_id)
 
     # Request exemption with viewer key (auto-approved with admin, pending with viewer)
     with mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']}):
@@ -119,13 +122,7 @@ def test_exemption_that_will_be_denied():
     rule_id = _get_rule("Is Definitely False")
     print("rule_id = " + rule_id)
 
-    # Revoke any existing exemption to make test idempotent (ignore if doesn't exist)
-    # Use admin key for revoke since viewer doesn't have permission
-    try:
-        cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "cleanup", "-ri", rule_id])
-    except Exception as e:
-        # Ignore errors - exemption may not exist
-        print(f"Cleanup: {e}")
+    _clear_exemption(rule_id)
 
     # Request exemption with viewer key (auto-approved with admin, pending with viewer)
     with mock.patch.dict(os.environ, {"CORTEX_API_KEY": os.environ['CORTEX_API_KEY_VIEWER']}):

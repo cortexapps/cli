@@ -1,0 +1,25 @@
+name: "Functional Test: GitLab Create Approval Rule"
+tag: func-test-gl-create-approval-rule
+description: Functional test for the gitlab.createApprovalRule action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: rule-name
+  type: STRING
+actions:
+- name: Create Approval Rule
+  slug: create-approval-rule
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.createApprovalRule
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      rule_name: "{{variables.rule-name}}"
+      approvals_required: 1
+  outgoingActions: []
+  isRootAction: true

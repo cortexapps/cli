@@ -1,0 +1,25 @@
+name: "Functional Test: GitLab Update Branch Protection"
+tag: func-test-gl-update-branch-protection
+description: Functional test for the gitlab.updateBranchProtection action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: branch-name
+  type: STRING
+actions:
+- name: Update Branch Protection
+  slug: update-branch-protection
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.updateBranchProtection
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      branch_name: "{{variables.branch-name}}"
+      allow_force_push: "true"
+  outgoingActions: []
+  isRootAction: true

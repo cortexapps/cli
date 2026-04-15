@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab Archive Project"
+tag: func-test-gl-archive-project
+description: Functional test for the gitlab.archiveProject action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: Archive Project
+  slug: archive-project
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.archiveProject
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

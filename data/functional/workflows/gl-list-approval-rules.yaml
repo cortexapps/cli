@@ -1,0 +1,21 @@
+name: "Functional Test: GitLab List Approval Rules"
+tag: func-test-gl-list-approval-rules
+description: Functional test for the gitlab.listApprovalRules action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+actions:
+- name: List Approval Rules
+  slug: list-approval-rules
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.listApprovalRules
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+  outgoingActions: []
+  isRootAction: true

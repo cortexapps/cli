@@ -1,0 +1,30 @@
+name: "Functional Test: GitHub Delete File"
+tag: func-test-gh-delete-file
+description: Functional test for the github.deleteFile action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+- slug: path
+  type: STRING
+- slug: message
+  type: STRING
+- slug: sha
+  type: STRING
+actions:
+- name: Delete file
+  slug: delete-file
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.deleteFile
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+      path: "{{variables.path}}"
+      message: "{{variables.message}}"
+      sha: "{{variables.sha}}"
+  outgoingActions: []
+  isRootAction: true

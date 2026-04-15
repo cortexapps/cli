@@ -1,0 +1,24 @@
+name: "Functional Test: GitLab Get Project Variable"
+tag: func-test-gl-get-project-variable
+description: Functional test for the gitlab.getProjectVariable action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: project
+  type: STRING
+- slug: key
+  type: STRING
+actions:
+- name: Get Project Variable
+  slug: get-project-variable
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: gitlab.getProjectVariable
+    integrationAlias: __GITLAB_INTEGRATION_ALIAS__
+    inputs:
+      project: "{{variables.project}}"
+      key: "{{variables.key}}"
+  outgoingActions: []
+  isRootAction: true

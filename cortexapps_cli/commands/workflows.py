@@ -7,7 +7,7 @@ import typer
 import yaml
 
 app = typer.Typer(
-    help="Workflows commands",
+    help="Workflows commands (Beta)",
     no_args_is_help=True
 )
 
@@ -142,3 +142,80 @@ def create(
         raise typer.BadParameter("Input file is neither valid JSON nor YAML.")
 
     r = client.post("api/v1/workflows", data=data, content_type=content_type)
+
+@app.command()
+def run(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag or unique identifier for the workflow"),
+    scope: str = typer.Option("GLOBAL", "--scope", "-s", help="Scope type: GLOBAL or ENTITY"),
+    entity: str = typer.Option(None, "--entity", "-e", help="Entity tag (required when scope is ENTITY)"),
+    run_as: str = typer.Option(None, "--run-as", help="Email of user to run the workflow as"),
+    context: str = typer.Option(None, "--context", "-x", help="JSON string for initialContext"),
+    context_file: Annotated[typer.FileText, typer.Option("--context-file", help="JSON file for initialContext")] = None,
+    wait: bool = typer.Option(False, "--wait", "-w", help="Poll until the run completes"),
+    timeout: int = typer.Option(300, "--timeout", help="Max seconds to wait when --wait is used"),
+):
+    """
+    (Beta) Run a workflow.  API key must have the Run workflows permission.
+    The workflow must have isRunnableViaApi set to true.
+    """
+    import time as time_module
+
+    client = ctx.obj["client"]
+
+    # Build scope payload
+    if scope.upper() == "ENTITY":
+        if not entity:
+            raise typer.BadParameter("--entity is required when --scope is ENTITY")
+        scope_payload = {"type": "ENTITY", "entityId": entity}
+    else:
+        scope_payload = {"type": "GLOBAL"}
+
+    # Build request body
+    body = {"scope": scope_payload}
+
+    if run_as:
+        body["runAs"] = run_as
+
+    # Handle initialContext from --context or --context-file
+    if context and context_file:
+        raise typer.BadParameter("Cannot specify both --context and --context-file")
+    if context:
+        body["initialContext"] = json.loads(context)
+    elif context_file:
+        body["initialContext"] = json.load(context_file)
+
+    r = client.post(f"api/v1/workflows/{tag}/runs", data=body)
+
+    if not wait:
+        print_output(r)
+        return
+
+    # Poll until completed or timeout
+    run_id = r.get("id")
+    if not run_id:
+        print_output(r)
+        return
+
+    start = time_module.time()
+    while time_module.time() - start < timeout:
+        time_module.sleep(2)
+        r = client.get(f"api/v1/workflows/{tag}/runs/{run_id}")
+        status = r.get("status", "").upper()
+        if status in ("COMPLETED", "FAILED", "CANCELLED"):
+            break
+
+    print_output(r)
+
+@app.command("get-run")
+def get_run(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag or unique identifier for the workflow"),
+    run_id: str = typer.Option(..., "--run-id", "-r", help="The run ID"),
+):
+    """
+    (Beta) Get details of a workflow run.  API key must have the View workflow runs permission.
+    """
+    client = ctx.obj["client"]
+    r = client.get(f"api/v1/workflows/{tag}/runs/{run_id}")
+    print_output(r)

@@ -1,0 +1,21 @@
+name: "Functional Test: GitHub List Branches"
+tag: func-test-gh-list-branches
+description: Functional test for the github.listBranches action block
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+- slug: repo
+  type: STRING
+actions:
+- name: List branches
+  slug: list-branches
+  schema:
+    type: ADVANCED_HTTP_REQUEST
+    actionIdentifier: github.listBranches
+    integrationAlias: __GITHUB_INTEGRATION_ALIAS__
+    inputs:
+      repo: "{{variables.repo}}"
+  outgoingActions: []
+  isRootAction: true
