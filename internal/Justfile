@@ -469,11 +469,48 @@ ske-setup:
     echo "Loading pipeline image into minikube..."
     minikube image load ske-test/message-pipeline:v0.1.0
 
-    # 9. Install the ConfigMap Promise
+    # 9. Create git-credentials secret for Kratix GitStateStore
+    echo "Creating git-credentials secret..."
+    kubectl create secret generic git-credentials \
+        --from-literal=username="${GH_USER}" \
+        --from-literal=password="${GITHUB_TOKEN}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # 10. Create GitStateStore + Destination so Kratix can write pipeline outputs
+    echo "Creating GitStateStore and Destination..."
+    kubectl apply -f - <<'GITSTATE'
+    apiVersion: platform.kratix.io/v1alpha1
+    kind: GitStateStore
+    metadata:
+      name: default
+    spec:
+      authMethod: basicAuth
+      branch: main
+      secretRef:
+        name: git-credentials
+      url: https://github.com/jeff-test-org/ske-test-resources
+    GITSTATE
+
+    kubectl apply -f - <<'DEST'
+    apiVersion: platform.kratix.io/v1alpha1
+    kind: Destination
+    metadata:
+      name: default
+      labels:
+        environment: dev
+    spec:
+      filepath:
+        mode: none
+      stateStoreRef:
+        kind: GitStateStore
+        name: default
+    DEST
+
+    # 11. Install the ConfigMap Promise
     echo "Installing ConfigMap Promise..."
     kubectl apply -f ske/promise.yaml
 
-    # 10. Wait for Promise to become Available
+    # 12. Wait for Promise to become Available
     echo "Waiting for Promise to become Available..."
     for i in $(seq 1 60); do
         STATUS=$(kubectl get promise message -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "")
@@ -506,7 +543,6 @@ ske-test:
     MAX_ATTEMPTS=30
     SLEEP_SECONDS=10
     for i in $(seq 1 $MAX_ATTEMPTS); do
-        # List entity types and look for "Message"
         RESPONSE=$(curl -sf \
             -H "Authorization: Bearer ${CORTEX_API_KEY}" \
             "${CORTEX_BASE_URL}/api/v1/catalog/types" 2>&1) || true
@@ -528,59 +564,69 @@ ske-test:
     WORKFLOWS=$(curl -sf \
         -H "Authorization: Bearer ${CORTEX_API_KEY}" \
         "${CORTEX_BASE_URL}/api/v1/workflows" 2>&1) || true
-    # The SKE controller generates workflows with predictable names
     echo "  Available workflows:"
     echo "$WORKFLOWS" | python3 -m json.tool 2>/dev/null | grep -i "message" || echo "  (checking...)"
 
     echo ""
-    echo "=== Step 3: Trigger Create Workflow via Cortex API ==="
-    echo "  Sending resource request with message='hello from ske'..."
+    echo "=== Step 3: Submit resource request via Git ==="
+    echo "  Committing Message resource request to GitHub repo..."
 
-    # Find the create workflow tag for the Message promise
-    CREATE_WF_TAG=$(echo "$WORKFLOWS" | python3 -c "
-    import json, sys
-    data = json.load(sys.stdin)
-    workflows = data.get('workflows', data) if isinstance(data, dict) else data
-    for wf in (workflows if isinstance(workflows, list) else [workflows]):
-        tag = wf.get('tag', '')
-        name = wf.get('name', '').lower()
-        if 'message' in name.lower() and 'create' in name.lower():
-            print(tag)
-            break
-    " 2>/dev/null || echo "")
+    # Clean up any previous test resource
+    gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml \
+        --method DELETE \
+        -f message="test: clean up previous ske-test-msg resource" \
+        -f sha="$(gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml --jq '.sha' 2>/dev/null || echo '')" \
+        2>/dev/null || true
 
-    if [ -z "$CREATE_WF_TAG" ]; then
-        echo "FAILED: Could not find a Create workflow for Message"
-        echo "Workflows response:"
-        echo "$WORKFLOWS" | python3 -m json.tool 2>/dev/null || echo "$WORKFLOWS"
-        exit 1
-    fi
-    echo "  Found create workflow: $CREATE_WF_TAG"
-
-    # Trigger the workflow
-    RUN_RESPONSE=$(curl -sf \
-        -H "Authorization: Bearer ${CORTEX_API_KEY}" \
-        -H "Content-Type: application/json" \
-        -X POST "${CORTEX_BASE_URL}/api/v1/workflows/${CREATE_WF_TAG}/runs" \
-        -d '{"parameters": {"message": "hello from ske"}, "scope": {"type": "GLOBAL"}}')
-    RUN_ID=$(echo "$RUN_RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
-    echo "  Workflow run ID: $RUN_ID"
+    # Commit the resource request YAML to the GitOps repo
+    RESOURCE_YAML=$(cat <<'RESOURCE'
+    apiVersion: demo.cortex.io/v1alpha1
+    kind: Message
+    metadata:
+      name: ske-test-msg
+      namespace: default
+    spec:
+      message: "hello from ske"
+    RESOURCE
+    )
+    ENCODED=$(echo "$RESOURCE_YAML" | base64)
+    gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml \
+        --method PUT \
+        -f message="test: create ske-test-msg resource request" \
+        -f content="$ENCODED" \
+        -f branch="main" > /dev/null
+    echo "  Resource request committed to kratix-resource-requests/ske-test-msg.yaml"
 
     echo ""
-    echo "=== Step 4: Wait for ConfigMap to appear on cluster ==="
+    echo "=== Step 4: Wait for ArgoCD to sync and Kratix to reconcile ==="
+    echo "  Waiting for Message resource to appear on cluster..."
+    for i in $(seq 1 60); do
+        if kubectl get message ske-test-msg -n default 2>/dev/null | grep -q "ske-test-msg"; then
+            echo "  Message resource synced to cluster!"
+            break
+        fi
+        if [ "$i" -eq 60 ]; then
+            echo "Warning: Message resource not synced after 120s"
+            exit 1
+        fi
+        sleep 2
+    done
+
+    echo ""
+    echo "=== Step 5: Wait for ConfigMap to appear on cluster ==="
     MAX_ATTEMPTS=60
     SLEEP_SECONDS=5
     for i in $(seq 1 $MAX_ATTEMPTS); do
         CM_DATA=$(kubectl get configmap -n default -o json 2>/dev/null | \
             python3 -c "
-            import json, sys
-            data = json.load(sys.stdin)
-            for item in data.get('items', []):
-                d = item.get('data', {})
-                if d.get('message') == 'hello from ske':
-                    print(item['metadata']['name'])
-                    break
-            " 2>/dev/null || echo "")
+    import json, sys
+    data = json.load(sys.stdin)
+    for item in data.get('items', []):
+        d = item.get('data', {})
+        if d.get('message') == 'hello from ske':
+            print(item['metadata']['name'])
+            break
+    " 2>/dev/null || echo "")
         if [ -n "$CM_DATA" ]; then
             echo "  ConfigMap '$CM_DATA' found with message='hello from ske'!"
             echo ""
@@ -602,11 +648,27 @@ ske-stop:
     #!/usr/bin/env bash
     set -euo pipefail
 
+    echo "Cleaning up test resource from GitHub repo..."
+    SHA=$(gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml --jq '.sha' 2>/dev/null || echo "")
+    if [ -n "$SHA" ]; then
+        gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml \
+            --method DELETE \
+            -f message="test: clean up ske-test-msg resource" \
+            -f sha="$SHA" 2>/dev/null || true
+    fi
+
     echo "Deleting ConfigMap Promise..."
     kubectl delete promise message 2>/dev/null || true
 
+    echo "Deleting Destination and GitStateStore..."
+    kubectl delete destination default 2>/dev/null || true
+    kubectl delete gitstatestore default 2>/dev/null || true
+
     echo "Uninstalling SKE Operator..."
     helm uninstall ske-operator -n kratix-platform-system 2>/dev/null || true
+
+    echo "Removing cert-manager..."
+    kubectl delete -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml 2>/dev/null || true
 
     echo "Removing ArgoCD..."
     kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml 2>/dev/null || true
