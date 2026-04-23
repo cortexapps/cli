@@ -11,14 +11,14 @@
 #     --set cortexIntegration.config.url=${CORTEX_BASE_URL}
 
 skeDeployment:
-  version: v0.99.0
+  version: "latest"
 
 cortexIntegration:
   enabled: true
   version: "latest"
   config:
     branch: main
-    integrationAlias: github
+    integrationAlias: cortex-prod
     path: kratix-resource-requests
     provider: github
     repositoryName: jeff-test-org/ske-test-resources

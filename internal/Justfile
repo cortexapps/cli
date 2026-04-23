@@ -429,7 +429,7 @@ ske-setup:
     # 3. Install ArgoCD
     echo "Installing ArgoCD..."
     kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    kubectl apply -n argocd --server-side -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
     echo "Waiting for ArgoCD to be ready..."
     kubectl wait --for=condition=available deployment/argocd-server \
         -n argocd --timeout=300s
@@ -438,17 +438,14 @@ ske-setup:
     echo "Configuring ArgoCD Application..."
     kubectl apply -f ske/argocd-app.yaml
 
-    # 5. Create GHCR image pull secret for Syntasso images
-    echo "Creating image pull secret for Syntasso GHCR..."
-    kubectl create namespace kratix-platform-system --dry-run=client -o yaml | kubectl apply -f -
-    kubectl create secret docker-registry syntasso-registry \
-        --namespace=kratix-platform-system \
-        --docker-server=ghcr.io \
-        --docker-username=syntasso-pkg \
-        --docker-password="${SKE_LICENSE_TOKEN}" \
-        --dry-run=client -o yaml | kubectl apply -f -
+    # 5. Install cert-manager (required by SKE)
+    echo "Installing cert-manager..."
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+    echo "Waiting for cert-manager to be ready..."
+    kubectl wait --for=condition=available deployment --all \
+        -n cert-manager --timeout=300s
 
-    # 6. Install SKE Operator via Helm
+    # 6. Install SKE Operator via Helm (also creates GHCR pull secret from skeLicense)
     echo "Installing SKE Operator..."
     helm repo add syntasso https://syntasso.github.io/helm-charts 2>/dev/null || true
     helm repo update syntasso
@@ -457,7 +454,6 @@ ske-setup:
         --create-namespace --wait \
         --values ske/values.yaml \
         --set skeLicense="${SKE_LICENSE_TOKEN}" \
-        --set skeDeployment.version="${SKE_VERSION}" \
         --set cortexIntegration.config.token="${CORTEX_API_KEY}" \
         --set cortexIntegration.config.url="${CORTEX_BASE_URL}"
 
