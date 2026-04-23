@@ -1,0 +1,24 @@
+# SKE Operator Helm values for local minikube testing.
+# Environment variables are substituted at install time via --set overrides.
+#
+# Usage (from Justfile):
+#   helm install ske-operator syntasso/ske-operator \
+#     --namespace kratix-platform-system \
+#     --create-namespace --wait \
+#     --values ske/values.yaml \
+#     --set skeLicense=${SKE_LICENSE_TOKEN} \
+#     --set cortexIntegration.config.token=${CORTEX_API_KEY} \
+#     --set cortexIntegration.config.url=${CORTEX_BASE_URL}
+
+skeDeployment:
+  version: v0.99.0
+
+cortexIntegration:
+  enabled: true
+  version: "latest"
+  config:
+    branch: main
+    integrationAlias: github
+    path: kratix-resource-requests
+    provider: github
+    repositoryName: jeff-test-org/ske-test-resources
