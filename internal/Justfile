@@ -542,16 +542,16 @@ ske-test:
 
     # Find the create workflow tag for the Message promise
     CREATE_WF_TAG=$(echo "$WORKFLOWS" | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-workflows = data.get('workflows', data) if isinstance(data, dict) else data
-for wf in (workflows if isinstance(workflows, list) else [workflows]):
-    tag = wf.get('tag', '')
-    name = wf.get('name', '').lower()
-    if 'message' in name.lower() and 'create' in name.lower():
-        print(tag)
-        break
-" 2>/dev/null || echo "")
+    import json, sys
+    data = json.load(sys.stdin)
+    workflows = data.get('workflows', data) if isinstance(data, dict) else data
+    for wf in (workflows if isinstance(workflows, list) else [workflows]):
+        tag = wf.get('tag', '')
+        name = wf.get('name', '').lower()
+        if 'message' in name.lower() and 'create' in name.lower():
+            print(tag)
+            break
+    " 2>/dev/null || echo "")
 
     if [ -z "$CREATE_WF_TAG" ]; then
         echo "FAILED: Could not find a Create workflow for Message"
@@ -577,14 +577,14 @@ for wf in (workflows if isinstance(workflows, list) else [workflows]):
     for i in $(seq 1 $MAX_ATTEMPTS); do
         CM_DATA=$(kubectl get configmap -n default -o json 2>/dev/null | \
             python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-for item in data.get('items', []):
-    d = item.get('data', {})
-    if d.get('message') == 'hello from ske':
-        print(item['metadata']['name'])
-        break
-" 2>/dev/null || echo "")
+            import json, sys
+            data = json.load(sys.stdin)
+            for item in data.get('items', []):
+                d = item.get('data', {})
+                if d.get('message') == 'hello from ske':
+                    print(item['metadata']['name'])
+                    break
+            " 2>/dev/null || echo "")
         if [ -n "$CM_DATA" ]; then
             echo "  ConfigMap '$CM_DATA' found with message='hello from ske'!"
             echo ""
