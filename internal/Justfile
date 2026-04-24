@@ -444,6 +444,19 @@ ske-setup:
     echo "Waiting for cert-manager to be ready..."
     kubectl wait --for=condition=available deployment --all \
         -n cert-manager --timeout=300s
+    echo "Waiting for cert-manager webhook to accept requests..."
+    for i in $(seq 1 30); do
+        if kubectl get validatingwebhookconfigurations cert-manager-webhook -o jsonpath='{.webhooks[0].clientConfig.caBundle}' 2>/dev/null | grep -q .; then
+            sleep 5
+            echo "  cert-manager webhook ready."
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo "Warning: cert-manager webhook CA not populated after 60s"
+            exit 1
+        fi
+        sleep 2
+    done
 
     # 6. Install SKE Operator via Helm (also creates GHCR pull secret from skeLicense)
     echo "Installing SKE Operator..."
@@ -476,8 +489,8 @@ ske-setup:
         --from-literal=password="${GITHUB_TOKEN}" \
         --dry-run=client -o yaml | kubectl apply -f -
 
-    # 10. Create GitStateStore + Destination so Kratix can write pipeline outputs
-    echo "Creating GitStateStore and Destination..."
+    # 10. Create GitStateStore (SKE auto-creates a Destination named "local-cluster")
+    echo "Creating GitStateStore..."
     kubectl apply -f - <<'GITSTATE'
     apiVersion: platform.kratix.io/v1alpha1
     kind: GitStateStore
@@ -491,20 +504,20 @@ ske-setup:
       url: https://github.com/jeff-test-org/ske-test-resources
     GITSTATE
 
-    kubectl apply -f - <<'DEST'
-    apiVersion: platform.kratix.io/v1alpha1
-    kind: Destination
-    metadata:
-      name: default
-      labels:
-        environment: dev
-    spec:
-      filepath:
-        mode: none
-      stateStoreRef:
-        kind: GitStateStore
-        name: default
-    DEST
+    echo "Waiting for Destination to become ready..."
+    for i in $(seq 1 30); do
+        if kubectl get destination -o jsonpath='{.items[0].status.conditions[?(@.type=="Ready")].status}' 2>/dev/null | grep -q "True"; then
+            DEST_NAME=$(kubectl get destination -o jsonpath='{.items[0].metadata.name}')
+            echo "  Destination '$DEST_NAME' is ready."
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo "Warning: No Destination became ready within 60s"
+            kubectl get destination -A
+            exit 1
+        fi
+        sleep 2
+    done
 
     # 11. Install the ConfigMap Promise
     echo "Installing ConfigMap Promise..."
@@ -660,8 +673,8 @@ ske-stop:
     echo "Deleting ConfigMap Promise..."
     kubectl delete promise message 2>/dev/null || true
 
-    echo "Deleting Destination and GitStateStore..."
-    kubectl delete destination default 2>/dev/null || true
+    echo "Deleting Destinations and GitStateStore..."
+    kubectl delete destination --all 2>/dev/null || true
     kubectl delete gitstatestore default 2>/dev/null || true
 
     echo "Uninstalling SKE Operator..."
