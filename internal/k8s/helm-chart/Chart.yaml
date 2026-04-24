@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cortex-k8s-agent
+description: A Helm chart for deploying Cortex K8s agent in your cluster
+type: application
+version: 0.1.0
+appVersion: 1.16.0

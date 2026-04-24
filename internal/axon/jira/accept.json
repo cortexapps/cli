@@ -1,0 +1,12 @@
+{
+  "private": [
+    {
+      "method": "any",
+      "path": "/**",
+      "origin": "${JIRA_API}",
+      "headers": {
+        "Authorization": "Basic ${JIRA_AUTH_TOKEN}"
+      }
+    }
+  ]
+}

@@ -36,6 +36,13 @@ pytest-xdist = "^3.6.1"
 responses = "^0.25.3"
 pytest-html = "^4.1.1"
 
+
+[tool.poetry.group.playwright.dependencies]
+playwright = "^1.58.0"
+pytest-playwright = "^0.7.2"
+python-dotenv = "^1.2.2"
+pyotp = "^2.9.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

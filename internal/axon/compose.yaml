@@ -1,0 +1,145 @@
+services:
+  github:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-github
+    env_file: ../.env
+    environment:
+      - GITHUB_API=https://api.github.com
+      - GITHUB_GRAPHQL=api.github.com/graphql
+    command: [
+      "relay",
+      "-i", "github",
+      "-a", "github-relay"
+    ]
+    restart: unless-stopped
+
+  gitlab:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-gitlab
+    env_file: ../.env
+    environment:
+      - GITLAB_API=https://gitlab.com
+    command: [
+      "relay",
+      "-i", "gitlab",
+      "-a", "gitlab-relay"
+    ]
+    restart: unless-stopped
+
+  jira:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-jira
+    env_file: ../.env
+    environment:
+      - JIRA_API=${JIRA_API:-https://cortex1.atlassian.net}
+      - JIRA_USERNAME=${JIRA_USERNAME}
+    command: [
+      "relay",
+      "-i", "jira",
+      "-a", "jira-relay"
+    ]
+    restart: unless-stopped
+
+  bitbucket:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-bitbucket
+    env_file: ../.env
+    environment:
+      - BITBUCKET_API=${BITBUCKET_API:-https://api.bitbucket.org}
+      - BITBUCKET_USERNAME=${BITBUCKET_USERNAME}
+    command: [
+      "relay",
+      "-i", "bitbucket",
+      "-a", "bitbucket-relay",
+      "-s", "basic"
+    ]
+    restart: unless-stopped
+
+  sonarqube:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-sonarqube
+    env_file: ../.env
+    command: [
+      "relay",
+      "-i", "sonarqube",
+      "-a", "sonarqube-relay"
+    ]
+    restart: unless-stopped
+
+  jenkins:
+    build: ./jenkins
+    container_name: axon-jenkins
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      CORTEX_API_KEY: ${CORTEX_API_KEY}
+    ports:
+      - "9090:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./jenkins/init.groovy.d:/usr/share/jenkins/ref/init.groovy.d:ro
+    restart: unless-stopped
+
+  jenkins-relay:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-jenkins-relay
+    env_file: ../.env
+    environment:
+      CORTEX_API_TOKEN: ${CORTEX_API_KEY}
+      AUTHORIZATION_TOKEN: ${AUTHORIZATION_TOKEN}
+      HOSTNAME: jenkins-relay-${HOSTNAME:-local}
+    volumes:
+      - ./jenkins/accept.json:/app/accept.json:ro
+    command: [
+      "relay",
+      "-a", "jenkins-relay",
+      "-f", "/app/accept.json"
+    ]
+    depends_on:
+      - jenkins
+    restart: unless-stopped
+
+  prometheus:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-prometheus
+    env_file: ../.env
+    environment:
+      - PROMETHEUS_API=${PROMETHEUS_API:-http://host.docker.internal:9090}
+      - PROMETHEUS_USERNAME=${PROMETHEUS_USERNAME:-admin}
+      - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD:-test}
+    command: [
+      "relay",
+      "-i", "prometheus",
+      "-a", "prometheus-relay"
+    ]
+    restart: unless-stopped
+
+  echo:
+    build: ./echo
+    container_name: axon-echo
+    environment:
+      CORTEX_API_KEY: ${CORTEX_API_KEY}
+      CORTEX_BASE_URL: ${CORTEX_BASE_URL:-https://api.getcortexapp.com}
+    ports:
+      - "8888:8080"
+    restart: unless-stopped
+
+  echo-relay:
+    image: ghcr.io/cortexapps/cortex-axon-agent:latest
+    container_name: axon-echo-relay
+    env_file: ../.env
+    environment:
+      CORTEX_API_TOKEN: ${CORTEX_API_KEY}
+      HOSTNAME: echo-relay-${HOSTNAME:-local}
+    volumes:
+      - ./echo/accept.json:/app/accept.json:ro
+    command: [
+      "relay",
+      "-a", "echo-relay",
+      "-f", "/app/accept.json"
+    ]
+    depends_on:
+      - echo
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:

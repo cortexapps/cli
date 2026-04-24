@@ -1,0 +1,12 @@
+{
+  "private": [
+    {
+      "method": "any",
+      "path": "/**",
+      "origin": "http://host.docker.internal:9090",
+      "headers": {
+        "Authorization": "Basic ${AUTHORIZATION_TOKEN}"
+      }
+    }
+  ]
+}
