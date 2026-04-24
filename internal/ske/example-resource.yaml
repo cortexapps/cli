@@ -1,0 +1,7 @@
+apiVersion: demo.cortex.io/v1alpha1
+kind: Message
+metadata:
+  name: example-message
+  namespace: default
+spec:
+  message: "hello from ske"

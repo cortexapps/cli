@@ -1,0 +1,680 @@
+set dotenv-load
+set export
+
+cortex_cli := 'poetry run cortex'
+pytest := 'PYTHONPATH=..:../tests poetry run pytest -rA'
+pw_pytest := 'poetry run pytest -rA --headed --browser chromium'
+
+help:
+   @just -l
+
+# Import functional test data (workflows)
+test-functional-import:
+   {{pytest}} -m setup tests/test_functional_import.py --cov=cortexapps_cli --cov-report=
+
+# Run functional tests, ie: just test-functional tests/test_gh_branches.py
+test-functional *args:
+   {{pytest}} -v -s -n auto --dist loadgroup -m functional --html=report-functional.html --self-contained-html {{args}}
+
+# Clean up orphaned functional test resources from interrupted runs
+_test-functional-clean:
+   {{pytest}} -v -s -m cleanup tests/test_gh_sweep.py
+
+# ---------------------------------------------------------------------------
+# K8s agent
+# ---------------------------------------------------------------------------
+
+# Start minikube, deploy k8s-agent, deploy test objects + Cortex entity
+k8s-agent-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # 1. Start minikube if not running
+    if minikube status | grep -q "Running"; then
+        echo "minikube already running"
+    else
+        echo "Starting minikube..."
+        minikube start --memory=8192 --cpus=4
+    fi
+
+    # 2. Create docker registry secret for GHCR
+    kubectl create secret docker-registry cortex-docker-registry-secret \
+        --docker-server=ghcr.io \
+        --docker-username="${GH_USER}" \
+        --docker-password="${GITHUB_TOKEN}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # 3. Create cortex-key secret
+    kubectl create secret generic cortex-key \
+        --from-literal=api-key="${CORTEX_API_KEY}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # 4. Fetch latest k8s-agent image tag from GHCR
+    echo "Fetching latest k8s-agent image tag..."
+    IMAGE_TAG=$(gh api \
+        -H "Accept: application/vnd.github+json" \
+        /orgs/cortexapps/packages/container/k8s-agent%2Fk8s-agent/versions \
+        --jq '.[0].metadata.container.tags[0]')
+    echo "Using image tag: ${IMAGE_TAG}"
+
+    # 5. Helm install/upgrade k8s-agent
+    helm upgrade --install cortex-k8s-agent k8s/helm-chart \
+        --set image.tag="${IMAGE_TAG}" \
+        --set app.baseUrl="${CORTEX_BASE_URL}"
+
+    # 6. Wait for agent pod readiness
+    echo "Waiting for k8s-agent pod to be ready..."
+    for i in $(seq 1 30); do
+        if kubectl get pod -l app.kubernetes.io/name=cortex-k8s-agent 2>/dev/null | grep -q .; then
+            break
+        fi
+        sleep 2
+    done
+    kubectl wait --for=condition=ready pod \
+        -l app.kubernetes.io/name=cortex-k8s-agent \
+        --timeout=120s
+
+    # 7. Create Cortex entity
+    echo "Creating Cortex entity..."
+    {{cortex_cli}} catalog create -f k8s/cortex-entity.yaml || true
+
+    # 8. Apply test k8s manifests
+    echo "Applying test manifests..."
+    kubectl apply -f k8s/manifests/
+
+    echo "Setup complete. Run 'just k8s-agent-test' to verify."
+
+# Verify test objects show up in Cortex via CLI
+k8s-agent-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Waiting for k8s-agent to push data to Cortex..."
+    MAX_ATTEMPTS=30
+    SLEEP_SECONDS=10
+
+    for i in $(seq 1 $MAX_ATTEMPTS); do
+        RESPONSE=$({{cortex_cli}} rest get /api/v1/catalog/k8s-test-annotation/k8s 2>&1) || true
+
+        # Check for all three expected objects
+        HAS_DEPLOYMENT=$(echo "$RESPONSE" | grep -c '"k8s-deployment"' || true)
+        HAS_STATEFULSET=$(echo "$RESPONSE" | grep -c '"k8s-statefulset"' || true)
+        HAS_CRONJOB=$(echo "$RESPONSE" | grep -c '"k8s-cronjob"' || true)
+
+        if [ "$HAS_DEPLOYMENT" -gt 0 ] && [ "$HAS_STATEFULSET" -gt 0 ] && [ "$HAS_CRONJOB" -gt 0 ]; then
+            echo "All k8s objects found in Cortex!"
+            echo "  - k8s-deployment"
+            echo "  - k8s-statefulset"
+            echo "  - k8s-cronjob"
+            exit 0
+        fi
+
+        echo "Attempt $i/$MAX_ATTEMPTS: waiting ${SLEEP_SECONDS}s for agent to sync..."
+        sleep $SLEEP_SECONDS
+    done
+
+    echo "FAILED: Not all k8s objects appeared in Cortex after $((MAX_ATTEMPTS * SLEEP_SECONDS))s"
+    echo "Last response:"
+    echo "$RESPONSE"
+    exit 1
+
+# Tear down k8s-agent and stop minikube
+k8s-agent-stop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Uninstalling k8s-agent..."
+    helm uninstall cortex-k8s-agent || true
+
+    echo "Stopping minikube..."
+    minikube stop
+
+    echo "Done."
+
+# ---------------------------------------------------------------------------
+# Playwright UI tests
+# ---------------------------------------------------------------------------
+
+# Run all Playwright UI tests
+test-ui *args:
+   {{pw_pytest}} -v ui/tests/ {{args}}
+
+# Run Workday integration tests (Playwright + API polling)
+test-workday *args:
+   {{pw_pytest}} -v ui/tests/test_workday.py {{args}}
+
+# Launch Playwright codegen to record a new test
+test-ui-create name url="https://app.getcortexapp.com/admin/home":
+   poetry run playwright codegen --target python-pytest -o ui/tests/{{name}}.py --load-storage=ui/state.json {{url}}
+
+# ---------------------------------------------------------------------------
+# Axon relay
+# ---------------------------------------------------------------------------
+
+# Start axon relay containers for configured integrations
+axon-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ -z "${CORTEX_API_KEY:-}" ]; then
+        echo "Error: CORTEX_API_KEY is required."
+        exit 1
+    fi
+
+    services=()
+
+    [ -n "${GITHUB_TOKEN:-}" ] && services+=(github)
+    [ -n "${GITLAB_TOKEN:-}" ] && services+=(gitlab)
+    [ -n "${JIRA_TOKEN:-}" ] && services+=(jira)
+    [ -n "${BITBUCKET_USERNAME:-}" ] && [ -n "${BITBUCKET_PASSWORD:-}" ] && services+=(bitbucket)
+    [ -n "${SONAR_TOKEN:-}" ] && services+=(sonarqube)
+    [ -n "${PROMETHEUS_API:-}" ] && services+=(prometheus)
+
+    if [ ${#services[@]} -eq 0 ]; then
+        echo "No integrations configured. Set variables in .env for the integrations you want:"
+        echo "  - GitHub:     GITHUB_TOKEN"
+        echo "  - GitLab:     GITLAB_TOKEN"
+        echo "  - Jira:       JIRA_TOKEN"
+        echo "  - Bitbucket:  BITBUCKET_USERNAME + BITBUCKET_PASSWORD"
+        echo "  - SonarQube:  SONAR_TOKEN"
+        echo "  - Prometheus: PROMETHEUS_API"
+        exit 0
+    fi
+
+    echo "Starting axon relay for: ${services[*]}"
+    docker compose -f axon/compose.yaml up -d "${services[@]}"
+    echo "Done. Running containers:"
+    docker compose -f axon/compose.yaml ps
+
+# Show status of axon relay containers
+axon-status:
+    docker compose -f axon/compose.yaml ps -a
+
+# Stop all axon relay containers
+axon-stop:
+    docker compose -f axon/compose.yaml down
+
+# ---------------------------------------------------------------------------
+# Axon + Jenkins test
+# ---------------------------------------------------------------------------
+
+# Set up Jenkins + relay, create pipeline job, push workflow to Cortex
+axon-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ -z "${CORTEX_API_KEY:-}" ]; then
+        echo "Error: CORTEX_API_KEY is required."
+        exit 1
+    fi
+
+    # 1. Build and start Jenkins
+    echo "Starting Jenkins..."
+    docker compose -f axon/compose.yaml up -d --build jenkins
+
+    # 2. Wait for Jenkins API to be ready
+    echo "Waiting for Jenkins to be ready..."
+    for i in $(seq 1 90); do
+        if curl -sf -u admin:admin http://localhost:9090/api/json > /dev/null 2>&1; then
+            echo "Jenkins is ready."
+            break
+        fi
+        if [ "$i" -eq 90 ]; then
+            echo "Jenkins did not become ready within 180s"
+            echo "Check: docker compose -f axon/compose.yaml logs jenkins"
+            exit 1
+        fi
+        sleep 2
+    done
+
+    # 3. Fetch CSRF crumb (save session cookie for subsequent requests)
+    COOKIE_JAR=$(mktemp)
+    trap "rm -f $COOKIE_JAR" EXIT
+    CRUMB_JSON=$(curl -sf -u admin:admin -c "$COOKIE_JAR" http://localhost:9090/crumbIssuer/api/json)
+    CRUMB_FIELD=$(echo "$CRUMB_JSON" | jq -r '.crumbRequestField')
+    CRUMB_VALUE=$(echo "$CRUMB_JSON" | jq -r '.crumb')
+
+    # 4. Create the pipeline job (ignore 400 if it already exists)
+    echo "Creating axon-demo pipeline job..."
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -u admin:admin \
+        -b "$COOKIE_JAR" \
+        -H "$CRUMB_FIELD: $CRUMB_VALUE" \
+        -X POST "http://localhost:9090/createItem?name=axon-demo" \
+        -H "Content-Type: application/xml" \
+        --data-binary @axon/jenkins/job-config.xml)
+    if [ "$HTTP_CODE" = "200" ]; then
+        echo "  Created axon-demo job."
+    elif [ "$HTTP_CODE" = "400" ]; then
+        echo "  axon-demo job already exists."
+    else
+        echo "  Warning: unexpected HTTP $HTTP_CODE creating job."
+    fi
+
+    # 5. Generate Jenkins API token and write to .env
+    if grep -q "^JENKINS_PASSWORD=" .env 2>/dev/null; then
+        echo "JENKINS_PASSWORD already set in .env, skipping token generation."
+    else
+        echo "Generating Jenkins API token..."
+        TOKEN_RESPONSE=$(curl -sf -u admin:admin \
+            -b "$COOKIE_JAR" \
+            -H "$CRUMB_FIELD: $CRUMB_VALUE" \
+            -X POST "http://localhost:9090/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken" \
+            -d "newTokenName=cortex-relay")
+        JENKINS_API_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.data.tokenValue')
+        if [ -n "$JENKINS_API_TOKEN" ] && [ "$JENKINS_API_TOKEN" != "null" ]; then
+            echo "JENKINS_USERNAME=admin" >> .env
+            echo "JENKINS_PASSWORD=$JENKINS_API_TOKEN" >> .env
+            # Base64-encoded credentials for the relay's Authorization header
+            AUTH_B64=$(echo -n "admin:$JENKINS_API_TOKEN" | base64)
+            echo "AUTHORIZATION_TOKEN=$AUTH_B64" >> .env
+            echo "  API token generated and written to .env."
+        else
+            echo "  Error: failed to generate API token."
+            echo "  Response: $TOKEN_RESPONSE"
+            exit 1
+        fi
+    fi
+
+    # 7. Start the jenkins-relay
+    echo "Starting jenkins-relay..."
+    docker compose -f axon/compose.yaml up -d jenkins-relay
+
+    # 8. Push workflow to Cortex (step number is correct now)
+    echo "Pushing workflow to Cortex..."
+    {{cortex_cli}} workflows create -f axon/workflow-jenkins.yaml 2>/dev/null || \
+        echo "  Workflow may already exist."
+
+    echo ""
+    echo "Setup complete."
+    echo "  Jenkins UI: http://localhost:9090  (admin/admin)"
+    echo "  Workflow:   'Jenkins via Axon Relay' — run from Cortex UI"
+
+# Follow Jenkins relay logs (Ctrl+C to stop)
+axon-test-logs:
+    docker compose -f axon/compose.yaml logs -f jenkins-relay
+
+# Tear down Jenkins + relay
+axon-test-stop:
+    docker compose -f axon/compose.yaml down jenkins jenkins-relay
+    docker volume rm -f axon_jenkins_home 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
+# Axon + Echo server (relay smoke test)
+# ---------------------------------------------------------------------------
+
+# Set up echo server + relay, push workflow to Cortex
+axon-echo-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ -z "${CORTEX_API_KEY:-}" ]; then
+        echo "Error: CORTEX_API_KEY is required."
+        exit 1
+    fi
+
+    echo "Starting echo server + relay..."
+    docker compose -f axon/compose.yaml up -d --build echo echo-relay
+
+    echo "Waiting for relay to connect..."
+    for i in $(seq 1 30); do
+        if docker logs axon-echo-relay 2>&1 | grep -q "started"; then
+            echo "Relay connected."
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo "Warning: relay did not start within 30s"
+            echo "Check: docker compose -f axon/compose.yaml logs echo-relay"
+            exit 1
+        fi
+        sleep 1
+    done
+
+    echo "Pushing workflow to Cortex..."
+    {{cortex_cli}} workflows create -f axon/workflow-echo.yaml 2>/dev/null || \
+        echo "  Workflow may already exist."
+
+    echo ""
+    echo "Setup complete."
+    echo "  Echo server: http://localhost:8888"
+    echo "  Workflow:    'Echo Server via Axon Relay' — run from Cortex UI or API"
+
+# Follow echo relay logs (Ctrl+C to stop)
+axon-echo-logs:
+    docker compose -f axon/compose.yaml logs -f echo-relay
+
+# Trigger the echo workflow and wait for completion
+axon-echo-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Triggering echo workflow..."
+    RESPONSE=$(curl -sf \
+        -H "Authorization: Bearer $CORTEX_API_KEY" \
+        -H "Content-Type: application/json" \
+        -X POST "${CORTEX_BASE_URL}/api/v1/workflows/echo-axon-relay/runs" \
+        -d '{"scope": {"type": "GLOBAL"}}')
+    RUN_ID=$(echo "$RESPONSE" | jq -r '.id')
+    WF_CID=$(echo "$RESPONSE" | jq -r '.workflow.cid')
+    echo "  Run ID: $RUN_ID"
+
+    echo "Waiting for workflow to complete..."
+    for i in $(seq 1 30); do
+        STATUS=$(curl -sf \
+            -H "Authorization: Bearer $CORTEX_API_KEY" \
+            "${CORTEX_BASE_URL}/api/v1/workflows/echo-axon-relay/runs/$RUN_ID" | jq -r '.status')
+        if [ "$STATUS" = "COMPLETED" ]; then
+            echo "Workflow completed successfully!"
+            exit 0
+        elif [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "TIMED_OUT" ]; then
+            echo "Workflow $STATUS"
+            exit 1
+        fi
+        sleep 2
+    done
+    echo "Warning: workflow did not complete within 60s (status: $STATUS)"
+
+# Tear down echo server + relay
+axon-echo-stop:
+    docker compose -f axon/compose.yaml down echo echo-relay
+
+# ---------------------------------------------------------------------------
+# Prometheus
+# ---------------------------------------------------------------------------
+
+# Start a local Prometheus instance at localhost:9090
+prometheus-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    docker compose -f prometheus/compose.yaml up -d
+
+    echo "Waiting for Prometheus to be ready..."
+    for i in $(seq 1 30); do
+        if curl -sf http://localhost:9090/-/ready > /dev/null 2>&1; then
+            echo "Prometheus is ready at http://localhost:9090"
+            exit 0
+        fi
+        sleep 1
+    done
+
+    echo "Warning: Prometheus did not become ready within 30s"
+    echo "Check: docker compose -f prometheus/compose.yaml logs"
+
+# Stop local Prometheus
+prometheus-stop:
+    docker compose -f prometheus/compose.yaml down
+
+# ---------------------------------------------------------------------------
+# SKE (Syntasso Kratix Enterprise)
+# ---------------------------------------------------------------------------
+
+# Start minikube, install ArgoCD + SKE, deploy ConfigMap Promise
+ske-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # 1. Start minikube if not running
+    if minikube status | grep -q "Running"; then
+        echo "minikube already running"
+    else
+        echo "Starting minikube..."
+        minikube start --memory=8192 --cpus=4
+    fi
+
+    # 2. Create GitHub repo for GitOps (idempotent)
+    echo "Ensuring GitHub repo jeff-test-org/ske-test-resources exists..."
+    gh repo create jeff-test-org/ske-test-resources --public --clone=false 2>/dev/null || \
+        echo "  Repo already exists."
+
+    # 3. Install ArgoCD
+    echo "Installing ArgoCD..."
+    kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+    kubectl apply -n argocd --server-side -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    echo "Waiting for ArgoCD to be ready..."
+    kubectl wait --for=condition=available deployment/argocd-server \
+        -n argocd --timeout=300s
+
+    # 4. Apply ArgoCD Application to watch the GitOps repo
+    echo "Configuring ArgoCD Application..."
+    kubectl apply -f ske/argocd-app.yaml
+
+    # 5. Install cert-manager (required by SKE)
+    echo "Installing cert-manager..."
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+    echo "Waiting for cert-manager to be ready..."
+    kubectl wait --for=condition=available deployment --all \
+        -n cert-manager --timeout=300s
+
+    # 6. Install SKE Operator via Helm (also creates GHCR pull secret from skeLicense)
+    echo "Installing SKE Operator..."
+    helm repo add syntasso https://syntasso.github.io/helm-charts 2>/dev/null || true
+    helm repo update syntasso
+    helm upgrade --install ske-operator syntasso/ske-operator \
+        --namespace kratix-platform-system \
+        --create-namespace --wait \
+        --values ske/values.yaml \
+        --set skeLicense="${SKE_LICENSE_TOKEN}" \
+        --set cortexIntegration.config.token="${CORTEX_API_KEY}" \
+        --set cortexIntegration.config.url="${CORTEX_BASE_URL}"
+
+    # 7. Wait for Kratix pods to be ready
+    echo "Waiting for Kratix platform pods..."
+    kubectl wait --for=condition=available deployment --all \
+        -n kratix-platform-system --timeout=300s
+
+    # 8. Build and load pipeline image into minikube
+    echo "Building pipeline image..."
+    docker build -t ske-test/message-pipeline:v0.1.0 \
+        ske/workflows/resource/configure/message-configure/ske-test-message-pipeline
+    echo "Loading pipeline image into minikube..."
+    minikube image load ske-test/message-pipeline:v0.1.0
+
+    # 9. Create git-credentials secret for Kratix GitStateStore
+    echo "Creating git-credentials secret..."
+    kubectl create secret generic git-credentials \
+        --from-literal=username="${GH_USER}" \
+        --from-literal=password="${GITHUB_TOKEN}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # 10. Create GitStateStore + Destination so Kratix can write pipeline outputs
+    echo "Creating GitStateStore and Destination..."
+    kubectl apply -f - <<'GITSTATE'
+    apiVersion: platform.kratix.io/v1alpha1
+    kind: GitStateStore
+    metadata:
+      name: default
+    spec:
+      authMethod: basicAuth
+      branch: main
+      secretRef:
+        name: git-credentials
+      url: https://github.com/jeff-test-org/ske-test-resources
+    GITSTATE
+
+    kubectl apply -f - <<'DEST'
+    apiVersion: platform.kratix.io/v1alpha1
+    kind: Destination
+    metadata:
+      name: default
+      labels:
+        environment: dev
+    spec:
+      filepath:
+        mode: none
+      stateStoreRef:
+        kind: GitStateStore
+        name: default
+    DEST
+
+    # 11. Install the ConfigMap Promise
+    echo "Installing ConfigMap Promise..."
+    kubectl apply -f ske/promise.yaml
+
+    # 12. Wait for Promise to become Available
+    echo "Waiting for Promise to become Available..."
+    for i in $(seq 1 60); do
+        STATUS=$(kubectl get promise message -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "")
+        if [ "$STATUS" = "True" ]; then
+            echo "Promise is Available!"
+            break
+        fi
+        if [ "$i" -eq 60 ]; then
+            echo "Warning: Promise did not become Available within 120s"
+            kubectl get promise message -o yaml
+            exit 1
+        fi
+        sleep 2
+    done
+
+    echo ""
+    echo "SKE setup complete."
+    echo "  - Kratix:  kubectl get pods -n kratix-platform-system"
+    echo "  - Promise: kubectl get promise message"
+    echo "  - ArgoCD:  kubectl port-forward svc/argocd-server -n argocd 8080:443"
+    echo ""
+    echo "Run 'just ske-test' to verify the Cortex integration."
+
+# Verify Cortex integration: Entity Type, Workflows, and ConfigMap provisioning
+ske-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "=== Step 1: Check for Message Entity Type in Cortex ==="
+    MAX_ATTEMPTS=30
+    SLEEP_SECONDS=10
+    for i in $(seq 1 $MAX_ATTEMPTS); do
+        RESPONSE=$(curl -sf \
+            -H "Authorization: Bearer ${CORTEX_API_KEY}" \
+            "${CORTEX_BASE_URL}/api/v1/catalog/types" 2>&1) || true
+        if echo "$RESPONSE" | grep -q '"message"'; then
+            echo "  Entity Type 'message' found in Cortex!"
+            break
+        fi
+        if [ "$i" -eq "$MAX_ATTEMPTS" ]; then
+            echo "FAILED: Entity Type 'message' not found in Cortex after $((MAX_ATTEMPTS * SLEEP_SECONDS))s"
+            echo "Last response: $RESPONSE"
+            exit 1
+        fi
+        echo "  Attempt $i/$MAX_ATTEMPTS: waiting ${SLEEP_SECONDS}s for SKE controller to create Entity Type..."
+        sleep $SLEEP_SECONDS
+    done
+
+    echo ""
+    echo "=== Step 2: Check for auto-generated Workflows in Cortex ==="
+    WORKFLOWS=$(curl -sf \
+        -H "Authorization: Bearer ${CORTEX_API_KEY}" \
+        "${CORTEX_BASE_URL}/api/v1/workflows" 2>&1) || true
+    echo "  Available workflows:"
+    echo "$WORKFLOWS" | python3 -m json.tool 2>/dev/null | grep -i "message" || echo "  (checking...)"
+
+    echo ""
+    echo "=== Step 3: Submit resource request via Git ==="
+    echo "  Committing Message resource request to GitHub repo..."
+
+    # Clean up any previous test resource
+    gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml \
+        --method DELETE \
+        -f message="test: clean up previous ske-test-msg resource" \
+        -f sha="$(gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml --jq '.sha' 2>/dev/null || echo '')" \
+        2>/dev/null || true
+
+    # Commit the resource request YAML to the GitOps repo
+    RESOURCE_YAML=$(cat <<'RESOURCE'
+    apiVersion: demo.cortex.io/v1alpha1
+    kind: Message
+    metadata:
+      name: ske-test-msg
+      namespace: default
+    spec:
+      message: "hello from ske"
+    RESOURCE
+    )
+    ENCODED=$(echo "$RESOURCE_YAML" | base64)
+    gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml \
+        --method PUT \
+        -f message="test: create ske-test-msg resource request" \
+        -f content="$ENCODED" \
+        -f branch="main" > /dev/null
+    echo "  Resource request committed to kratix-resource-requests/ske-test-msg.yaml"
+
+    echo ""
+    echo "=== Step 4: Wait for ArgoCD to sync and Kratix to reconcile ==="
+    echo "  Waiting for Message resource to appear on cluster..."
+    for i in $(seq 1 60); do
+        if kubectl get message ske-test-msg -n default 2>/dev/null | grep -q "ske-test-msg"; then
+            echo "  Message resource synced to cluster!"
+            break
+        fi
+        if [ "$i" -eq 60 ]; then
+            echo "Warning: Message resource not synced after 120s"
+            exit 1
+        fi
+        sleep 2
+    done
+
+    echo ""
+    echo "=== Step 5: Wait for ConfigMap to appear on cluster ==="
+    MAX_ATTEMPTS=60
+    SLEEP_SECONDS=5
+    for i in $(seq 1 $MAX_ATTEMPTS); do
+        CM_DATA=$(kubectl get configmap -n default -o json 2>/dev/null | \
+            python3 -c "
+    import json, sys
+    data = json.load(sys.stdin)
+    for item in data.get('items', []):
+        d = item.get('data', {})
+        if d.get('message') == 'hello from ske':
+            print(item['metadata']['name'])
+            break
+    " 2>/dev/null || echo "")
+        if [ -n "$CM_DATA" ]; then
+            echo "  ConfigMap '$CM_DATA' found with message='hello from ske'!"
+            echo ""
+            echo "SUCCESS: Full SKE → Cortex → GitOps → Cluster flow verified!"
+            exit 0
+        fi
+        if [ "$i" -eq "$MAX_ATTEMPTS" ]; then
+            echo "FAILED: ConfigMap with message='hello from ske' not found after $((MAX_ATTEMPTS * SLEEP_SECONDS))s"
+            echo "ConfigMaps in default namespace:"
+            kubectl get configmap -n default
+            exit 1
+        fi
+        echo "  Attempt $i/$MAX_ATTEMPTS: waiting ${SLEEP_SECONDS}s for ConfigMap..."
+        sleep $SLEEP_SECONDS
+    done
+
+# Tear down SKE, ArgoCD, and stop minikube
+ske-stop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Cleaning up test resource from GitHub repo..."
+    SHA=$(gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml --jq '.sha' 2>/dev/null || echo "")
+    if [ -n "$SHA" ]; then
+        gh api repos/jeff-test-org/ske-test-resources/contents/kratix-resource-requests/ske-test-msg.yaml \
+            --method DELETE \
+            -f message="test: clean up ske-test-msg resource" \
+            -f sha="$SHA" 2>/dev/null || true
+    fi
+
+    echo "Deleting ConfigMap Promise..."
+    kubectl delete promise message 2>/dev/null || true
+
+    echo "Deleting Destination and GitStateStore..."
+    kubectl delete destination default 2>/dev/null || true
+    kubectl delete gitstatestore default 2>/dev/null || true
+
+    echo "Uninstalling SKE Operator..."
+    helm uninstall ske-operator -n kratix-platform-system 2>/dev/null || true
+
+    echo "Removing cert-manager..."
+    kubectl delete -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml 2>/dev/null || true
+
+    echo "Removing ArgoCD..."
+    kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml 2>/dev/null || true
+    kubectl delete namespace argocd 2>/dev/null || true
+
+    echo "Stopping minikube..."
+    minikube stop
+
+    echo "Done."
