@@ -82,6 +82,8 @@ internal/
 - **SKE version "latest" is the safe default** — Specific version tags (like v0.99.0 from docs) may not exist. The Helm chart defaults to `"latest"` which resolves to the actual latest (e.g. v0.45.0).
 - **GitStateStore + Destination must be created** — Kratix won't know where to write pipeline outputs without these. The setup recipe creates them pointing to the same GitHub repo ArgoCD watches.
 - **git-credentials secret** — Kratix needs this to push pipeline outputs to Git. Created from `GH_USER` + `GITHUB_TOKEN`.
+- **SKE auto-creates the Destination** — When SKE detects a GitStateStore named `default`, it creates a Destination called `local-cluster` automatically. Don't create your own Destination — it will conflict.
+- **cert-manager webhook needs extra time** — Deployments report "available" before the webhook CA certificate is populated. Wait for `caBundle` in the ValidatingWebhookConfiguration before running Helm.
 - **`integrationAlias` must match your Cortex GitHub integration** — Check with `poetry run cortex integrations get-all | jq '.configurations[] | select(.type == "github")'`. Ours is `cortex-prod`.
 - **Auto-generated workflows have `isRunnableViaApi: false`** — You cannot trigger them via the Cortex REST API. They must be triggered from the Cortex UI, or you can commit the resource request YAML directly to the Git repo.
 - **ArgoCD server-side apply** — Required for ArgoCD CRD installation because annotations exceed the 262KB client-side limit. Use `kubectl apply --server-side`.

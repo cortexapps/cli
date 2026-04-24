@@ -558,8 +558,8 @@ ske-test:
     for i in $(seq 1 $MAX_ATTEMPTS); do
         RESPONSE=$(curl -sf \
             -H "Authorization: Bearer ${CORTEX_API_KEY}" \
-            "${CORTEX_BASE_URL}/api/v1/catalog/types" 2>&1) || true
-        if echo "$RESPONSE" | grep -q '"message"'; then
+            "${CORTEX_BASE_URL}/api/v1/catalog?types=message" 2>&1) || true
+        if echo "$RESPONSE" | grep -q '"entities"'; then
             echo "  Entity Type 'message' found in Cortex!"
             break
         fi
