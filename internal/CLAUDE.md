@@ -10,19 +10,30 @@ cd internal/
 # See all available recipes
 just
 
+# Shared minikube cluster
+just minikube-stop            # stop the shared cluster (all modules)
+
+# Cortex self-hosted deploy
+just cortex-setup             # deploy Cortex on minikube
+just cortex-stop              # tear down Cortex (keeps cluster)
+just cortex-status            # show pod/port-forward status
+just cortex-pf                # resume port forwarding after sleep
+just cortex-db                # psql into local postgres
+just cortex-open              # open http://localhost:3000
+
 # Run functional tests
 just test-functional-import   # prerequisite: loads test data
 just test-functional          # run all functional tests
 
 # SKE (Syntasso Kratix Enterprise)
-just ske-setup                # start minikube, install ArgoCD + SKE, deploy Promise
+just ske-setup                # install ArgoCD + SKE, deploy Promise
 just ske-test                 # verify end-to-end: Cortex Entity Type → Git → K8s
-just ske-stop                 # tear down everything + stop minikube
+just ske-stop                 # tear down SKE/ArgoCD/cert-manager (keeps cluster)
 
 # K8s agent
-just k8s-agent-setup          # start minikube, deploy k8s-agent + test objects
+just k8s-agent-setup          # deploy k8s-agent + test objects
 just k8s-agent-test           # verify test objects appear in Cortex
-just k8s-agent-stop           # tear down + stop minikube
+just k8s-agent-stop           # tear down k8s-agent (keeps cluster)
 
 # Axon relay
 just axon-setup               # start relay containers for configured integrations
@@ -36,16 +47,52 @@ just axon-echo-setup          # simple echo server relay smoke test
 - **`set dotenv-load` + `set export`** in Justfile means all `.env` vars are auto-loaded and exported.
 - **`PYTHONPATH=..:../tests`** is set in pytest commands so internal tests can import both `cortexapps_cli` and `helpers.utils` from the parent project.
 
+## Env var prompting
+
+Every recipe that requires environment variables will automatically check for missing values and prompt you interactively. The prompt includes a description and help text explaining how to obtain each value. Values are appended to `.env` so you only need to enter them once.
+
+If `.env` doesn't exist, it's created from `.env.example` on first run.
+
+## Shared minikube cluster
+
+All k8s-based recipes (cortex, k8s-agent, SKE) share a single minikube cluster with profile `cortex-minikube` (configurable via `MINIKUBE_PROFILE` in `.env`). Each module has independent setup/stop recipes that manage only their own Helm releases. Use `just minikube-stop` to stop the cluster entirely.
+
+## Cortex self-hosted deploy
+
+Deploys Cortex (backend, worker, frontend, PostgreSQL) on the shared minikube cluster via the `cortex/cortex` Helm chart.
+
+### Required environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `GH_USER` | GitHub username for ghcr.io authentication |
+| `GH_PAT` | GitHub PAT with `read:packages` scope |
+| `CORTEX_LICENSE_FILE` | Absolute path to your `license.jwt` file |
+
+All vars are prompted automatically if missing from `.env`.
+
+### Using k8s-agent with local Cortex
+
+To point the k8s-agent at your local Cortex instead of cloud:
+
+```bash
+# In .env, set:
+CORTEX_BASE_URL=http://cortex-backend-service:80
+```
+
+The agent communicates via K8s service DNS — no port-forward needed.
+
 ## Directory structure
 
 ```
 internal/
 ├── CLAUDE.md              # this file
-├── Justfile               # all recipes (functional tests, k8s-agent, axon, SKE)
+├── Justfile               # all recipes (cortex deploy, k8s-agent, SKE, axon, tests)
 ├── .env                   # local secrets (gitignored)
 ├── .env.example           # template with all required vars
 ├── pytest.ini             # local pytest config (avoids root pytest.ini interference)
 ├── tests/                 # functional tests (moved from tests/functional/)
+├── cortex/                # Cortex Helm values for minikube deploy
 ├── k8s/                   # k8s-agent helm chart, test manifests, Cortex entity
 ├── axon/                  # relay compose files, accept.json configs, Jenkins setup
 ├── prometheus/            # local Prometheus compose + config
