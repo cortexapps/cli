@@ -26,74 +26,6 @@ _minikube-start:
     fi
     kubectl config use-context {{MINIKUBE_PROFILE}}
 
-# Check for required env vars, prompt for missing ones, append to .env.
-# Each argument is "NAME|Label|Help text".
-_ensure-env +vars:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Create .env from .env.example if it doesn't exist
-    if [ ! -f .env ]; then
-        if [ -f .env.example ]; then
-            cp .env.example .env
-            echo "Created .env from .env.example"
-        else
-            touch .env
-        fi
-    fi
-
-    # Source current .env values
-    set -a
-    source .env
-    set +a
-
-    # Parse var declarations and find missing ones
-    MISSING_NAMES=()
-    MISSING_LABELS=()
-    MISSING_HELPS=()
-    for decl in {{vars}}; do
-        NAME=$(echo "$decl" | cut -d'|' -f1)
-        LABEL=$(echo "$decl" | cut -d'|' -f2)
-        HELP=$(echo "$decl" | cut -d'|' -f3)
-        VAL="${!NAME:-}"
-        if [ -z "$VAL" ]; then
-            MISSING_NAMES+=("$NAME")
-            MISSING_LABELS+=("$LABEL")
-            MISSING_HELPS+=("$HELP")
-        fi
-    done
-
-    if [ ${#MISSING_NAMES[@]} -eq 0 ]; then
-        exit 0
-    fi
-
-    echo ""
-    echo "Missing ${#MISSING_NAMES[@]} required variable(s): ${MISSING_NAMES[*]}"
-    echo ""
-
-    for i in "${!MISSING_NAMES[@]}"; do
-        NAME="${MISSING_NAMES[$i]}"
-        LABEL="${MISSING_LABELS[$i]}"
-        HELP="${MISSING_HELPS[$i]}"
-
-        echo "$NAME ($LABEL)"
-        echo "  $HELP"
-        while true; do
-            printf ": "
-            read -r VALUE
-            if [ -n "$VALUE" ]; then
-                echo "$NAME=$VALUE" >> .env
-                export "$NAME=$VALUE"
-                echo ""
-                break
-            fi
-            echo "  Value cannot be empty. Try again."
-        done
-    done
-
-    echo "All variables set."
-    echo ""
-
 # Stop the shared minikube cluster
 minikube-stop:
     #!/usr/bin/env bash
@@ -107,12 +39,24 @@ minikube-stop:
 # ---------------------------------------------------------------------------
 
 # Import functional test data (workflows)
-test-functional-import: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys. Needs 'Run workflows' and 'View workflow runs' permissions." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances.")
-   {{pytest}} -m setup tests/test_functional_import.py --cov=cortexapps_cli --cov-report=
+test-functional-import:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys. Needs 'Run workflows' and 'View workflow runs' permissions." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances."
+    source .env
+    {{pytest}} -m setup tests/test_functional_import.py --cov=cortexapps_cli --cov-report=
 
 # Run functional tests, ie: just test-functional tests/test_gh_branches.py
-test-functional *args: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys. Needs 'Run workflows' and 'View workflow runs' permissions." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances.")
-   {{pytest}} -v -s -n auto --dist loadgroup -m functional --html=report-functional.html --self-contained-html {{args}}
+test-functional *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys. Needs 'Run workflows' and 'View workflow runs' permissions." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances."
+    source .env
+    {{pytest}} -v -s -n auto --dist loadgroup -m functional --html=report-functional.html --self-contained-html {{args}}
 
 # Clean up orphaned functional test resources from interrupted runs
 _test-functional-clean:
@@ -123,9 +67,16 @@ _test-functional-clean:
 # ---------------------------------------------------------------------------
 
 # Start minikube, deploy k8s-agent, deploy test objects + Cortex entity
-k8s-agent-setup: (_ensure-env "GH_USER|GitHub username|Your GitHub username for GHCR authentication." "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope." "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances.") _minikube-start
+k8s-agent-setup: _minikube-start
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "GH_USER|GitHub username|Your GitHub username for GHCR authentication." \
+        "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope." \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances."
+    source .env
 
     # 1. Create docker registry secret for GHCR
     kubectl create secret docker-registry cortex-docker-registry-secret \
@@ -175,9 +126,14 @@ k8s-agent-setup: (_ensure-env "GH_USER|GitHub username|Your GitHub username for 
     echo "Setup complete. Run 'just k8s-agent-test' to verify."
 
 # Verify test objects show up in Cortex via CLI
-k8s-agent-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com.")
+k8s-agent-test:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com."
+    source .env
 
     echo "Waiting for k8s-agent to push data to Cortex..."
     MAX_ATTEMPTS=30
@@ -223,12 +179,33 @@ k8s-agent-stop:
 # ---------------------------------------------------------------------------
 
 # Run all Playwright UI tests
-test-ui *args: (_ensure-env "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret.")
-   {{pw_pytest}} -v ui/tests/ {{args}}
+test-ui *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/ensure-env.sh \
+        "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." \
+        "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." \
+        "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." \
+        "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." \
+        "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret."
+    source .env
+    {{pw_pytest}} -v ui/tests/ {{args}}
 
 # Run Workday integration tests (Playwright + API polling)
-test-workday *args: (_ensure-env "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret." "WORKDAY_USERNAME|Workday service account username|Workday service account for the ownership report API." "WORKDAY_PASSWORD|Workday service account password|Password for the Workday service account." "WORKDAY_OWNERSHIP_REPORT_URL|Workday report URL|Workday custom report URL that returns ownership data.")
-   {{pw_pytest}} -v ui/tests/test_workday.py {{args}}
+test-workday *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/ensure-env.sh \
+        "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." \
+        "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." \
+        "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." \
+        "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." \
+        "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret." \
+        "WORKDAY_USERNAME|Workday service account username|Workday service account for the ownership report API." \
+        "WORKDAY_PASSWORD|Workday service account password|Password for the Workday service account." \
+        "WORKDAY_OWNERSHIP_REPORT_URL|Workday report URL|Workday custom report URL that returns ownership data."
+    source .env
+    {{pw_pytest}} -v ui/tests/test_workday.py {{args}}
 
 # Launch Playwright codegen to record a new test
 test-ui-create name url="https://app.getcortexapp.com/admin/home":
@@ -239,9 +216,13 @@ test-ui-create name url="https://app.getcortexapp.com/admin/home":
 # ---------------------------------------------------------------------------
 
 # Start axon relay containers for configured integrations
-axon-setup: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys.")
+axon-setup:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys."
+    source .env
 
     services=()
 
@@ -281,9 +262,13 @@ axon-stop:
 # ---------------------------------------------------------------------------
 
 # Set up Jenkins + relay, create pipeline job, push workflow to Cortex
-axon-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys.")
+axon-test:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys."
+    source .env
 
     # 1. Build and start Jenkins
     echo "Starting Jenkins..."
@@ -380,9 +365,13 @@ axon-test-stop:
 # ---------------------------------------------------------------------------
 
 # Set up echo server + relay, push workflow to Cortex
-axon-echo-setup: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys.")
+axon-echo-setup:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys."
+    source .env
 
     echo "Starting echo server + relay..."
     docker compose -f axon/compose.yaml up -d --build echo echo-relay
@@ -415,9 +404,14 @@ axon-echo-logs:
     docker compose -f axon/compose.yaml logs -f echo-relay
 
 # Trigger the echo workflow and wait for completion
-axon-echo-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com.")
+axon-echo-test:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com."
+    source .env
 
     echo "Triggering echo workflow..."
     RESPONSE=$(curl -sf \
@@ -481,9 +475,15 @@ prometheus-stop:
 # ---------------------------------------------------------------------------
 
 # Deploy Cortex on minikube: database, backend, worker, frontend + port forwarding
-cortex-setup: (_ensure-env "GH_USER|GitHub username|Your GitHub username for ghcr.io authentication." "GH_PAT|GitHub PAT for ghcr.io|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope for pulling Cortex container images." "CORTEX_LICENSE_FILE|Path to license.jwt|Get from 1Password vault 'Cortex Licenses' or ask in #engineering Slack. Save the file anywhere and provide the absolute path.") _minikube-start
+cortex-setup: _minikube-start
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "GH_USER|GitHub username|Your GitHub username for ghcr.io authentication." \
+        "GH_PAT|GitHub PAT for ghcr.io|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope for pulling Cortex container images." \
+        "CORTEX_LICENSE_FILE|Path to license.jwt|Get from 1Password vault 'Cortex Licenses' or ask in #engineering Slack. Save the file anywhere and provide the absolute path."
+    source .env
 
     # Validate license file exists
     if [ ! -f "${CORTEX_LICENSE_FILE}" ]; then
@@ -628,9 +628,17 @@ cortex-open:
 # ---------------------------------------------------------------------------
 
 # Start minikube, install ArgoCD + SKE, deploy ConfigMap Promise
-ske-setup: (_ensure-env "SKE_LICENSE_TOKEN|Syntasso license token|ghp_-prefixed GitHub PAT from Syntasso. Used for both the SKE license and pulling images from ghcr.io/syntasso." "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com." "GH_USER|GitHub username|Your GitHub username for git-credentials secret." "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs repo scope for GitOps repo access.") _minikube-start
+ske-setup: _minikube-start
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "SKE_LICENSE_TOKEN|Syntasso license token|ghp_-prefixed GitHub PAT from Syntasso. Used for both the SKE license and pulling images from ghcr.io/syntasso." \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com." \
+        "GH_USER|GitHub username|Your GitHub username for git-credentials secret." \
+        "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs repo scope for GitOps repo access."
+    source .env
 
     # 1. Create GitHub repo for GitOps (idempotent)
     echo "Ensuring GitHub repo jeff-test-org/ske-test-resources exists..."
@@ -759,9 +767,14 @@ ske-setup: (_ensure-env "SKE_LICENSE_TOKEN|Syntasso license token|ghp_-prefixed 
     echo "Run 'just ske-test' to verify the Cortex integration."
 
 # Verify Cortex integration: Entity Type, Workflows, and ConfigMap provisioning
-ske-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com.")
+ske-test:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    ./scripts/ensure-env.sh \
+        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
+        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com."
+    source .env
 
     echo "=== Step 1: Check for Message Entity Type in Cortex ==="
     MAX_ATTEMPTS=30
