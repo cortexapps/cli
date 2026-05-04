@@ -533,9 +533,7 @@ cortex-setup: _minikube-start
     sleep 1
 
     kubectl port-forward svc/cortex-frontend-service 3000:80 >/dev/null 2>&1 &
-    echo $! > /tmp/cortex-frontend-pf.pid
     kubectl port-forward svc/cortex-backend-service 8080:80 >/dev/null 2>&1 &
-    echo $! > /tmp/cortex-backend-pf.pid
     sleep 2
 
     echo ""
@@ -554,8 +552,6 @@ cortex-stop:
     # Stop port forwards
     pkill -f "kubectl.*port-forward.*cortex-frontend-service" || true
     pkill -f "kubectl.*port-forward.*cortex-backend-service" || true
-    rm -f /tmp/cortex-frontend-pf.pid /tmp/cortex-backend-pf.pid
-
     echo "Uninstalling Cortex..."
     helm uninstall cortex || true
 
@@ -568,7 +564,7 @@ cortex-status:
     echo "============="
     echo ""
     echo "Pods:"
-    kubectl get pods -l app.kubernetes.io/name=cortex-deployment 2>/dev/null || echo "  No Cortex pods found"
+    kubectl get pods -l app.kubernetes.io/instance=cortex 2>/dev/null || echo "  No Cortex pods found"
     echo ""
     echo "Services:"
     kubectl get svc | grep cortex 2>/dev/null || echo "  No Cortex services found"
@@ -599,9 +595,7 @@ cortex-pf:
     sleep 1
 
     kubectl port-forward svc/cortex-frontend-service 3000:80 >/dev/null 2>&1 &
-    echo $! > /tmp/cortex-frontend-pf.pid
     kubectl port-forward svc/cortex-backend-service 8080:80 >/dev/null 2>&1 &
-    echo $! > /tmp/cortex-backend-pf.pid
     sleep 2
 
     echo "Port forwarding established:"

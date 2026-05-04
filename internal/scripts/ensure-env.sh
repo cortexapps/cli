@@ -58,7 +58,7 @@ for i in "${!MISSING_NAMES[@]}"; do
         printf ": "
         read -r VALUE
         if [ -n "$VALUE" ]; then
-            echo "$NAME=$VALUE" >> .env
+            echo "$NAME=\"$VALUE\"" >> .env
             export "$NAME=$VALUE"
             echo ""
             break
