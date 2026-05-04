@@ -1,6 +1,8 @@
 set dotenv-load
 set export
 
+MINIKUBE_PROFILE := env("MINIKUBE_PROFILE", "cortex-minikube")
+
 cortex_cli := 'poetry run cortex'
 pytest := 'PYTHONPATH=..:../tests poetry run pytest -rA'
 pw_pytest := 'poetry run pytest -rA --headed --browser chromium'
@@ -8,12 +10,108 @@ pw_pytest := 'poetry run pytest -rA --headed --browser chromium'
 help:
    @just -l
 
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+# Start minikube if not already running (shared across all k8s recipes)
+_minikube-start:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if minikube status --profile {{MINIKUBE_PROFILE}} 2>/dev/null | grep -q "Running"; then
+        echo "minikube ({{MINIKUBE_PROFILE}}) already running"
+    else
+        echo "Starting minikube ({{MINIKUBE_PROFILE}})..."
+        minikube start --memory=10240 --cpus=4 --driver=docker --profile={{MINIKUBE_PROFILE}}
+    fi
+    kubectl config use-context {{MINIKUBE_PROFILE}}
+
+# Check for required env vars, prompt for missing ones, append to .env.
+# Each argument is "NAME|Label|Help text".
+_ensure-env +vars:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Create .env from .env.example if it doesn't exist
+    if [ ! -f .env ]; then
+        if [ -f .env.example ]; then
+            cp .env.example .env
+            echo "Created .env from .env.example"
+        else
+            touch .env
+        fi
+    fi
+
+    # Source current .env values
+    set -a
+    source .env
+    set +a
+
+    # Parse var declarations and find missing ones
+    MISSING_NAMES=()
+    MISSING_LABELS=()
+    MISSING_HELPS=()
+    for decl in {{vars}}; do
+        NAME=$(echo "$decl" | cut -d'|' -f1)
+        LABEL=$(echo "$decl" | cut -d'|' -f2)
+        HELP=$(echo "$decl" | cut -d'|' -f3)
+        VAL="${!NAME:-}"
+        if [ -z "$VAL" ]; then
+            MISSING_NAMES+=("$NAME")
+            MISSING_LABELS+=("$LABEL")
+            MISSING_HELPS+=("$HELP")
+        fi
+    done
+
+    if [ ${#MISSING_NAMES[@]} -eq 0 ]; then
+        exit 0
+    fi
+
+    echo ""
+    echo "Missing ${#MISSING_NAMES[@]} required variable(s): ${MISSING_NAMES[*]}"
+    echo ""
+
+    for i in "${!MISSING_NAMES[@]}"; do
+        NAME="${MISSING_NAMES[$i]}"
+        LABEL="${MISSING_LABELS[$i]}"
+        HELP="${MISSING_HELPS[$i]}"
+
+        echo "$NAME ($LABEL)"
+        echo "  $HELP"
+        while true; do
+            printf ": "
+            read -r VALUE
+            if [ -n "$VALUE" ]; then
+                echo "$NAME=$VALUE" >> .env
+                export "$NAME=$VALUE"
+                echo ""
+                break
+            fi
+            echo "  Value cannot be empty. Try again."
+        done
+    done
+
+    echo "All variables set."
+    echo ""
+
+# Stop the shared minikube cluster
+minikube-stop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Stopping minikube ({{MINIKUBE_PROFILE}})..."
+    minikube stop --profile {{MINIKUBE_PROFILE}}
+    echo "Done."
+
+# ---------------------------------------------------------------------------
+# Functional tests
+# ---------------------------------------------------------------------------
+
 # Import functional test data (workflows)
-test-functional-import:
+test-functional-import: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys. Needs 'Run workflows' and 'View workflow runs' permissions." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances.")
    {{pytest}} -m setup tests/test_functional_import.py --cov=cortexapps_cli --cov-report=
 
 # Run functional tests, ie: just test-functional tests/test_gh_branches.py
-test-functional *args:
+test-functional *args: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys. Needs 'Run workflows' and 'View workflow runs' permissions." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances.")
    {{pytest}} -v -s -n auto --dist loadgroup -m functional --html=report-functional.html --self-contained-html {{args}}
 
 # Clean up orphaned functional test resources from interrupted runs
@@ -25,31 +123,23 @@ _test-functional-clean:
 # ---------------------------------------------------------------------------
 
 # Start minikube, deploy k8s-agent, deploy test objects + Cortex entity
-k8s-agent-setup:
+k8s-agent-setup: (_ensure-env "GH_USER|GitHub username|Your GitHub username for GHCR authentication." "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope." "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances.") _minikube-start
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # 1. Start minikube if not running
-    if minikube status | grep -q "Running"; then
-        echo "minikube already running"
-    else
-        echo "Starting minikube..."
-        minikube start --memory=8192 --cpus=4
-    fi
-
-    # 2. Create docker registry secret for GHCR
+    # 1. Create docker registry secret for GHCR
     kubectl create secret docker-registry cortex-docker-registry-secret \
         --docker-server=ghcr.io \
         --docker-username="${GH_USER}" \
         --docker-password="${GITHUB_TOKEN}" \
         --dry-run=client -o yaml | kubectl apply -f -
 
-    # 3. Create cortex-key secret
+    # 2. Create cortex-key secret
     kubectl create secret generic cortex-key \
         --from-literal=api-key="${CORTEX_API_KEY}" \
         --dry-run=client -o yaml | kubectl apply -f -
 
-    # 4. Fetch latest k8s-agent image tag from GHCR
+    # 3. Fetch latest k8s-agent image tag from GHCR
     echo "Fetching latest k8s-agent image tag..."
     IMAGE_TAG=$(gh api \
         -H "Accept: application/vnd.github+json" \
@@ -57,12 +147,12 @@ k8s-agent-setup:
         --jq '.[0].metadata.container.tags[0]')
     echo "Using image tag: ${IMAGE_TAG}"
 
-    # 5. Helm install/upgrade k8s-agent
+    # 4. Helm install/upgrade k8s-agent
     helm upgrade --install cortex-k8s-agent k8s/helm-chart \
         --set image.tag="${IMAGE_TAG}" \
         --set app.baseUrl="${CORTEX_BASE_URL}"
 
-    # 6. Wait for agent pod readiness
+    # 5. Wait for agent pod readiness
     echo "Waiting for k8s-agent pod to be ready..."
     for i in $(seq 1 30); do
         if kubectl get pod -l app.kubernetes.io/name=cortex-k8s-agent 2>/dev/null | grep -q .; then
@@ -74,18 +164,18 @@ k8s-agent-setup:
         -l app.kubernetes.io/name=cortex-k8s-agent \
         --timeout=120s
 
-    # 7. Create Cortex entity
+    # 6. Create Cortex entity
     echo "Creating Cortex entity..."
     {{cortex_cli}} catalog create -f k8s/cortex-entity.yaml || true
 
-    # 8. Apply test k8s manifests
+    # 7. Apply test k8s manifests
     echo "Applying test manifests..."
     kubectl apply -f k8s/manifests/
 
     echo "Setup complete. Run 'just k8s-agent-test' to verify."
 
 # Verify test objects show up in Cortex via CLI
-k8s-agent-test:
+k8s-agent-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com.")
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -118,16 +208,13 @@ k8s-agent-test:
     echo "$RESPONSE"
     exit 1
 
-# Tear down k8s-agent and stop minikube
+# Tear down k8s-agent (keeps minikube running)
 k8s-agent-stop:
     #!/usr/bin/env bash
     set -euo pipefail
 
     echo "Uninstalling k8s-agent..."
     helm uninstall cortex-k8s-agent || true
-
-    echo "Stopping minikube..."
-    minikube stop
 
     echo "Done."
 
@@ -136,11 +223,11 @@ k8s-agent-stop:
 # ---------------------------------------------------------------------------
 
 # Run all Playwright UI tests
-test-ui *args:
+test-ui *args: (_ensure-env "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret.")
    {{pw_pytest}} -v ui/tests/ {{args}}
 
 # Run Workday integration tests (Playwright + API polling)
-test-workday *args:
+test-workday *args: (_ensure-env "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret." "WORKDAY_USERNAME|Workday service account username|Workday service account for the ownership report API." "WORKDAY_PASSWORD|Workday service account password|Password for the Workday service account." "WORKDAY_OWNERSHIP_REPORT_URL|Workday report URL|Workday custom report URL that returns ownership data.")
    {{pw_pytest}} -v ui/tests/test_workday.py {{args}}
 
 # Launch Playwright codegen to record a new test
@@ -152,14 +239,9 @@ test-ui-create name url="https://app.getcortexapp.com/admin/home":
 # ---------------------------------------------------------------------------
 
 # Start axon relay containers for configured integrations
-axon-setup:
+axon-setup: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys.")
     #!/usr/bin/env bash
     set -euo pipefail
-
-    if [ -z "${CORTEX_API_KEY:-}" ]; then
-        echo "Error: CORTEX_API_KEY is required."
-        exit 1
-    fi
 
     services=()
 
@@ -199,14 +281,9 @@ axon-stop:
 # ---------------------------------------------------------------------------
 
 # Set up Jenkins + relay, create pipeline job, push workflow to Cortex
-axon-test:
+axon-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys.")
     #!/usr/bin/env bash
     set -euo pipefail
-
-    if [ -z "${CORTEX_API_KEY:-}" ]; then
-        echo "Error: CORTEX_API_KEY is required."
-        exit 1
-    fi
 
     # 1. Build and start Jenkins
     echo "Starting Jenkins..."
@@ -275,11 +352,11 @@ axon-test:
         fi
     fi
 
-    # 7. Start the jenkins-relay
+    # 6. Start the jenkins-relay
     echo "Starting jenkins-relay..."
     docker compose -f axon/compose.yaml up -d jenkins-relay
 
-    # 8. Push workflow to Cortex (step number is correct now)
+    # 7. Push workflow to Cortex
     echo "Pushing workflow to Cortex..."
     {{cortex_cli}} workflows create -f axon/workflow-jenkins.yaml 2>/dev/null || \
         echo "  Workflow may already exist."
@@ -303,14 +380,9 @@ axon-test-stop:
 # ---------------------------------------------------------------------------
 
 # Set up echo server + relay, push workflow to Cortex
-axon-echo-setup:
+axon-echo-setup: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys.")
     #!/usr/bin/env bash
     set -euo pipefail
-
-    if [ -z "${CORTEX_API_KEY:-}" ]; then
-        echo "Error: CORTEX_API_KEY is required."
-        exit 1
-    fi
 
     echo "Starting echo server + relay..."
     docker compose -f axon/compose.yaml up -d --build echo echo-relay
@@ -343,7 +415,7 @@ axon-echo-logs:
     docker compose -f axon/compose.yaml logs -f echo-relay
 
 # Trigger the echo workflow and wait for completion
-axon-echo-test:
+axon-echo-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com.")
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -405,28 +477,167 @@ prometheus-stop:
     docker compose -f prometheus/compose.yaml down
 
 # ---------------------------------------------------------------------------
+# Cortex self-hosted deploy (minikube)
+# ---------------------------------------------------------------------------
+
+# Deploy Cortex on minikube: database, backend, worker, frontend + port forwarding
+cortex-setup: (_ensure-env "GH_USER|GitHub username|Your GitHub username for ghcr.io authentication." "GH_PAT|GitHub PAT for ghcr.io|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope for pulling Cortex container images." "CORTEX_LICENSE_FILE|Path to license.jwt|Get from 1Password vault 'Cortex Licenses' or ask in #engineering Slack. Save the file anywhere and provide the absolute path.") _minikube-start
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Validate license file exists
+    if [ ! -f "${CORTEX_LICENSE_FILE}" ]; then
+        echo "Error: License file not found at ${CORTEX_LICENSE_FILE}"
+        exit 1
+    fi
+
+    # 1. Create GHCR pull secret
+    echo "Creating GHCR pull secret..."
+    kubectl create secret docker-registry cortex-docker-registry-secret \
+        --docker-server=ghcr.io \
+        --docker-username="${GH_USER}" \
+        --docker-password="${GH_PAT}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # 2. Create cortex-secret with DB creds + license
+    echo "Creating Cortex secret..."
+    kubectl create secret generic cortex-secret \
+        --from-literal=DB_HOST=cortex-postgresql \
+        --from-literal=DB_PORT=5432 \
+        --from-literal=DB_USERNAME=cortex \
+        --from-literal=DB_NAME=cortex \
+        --from-literal=DB_PASSWORD=cortex \
+        --from-literal=ENTITLEMENTS_JWT="$(cat "${CORTEX_LICENSE_FILE}")" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # 3. Install/upgrade Cortex via Helm
+    echo "Adding Cortex Helm repo..."
+    helm repo add cortex https://helm-charts.cortex.io 2>/dev/null || true
+    helm repo update cortex
+
+    CHART_VERSION=$(helm search repo cortex/cortex -o json | jq -r '.[0].version' 2>/dev/null || echo "unknown")
+    echo "Deploying Cortex (chart version: ${CHART_VERSION})..."
+    helm upgrade --install cortex cortex/cortex \
+        --values cortex/values.yaml \
+        --timeout 15m \
+        --wait
+
+    # 4. Wait for pods
+    echo "Waiting for Cortex pods to be ready..."
+    kubectl wait --for=condition=ready pod -l app=cortex-frontend --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=cortex-backend --timeout=300s
+
+    # 5. Set up port forwarding
+    pkill -f "kubectl.*port-forward.*cortex-frontend-service" || true
+    pkill -f "kubectl.*port-forward.*cortex-backend-service" || true
+    sleep 1
+
+    kubectl port-forward svc/cortex-frontend-service 3000:80 >/dev/null 2>&1 &
+    echo $! > /tmp/cortex-frontend-pf.pid
+    kubectl port-forward svc/cortex-backend-service 8080:80 >/dev/null 2>&1 &
+    echo $! > /tmp/cortex-backend-pf.pid
+    sleep 2
+
+    echo ""
+    echo "Cortex is running!"
+    echo "  Frontend: http://localhost:3000"
+    echo "  Backend:  http://localhost:8080"
+    echo ""
+    echo "Use 'just cortex-pf' to resume port forwarding after sleep/reboot."
+    echo "Use 'just cortex-stop' to tear down."
+
+# Tear down Cortex deployment (keeps minikube running)
+cortex-stop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Stop port forwards
+    pkill -f "kubectl.*port-forward.*cortex-frontend-service" || true
+    pkill -f "kubectl.*port-forward.*cortex-backend-service" || true
+    rm -f /tmp/cortex-frontend-pf.pid /tmp/cortex-backend-pf.pid
+
+    echo "Uninstalling Cortex..."
+    helm uninstall cortex || true
+
+    echo "Done."
+
+# Show Cortex pod and port-forward status
+cortex-status:
+    #!/usr/bin/env bash
+    echo "Cortex Status"
+    echo "============="
+    echo ""
+    echo "Pods:"
+    kubectl get pods -l app.kubernetes.io/name=cortex-deployment 2>/dev/null || echo "  No Cortex pods found"
+    echo ""
+    echo "Services:"
+    kubectl get svc | grep cortex 2>/dev/null || echo "  No Cortex services found"
+    echo ""
+    if pgrep -f "kubectl.*port-forward.*cortex-frontend-service" > /dev/null 2>&1; then
+        echo "Frontend port forward: RUNNING (http://localhost:3000)"
+    else
+        echo "Frontend port forward: NOT RUNNING"
+    fi
+    if pgrep -f "kubectl.*port-forward.*cortex-backend-service" > /dev/null 2>&1; then
+        echo "Backend port forward: RUNNING (http://localhost:8080)"
+    else
+        echo "Backend port forward: NOT RUNNING"
+    fi
+
+# Resume port forwarding (after sleep/reboot)
+cortex-pf:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if ! minikube status --profile {{MINIKUBE_PROFILE}} 2>/dev/null | grep -q "Running"; then
+        echo "Error: minikube ({{MINIKUBE_PROFILE}}) is not running. Run 'just cortex-setup' first."
+        exit 1
+    fi
+
+    pkill -f "kubectl.*port-forward.*cortex-frontend-service" || true
+    pkill -f "kubectl.*port-forward.*cortex-backend-service" || true
+    sleep 1
+
+    kubectl port-forward svc/cortex-frontend-service 3000:80 >/dev/null 2>&1 &
+    echo $! > /tmp/cortex-frontend-pf.pid
+    kubectl port-forward svc/cortex-backend-service 8080:80 >/dev/null 2>&1 &
+    echo $! > /tmp/cortex-backend-pf.pid
+    sleep 2
+
+    echo "Port forwarding established:"
+    echo "  Frontend: http://localhost:3000"
+    echo "  Backend:  http://localhost:8080"
+
+# Connect to Cortex PostgreSQL database
+cortex-db:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    POD=$(kubectl get pods -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+    if [ -z "$POD" ]; then
+        echo "Error: No PostgreSQL pod found. Run 'just cortex-setup' first."
+        exit 1
+    fi
+    kubectl exec -it "$POD" -- psql -U cortex -d cortex
+
+# Open Cortex frontend in browser
+cortex-open:
+    @open http://localhost:3000
+
+# ---------------------------------------------------------------------------
 # SKE (Syntasso Kratix Enterprise)
 # ---------------------------------------------------------------------------
 
 # Start minikube, install ArgoCD + SKE, deploy ConfigMap Promise
-ske-setup:
+ske-setup: (_ensure-env "SKE_LICENSE_TOKEN|Syntasso license token|ghp_-prefixed GitHub PAT from Syntasso. Used for both the SKE license and pulling images from ghcr.io/syntasso." "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com." "GH_USER|GitHub username|Your GitHub username for git-credentials secret." "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs repo scope for GitOps repo access.") _minikube-start
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # 1. Start minikube if not running
-    if minikube status | grep -q "Running"; then
-        echo "minikube already running"
-    else
-        echo "Starting minikube..."
-        minikube start --memory=8192 --cpus=4
-    fi
-
-    # 2. Create GitHub repo for GitOps (idempotent)
+    # 1. Create GitHub repo for GitOps (idempotent)
     echo "Ensuring GitHub repo jeff-test-org/ske-test-resources exists..."
     gh repo create jeff-test-org/ske-test-resources --public --clone=false 2>/dev/null || \
         echo "  Repo already exists."
 
-    # 3. Install ArgoCD
+    # 2. Install ArgoCD
     echo "Installing ArgoCD..."
     kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
     kubectl apply -n argocd --server-side -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -434,11 +645,11 @@ ske-setup:
     kubectl wait --for=condition=available deployment/argocd-server \
         -n argocd --timeout=300s
 
-    # 4. Apply ArgoCD Application to watch the GitOps repo
+    # 3. Apply ArgoCD Application to watch the GitOps repo
     echo "Configuring ArgoCD Application..."
     kubectl apply -f ske/argocd-app.yaml
 
-    # 5. Install cert-manager (required by SKE)
+    # 4. Install cert-manager (required by SKE)
     echo "Installing cert-manager..."
     kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
     echo "Waiting for cert-manager to be ready..."
@@ -458,7 +669,7 @@ ske-setup:
         sleep 2
     done
 
-    # 6. Install SKE Operator via Helm (also creates GHCR pull secret from skeLicense)
+    # 5. Install SKE Operator via Helm (also creates GHCR pull secret from skeLicense)
     echo "Installing SKE Operator..."
     helm repo add syntasso https://syntasso.github.io/helm-charts 2>/dev/null || true
     helm repo update syntasso
@@ -470,26 +681,26 @@ ske-setup:
         --set cortexIntegration.config.token="${CORTEX_API_KEY}" \
         --set cortexIntegration.config.url="${CORTEX_BASE_URL}"
 
-    # 7. Wait for Kratix pods to be ready
+    # 6. Wait for Kratix pods to be ready
     echo "Waiting for Kratix platform pods..."
     kubectl wait --for=condition=available deployment --all \
         -n kratix-platform-system --timeout=300s
 
-    # 8. Build and load pipeline image into minikube
+    # 7. Build and load pipeline image into minikube
     echo "Building pipeline image..."
     docker build -t ske-test/message-pipeline:v0.1.0 \
         ske/workflows/resource/configure/message-configure/ske-test-message-pipeline
     echo "Loading pipeline image into minikube..."
-    minikube image load ske-test/message-pipeline:v0.1.0
+    minikube image load ske-test/message-pipeline:v0.1.0 --profile {{MINIKUBE_PROFILE}}
 
-    # 9. Create git-credentials secret for Kratix GitStateStore
+    # 8. Create git-credentials secret for Kratix GitStateStore
     echo "Creating git-credentials secret..."
     kubectl create secret generic git-credentials \
         --from-literal=username="${GH_USER}" \
         --from-literal=password="${GITHUB_TOKEN}" \
         --dry-run=client -o yaml | kubectl apply -f -
 
-    # 10. Create GitStateStore (SKE auto-creates a Destination named "local-cluster")
+    # 9. Create GitStateStore (SKE auto-creates a Destination named "local-cluster")
     echo "Creating GitStateStore..."
     kubectl apply -f - <<'GITSTATE'
     apiVersion: platform.kratix.io/v1alpha1
@@ -519,11 +730,11 @@ ske-setup:
         sleep 2
     done
 
-    # 11. Install the ConfigMap Promise
+    # 10. Install the ConfigMap Promise
     echo "Installing ConfigMap Promise..."
     kubectl apply -f ske/promise.yaml
 
-    # 12. Wait for Promise to become Available
+    # 11. Wait for Promise to become Available
     echo "Waiting for Promise to become Available..."
     for i in $(seq 1 60); do
         STATUS=$(kubectl get promise message -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "")
@@ -548,7 +759,7 @@ ske-setup:
     echo "Run 'just ske-test' to verify the Cortex integration."
 
 # Verify Cortex integration: Entity Type, Workflows, and ConfigMap provisioning
-ske-test:
+ske-test: (_ensure-env "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com.")
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -656,7 +867,7 @@ ske-test:
         sleep $SLEEP_SECONDS
     done
 
-# Tear down SKE, ArgoCD, and stop minikube
+# Tear down SKE, ArgoCD, and cert-manager (keeps minikube running)
 ske-stop:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -686,8 +897,5 @@ ske-stop:
     echo "Removing ArgoCD..."
     kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml 2>/dev/null || true
     kubectl delete namespace argocd 2>/dev/null || true
-
-    echo "Stopping minikube..."
-    minikube stop
 
     echo "Done."
