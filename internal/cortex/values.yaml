@@ -1,0 +1,72 @@
+# Cortex on minikube — port-forward only, no ingress
+# Deploy with: helm upgrade --install cortex cortex/cortex --values cortex/values.yaml
+
+app:
+  hostnames:
+    frontend: "localhost:3000"
+    backend: "localhost:8080"
+    protocol: http
+
+  ingress:
+    create: false
+    enabled: false
+
+  backend:
+    replicaCount: 1
+    jvmConfiguration:
+      javaOpts: -Xms512m -Xmx4096m -Dpolyglot.engine.Mode=interpreted
+    containerConfiguration:
+      resources:
+        requests:
+          memory: 4Gi
+          cpu: 1
+        limits:
+          memory: 4Gi
+          cpu: 2
+
+  worker:
+    replicaCount: 1
+    jvmConfiguration:
+      javaOpts: -Xms512m -Xmx1536m
+    containerConfiguration:
+      resources:
+        requests:
+          memory: 3Gi
+          cpu: 1
+        limits:
+          memory: 5Gi
+          cpu: 2
+
+  frontend:
+    replicaCount: 1
+
+  ai:
+    enabled: false
+  api:
+    enabled: false
+  graph:
+    enabled: false
+  workflowsRunner:
+    enabled: false
+
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "cortex"
+    username: "cortex"
+    password: "cortex"
+    database: "cortex"
+  primary:
+    persistence:
+      enabled: true
+      size: 4Gi
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+
+redis:
+  enabled: false
