@@ -67,7 +67,7 @@ _test-functional-clean:
 # ---------------------------------------------------------------------------
 
 # Start minikube, deploy k8s-agent, deploy test objects + Cortex entity
-k8s-agent-setup: _minikube-start
+k8s-agent-setup:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -77,6 +77,7 @@ k8s-agent-setup: _minikube-start
         "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
         "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com. Override for self-hosted instances."
     source .env
+    just _minikube-start
 
     # 1. Create docker registry secret for GHCR
     kubectl create secret docker-registry cortex-docker-registry-secret \
@@ -475,7 +476,7 @@ prometheus-stop:
 # ---------------------------------------------------------------------------
 
 # Deploy Cortex on minikube: database, backend, worker, frontend + port forwarding
-cortex-setup: _minikube-start
+cortex-setup:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -484,6 +485,7 @@ cortex-setup: _minikube-start
         "GH_PAT|GitHub PAT for ghcr.io|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs read:packages scope for pulling Cortex container images." \
         "CORTEX_LICENSE_FILE|Path to license.jwt|Get from 1Password vault 'Cortex Licenses' or ask in #engineering Slack. Save the file anywhere and provide the absolute path."
     source .env
+    just _minikube-start
 
     # Validate license file exists
     if [ ! -f "${CORTEX_LICENSE_FILE}" ]; then
@@ -622,7 +624,7 @@ cortex-open:
 # ---------------------------------------------------------------------------
 
 # Start minikube, install ArgoCD + SKE, deploy ConfigMap Promise
-ske-setup: _minikube-start
+ske-setup:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -633,6 +635,7 @@ ske-setup: _minikube-start
         "GH_USER|GitHub username|Your GitHub username for git-credentials secret." \
         "GITHUB_TOKEN|GitHub PAT|Create at GitHub > Settings > Developer settings > Personal access tokens. Needs repo scope for GitOps repo access."
     source .env
+    just _minikube-start
 
     # 1. Create GitHub repo for GitOps (idempotent)
     echo "Ensuring GitHub repo jeff-test-org/ske-test-resources exists..."
