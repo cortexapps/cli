@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.16.0](https://github.com/cortexapps/cli/releases/tag/1.16.0) - 2026-05-14
+
+<small>[Compare with 1.15.0](https://github.com/cortexapps/cli/compare/1.15.0...1.16.0)</small>
+
+### Features
+
+- shared minikube cluster, env prompting, cortex deploy recipes ([ff7c67d](https://github.com/cortexapps/cli/commit/ff7c67db11b47c32be7018b1f8660d9e7e148ed7) by Jeff Schnitter).
+- add Cortex Helm values and env vars for minikube deploy ([23a8994](https://github.com/cortexapps/cli/commit/23a89943e20164c73630fdaee0071cd88cc553f9) by Jeff Schnitter).
+- consolidate internal tooling — axon, k8s, prometheus, ui, functional tests ([1fd70fe](https://github.com/cortexapps/cli/commit/1fd70fe5b212516704e91e0022c10e6c6c3aed3c) by Jeff Schnitter).
+- add ske-setup, ske-test, and ske-stop Justfile recipes ([6f56dca](https://github.com/cortexapps/cli/commit/6f56dca1afcd48ebc23fe3cf5a70bc2760b60257) by Jeff Schnitter).
+- add SKE Helm values and ArgoCD Application manifest ([3d83ca5](https://github.com/cortexapps/cli/commit/3d83ca567861c64cea08d2dedee545fee0aff278) by Jeff Schnitter).
+- add ConfigMap Promise for SKE Cortex integration test ([7942967](https://github.com/cortexapps/cli/commit/7942967b83eb121fbd2ec606a14dfd86c5a73036) by Jeff Schnitter).
+- add SKE directory structure and env config ([dc0cd54](https://github.com/cortexapps/cli/commit/dc0cd54e6126bc4e5f3498db85f7cf862ea261c2) by Jeff Schnitter).
+
+### Bug Fixes
+
+- add __init__.py to trigger publish workflow for urllib3 update ([854dcb0](https://github.com/cortexapps/cli/commit/854dcb00b534df21b6a1976c7a4e79fca613f246) by Jeff Schnitter).
+- update urllib3 to 2.7.0 to resolve high-severity CVEs ([904a144](https://github.com/cortexapps/cli/commit/904a144e02e65067f2029d85baa5efdf83c535f6) by Jeff Schnitter).
+- prompt for env vars before starting minikube ([3da7a87](https://github.com/cortexapps/cli/commit/3da7a870853591f48f0eb3e80013e0d6573f9f62) by Jeff Schnitter).
+- review fixes — quote .env values, fix pod selector, remove dead PID files ([4931dae](https://github.com/cortexapps/cli/commit/4931daed4e8a10ab6b9842d6aa70e6b4ce81c94b) by Jeff Schnitter).
+- use external script for env prompting to fix just quoting bug ([5816d65](https://github.com/cortexapps/cli/commit/5816d65c7ca55834b7eb0a1e819b5192d2463853) by Jeff Schnitter).
+- use correct Cortex API endpoint for Entity Type check in ske-test ([94f774e](https://github.com/cortexapps/cli/commit/94f774e43d7849175224794cfd8c8d7744b6c925) by Jeff Schnitter).
+- wait for cert-manager webhook CA, let SKE auto-create Destination ([a4983fe](https://github.com/cortexapps/cli/commit/a4983fe75946c37e2eb582098a21754a10c498c8) by Jeff Schnitter).
+- update SKE recipes with GitStateStore, Destination, and git-based resource requests ([8dad6be](https://github.com/cortexapps/cli/commit/8dad6bea12ff52011a2cbe1f15898d2eb91f9ad7) by Jeff Schnitter).
+- correct SKE setup — add cert-manager, use latest version, fix integrationAlias ([4e1d2d7](https://github.com/cortexapps/cli/commit/4e1d2d74a096da9d6ff28e4cbedb7c6c50b4d8d6) by Jeff Schnitter).
+- indent inline Python in ske-test recipe for just compatibility ([8a57c3c](https://github.com/cortexapps/cli/commit/8a57c3c21a10795baa1a59ca290af14f018ff813) by Jeff Schnitter).
+
 ## [1.15.0](https://github.com/cortexapps/cli/releases/tag/1.15.0) - 2026-04-15
 
 <small>[Compare with 1.14.0](https://github.com/cortexapps/cli/compare/1.14.0...1.15.0)</small>
