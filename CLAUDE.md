@@ -212,6 +212,8 @@ Commits use **conventional commit** prefixes which affect both versioning and ch
 
 Best practice: Use `feat:` for new features (will bump minor) and `fix:` for bug fixes (will bump patch). These prefixes satisfy both the version bumping and changelog generation.
 
+**Important**: `feat:` and `fix:` must only be used for commits that affect the CLI deliverable (i.e., changes under `cortexapps_cli/`, `pyproject.toml`, `poetry.lock`, `tests/`, `docker/`). Commits that only touch non-deliverable paths (`internal/`, `docs/superpowers/`, Justfile recipes for internal tooling, etc.) must use `chore:` or `docs:` prefixes to avoid unintended version bumps.
+
 ### HISTORY.md Merge Conflicts
 The `HISTORY.md` file is auto-generated when `staging` is merged to `main`. This means:
 - `main` always has the latest HISTORY.md
