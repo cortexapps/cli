@@ -1,0 +1,38 @@
+name: Jenkins via Axon Relay
+tag: jenkins-axon-relay
+description: |
+  Triggers a Jenkins pipeline running on local infrastructure through the Axon relay.
+  Jenkins is unreachable from the internet — the relay tunnels the request.
+  Jenkins calls back to Cortex with build results via the public API.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+runResponseTemplate: |
+  # Jenkins Build via Axon Relay
+
+  ## Results
+
+  | Field | Value |
+  |-------|-------|
+  | **Job** | {{actions.trigger-jenkins.outputs.result.output.job_name}} |
+  | **Build** | {{actions.trigger-jenkins.outputs.result.output.build_number}} |
+  | **Result** | {{actions.trigger-jenkins.outputs.result.output.result}} |
+
+  ## What This Proves
+
+  1. **Cortex reached Jenkins** through the Axon relay tunnel — no firewall changes needed
+  2. **Jenkins called back to Cortex** via the public API with build results
+actions:
+  - name: Trigger Jenkins Job via Relay
+    slug: trigger-jenkins
+    schema:
+      type: HTTP_REQUEST_ASYNC
+      httpMethod: POST
+      url: "http://jenkins-relay@relay-proxy.cortex.io/job/axon-demo/buildWithParameters?callbackURL={{callbackUrl}}"
+      headers:
+        Content-Type: application/json
+      payload: "{}"
+      timeoutInSeconds: 300
+    outgoingActions: []
+    isRootAction: true

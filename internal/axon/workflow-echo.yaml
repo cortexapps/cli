@@ -1,0 +1,38 @@
+name: Echo Server via Axon Relay
+tag: echo-axon-relay
+description: |
+  Sends a request to a local echo server through the Axon relay.
+  Proves that Cortex can reach internal infrastructure through the tunnel.
+  The echo server calls back to Cortex with results.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+runResponseTemplate: |
+  # Echo Server via Axon Relay
+
+  ## Results
+
+  | Field | Value |
+  |-------|-------|
+  | **Server** | {{actions.call-echo.outputs.result.output.echo_server}} |
+  | **Message** | {{actions.call-echo.outputs.result.output.message}} |
+  | **Timestamp** | {{actions.call-echo.outputs.result.output.timestamp}} |
+
+  ## What This Proves
+
+  1. **Cortex reached the echo server** through the Axon relay tunnel
+  2. **The echo server called back to Cortex** with results via the public API
+actions:
+  - name: Call Echo Server via Relay
+    slug: call-echo
+    schema:
+      type: HTTP_REQUEST_ASYNC
+      httpMethod: POST
+      url: "http://echo-relay@relay-proxy.cortex.io/echo?callbackURL={{callbackUrl}}"
+      headers:
+        Content-Type: application/json
+      payload: "{\"message\": \"hello from cortex\"}"
+      timeoutInSeconds: 60
+    outgoingActions: []
+    isRootAction: true

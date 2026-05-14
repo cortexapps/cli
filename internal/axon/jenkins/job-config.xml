@@ -1,0 +1,67 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Axon relay demo - triggered by Cortex workflow</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>callbackURL</name>
+          <description>Cortex workflow callback URL</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[pipeline {
+    agent any
+
+    stages {
+        stage('Hello World') {
+            steps {
+                echo 'Hello from Jenkins, triggered via Axon Relay!'
+                echo "Build number: ${env.BUILD_NUMBER}"
+                echo "Job name: ${env.JOB_NAME}"
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def cbUrl = params.callbackURL?.trim()
+                if (cbUrl) {
+                    def buildNum = env.BUILD_NUMBER
+                    def jobName = env.JOB_NAME
+                    def result = currentBuild.currentResult == 'SUCCESS' ? 'success' : 'failure'
+
+                    withCredentials([string(credentialsId: 'cortex_api_token', variable: 'API_TOKEN')]) {
+                        // Send update with build details
+                        sh """
+                            curl -sf -X POST '${cbUrl}' \
+                                -H 'Content-Type: application/json' \
+                                -H "Authorization: Bearer \${API_TOKEN}" \
+                                -d '{"status":"update","message":"Jenkins build completed","response":{"build_number":"${buildNum}","job_name":"${jobName}","result":"${result}"}}'
+                        """
+
+                        // Send final status to complete the workflow
+                        sh """
+                            curl -sf -X POST '${cbUrl}' \
+                                -H 'Content-Type: application/json' \
+                                -H "Authorization: Bearer \${API_TOKEN}" \
+                                -d '{"status":"${result}","message":"Jenkins build ${result}","response":{"build_number":"${buildNum}","job_name":"${jobName}","result":"${result}"}}'
+                        """
+                    }
+                    echo "Sent ${result} callback to Cortex"
+                } else {
+                    echo 'No callback URL provided, skipping'
+                }
+            }
+        }
+    }
+}]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+</flow-definition>

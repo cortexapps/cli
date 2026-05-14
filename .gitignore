@@ -13,4 +13,8 @@ report.html
 import.html
 report*.html
 .load-data-done
-
+.env
+state.json
+screenshots/
+videos/
+*.jwt

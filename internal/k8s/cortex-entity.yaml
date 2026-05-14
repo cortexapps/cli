@@ -1,0 +1,6 @@
+openapi: 3.0.0
+info:
+  title: K8s Test Service
+  description: Test entity for K8s agent integration
+  x-cortex-tag: k8s-test-annotation
+  x-cortex-type: service

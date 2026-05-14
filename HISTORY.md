@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.15.0](https://github.com/cortexapps/cli/releases/tag/1.15.0) - 2026-04-15
+
+<small>[Compare with 1.14.0](https://github.com/cortexapps/cli/compare/1.14.0...1.15.0)</small>
+
+### Features
+
+- pytest CVE fix, beta label updates, test improvements ([9cbe2a0](https://github.com/cortexapps/cli/commit/9cbe2a0335a55eb098ab7fb243340d4de69a07cb) by Jeff Schnitter).
+- add env var checks for functional tests in Justfile ([ea3036c](https://github.com/cortexapps/cli/commit/ea3036c1ac3073845e0d8d97b0dc3f85a4c4b7a0) by Jeff Schnitter).
+- add list-branches functional test ([3d9b9b6](https://github.com/cortexapps/cli/commit/3d9b9b6d27416ef61d26f91bbfd04dec87a61816) by Jeff Schnitter).
+- add functional test data import test ([efddc65](https://github.com/cortexapps/cli/commit/efddc65e0d4a43e17fefe65be37c42e299cc3a1f) by Jeff Schnitter).
+- add session fixtures for functional tests ([ea6b2c0](https://github.com/cortexapps/cli/commit/ea6b2c0fb77d51ce07eb2c13d64978938046e6bf) by Jeff Schnitter).
+- add GitHub helper functions for functional tests ([8874ac0](https://github.com/cortexapps/cli/commit/8874ac0c6b839ee679fd5f01e83d3c1aef6c77e1) by Jeff Schnitter).
+- add list-branches workflow YAML for functional tests ([f0310ac](https://github.com/cortexapps/cli/commit/f0310ac16a7e0db6d1013731ff8f86337913eae0) by Jeff Schnitter).
+- add cortex workflows get-run command ([88d92cc](https://github.com/cortexapps/cli/commit/88d92cc774dcc143bbd3b4ae4edd0ca8ea258426) by Jeff Schnitter).
+- add cortex workflows run command ([c1519dc](https://github.com/cortexapps/cli/commit/c1519dca44dec00159f5efb1127e0acb1dc8ea46) by Jeff Schnitter).
+- add functional test infrastructure for GitHub workflow action blocks ([d0c0ecc](https://github.com/cortexapps/cli/commit/d0c0ecce027d171e45b096970451ebfed4f28c65) by Jeff Schnitter).
+
+### Bug Fixes
+
+- use configurable GITHUB_INTEGRATION_ALIAS and assert import success ([24851a7](https://github.com/cortexapps/cli/commit/24851a7114d270ca32c48f83a9ee8058989928d6) by Jeff Schnitter).
+- remove publish.yml from paths trigger to prevent accidental releases ([4b8a71e](https://github.com/cortexapps/cli/commit/4b8a71ecaf7492dcbb37d5fd568a1024d8778fa1) by Jeff Schnitter).
+
 ## [1.14.0](https://github.com/cortexapps/cli/releases/tag/1.14.0) - 2026-04-02
 
 <small>[Compare with 1.13.0](https://github.com/cortexapps/cli/compare/1.13.0...1.14.0)</small>

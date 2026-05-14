@@ -19,7 +19,7 @@ classifiers = [
 python = "^3.11"
 requests = "^2.33.0"
 pyyaml = ">= 6.0.1, < 7"
-urllib3 = ">= 2.6.0"
+urllib3 = ">= 2.7.0"
 typer = "^0.12.5"
 click = "<8.2"
 
@@ -35,6 +35,13 @@ pytest-cov = "^5.0.0"
 pytest-xdist = "^3.6.1"
 responses = "^0.25.3"
 pytest-html = "^4.1.1"
+
+
+[tool.poetry.group.playwright.dependencies]
+playwright = "^1.58.0"
+pytest-playwright = "^0.7.2"
+python-dotenv = "^1.2.2"
+pyotp = "^2.9.0"
 
 [build-system]
 requires = ["poetry-core"]

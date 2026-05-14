@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: k8s-statefulset
+  labels:
+    app: k8s-test-label
+  annotations:
+    cortex.io/tag: k8s-test-annotation
+spec:
+  serviceName: k8s-test
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-test-ss
+  template:
+    metadata:
+      labels:
+        app: k8s-test-ss
+    spec:
+      containers:
+      - name: hello
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
