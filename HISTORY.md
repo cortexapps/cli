@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.17.0](https://github.com/cortexapps/cli/releases/tag/1.17.0) - 2026-05-20
+
+<small>[Compare with 1.16.0](https://github.com/cortexapps/cli/compare/1.16.0...1.17.0)</small>
+
+### Features
+
+- add CLI support for 32 new integrations ([58c8960](https://github.com/cortexapps/cli/commit/58c8960c0359b25c49084a399f49dbb210a78507) by Jeff Schnitter).
+
 ## [1.16.0](https://github.com/cortexapps/cli/releases/tag/1.16.0) - 2026-05-14
 
 <small>[Compare with 1.15.0](https://github.com/cortexapps/cli/compare/1.15.0...1.16.0)</small>
