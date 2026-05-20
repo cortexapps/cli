@@ -1,0 +1,152 @@
+import json
+from rich import print_json
+import typer
+from typing_extensions import Annotated
+
+app = typer.Typer(help="Bitbucket commands", no_args_is_help=True)
+
+@app.command()
+def add(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing configuration; can be passed as stdin with -, example: -f-")] = None,
+):
+    """
+    Add a single configuration (use --file for JSON input)
+    """
+
+    client = ctx.obj["client"]
+
+    data = json.loads("".join([line for line in file_input]))
+
+    r = client.post("api/v1/bitbucket/configuration", data=data)
+    print_json(data=r)
+
+@app.command()
+def add_multiple(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing configurations; can be passed as stdin with -, example: -f-")] = None,
+):
+    """
+    Add multiple configurations
+    """
+
+    client = ctx.obj["client"]
+
+    data = json.loads("".join([line for line in file_input]))
+
+    r = client.put("api/v1/bitbucket/configurations", data=data)
+    print_json(data=r)
+
+@app.command()
+def delete(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+):
+    """
+    Delete a configuration
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.delete("api/v1/bitbucket/configuration/" + alias)
+    print_json(data=r)
+
+@app.command()
+def delete_all(
+    ctx: typer.Context,
+):
+    """
+    Delete all configurations
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.delete("api/v1/bitbucket/configurations")
+    print_json(data=r)
+
+@app.command()
+def get(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+):
+    """
+    Get a configuration
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/bitbucket/configuration/" + alias)
+    print_json(data=r)
+
+@app.command()
+def list(
+    ctx: typer.Context,
+):
+    """
+    Get all configurations
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/bitbucket/configurations")
+    print_json(data=r)
+
+@app.command()
+def get_default(
+    ctx: typer.Context,
+):
+    """
+    Get default configuration
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/bitbucket/default-configuration")
+    print_json(data=r)
+
+@app.command()
+def update(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+    is_default: bool = typer.Option(False, "--is-default", "-i", help="If this is the default configuration"),
+):
+    """
+    Update a configuration
+    """
+
+    client = ctx.obj["client"]
+
+    data = {
+       "alias": alias,
+       "isDefault": is_default
+    }
+
+    r = client.put("api/v1/bitbucket/configuration/" + alias, data=data)
+    print_json(data=r)
+
+@app.command()
+def validate(
+    ctx: typer.Context,
+    alias: str = typer.Option(..., "--alias", "-a", help="The alias of the configuration"),
+):
+    """
+    Validate a configuration
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.post("api/v1/bitbucket/configuration/validate/" + alias)
+    print_json(data=r)
+
+@app.command()
+def validate_all(
+    ctx: typer.Context,
+):
+    """
+    Validate all configurations
+    """
+
+    client = ctx.obj["client"]
+
+    r = client.post("api/v1/bitbucket/configuration/validate")
+    print_json(data=r)
