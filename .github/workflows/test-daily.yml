@@ -2,6 +2,17 @@ name: Daily Test
 
 on:
   workflow_dispatch:
+    inputs:
+      python-version:
+        description: 'Python version to test'
+        required: false
+        default: '3.14'
+        type: choice
+        options:
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
   schedule:
     - cron: '0 15 * * 1-5'
 
@@ -16,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["${{ inputs.python-version || '3.14' }}"]
     steps:
     - uses: actions/checkout@v4
 
