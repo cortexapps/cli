@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.19.0](https://github.com/cortexapps/cli/releases/tag/1.19.0) - 2026-06-01
+
+<small>[Compare with 1.18.0](https://github.com/cortexapps/cli/compare/1.18.0...1.19.0)</small>
+
+### Bug Fixes
+
+- resolve Python 3.14 crash from builtin list shadowing in custom_events ([95e3f79](https://github.com/cortexapps/cli/commit/95e3f7960fc02ab6299cd765bafe39946f8fa847) by Jeff Schnitter).
+
 ## [1.18.0](https://github.com/cortexapps/cli/releases/tag/1.18.0) - 2026-06-01
 
 <small>[Compare with 1.17.0](https://github.com/cortexapps/cli/compare/1.17.0...1.18.0)</small>
