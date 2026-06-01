@@ -2,6 +2,17 @@ name: Daily Test
 
 on:
   workflow_dispatch:
+    inputs:
+      python-version:
+        description: 'Python version to test'
+        required: false
+        default: '3.14'
+        type: choice
+        options:
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
   schedule:
     - cron: '0 15 * * 1-5'
 
@@ -16,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["${{ inputs.python-version || '3.14' }}"]
     steps:
     - uses: actions/checkout@v4
 
@@ -32,7 +43,7 @@ jobs:
       run: |
         sudo apt update && sudo apt install just
         python -m pip install --upgrade pip
-        pip install poetry poetry-audit-plugin pytest-cov pytest pytest-xdist
+        pip install poetry "poetry-audit-plugin" "safety<3.8.0" pytest-cov pytest pytest-xdist
 
     - name: Run pip-audit to check for vulnerabilities
       run: poetry audit
