@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: k8s-rollout
+  labels:
+    app: k8s-test-label
+  annotations:
+    cortex.io/tag: k8s-test-annotation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-test-rollout
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: k8s-deployment
+    scaleDown: onsuccess
+  strategy:
+    canary:
+      steps:
+        - setWeight: 100

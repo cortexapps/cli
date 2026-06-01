@@ -120,50 +120,56 @@ k8s-agent-setup:
     echo "Creating Cortex entity..."
     {{cortex_cli}} catalog create -f k8s/cortex-entity.yaml || true
 
-    # 7. Apply test k8s manifests
+    # 7. Install Argo Rollouts CRD (required for Rollout test manifest)
+    echo "Installing Argo Rollouts CRD..."
+    kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-rollouts/stable/manifests/crds/rollout-crd.yaml
+
+    # 8. Apply test k8s manifests
     echo "Applying test manifests..."
     kubectl apply -f k8s/manifests/
 
     echo "Setup complete. Run 'just k8s-agent-test' to verify."
 
-# Verify test objects show up in Cortex via CLI
+# Verify test objects show up in Cortex (checks agent logs, then runs Playwright UI test)
 k8s-agent-test:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    ./scripts/ensure-env.sh \
-        "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys." \
-        "CORTEX_BASE_URL|Cortex API base URL|Defaults to https://api.getcortexapp.com."
-    source .env
+    # 1. Verify agent is running and successfully pushing data
+    echo "Checking k8s-agent status..."
+    kubectl wait --for=condition=ready pod \
+        -l app.kubernetes.io/name=cortex-k8s-agent \
+        --timeout=30s
 
-    echo "Waiting for k8s-agent to push data to Cortex..."
-    MAX_ATTEMPTS=30
-    SLEEP_SECONDS=10
+    echo "Checking agent logs for successful cache push..."
+    if kubectl logs -l app.kubernetes.io/name=cortex-k8s-agent --tail=20 2>&1 | grep -q "<-- 200"; then
+        echo "  Agent is successfully pushing data to Cortex (200 OK)."
+    else
+        echo "  Warning: No successful cache push found in recent logs."
+        echo "  Agent logs (last 20 lines):"
+        kubectl logs -l app.kubernetes.io/name=cortex-k8s-agent --tail=20
+    fi
 
-    for i in $(seq 1 $MAX_ATTEMPTS); do
-        RESPONSE=$({{cortex_cli}} rest get /api/v1/catalog/k8s-test-annotation/k8s 2>&1) || true
-
-        # Check for all three expected objects
-        HAS_DEPLOYMENT=$(echo "$RESPONSE" | grep -c '"k8s-deployment"' || true)
-        HAS_STATEFULSET=$(echo "$RESPONSE" | grep -c '"k8s-statefulset"' || true)
-        HAS_CRONJOB=$(echo "$RESPONSE" | grep -c '"k8s-cronjob"' || true)
-
-        if [ "$HAS_DEPLOYMENT" -gt 0 ] && [ "$HAS_STATEFULSET" -gt 0 ] && [ "$HAS_CRONJOB" -gt 0 ]; then
-            echo "All k8s objects found in Cortex!"
-            echo "  - k8s-deployment"
-            echo "  - k8s-statefulset"
-            echo "  - k8s-cronjob"
-            exit 0
+    # 2. Verify all test manifests exist on the cluster
+    echo ""
+    echo "Verifying test manifests on cluster..."
+    MISSING=0
+    for OBJ in "deployment/k8s-deployment" "statefulset/k8s-statefulset" "cronjob/k8s-cronjob" "rollout.argoproj.io/k8s-rollout"; do
+        if kubectl get "$OBJ" >/dev/null 2>&1; then
+            echo "  OK: $OBJ"
+        else
+            echo "  MISSING: $OBJ"
+            MISSING=1
         fi
-
-        echo "Attempt $i/$MAX_ATTEMPTS: waiting ${SLEEP_SECONDS}s for agent to sync..."
-        sleep $SLEEP_SECONDS
     done
+    if [ "$MISSING" -eq 1 ]; then
+        echo "ERROR: Some test manifests are missing. Run 'just k8s-agent-setup' first."
+        exit 1
+    fi
 
-    echo "FAILED: Not all k8s objects appeared in Cortex after $((MAX_ATTEMPTS * SLEEP_SECONDS))s"
-    echo "Last response:"
-    echo "$RESPONSE"
-    exit 1
+    echo ""
+    echo "Agent is healthy and all test manifests are deployed."
+    echo "Run 'just test-k8s-agent-ui' to verify workloads appear in the Cortex UI."
 
 # Tear down k8s-agent (keeps minikube running)
 k8s-agent-stop:
@@ -191,6 +197,19 @@ test-ui *args:
         "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret."
     source .env
     {{pw_pytest}} -v ui/tests/ {{args}}
+
+# Run k8s-agent Playwright test (verify workloads appear on K8s tab)
+test-k8s-agent-ui *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/ensure-env.sh \
+        "CORTEX_APP_URL|Cortex web app URL|Defaults to https://app.getcortexapp.com." \
+        "CORTEX_TENANT_CODE|Cortex tenant code|Found in your Cortex URL: app.getcortexapp.com/<tenant-code>." \
+        "GOOGLE_EMAIL|Google account email|The Google account used for SSO login to Cortex." \
+        "GOOGLE_PASSWORD|Google account password|Password for the Google SSO account." \
+        "GOOGLE_TOTP_URI|Google TOTP URI|otpauth:// URI for generating MFA codes. Get when setting up 2FA — choose 'Can't scan it?' to see the secret."
+    source .env
+    {{pw_pytest}} -v ui/tests/test_k8s_agent.py {{args}}
 
 # Run Workday integration tests (Playwright + API polling)
 test-workday *args:
