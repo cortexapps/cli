@@ -453,8 +453,6 @@ This recipe creates YAML files for each Workflow.  This may be helpful if you ar
        cortex workflows get --tag $workflow --yaml > $workflow.yaml
     done
 
-====================================
-
 .. |PyPI download month| image:: https://img.shields.io/pypi/dm/cortexapps-cli.svg
    :target: https://pypi.python.org/pypi/cortexapps-cli/
 .. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/cortexapps-cli.svg
