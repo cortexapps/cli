@@ -114,7 +114,6 @@ def update(
 def get(
     ctx: typer.Context,
     entity_type: str = typer.Option(..., "--type", "-t", help="The entity type"),
-    _print: CommandOptions._print = True,
 ):
     """
     Retrieve entity type
@@ -123,7 +122,4 @@ def get(
     client = ctx.obj["client"]
 
     r = client.get("api/v1/catalog/definitions/" + entity_type)
-    if _print:
-        print_json(data=r)
-    else:
-        return r
+    print_json(data=r)

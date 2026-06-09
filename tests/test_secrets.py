@@ -34,6 +34,13 @@ def test():
     response = cli(["secrets", "get", "-t", "cli_test_secret"])
     assert response['name'] == 'Updated CLI Test Secret', "Should have updated name"
 
+    # Verify table output with default columns
+    cli(["secrets", "list", "--table"], return_type=ReturnType.STDOUT)
+
+    # Verify list with explicit page
+    response = cli(["secrets", "list", "-p", "0"])
+    assert 'secrets' in response, "Should return secrets with explicit page"
+
     # Delete the secret
     cli(["secrets", "delete", "-t", "cli_test_secret"])
 

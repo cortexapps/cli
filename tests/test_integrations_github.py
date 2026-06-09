@@ -24,7 +24,7 @@ def test_integrations_github_delete_all():
 
 @responses.activate
 def test_integrations_github_get():
-    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configuration/app/test", json={}, status=200)
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/app/test", json={}, status=200)
     cli(["integrations", "github", "get", "-a", "test"])
 
 @responses.activate
@@ -65,9 +65,21 @@ def test_integrations_github_update_personal():
 @responses.activate
 def test_integrations_github_get_personal():
     responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal/test", json={}, status=200)
-    cli(["integrations", "github", "get", "-a", "test"])
+    cli(["integrations", "github", "get-personal", "-a", "test"])
 
 @responses.activate
 def test_integrations_github_delete_personal():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/github/configurations/personal/test", status=200)
     cli(["integrations", "github", "delete-personal", "-a", "test"])
+
+@responses.activate
+def test_integrations_github_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "github", "add", "-a", "test", "--api-key", "key", "-f", str(f)], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_github_add_personal_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "github", "add-personal", "-a", "test", "--access-token", "token", "-f", str(f)], return_type=ReturnType.RAW)
+    assert result.exit_code != 0

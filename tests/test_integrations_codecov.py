@@ -30,6 +30,28 @@ def test_integrations_codecov_validate():
     cli(["integrations", "codecov", "validate"])
 
 @responses.activate
+def test_integrations_codecov_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/codecov/configuration", json={}, status=200)
+    cli(["integrations", "codecov", "add", "--api-token", "foo"])
+
+@responses.activate
+def test_integrations_codecov_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "codecov", "add", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_codecov_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/codecov/configuration", json={}, status=200)
+    cli(["integrations", "codecov", "update", "--api-token", "foo"])
+
+@responses.activate
+def test_integrations_codecov_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "codecov", "update", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_codecov_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/codecov/configurations", json={}, status=200)
     cli(["integrations", "codecov", "delete"])

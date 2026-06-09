@@ -30,6 +30,28 @@ def test_integrations_snyk_validate():
     cli(["integrations", "snyk", "validate"])
 
 @responses.activate
+def test_integrations_snyk_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/snyk/configuration", json={}, status=200)
+    cli(["integrations", "snyk", "add", "--auth-token", "foo", "--region", "USA"])
+
+@responses.activate
+def test_integrations_snyk_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "snyk", "add", "-f", str(f), "--auth-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_snyk_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/snyk/configuration", json={}, status=200)
+    cli(["integrations", "snyk", "update", "--auth-token", "foo"])
+
+@responses.activate
+def test_integrations_snyk_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "snyk", "update", "-f", str(f), "--auth-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_snyk_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/snyk/configurations", json={}, status=200)
     cli(["integrations", "snyk", "delete"])

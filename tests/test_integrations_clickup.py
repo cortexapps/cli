@@ -30,6 +30,28 @@ def test_integrations_clickup_validate():
     cli(["integrations", "clickup", "validate"])
 
 @responses.activate
+def test_integrations_clickup_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/clickup/configuration", json={}, status=200)
+    cli(["integrations", "clickup", "add", "--personal-api-token", "foo"])
+
+@responses.activate
+def test_integrations_clickup_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "clickup", "add", "-f", str(f), "--personal-api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_clickup_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/clickup/configuration", json={}, status=200)
+    cli(["integrations", "clickup", "update", "--personal-api-token", "foo"])
+
+@responses.activate
+def test_integrations_clickup_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "clickup", "update", "-f", str(f), "--personal-api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_clickup_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/clickup/configurations", json={}, status=200)
     cli(["integrations", "clickup", "delete"])

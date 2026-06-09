@@ -16,6 +16,9 @@ def test_resource_definitions(capsys):
     response = cli(["entity-types", "get", "-t", "cli-test"])
     assert response.get('iconTag') == "Cortex-builtin::Basketball", "iconTag should be set to Cortex-builtin::Basketball"
 
+    # Verify default columns are set when using --table output
+    cli(["entity-types", "list", "--table"], return_type=ReturnType.STDOUT)
+
     cli(["entity-types", "update", "-t", "cli-test", "-f", "data/run-time/entity-type-update.json"])
 
 

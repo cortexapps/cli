@@ -57,3 +57,16 @@ def test_integrations_incidentio_validate():
 def test_integrations_incidentio_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/incidentio/configuration/validate", json={}, status=200)
     cli(["integrations", "incidentio", "validate-all"])
+
+@responses.activate
+def test_integrations_incidentio_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "incidentio", "add", "-a", "test", "--api-key", "key", "-f", str(f)], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_incidentio_add_multiple_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"configurations": []}')
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/incidentio/configurations", json={}, status=200)
+    cli(["integrations", "incidentio", "add-multiple", "-f", str(f)])

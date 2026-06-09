@@ -30,6 +30,28 @@ def test_integrations_okta_validate():
     cli(["integrations", "okta", "validate"])
 
 @responses.activate
+def test_integrations_okta_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/okta/configuration", json={}, status=200)
+    cli(["integrations", "okta", "add", "--api-token", "foo", "--domain", "bar"])
+
+@responses.activate
+def test_integrations_okta_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "okta", "add", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_okta_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/okta/configuration", json={}, status=200)
+    cli(["integrations", "okta", "update", "--api-token", "foo"])
+
+@responses.activate
+def test_integrations_okta_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "okta", "update", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_okta_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/okta/configurations", json={}, status=200)
     cli(["integrations", "okta", "delete"])

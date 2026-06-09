@@ -30,6 +30,28 @@ def test_integrations_servicenow_validate():
     cli(["integrations", "servicenow", "validate"])
 
 @responses.activate
+def test_integrations_servicenow_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/servicenow/configuration", json={}, status=200)
+    cli(["integrations", "servicenow", "add", "--instance-name", "foo", "--password", "bar", "--username", "baz"])
+
+@responses.activate
+def test_integrations_servicenow_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "servicenow", "add", "-f", str(f), "--instance-name", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_servicenow_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/servicenow/configuration", json={}, status=200)
+    cli(["integrations", "servicenow", "update", "--instance-name", "foo"])
+
+@responses.activate
+def test_integrations_servicenow_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "servicenow", "update", "-f", str(f), "--instance-name", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_servicenow_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/servicenow/configurations", json={}, status=200)
     cli(["integrations", "servicenow", "delete"])

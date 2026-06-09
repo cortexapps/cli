@@ -30,6 +30,28 @@ def test_integrations_azure_active_directory_validate():
     cli(["integrations", "azure-active-directory", "validate"])
 
 @responses.activate
+def test_integrations_azure_active_directory_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/active-directory/configuration", json={}, status=200)
+    cli(["integrations", "azure-active-directory", "add", "--client-id", "foo", "--client-secret", "bar", "--tenant-id", "baz"])
+
+@responses.activate
+def test_integrations_azure_active_directory_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "azure-active-directory", "add", "-f", str(f), "--client-id", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_azure_active_directory_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/active-directory/configuration", json={}, status=200)
+    cli(["integrations", "azure-active-directory", "update", "--client-id", "foo"])
+
+@responses.activate
+def test_integrations_azure_active_directory_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "azure-active-directory", "update", "-f", str(f), "--client-id", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_azure_active_directory_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/active-directory/configurations", json={}, status=200)
     cli(["integrations", "azure-active-directory", "delete"])
