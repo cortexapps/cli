@@ -30,6 +30,28 @@ def test_integrations_firehydrant_validate():
     cli(["integrations", "firehydrant", "validate"])
 
 @responses.activate
+def test_integrations_firehydrant_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/firehydrant/configuration", json={}, status=200)
+    cli(["integrations", "firehydrant", "add", "--api-token", "foo"])
+
+@responses.activate
+def test_integrations_firehydrant_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "firehydrant", "add", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_firehydrant_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/firehydrant/configuration", json={}, status=200)
+    cli(["integrations", "firehydrant", "update", "--api-token", "foo"])
+
+@responses.activate
+def test_integrations_firehydrant_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "firehydrant", "update", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_firehydrant_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/firehydrant/configurations", json={}, status=200)
     cli(["integrations", "firehydrant", "delete"])

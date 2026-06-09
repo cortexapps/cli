@@ -78,3 +78,17 @@ def test_integrations_sonarqube_validate():
 def test_integrations_sonarqube_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configuration/validate", json={}, status=200)
     cli(["integrations", "sonarqube", "validate-all"])
+
+@responses.activate
+def test_integrations_sonarqube_add_file_with_flags_error(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"alias": "test"}')
+    result = cli(["integrations", "sonarqube", "add", "-a", "test", "--api-key", "key", "-f", str(f)], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_sonarqube_add_multiple_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"configurations": []}')
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configurations", json={}, status=200)
+    cli(["integrations", "sonarqube", "add-multiple", "-f", str(f)])

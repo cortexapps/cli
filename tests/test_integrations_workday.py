@@ -30,6 +30,28 @@ def test_integrations_workday_validate():
     cli(["integrations", "workday", "validate"])
 
 @responses.activate
+def test_integrations_workday_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/workday/configuration", json={}, status=200)
+    cli(["integrations", "workday", "add", "--username", "foo", "--password", "bar", "--ownership-report-url", "baz"])
+
+@responses.activate
+def test_integrations_workday_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "workday", "add", "-f", str(f), "--username", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_workday_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/workday/configuration", json={}, status=200)
+    cli(["integrations", "workday", "update", "--username", "foo"])
+
+@responses.activate
+def test_integrations_workday_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "workday", "update", "-f", str(f), "--username", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_workday_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/workday/configurations", json={}, status=200)
     cli(["integrations", "workday", "delete"])

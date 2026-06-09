@@ -30,6 +30,28 @@ def test_integrations_veracode_validate():
     cli(["integrations", "veracode", "validate"])
 
 @responses.activate
+def test_integrations_veracode_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/veracode/configuration", json={}, status=200)
+    cli(["integrations", "veracode", "add", "--api-key", "foo", "--key-id", "bar", "--region", "baz"])
+
+@responses.activate
+def test_integrations_veracode_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "veracode", "add", "-f", str(f), "--api-key", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_veracode_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/veracode/configuration", json={}, status=200)
+    cli(["integrations", "veracode", "update", "--api-key", "foo"])
+
+@responses.activate
+def test_integrations_veracode_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "veracode", "update", "-f", str(f), "--api-key", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_veracode_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/veracode/configurations", json={}, status=200)
     cli(["integrations", "veracode", "delete"])

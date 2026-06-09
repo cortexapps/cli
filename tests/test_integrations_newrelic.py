@@ -86,3 +86,17 @@ def test_integrations_newrelic_validate():
 def test_integrations_newrelic_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configuration/validate", json={}, status=200)
     cli(["integrations", "newrelic", "validate-all"])
+
+@responses.activate
+def test_integrations_newrelic_add_file_with_flags_error(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"alias": "test"}')
+    result = cli(["integrations", "newrelic", "add", "-a", "test", "--account-id", "123", "--personal-key", "NRAK-key", "-f", str(f)], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_newrelic_add_multiple_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"configurations": []}')
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/newrelic/configurations", json={}, status=200)
+    cli(["integrations", "newrelic", "add-multiple", "-f", str(f)])

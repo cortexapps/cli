@@ -30,6 +30,28 @@ def test_integrations_mend_sca_validate():
     cli(["integrations", "mend-sca", "validate"])
 
 @responses.activate
+def test_integrations_mend_sca_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/mend/sca/configuration", json={}, status=200)
+    cli(["integrations", "mend-sca", "add", "--org-key", "foo", "--user-key", "bar"])
+
+@responses.activate
+def test_integrations_mend_sca_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "mend-sca", "add", "-f", str(f), "--org-key", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_mend_sca_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/mend/sca/configuration", json={}, status=200)
+    cli(["integrations", "mend-sca", "update", "--org-key", "foo"])
+
+@responses.activate
+def test_integrations_mend_sca_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "mend-sca", "update", "-f", str(f), "--org-key", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_mend_sca_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/mend/sca/configurations", json={}, status=200)
     cli(["integrations", "mend-sca", "delete"])
