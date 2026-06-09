@@ -30,6 +30,28 @@ def test_integrations_mend_sast_validate():
     cli(["integrations", "mend-sast", "validate"])
 
 @responses.activate
+def test_integrations_mend_sast_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/mend/sast/configuration", json={}, status=200)
+    cli(["integrations", "mend-sast", "add", "--api-key", "foo"])
+
+@responses.activate
+def test_integrations_mend_sast_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "mend-sast", "add", "-f", str(f), "--api-key", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_mend_sast_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/mend/sast/configuration", json={}, status=200)
+    cli(["integrations", "mend-sast", "update", "--api-key", "foo"])
+
+@responses.activate
+def test_integrations_mend_sast_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "mend-sast", "update", "-f", str(f), "--api-key", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_mend_sast_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/mend/sast/configurations", json={}, status=200)
     cli(["integrations", "mend-sast", "delete"])

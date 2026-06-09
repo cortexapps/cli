@@ -30,6 +30,28 @@ def test_integrations_checkmarx_sast_validate():
     cli(["integrations", "checkmarx-sast", "validate"])
 
 @responses.activate
+def test_integrations_checkmarx_sast_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/checkmarx/sast/configuration", json={}, status=200)
+    cli(["integrations", "checkmarx-sast", "add", "--username", "foo", "--password", "bar"])
+
+@responses.activate
+def test_integrations_checkmarx_sast_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "checkmarx-sast", "add", "-f", str(f), "--username", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_checkmarx_sast_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/checkmarx/sast/configuration", json={}, status=200)
+    cli(["integrations", "checkmarx-sast", "update", "--username", "foo"])
+
+@responses.activate
+def test_integrations_checkmarx_sast_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "checkmarx-sast", "update", "-f", str(f), "--username", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_checkmarx_sast_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/checkmarx/sast/configurations", json={}, status=200)
     cli(["integrations", "checkmarx-sast", "delete"])

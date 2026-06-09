@@ -1,11 +1,14 @@
 name: Publish
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - 'cortexapps_cli/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
 
 env:
   CORTEX_API_KEY:      ${{ secrets.CORTEX_API_KEY_PRODUCTION }}

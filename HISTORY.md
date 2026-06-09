@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.19.0](https://github.com/cortexapps/cli/releases/tag/1.19.0) - 2026-06-01
+
+<small>[Compare with 1.18.0](https://github.com/cortexapps/cli/compare/1.18.0...1.19.0)</small>
+
+### Bug Fixes
+
+- resolve Python 3.14 crash from builtin list shadowing in custom_events ([95e3f79](https://github.com/cortexapps/cli/commit/95e3f7960fc02ab6299cd765bafe39946f8fa847) by Jeff Schnitter).
+
+## [1.18.0](https://github.com/cortexapps/cli/releases/tag/1.18.0) - 2026-06-01
+
+<small>[Compare with 1.17.0](https://github.com/cortexapps/cli/compare/1.17.0...1.18.0)</small>
+
+### Features
+
+- add Python 3.14 support and update CI to test on 3.14 by default ([90c5654](https://github.com/cortexapps/cli/commit/90c56540c3034cb29212cbd1c06eb7a8eb4073b0) by Jeff Schnitter).
+
+### Bug Fixes
+
+- pin safety<3.8.0 to fix broken poetry audit in CI ([f706a6c](https://github.com/cortexapps/cli/commit/f706a6c0bb384f689eab7dbc14d1b0602cc62db2) by Jeff Schnitter).
+- update idna to 3.17 to address CVE bypass (Dependabot #22) ([cb60c3c](https://github.com/cortexapps/cli/commit/cb60c3cbaf281b4b80e25e0d328209d300366d50) by Jeff Schnitter).
+
 ## [1.17.0](https://github.com/cortexapps/cli/releases/tag/1.17.0) - 2026-05-20
 
 <small>[Compare with 1.16.0](https://github.com/cortexapps/cli/compare/1.16.0...1.17.0)</small>

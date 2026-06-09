@@ -57,3 +57,16 @@ def test_integrations_circle_ci_validate():
 def test_integrations_circle_ci_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/pagerduty/configuration/validate", json={}, status=200)
     cli(["integrations", "pagerduty", "validate-all"])
+
+@responses.activate
+def test_integrations_pagerduty_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "pagerduty", "add", "-a", "test", "--api-key", "key", "-f", str(f)], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_pagerduty_add_multiple_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"configurations": []}')
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/pagerduty/configurations", json={}, status=200)
+    cli(["integrations", "pagerduty", "add-multiple", "-f", str(f)])

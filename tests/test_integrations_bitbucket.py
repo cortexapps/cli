@@ -58,3 +58,17 @@ def test_integrations_bitbucket_validate():
 def test_integrations_bitbucket_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/bitbucket/configuration/validate", json={}, status=200)
     cli(["integrations", "bitbucket", "validate-all"])
+
+@responses.activate
+def test_integrations_bitbucket_add_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"alias": "test", "appPassword": "pw", "username": "user"}')
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/bitbucket/configuration", json={}, status=200)
+    cli(["integrations", "bitbucket", "add", "-f", str(f)])
+
+@responses.activate
+def test_integrations_bitbucket_add_multiple_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"configurations": []}')
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/bitbucket/configurations", json={}, status=200)
+    cli(["integrations", "bitbucket", "add-multiple", "-f", str(f)])

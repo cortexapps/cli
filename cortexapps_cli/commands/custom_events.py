@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import json
+from typing import List, Optional
 from rich import print_json
 import typer
 from typing_extensions import Annotated
@@ -32,7 +33,7 @@ def _parse_key_value(values):
 def update_by_uuid(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing custom event; can be passed as stdin with -, example: -f-")] = None,
-    custom_data: list[str] | None  = typer.Option(None, "--custom", "-c", callback=_parse_key_value, help="List of optional custom metadata key=value pairs (only if file input not provided."),
+    custom_data: Optional[List[str]] = typer.Option(None, "--custom", "-c", callback=_parse_key_value, help="List of optional custom metadata key=value pairs (only if file input not provided."),
     description: str = typer.Option(None, "--description", "-d", help="The description of the custom data key (only if file input not provided)."),
     title: str = typer.Option(None, "--title", "-ti",  help="The title of the custome event (only if file input not provided)."),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
@@ -81,7 +82,7 @@ def update_by_uuid(
 def create(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing custom event; can be passed as stdin with -, example: -f-")] = None,
-    custom_data: list[str] | None  = typer.Option(None, "--custom", "-c", callback=_parse_key_value, help="List of optional custom metadata key=value pairs (only if file input not provided."),
+    custom_data: Optional[List[str]] = typer.Option(None, "--custom", "-c", callback=_parse_key_value, help="List of optional custom metadata key=value pairs (only if file input not provided."),
     description: str = typer.Option(None, "--description", "-d", help="The description of the custom data key (only if file input not provided)."),
     title: str = typer.Option(None, "--title", "-ti",  help="The title of the custome event (only if file input not provided)."),
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),

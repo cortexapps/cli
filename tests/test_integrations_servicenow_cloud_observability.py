@@ -30,6 +30,28 @@ def test_integrations_servicenow_cloud_observability_validate():
     cli(["integrations", "servicenow-cloud-observability", "validate"])
 
 @responses.activate
+def test_integrations_servicenow_cloud_observability_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/lightstep/configuration", json={}, status=200)
+    cli(["integrations", "servicenow-cloud-observability", "add", "--auth-token", "foo", "--organization-id", "bar", "--project-id", "baz"])
+
+@responses.activate
+def test_integrations_servicenow_cloud_observability_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "servicenow-cloud-observability", "add", "-f", str(f), "--auth-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_servicenow_cloud_observability_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/lightstep/configuration", json={}, status=200)
+    cli(["integrations", "servicenow-cloud-observability", "update", "--auth-token", "foo"])
+
+@responses.activate
+def test_integrations_servicenow_cloud_observability_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "servicenow-cloud-observability", "update", "-f", str(f), "--auth-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_servicenow_cloud_observability_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/lightstep/configurations", json={}, status=200)
     cli(["integrations", "servicenow-cloud-observability", "delete"])

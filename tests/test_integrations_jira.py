@@ -58,3 +58,17 @@ def test_integrations_jira_validate():
 def test_integrations_jira_validate_all():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/jira/configuration/validate", json={}, status=200)
     cli(["integrations", "jira", "validate-all"])
+
+@responses.activate
+def test_integrations_jira_add_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"alias": "test", "email": "test@test.com", "host": "jira.test.com", "apiToken": "token"}')
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/jira/configuration", json={}, status=200)
+    cli(["integrations", "jira", "add", "-f", str(f)])
+
+@responses.activate
+def test_integrations_jira_add_multiple_valid(tmp_path):
+    f = tmp_path / "valid.json"
+    f.write_text('{"configurations": []}')
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/jira/configurations", json={}, status=200)
+    cli(["integrations", "jira", "add-multiple", "-f", str(f)])

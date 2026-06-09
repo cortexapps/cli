@@ -30,6 +30,28 @@ def test_integrations_bamboohr_validate():
     cli(["integrations", "bamboohr", "validate"])
 
 @responses.activate
+def test_integrations_bamboohr_add_with_flags():
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/bamboohr/configuration", json={}, status=200)
+    cli(["integrations", "bamboohr", "add", "--api-token", "foo", "--subdomain", "bar"])
+
+@responses.activate
+def test_integrations_bamboohr_add_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "bamboohr", "add", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
+def test_integrations_bamboohr_update_with_flags():
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/bamboohr/configuration", json={}, status=200)
+    cli(["integrations", "bamboohr", "update", "--api-token", "foo"])
+
+@responses.activate
+def test_integrations_bamboohr_update_file_with_flags_error(tmp_path):
+    f = _dummy_file(tmp_path)
+    result = cli(["integrations", "bamboohr", "update", "-f", str(f), "--api-token", "foo"], return_type=ReturnType.RAW)
+    assert result.exit_code != 0
+
+@responses.activate
 def test_integrations_bamboohr_delete():
     responses.add(responses.DELETE, os.getenv("CORTEX_BASE_URL") + "/api/v1/bamboohr/configurations", json={}, status=200)
     cli(["integrations", "bamboohr", "delete"])
