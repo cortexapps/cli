@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.19.2](https://github.com/cortexapps/cli/releases/tag/1.19.2) - 2026-06-10
+
+<small>[Compare with 1.19.1](https://github.com/cortexapps/cli/compare/1.19.1...1.19.2)</small>
+
+### Bug Fixes
+
+- update Docker base image for CVE-2026-45447 and add docker/ to publish triggers #patch ([1bcef87](https://github.com/cortexapps/cli/commit/1bcef8718845cad9b15094a764392c5dcaa8804e) by Jeff Schnitter).
+
+## [1.19.1](https://github.com/cortexapps/cli/releases/tag/1.19.1) - 2026-06-09
+
+<small>[Compare with 1.19.0](https://github.com/cortexapps/cli/compare/1.19.0...1.19.1)</small>
+
+### Bug Fixes
+
+- remove invalid RST transition that breaks PyPI rendering #patch ([00e2d96](https://github.com/cortexapps/cli/commit/00e2d96500ddfb9325d8db8075612af4a0489d58) by Jeff Schnitter).
+
 ## [1.19.0](https://github.com/cortexapps/cli/releases/tag/1.19.0) - 2026-06-01
 
 <small>[Compare with 1.18.0](https://github.com/cortexapps/cli/compare/1.18.0...1.19.0)</small>
