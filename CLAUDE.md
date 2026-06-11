@@ -143,26 +143,38 @@ Use the GitHub-recommended format: `<issue-number>-<short-description>`
 Documentation-only changes (like updates to CLAUDE.md, README.md, STYLE.md) can be committed directly to `main` without going through the staging workflow.
 
 ### Release Workflow
+
+**Default (single-feature release):** Feature branch → PR directly to `main`
 1. Create feature branch for changes
-2. Create PR to merge feature branch to `staging` for testing
+2. Create PR to merge feature branch to `main`:
+   ```bash
+   gh pr create --base main --head <feature-branch> --title "feat: description"
+   ```
+3. Merge the PR to trigger release
+
+**Multi-feature release:** Use `staging` to bundle multiple features
+1. Create feature branches for each change
+2. Create PRs to merge each feature branch to `staging`
 3. Create PR to merge `staging` to `main` to trigger release:
    ```bash
    gh pr create --base main --head staging --title "Release X.Y.Z: Description"
    ```
    - Include the expected version number and brief description in title
    - List all changes in the PR body
-4. Version bumping is automatic based on **conventional commit prefixes** in the commit history since the last tag:
-   - `feat:` prefix → **minor** version bump (new features)
-   - `fix:` prefix → **patch** version bump (bug fixes)
-   - If multiple types present, the highest wins (feat > fix)
-   - Default (no recognized prefix): patch bump
-5. Release publishes to:
-   - PyPI
-   - Docker Hub (`cortexapp/cli:VERSION` and `cortexapp/cli:latest`)
-   - Homebrew tap (`cortexapps/homebrew-tap`)
+
+**Version bumping** is automatic based on **conventional commit prefixes** in the commit history since the last tag:
+- `feat:` prefix → **minor** version bump (new features)
+- `fix:` prefix → **patch** version bump (bug fixes)
+- If multiple types present, the highest wins (feat > fix)
+- Default (no recognized prefix): patch bump
+
+**Release publishes to:**
+- PyPI
+- Docker Hub (`cortexapp/cli:VERSION` and `cortexapp/cli:latest`)
+- Homebrew tap (`cortexapps/homebrew-tap`)
 
 ### Determining the Next Version (Claude Instructions)
-Before creating a staging-to-main release PR, Claude must:
+Before merging to `main`, Claude must:
 
 1. **Check the current version tag**:
    ```bash
@@ -170,9 +182,9 @@ Before creating a staging-to-main release PR, Claude must:
    git describe --tags --abbrev=0
    ```
 
-2. **Analyze commits since the last tag**:
+2. **Analyze commits since the last tag** (use the source branch):
    ```bash
-   git log <last-tag>..origin/staging --oneline
+   git log <last-tag>..<feature-branch-or-staging> --oneline
    ```
 
 3. **Determine the version bump** by examining commit prefixes:
