@@ -123,17 +123,13 @@ k8s-agent-setup:
         --set image.tag="${IMAGE_TAG}" \
         --set app.baseUrl="${CORTEX_BASE_URL}"
 
-    # 5. Wait for agent pod readiness
+    # 5. Restart agent pod to pick up any secret/configmap changes
+    kubectl rollout restart deployment -l app.kubernetes.io/name=cortex-k8s-agent
+
+    # 6. Wait for agent pod readiness
     echo "Waiting for k8s-agent pod to be ready..."
-    for i in $(seq 1 30); do
-        if kubectl get pod -l app.kubernetes.io/name=cortex-k8s-agent 2>/dev/null | grep -q .; then
-            break
-        fi
-        sleep 2
-    done
-    kubectl wait --for=condition=ready pod \
-        -l app.kubernetes.io/name=cortex-k8s-agent \
-        --timeout=120s
+    sleep 5  # Give k8s time to start the rollout
+    kubectl rollout status deployment -l app.kubernetes.io/name=cortex-k8s-agent --timeout=120s
 
     # 6. Create Cortex entity
     echo "Creating Cortex entity..."
