@@ -131,7 +131,12 @@ class CortexClient:
         self.rate_limiter.acquire()
 
         start_time = time.time()
-        response = self.session.request(method, url, params=params, headers=req_headers, data=req_data)
+        try:
+            response = self.session.request(method, url, params=params, headers=req_headers, data=req_data)
+        except requests.exceptions.ConnectionError as e:
+            print(f'[red][bold]Connection error[/bold][/red]: Could not connect to {url}')
+            print(f'  [dim]{e}[/dim]')
+            raise typer.Exit(code=1)
         duration = time.time() - start_time
 
         # Log slow requests or non-200 responses (likely retries happened)
