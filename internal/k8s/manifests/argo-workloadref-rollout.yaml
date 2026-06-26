@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-workloadref-deploy
+  labels:
+    app: k8s-test-label
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: argo-workloadref
+  template:
+    metadata:
+      labels:
+        app: argo-workloadref
+    spec:
+      containers:
+      - name: hello
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: argo-workloadref
+  labels:
+    app: k8s-test-label
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo-workloadref
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: argo-workloadref-deploy
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      - pause: {duration: 5m}
+      - setWeight: 50
+      - pause: {duration: 5m}
+      - setWeight: 100
