@@ -363,3 +363,29 @@ def scorecard_scores(
 
     r = client.get("api/v1/catalog/" + tag + "/scorecards")
     print_output_with_context(ctx, r)
+
+@app.command()
+def aws(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Get AWS resource details for an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/catalog/" + tag + "/aws")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def k8s(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Get Kubernetes resource details for an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/catalog/" + tag + "/k8s")
+    print_output_with_context(ctx, r)
