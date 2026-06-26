@@ -190,7 +190,7 @@ k8s-agent-test:
     echo ""
     echo "Checking k8s data via CLI..."
     FAILED=0
-    K8S_RESULT=$(CORTEX_BASE_URL= CORTEX_API_KEY= {{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog k8s -t k8s-test-label 2>&1) && RC=0 || RC=$?
+    K8S_RESULT=$(CORTEX_BASE_URL= CORTEX_API_KEY= {{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog k8s -t k8s-test-annotation 2>&1) && RC=0 || RC=$?
     if [ "$RC" -ne 0 ]; then
         echo "  FAILED: catalog k8s command exited with code $RC"
         echo "  $K8S_RESULT" | head -5
