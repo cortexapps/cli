@@ -43,8 +43,24 @@ just axon-echo-setup          # simple echo server relay smoke test
 
 ## Environment
 
-- **`.env`** — local secrets and config (gitignored). Copy from `.env.example` and fill in values.
+- **`.env`** — active config (gitignored). Copy from `.env.example` and fill in values.
 - **`set dotenv-load` + `set export`** in Justfile means all `.env` vars are auto-loaded and exported.
+
+### Environment profiles
+
+Switch between cloud and local dev with `just env`:
+
+```bash
+just env            # switch to cloud workspace (.env.default)
+just env local      # switch to local dev (.env.local)
+just env-show       # show active profile and key vars
+```
+
+Profile files (`.env.<name>`) contain only the vars that differ per environment (API key, base URL, app URL, tenant code). `just env` patches those into `.env` — shared vars are untouched.
+
+Setup:
+1. Copy `.env.default.example` → `.env.default` and fill in your cloud workspace values
+2. Copy `.env.local.example` → `.env.local` and fill in your local API key (from `~/.cortex/config [cortex-local]`)
 - **`PYTHONPATH=..:../tests`** is set in pytest commands so internal tests can import both `cortexapps_cli` and `helpers.utils` from the parent project.
 
 ## Env var prompting

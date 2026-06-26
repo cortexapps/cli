@@ -11,6 +11,25 @@ help:
    @just -l
 
 # ---------------------------------------------------------------------------
+# Environment profiles
+# ---------------------------------------------------------------------------
+
+# Switch environment profile (default=cloud workspace, local=local dev)
+env profile="default":
+    @./scripts/switch-env.sh {{profile}}
+
+# Show the active environment profile
+env-show:
+    @if [ -f .env.active ]; then \
+        echo "Active profile: $(cat .env.active)"; \
+    else \
+        echo "No active profile (using .env as-is)"; \
+    fi
+    @echo ""
+    @grep -E '^(CORTEX_API_KEY|CORTEX_BASE_URL|CORTEX_APP_URL|CORTEX_TENANT_CODE)=' .env 2>/dev/null | \
+        sed 's/\(CORTEX_API_KEY=\).*/\1...redacted.../' || true
+
+# ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
 
