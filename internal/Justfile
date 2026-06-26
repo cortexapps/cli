@@ -197,7 +197,8 @@ k8s-agent-test:
         FAILED=1
     elif echo "$K8S_RESULT" | grep -q '"resources"'; then
         RESOURCE_COUNT=$(echo "$K8S_RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['resources']))")
-        echo "  OK: catalog k8s returned ${RESOURCE_COUNT} resource(s)."
+        echo "  OK: catalog k8s returned ${RESOURCE_COUNT} resource(s) for entity k8s-test-annotation:"
+        echo "$K8S_RESULT" | python3 -c "import sys,json; [print(f'    - {r[\"type\"]:12s} {r[\"namespace\"]}/{r[\"name\"]} (cluster: {r[\"cluster\"]})') for r in json.load(sys.stdin).get('resources',[])]"
     elif echo "$K8S_RESULT" | grep -q "404"; then
         echo "  FAILED: catalog k8s returned 404 — agent may not have pushed data yet."
         FAILED=1
