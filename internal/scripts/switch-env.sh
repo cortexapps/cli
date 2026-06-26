@@ -43,17 +43,10 @@ while IFS= read -r line || [ -n "$line" ]; do
     [[ -z "${line// /}" ]] && continue
 
     KEY=$(echo "$line" | cut -d'=' -f1)
-    # Check if key exists in .env
-    if grep -q "^${KEY}=" .env 2>/dev/null; then
-        # Replace the existing line (macOS + Linux compatible sed)
-        if [[ "$OSTYPE" == darwin* ]]; then
-            sed -i '' "s|^${KEY}=.*|${line}|" .env
-        else
-            sed -i "s|^${KEY}=.*|${line}|" .env
-        fi
-    else
-        echo "$line" >> .env
-    fi
+    # Remove existing line for this key (if any), then append the new one
+    grep -v "^${KEY}=" .env > .env.tmp || true
+    mv .env.tmp .env
+    echo "$line" >> .env
 done < "$PROFILE_FILE"
 
 # Record active profile
