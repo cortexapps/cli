@@ -189,19 +189,30 @@ k8s-agent-test:
     # 3. Verify k8s data is accessible via the public API
     echo ""
     echo "Checking k8s data via CLI..."
-    K8S_RESULT=$({{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog k8s -t k8s-test-annotation 2>&1) || true
-    if echo "$K8S_RESULT" | grep -q '"resources"'; then
+    FAILED=0
+    K8S_RESULT=$({{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog k8s -t k8s-test-annotation 2>&1) && RC=0 || RC=$?
+    if [ "$RC" -ne 0 ]; then
+        echo "  FAILED: catalog k8s command exited with code $RC"
+        echo "  $K8S_RESULT" | head -5
+        FAILED=1
+    elif echo "$K8S_RESULT" | grep -q '"resources"'; then
         RESOURCE_COUNT=$(echo "$K8S_RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['resources']))")
         echo "  OK: catalog k8s returned ${RESOURCE_COUNT} resource(s)."
     elif echo "$K8S_RESULT" | grep -q "404"; then
-        echo "  Warning: catalog k8s returned 404 — agent may not have pushed data yet. Wait and retry."
+        echo "  FAILED: catalog k8s returned 404 — agent may not have pushed data yet."
+        FAILED=1
     else
-        echo "  Warning: unexpected response from catalog k8s:"
-        echo "  $K8S_RESULT"
+        echo "  FAILED: unexpected response from catalog k8s:"
+        echo "  $K8S_RESULT" | head -5
+        FAILED=1
     fi
 
     echo ""
-    echo "Agent is healthy and all test manifests are deployed."
+    if [ "$FAILED" -eq 1 ] || [ "$MISSING" -eq 1 ]; then
+        echo "ERROR: One or more checks failed."
+        exit 1
+    fi
+    echo "All checks passed."
 
 # Tear down k8s-agent (keeps minikube running)
 k8s-agent-stop:
