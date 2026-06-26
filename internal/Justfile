@@ -167,9 +167,22 @@ k8s-agent-test:
         exit 1
     fi
 
+    # 3. Verify k8s data is accessible via the public API
+    echo ""
+    echo "Checking k8s data via CLI..."
+    K8S_RESULT=$({{cortex_cli}} catalog k8s -t k8s-test-annotation 2>&1) || true
+    if echo "$K8S_RESULT" | grep -q '"resources"'; then
+        RESOURCE_COUNT=$(echo "$K8S_RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['resources']))")
+        echo "  OK: catalog k8s returned ${RESOURCE_COUNT} resource(s)."
+    elif echo "$K8S_RESULT" | grep -q "404"; then
+        echo "  Warning: catalog k8s returned 404 — agent may not have pushed data yet. Wait and retry."
+    else
+        echo "  Warning: unexpected response from catalog k8s:"
+        echo "  $K8S_RESULT"
+    fi
+
     echo ""
     echo "Agent is healthy and all test manifests are deployed."
-    echo "Run 'just test-k8s-agent-ui' to verify workloads appear in the Cortex UI."
 
 # Tear down k8s-agent (keeps minikube running)
 k8s-agent-stop:
