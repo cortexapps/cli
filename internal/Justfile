@@ -189,7 +189,7 @@ k8s-agent-test:
     # 3. Verify k8s data is accessible via the public API
     echo ""
     echo "Checking k8s data via CLI..."
-    K8S_RESULT=$({{cortex_cli}} catalog k8s -t k8s-test-annotation 2>&1) || true
+    K8S_RESULT=$({{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog k8s -t k8s-test-annotation 2>&1) || true
     if echo "$K8S_RESULT" | grep -q '"resources"'; then
         RESOURCE_COUNT=$(echo "$K8S_RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['resources']))")
         echo "  OK: catalog k8s returned ${RESOURCE_COUNT} resource(s)."
