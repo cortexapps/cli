@@ -5,7 +5,7 @@ metadata:
   labels:
     app: k8s-test-label
   annotations:
-    cortex.io/tag: k8s-test-annotation
+    cortex.io/tag: k8s-test-label
 spec:
   serviceName: k8s-test
   replicas: 1
