@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.20.1](https://github.com/cortexapps/cli/releases/tag/1.20.1) - 2026-07-06
+
+<small>[Compare with 1.20.0](https://github.com/cortexapps/cli/compare/1.20.0...1.20.1)</small>
+
+### Bug Fixes
+
+- two-pass re-import for catalog entities with x-cortex-relationships #patch ([1d75640](https://github.com/cortexapps/cli/commit/1d75640f3ac6314f9723c12d9434747aa8c93d4b) by Jeff Schnitter).
+
 ## [1.20.0](https://github.com/cortexapps/cli/releases/tag/1.20.0) - 2026-06-11
 
 <small>[Compare with 1.19.2](https://github.com/cortexapps/cli/compare/1.19.2...1.20.0)</small>
