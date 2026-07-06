@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from typing import Optional
 from typing import List
 from typing_extensions import Annotated
@@ -7,7 +8,6 @@ import json
 import os
 import tempfile
 import sys
-from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 from rich import print, print_json
 from rich.console import Console
@@ -471,6 +471,18 @@ def _import_entity_relationships(ctx, directory):
 
     return ("entity-relationships", len(results) - failed_count, [(fp, et, em) for rt, fp, et, em in results if et])
 
+def _has_relationships(file_path):
+    """Check if a catalog YAML file contains x-cortex-relationships."""
+    try:
+        with open(file_path) as f:
+            content = yaml.safe_load(f)
+        info = content.get('info', {})
+        relationships = info.get('x-cortex-relationships')
+        return relationships is not None and len(relationships) > 0
+    except Exception:
+        return False
+
+
 def _import_catalog(ctx, directory):
     results = []
     failed_count = 0
@@ -493,7 +505,7 @@ def _import_catalog(ctx, directory):
             except Exception as e:
                 return (filename, file_path, type(e).__name__, str(e))
 
-        # Import all files in parallel
+        # Pass 1: Import all files
         with ThreadPoolExecutor(max_workers=30) as executor:
             futures = {executor.submit(import_catalog_file, file_info): file_info[0] for file_info in files}
             results = []
@@ -505,6 +517,113 @@ def _import_catalog(ctx, directory):
 
         if failed_count > 0:
             print(f"\n   Total catalog import failures: {failed_count}")
+
+        # Pass 2: Delete and re-create entities with x-cortex-relationships.
+        # On first creation (pass 1), the relationship processor runs synchronously but
+        # the entity hasn't been committed to the DB yet, so it caches a failed state.
+        # Subsequent updates don't clear this cache. Deleting the entity clears the cache,
+        # so the fresh re-create triggers proper relationship processing.
+        #
+        # Two-wave approach handles multi-tier hierarchies: Wave 1 re-creates all
+        # relationship entities (e.g., clusters → services, where services are stable from
+        # pass 1). Wave 2 re-creates entities whose destinations were also recreated in
+        # wave 1 (e.g., accounts → clusters), ensuring destinations exist before the
+        # relationship processor runs for those dependent sources.
+        relationship_files = [(fn, fp) for fn, fp in files if _has_relationships(fp)]
+        if relationship_files:
+            print(f"\n   Re-importing {len(relationship_files)} entities with relationships...")
+
+            # Collect all tags being recreated in pass 2
+            pass2_tags = set()
+            for fn, fp in relationship_files:
+                try:
+                    with open(fp) as f:
+                        content = yaml.safe_load(f)
+                    tag = content.get('info', {}).get('x-cortex-tag')
+                    if tag:
+                        pass2_tags.add(tag)
+                except Exception:
+                    pass
+
+            def delete_entity(file_info):
+                filename, file_path = file_info
+                try:
+                    with open(file_path) as f:
+                        content = yaml.safe_load(f)
+                    tag = content.get('info', {}).get('x-cortex-tag')
+                    if tag:
+                        catalog.delete(ctx, tag=tag)
+                except Exception:
+                    pass  # Entity may not exist; that's fine
+
+            def create_entity(file_info):
+                filename, file_path = file_info
+                print(f"   Re-importing: {filename}")
+                try:
+                    with open(file_path) as f:
+                        catalog.create(ctx, file_input=f, _print=False)
+                    return (filename, file_path, None, None)
+                except typer.Exit as e:
+                    return (filename, file_path, "HTTP", "Validation or HTTP error")
+                except Exception as e:
+                    return (filename, file_path, type(e).__name__, str(e))
+
+            def has_pass2_destination(file_path):
+                """Return True if any of this entity's relationship destinations are
+                also being recreated in pass 2 (i.e., they need to exist first)."""
+                try:
+                    with open(file_path) as f:
+                        content = yaml.safe_load(f)
+                    info = content.get('info', {})
+                    for rel in info.get('x-cortex-relationships', []):
+                        for dest in rel.get('destinations', []):
+                            if dest.get('tag') in pass2_tags:
+                                return True
+                except Exception:
+                    pass
+                return False
+
+            reprocess_results = []
+
+            # Wave 1: Delete all, then create all. This establishes every entity
+            # in the DB and resolves relationships whose destinations are stable
+            # (i.e., not being recreated in this pass).
+            with ThreadPoolExecutor(max_workers=30) as executor:
+                futures = {executor.submit(delete_entity, fi): fi[0] for fi in relationship_files}
+                for future in as_completed(futures):
+                    future.result()
+
+            time.sleep(2)  # Allow deletes to commit before re-creating
+
+            with ThreadPoolExecutor(max_workers=30) as executor:
+                futures = {executor.submit(create_entity, fi): fi[0] for fi in relationship_files}
+                for future in as_completed(futures):
+                    reprocess_results.append(future.result())
+
+            # Wave 2: For entities whose destinations were also recreated in wave 1,
+            # do another delete+create now that those destinations exist in the DB.
+            dependent_files = [(fn, fp) for fn, fp in relationship_files if has_pass2_destination(fp)]
+            if dependent_files:
+                time.sleep(5)  # Let wave 1 entities settle in the DB
+
+                with ThreadPoolExecutor(max_workers=30) as executor:
+                    futures = {executor.submit(delete_entity, fi): fi[0] for fi in dependent_files}
+                    for future in as_completed(futures):
+                        future.result()
+
+                time.sleep(2)
+
+                with ThreadPoolExecutor(max_workers=30) as executor:
+                    futures = {executor.submit(create_entity, fi): fi[0] for fi in dependent_files}
+                    for future in as_completed(futures):
+                        reprocess_results.append(future.result())
+
+            reprocess_failed = sum(1 for fn, fp, et, em in reprocess_results if et)
+            if reprocess_failed > 0:
+                print(f"\n   Total catalog re-import failures: {reprocess_failed}")
+                failed_count += reprocess_failed
+            else:
+                print(f"   Note: relationships are processed asynchronously and will be visible within 30 seconds.")
 
     return ("catalog", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
