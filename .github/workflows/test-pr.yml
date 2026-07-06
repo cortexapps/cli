@@ -16,6 +16,7 @@ on:
   pull_request:
     branches:
       - staging
+      - main
     paths:
       - 'cortexapps_cli/**'
       - 'tests/**'
@@ -68,3 +69,18 @@ jobs:
     - name: Test with pytest
       run: |
         just test-all
+
+  automerge:
+    needs: test
+    # Only auto-merge on non-draft PRs. For PRs requiring human review, keep as
+    # draft until approved, then convert to ready — that re-triggers this workflow.
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+    - name: Auto-merge PR
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh pr merge ${{ github.event.pull_request.number }} --merge --repo ${{ github.repository }}
