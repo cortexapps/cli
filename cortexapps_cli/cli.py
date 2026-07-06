@@ -16,6 +16,7 @@ import cortexapps_cli.commands.api_keys as api_keys
 import cortexapps_cli.commands.audit_logs as audit_logs
 import cortexapps_cli.commands.backup as backup
 import cortexapps_cli.commands.catalog as catalog
+import cortexapps_cli.commands.catalogs as catalogs
 import cortexapps_cli.commands.custom_data as custom_data
 import cortexapps_cli.commands.custom_events as custom_events
 import cortexapps_cli.commands.custom_metrics as custom_metrics
@@ -54,6 +55,7 @@ app.add_typer(api_keys.app, name="api-keys")
 app.add_typer(audit_logs.app, name="audit-logs")
 app.add_typer(backup.app, name="backup")
 app.add_typer(catalog.app, name="catalog")
+app.add_typer(catalogs.app, name="catalogs")
 app.add_typer(custom_data.app, name="custom-data")
 app.add_typer(custom_events.app, name="custom-events")
 app.add_typer(custom_metrics.app, name="custom-metrics")

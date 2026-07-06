@@ -1,0 +1,7 @@
+{
+  "name": "CLI Test Catalog",
+  "slug": "cli-test-catalog",
+  "description": "Catalog created by CLI integration tests",
+  "iconTag": "service",
+  "isDraft": false
+}
