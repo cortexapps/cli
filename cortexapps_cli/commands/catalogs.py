@@ -1,5 +1,5 @@
 import json
-from rich import print_json
+from typing import Optional
 import typer
 from typing_extensions import Annotated
 from cortexapps_cli.command_options import CommandOptions
@@ -14,6 +14,8 @@ app = typer.Typer(
 @app.command(name="list")
 def catalogs_list(
     ctx: typer.Context,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
     _print: CommandOptions._print = True,
     table_output: ListCommandOptions.table_output = False,
     csv_output: ListCommandOptions.csv_output = False,
@@ -23,7 +25,7 @@ def catalogs_list(
     sort: ListCommandOptions.sort = [],
 ):
     """
-    List all catalogs.
+    List all catalogs. API key must have the View catalogs permission.
     """
     client = ctx.obj["client"]
 
@@ -37,48 +39,79 @@ def catalogs_list(
             "Type=catalogType",
         ]
 
-    result = client.get("api/v1/catalogs")
+    params = {k: v for k, v in {"page": page, "pageSize": page_size}.items() if v is not None}
+
+    result = client.fetch("api/v1/catalogs", params=params) if page is None else client.get("api/v1/catalogs", params=params)
 
     if _print:
         print_output_with_context(ctx, result)
     else:
         return result
 
+
 @app.command()
 def get(
     ctx: typer.Context,
-    tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The slug or unique ID of the catalog"),
+    slug: str = typer.Option(..., "--slug", "-s", help="The slug of the catalog"),
+    _print: CommandOptions._print = True,
 ):
     """
-    Retrieve a catalog by its slug or ID.
+    Retrieve a catalog by its slug. API key must have the View catalogs permission.
     """
     client = ctx.obj["client"]
 
-    result = client.get("api/v1/catalogs/" + tag_or_id)
-    print_json(data=result)
+    result = client.get("api/v1/catalogs/" + slug)
+
+    if _print:
+        print_output_with_context(ctx, result)
+    else:
+        return result
+
 
 @app.command()
 def create(
     ctx: typer.Context,
-    file_input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing JSON body of the catalog request, can be passed as stdin with -, example: -f-")] = None,
+    file_input: Annotated[
+        typer.FileText,
+        typer.Option(..., "--file", "-f", help="File containing JSON catalog definition; use - for stdin, e.g. -f-"),
+    ],
+    mode: Optional[str] = typer.Option(
+        None,
+        "--mode",
+        "-m",
+        help="UPSERT (default): create or replace existing catalog. CREATE: fail if slug already exists.",
+    ),
+    _print: CommandOptions._print = True,
 ):
     """
-    Create a catalog. The JSON body should include: name, slug, iconTag, and optionally description, isDraft, filter, relationshipTypeId, catalogType.
+    Create or replace a catalog. API key must have the Edit catalogs permission.
+
+    JSON fields: name (required), slug (required), iconTag (required), description,
+    isDraft, filter, relationshipTypeTag, catalogType (FILTER|RELATIONSHIP_TYPE|DOMAIN).
     """
     client = ctx.obj["client"]
-    data = json.loads("".join([line for line in file_input]))
+    data = json.loads(file_input.read())
 
-    result = client.post("api/v1/catalogs", data=data)
-    print_json(data=result)
+    params = {}
+    if mode:
+        params["mode"] = mode.upper()
+
+    result = client.post("api/v1/catalogs", data=data, params=params if params else None)
+
+    if _print:
+        print_output_with_context(ctx, result)
+    else:
+        return result
+
 
 @app.command()
 def delete(
     ctx: typer.Context,
-    tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The slug or unique ID of the catalog"),
+    slug: str = typer.Option(..., "--slug", "-s", help="The slug of the catalog to delete"),
 ):
     """
-    Delete a catalog by its slug or ID.
+    Delete a catalog by its slug. API key must have the Edit catalogs permission.
     """
     client = ctx.obj["client"]
 
-    client.delete("api/v1/catalogs/" + tag_or_id)
+    client.delete("api/v1/catalogs/" + slug)

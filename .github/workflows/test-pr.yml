@@ -21,6 +21,10 @@ on:
       - 'cortexapps_cli/**'
       - 'tests/**'
 
+concurrency:
+  group: test-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
