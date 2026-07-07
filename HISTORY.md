@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.21.0](https://github.com/cortexapps/cli/releases/tag/1.21.0) - 2026-07-07
+
+<small>[Compare with 1.20.1](https://github.com/cortexapps/cli/compare/1.20.1...1.21.0)</small>
+
+### Features
+
+- add login command, alphabetize help, remove workflows Beta label ([a89c6c7](https://github.com/cortexapps/cli/commit/a89c6c7e85479bb116eda3bfb6f657b888f186db) by Jeff Schnitter).
+
 ## [1.20.1](https://github.com/cortexapps/cli/releases/tag/1.20.1) - 2026-07-06
 
 <small>[Compare with 1.20.0](https://github.com/cortexapps/cli/compare/1.20.0...1.20.1)</small>
