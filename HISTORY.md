@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.20.0](https://github.com/cortexapps/cli/releases/tag/1.20.0) - 2026-06-11
+
+<small>[Compare with 1.19.2](https://github.com/cortexapps/cli/compare/1.19.2...1.20.0)</small>
+
+### Features
+
+- add integration tests for users roles list ([ef639c6](https://github.com/cortexapps/cli/commit/ef639c6c49a6de44e38c9c72e4d84754af4c5e8a) by Jeff Schnitter).
+- add users roles list command ([52013c9](https://github.com/cortexapps/cli/commit/52013c981a38236e8a381b7c069b5f067cbdadba) by Jeff Schnitter).
+
+### Bug Fixes
+
+- add explicit pytest import to test_users.py ([517b60a](https://github.com/cortexapps/cli/commit/517b60a48ee1977c575c840a81e90faf92c1f793) by Jeff Schnitter).
+
 ## [1.19.2](https://github.com/cortexapps/cli/releases/tag/1.19.2) - 2026-06-10
 
 <small>[Compare with 1.19.1](https://github.com/cortexapps/cli/compare/1.19.1...1.19.2)</small>
