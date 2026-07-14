@@ -134,26 +134,13 @@ def list_solutions(ctx: typer.Context):
 def _print_readme(text: str, plain: bool = False) -> None:
     """Render README with left-justified headings and Rich Markdown body blocks.
 
-    When plain=True, output is rendered without any color or Rich markup,
-    suitable for light-mode terminals.
+    When plain=True, markdown structure is preserved (bold, code blocks, etc.)
+    but all color is removed — suitable for light-mode terminals.
     """
     # Strip YAML frontmatter
     body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL).strip()
 
-    if plain:
-        # Plain black output: strip markdown markers, print raw text
-        plain_console = Console(highlight=False, markup=False)
-        for line in body.split("\n"):
-            # Strip heading markers
-            for prefix in ("### ", "## ", "# "):
-                if line.startswith(prefix):
-                    line = line[len(prefix):]
-                    break
-            # Strip code fence markers
-            if line.startswith("```"):
-                continue
-            plain_console.print(line)
-        return
+    out = Console(no_color=True) if plain else console
 
     heading_styles = {"# ": "bold", "## ": "bold underline", "### ": "bold"}
     pending: list[str] = []
@@ -162,7 +149,7 @@ def _print_readme(text: str, plain: bool = False) -> None:
     def flush() -> None:
         block = "\n".join(pending).strip()
         if block:
-            console.print(Markdown(block))
+            out.print(Markdown(block))
         pending.clear()
 
     for line in body.split("\n"):
@@ -173,13 +160,13 @@ def _print_readme(text: str, plain: bool = False) -> None:
             continue
 
         if in_code_block:
-            console.print(f"  [cyan]{line}[/cyan]" if line else "")
+            out.print(f"  [cyan]{line}[/cyan]" if line else "")
             continue
 
         for prefix, style in heading_styles.items():
             if line.startswith(prefix):
                 flush()
-                console.print(f"\n[{style}]{line[len(prefix):]}[/{style}]")
+                out.print(f"\n[{style}]{line[len(prefix):]}[/{style}]")
                 break
         else:
             pending.append(line)
