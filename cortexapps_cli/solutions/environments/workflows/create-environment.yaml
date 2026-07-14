@@ -1,3 +1,4 @@
+tag: create-environment
 name: Create Environment
 description: >
   Creates a new environment entity in Cortex.

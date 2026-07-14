@@ -1,3 +1,4 @@
+tag: create-release
 name: Create Release
 description: >
   Creates a release entity in Cortex linked to an environment.

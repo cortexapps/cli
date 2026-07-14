@@ -1,0 +1,1 @@
+{"type": "release", "name": "Release", "description": "A deployment event. Links an environment to the set of service versions deployed in it."}

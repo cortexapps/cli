@@ -1,7 +1,0 @@
-tag: service-version
-name: Service Version
-description: >
-  A specific deployed version of a service (e.g. payments-1.6.1).
-  Carries package and CVE vulnerability data as custom metadata.
-  References parent service via custom-data.service field.
-  Created automatically by the GitHub release workflow on publish.
