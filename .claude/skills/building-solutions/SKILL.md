@@ -24,18 +24,20 @@ cortexapps_cli/solutions/<tag>/
 │   └── <tag>.yaml
 ├── scorecards/                       ← scorecard definitions
 │   └── <tag>.yaml
-└── workflows/                        ← Cortex workflow YAML files (must include `tag:` field)
+└── workflows/                        ← Cortex workflow YAML files
     └── <name>.yaml
 ```
 
 The solution root IS the backup root — `backup.import_tenant` is called directly on this directory. Do not add a `backup/` subdirectory.
 
-**File format rules (important):**
+**Do NOT include `.gitkeep` files.** The importer tries to parse every file it finds.
+
+**File format rules — these are hard requirements:**
 - `entity-types/` — **JSON only**. `entity_types.create` uses `json.loads`. Fields: `type`, `name`, `description`.
-- `entity-relationship-types/` — **JSON only**. Fields: `tag`, `name`, `description`, `sourceTypes`, `targetTypes`.
+- `entity-relationship-types/` — **JSON only**. Must include `definitionLocation`, `sourcesFilter`, `destinationsFilter`, `inheritances`. See format below.
 - `catalog/` — **YAML** (OpenAPI format with `x-cortex-*` extensions). Must be **flat** — the importer only reads files at the top level, not subdirectories.
 - `scorecards/` — YAML or JSON.
-- `workflows/` — YAML or JSON, but **must include a `tag:` field** at the top level.
+- `workflows/` — YAML or JSON. Must include `tag:`, `filter:`, and `actions:` fields. See format below.
 
 ---
 
@@ -75,8 +77,6 @@ cortex solutions install -s <tag>
 Steps the user must take manually after install (e.g. create a Catalog in the UI).
 ```
 
-See `cortexapps_cli/solutions/github-starter/README.md` for a real example.
-
 ---
 
 ## Entity YAML Format
@@ -90,14 +90,42 @@ info:
   x-cortex-tag: my-entity
   x-cortex-type: <entity-type-tag>
   x-cortex-description: Human readable description
+  x-cortex-definition: {}      ← REQUIRED for custom entity types (e.g. non-service/domain/team)
   x-cortex-groups:
     - groupName:value
   x-cortex-custom-data:
     key: value
   x-cortex-relationships:
-    - tag: other-entity-tag
-      type: relationship-type-tag
+    - type: relationship-type-tag
+      destinations:
+        - tag: child-entity-tag
 ```
+
+**`x-cortex-definition: {}`** — Required for custom entity types (anything not service, domain, or team). Omitting it causes "Standard cortex tags: Definition is required" on import.
+
+---
+
+## Entity Relationship Format in Catalog YAML
+
+The `x-cortex-relationships` block uses **`type`** (not `tag`) for the relationship type name, and **`destinations`** or **`sources`** for the connected entities:
+
+```yaml
+x-cortex-relationships:
+  - type: my-relationship-type    ← relationship TYPE tag (not the connected entity tag)
+    destinations:                 ← use 'destinations' if this entity is the SOURCE
+      - tag: child-entity-tag
+      - tag: another-child-tag
+```
+
+**Which direction to use** depends on the relationship type's `definitionLocation`:
+- `definitionLocation: SOURCE` — the SOURCE entity defines the relationship using `destinations`. The source entity lists its children.
+- `definitionLocation: DESTINATION` — the DESTINATION entity defines the relationship using `sources`. The child entity points to its parent.
+
+**Choose SOURCE when** the parent entity should enumerate its children (e.g. environment lists its releases). All child entities will be destinations.
+
+**The relationship type's `sourcesFilter` and `destinationsFilter`** control which entity types are allowed on each end. Violations produce errors like "cannot have destinations of type X" if you point to the wrong type.
+
+---
 
 ## Entity Type JSON Format
 
@@ -111,19 +139,113 @@ Entity types must be **JSON** (the CLI's `entity_types.create` uses `json.loads`
 }
 ```
 
+**Note:** If a custom entity type with the same `type` tag already exists in the tenant, the importer silently skips creation. The existing definition may differ from yours.
+
+---
+
 ## Relationship Type JSON Format
 
-Relationship types must be **JSON** and go in `entity-relationship-types/` (not `relationship-types/`):
+Relationship types must be **JSON**, go in `entity-relationship-types/` (not `relationship-types/`), and include all required fields:
 
 ```json
 {
   "tag": "my-relationship",
   "name": "My Relationship",
   "description": "What this relationship means.",
-  "sourceTypes": ["entity-type-a", "entity-type-b"],
-  "targetTypes": ["entity-type-c"]
+  "definitionLocation": "SOURCE",
+  "isSingleSource": false,
+  "isSingleDestination": false,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": true,
+    "types": ["source-entity-type"],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": true,
+    "types": ["destination-entity-type"],
+    "providers": []
+  },
+  "inheritances": []
 }
 ```
+
+**`definitionLocation`** — required. Values: `"SOURCE"`, `"DESTINATION"`, `"BOTH"`.
+- `SOURCE`: the source entity's YAML defines the relationship (uses `destinations:` in entity YAML)
+- `DESTINATION`: the destination entity's YAML defines the relationship (uses `sources:` in entity YAML)
+
+**`inheritances`** — required, even if empty (`[]`).
+
+**`sourcesFilter` / `destinationsFilter`** — required. Set `include: true` with specific `types` to restrict which entity types can be on each end, or `include: false` with `types: []` for unrestricted.
+
+---
+
+## Workflow YAML Format
+
+Workflows must include `tag`, `filter`, and `actions`. The format is the Cortex workflow API object, **not** a DSL with `trigger`/`inputs`/`steps`.
+
+```yaml
+tag: my-workflow
+name: My Workflow
+description: What this workflow does.
+filter:
+  type: GLOBAL          # or ENTITY for entity-scoped workflows
+isDraft: true
+actions:
+  - name: Collect Inputs
+    slug: collect-inputs
+    isRootAction: true
+    outgoingActions:
+      - next-action-slug
+    schema:
+      type: USER_INPUT
+      inputs:
+        - name: Field Name
+          key: fieldKey
+          description: Description shown to user
+          required: true
+          type: INPUT_FIELD        # or SELECT_FIELD for dropdown
+          options:                 # only for SELECT_FIELD
+            - option1
+            - option2
+      inputOverrides: []
+      jsValidatorScript: null
+  - name: Create Entity
+    slug: create-entity
+    isRootAction: false
+    outgoingActions: []
+    schema:
+      type: ADVANCED_HTTP_REQUEST
+      actionIdentifier: cortex.createOrUpdateEntity
+      integrationAlias: null
+      inputs:
+        mode: CREATE              # or UPSERT
+        dryRun: false
+        body: |
+          openapi: "3.0.0"
+          info:
+            title: "{{actions.collect-inputs.outputs.fieldKey}}"
+            x-cortex-tag: "{{actions.collect-inputs.outputs.fieldKey}}"
+            x-cortex-type: my-type
+            x-cortex-definition: {}
+```
+
+**Template syntax:** `{{actions.<slug>.outputs.<key>}}` to reference previous action outputs. Use `{{{...}}}` (triple braces) for raw/unescaped values.
+
+**Available action identifiers:**
+- `cortex.createOrUpdateEntity` — create or upsert a Cortex entity. Inputs: `body` (YAML string), `mode` (CREATE/UPSERT), `dryRun`.
+- `cortex.createOrPatchEntity` — patch an existing entity. Inputs: `body`, `dryRun`, `appendArrays`, `failIfEntityDoesNotExist`.
+- `cortex.addCustomMetricsDataPoint` — push a custom metric. Inputs: `value`, `entityId`, `timestamp`, `metricsKey`.
+- `github.getFile` — fetch a file from GitHub. Inputs: `path`, `repo`.
+- `github.createRelease` — create a GitHub release. Inputs: `repo`, `tagName`, `name`, `body`, `draft`, `prerelease`.
+
+**GitHub workflow limitation:** `github.*` actions require a configured GitHub integration alias in the target tenant. Workflows using GitHub actions will fail import in tenants without it. Either make the workflow a stub (USER_INPUT only) or document this requirement in the README.
+
+**`filter.type`:**
+- `GLOBAL` — workflow runs globally, not scoped to an entity
+- `ENTITY` — workflow runs on a specific entity; can access `{{context.entity.*}}`
+
+---
 
 ## Scorecard YAML Format
 
@@ -151,7 +273,7 @@ rules:
 
 2. **Write README.md** with YAML frontmatter (name + description required).
 
-3. **Add backup content** — entity types (JSON), relationship types (JSON), catalog entities (flat YAML), scorecards, workflows (with `tag:` field).
+3. **Add backup content** — entity types (JSON), relationship types (JSON), catalog entities (flat YAML), scorecards, workflows.
 
 4. **Verify `importlib.resources` discovers it:**
    ```bash
@@ -173,10 +295,20 @@ rules:
    "
    ```
 
-6. **Smoke test via CLI:**
+6. **Test each resource type individually before running the full install:**
+   ```bash
+   poetry run cortex entity-types create -f cortexapps_cli/solutions/<tag>/entity-types/<type>.json
+   poetry run cortex entity-relationship-types create -f cortexapps_cli/solutions/<tag>/entity-relationship-types/<rel>.json
+   poetry run cortex catalog create -f cortexapps_cli/solutions/<tag>/catalog/<entity>.yaml
+   poetry run cortex workflows create -f cortexapps_cli/solutions/<tag>/workflows/<workflow>.yaml
+   ```
+   Fix errors before running `solutions install`.
+
+7. **Smoke test via CLI:**
    ```bash
    poetry run cortex solutions list           # should show your solution
    poetry run cortex solutions info -s <tag>  # should render README
+   poetry run cortex solutions install -s <tag>
    ```
 
 ---
@@ -190,27 +322,35 @@ with as_file(_solutions_root() / tag) as solution_path:
     backup.import_tenant(ctx, directory=str(solution_path), force=force)
 ```
 
-`backup.import_tenant` walks the directory and upserts every YAML file it recognizes into the user's Cortex instance. This means:
-- Entity types and relationship types are created first
-- Entities are upserted (created or updated)
-- Scorecards are imported
-- Files in `catalogs/` are skipped until catalog API support is added
+`backup.import_tenant` processes directories in this order:
+1. `ip-allowlist/`
+2. `entity-types/` — JSON files
+3. `entity-relationship-types/` — JSON files
+4. `catalog/` — YAML/JSON entities (flat, parallel import + two-pass for relationships)
+5. `entity-relationships/` — JSON
+6. `plugins/`
+7. `scorecards/` — YAML/JSON
+8. `workflows/` — YAML/JSON
 
 ---
 
-## Catalog Placeholder Convention
+## Common Errors and Fixes
 
-Catalog creation is not yet supported via the backup API. Add a comment-only placeholder so users know what to do manually:
-
-```yaml
-# PLACEHOLDER — pending catalog API support in Cortex CLI
-#
-# After install, manually create the catalog:
-#   1. Go to Catalogs in the Cortex UI
-#   2. Click "New Catalog"
-#   3. Select relationship type: <your-relationship-type>
-#   4. Set root entity type: <your-root-type>
-```
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `JSONDecodeError - Expecting value` | Entity type file is YAML, not JSON | Convert to JSON |
+| `missing required field(s): definitionLocation` | Relationship type missing required fields | Add `definitionLocation`, `sourcesFilter`, `destinationsFilter`, `inheritances` |
+| `missing required field(s): inheritances` | Relationship type JSON missing field | Add `"inheritances": []` |
+| `Relationship type #1 must contain at least one of sources or destinations` | Old format `{tag:..., type:...}` used | Use `{type: rel-type, destinations: [{tag:...}]}` |
+| `Relationship type #1 is missing required type field` | Using `tag:` instead of `type:` for relationship | Change outer key from `tag:` to `type:` |
+| `Relationships of type X must be defined by the SOURCE entity` | Entity has relationship but wrong `definitionLocation` | Relationship must be on source entities (if SOURCE) or destination entities (if DESTINATION) |
+| `cannot have destinations of type X` | Wrong entity type in destinations | sourcesFilter/destinationsFilter restrict which types are allowed on each end |
+| `Standard cortex tags: Definition is required` | Custom entity missing `x-cortex-definition` | Add `x-cortex-definition: {}` to entity YAML |
+| `missing required field(s): filter` | Workflow missing `filter:` field | Add `filter: {type: GLOBAL}` or `{type: ENTITY}` |
+| `missing required field(s): actions` | Workflow missing `actions:` field | Add `actions: []` or populate with real actions |
+| `Duplicate field 'filter'` | Script added filter twice | Remove duplicate from workflow YAML |
+| `Invalid Github configuration alias` | Workflow uses `github.*` action but no GitHub integration configured in tenant | Remove GitHub action or document as manual step |
+| `.gitkeep` parse errors | Empty placeholder files are parsed | Remove all `.gitkeep` files from solution |
 
 ---
 
@@ -219,7 +359,14 @@ Catalog creation is not yet supported via the backup API. Add a comment-only pla
 - [ ] Directory at `cortexapps_cli/solutions/<tag>/`
 - [ ] `README.md` with valid YAML frontmatter (`name` + `description`)
 - [ ] ASCII diagram in `## Overview` section of README
-- [ ] All YAML files pass `yaml.safe_load`
+- [ ] No `.gitkeep` files anywhere in the solution
+- [ ] Entity types as JSON with `type`, `name`, `description`
+- [ ] Relationship types as JSON with all required fields including `definitionLocation` and `inheritances`
+- [ ] Catalog entities are flat (no subdirectories), custom types have `x-cortex-definition: {}`
+- [ ] Entity relationships use `type:` (not `tag:`) and `destinations:`/`sources:` consistent with `definitionLocation`
+- [ ] Workflows have `tag:`, `filter:`, and `actions:` fields
+- [ ] Each resource type tested individually before running full install
 - [ ] `cortex solutions list` shows the solution
 - [ ] `cortex solutions info -s <tag>` renders correctly
+- [ ] `cortex solutions install -s <tag>` completes with 0 failures
 - [ ] Commit with `feat: add <tag> solution`
