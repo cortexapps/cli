@@ -4,6 +4,7 @@ info:
   x-cortex-tag: notifications-1.0.1
   x-cortex-type: service-version
   x-cortex-description: notifications service version 1.0.1
+  x-cortex-definition: {}
   x-cortex-custom-data:
     service: notifications
     version: 1.0.1
@@ -14,7 +15,3 @@ info:
       - name: redis-py
         version: 5.0.4
         vulnerabilities: []
-  x-cortex-relationships:
-    - tag: environments
-      destinations:
-        - tag: release-2026-07-07-dev

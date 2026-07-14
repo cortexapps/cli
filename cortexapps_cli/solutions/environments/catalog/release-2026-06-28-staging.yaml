@@ -5,6 +5,8 @@ info:
   x-cortex-type: release
   x-cortex-description: Staging release on 2026-06-28
   x-cortex-relationships:
-    - tag: environments
+    - type: environments
       destinations:
-        - tag: gcp-staging-us-east-1
+        - tag: auth-2.1.0
+        - tag: notifications-1.0.0
+        - tag: payments-1.6.1

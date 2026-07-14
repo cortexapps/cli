@@ -5,6 +5,8 @@ info:
   x-cortex-type: release
   x-cortex-description: Production release on 2026-06-15
   x-cortex-relationships:
-    - tag: environments
+    - type: environments
       destinations:
-        - tag: gcp-prod-us-east-1
+        - tag: auth-2.0.8
+        - tag: notifications-0.9.5
+        - tag: payments-1.5.2

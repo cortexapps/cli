@@ -4,6 +4,7 @@ info:
   x-cortex-tag: api-gateway-3.1.1
   x-cortex-type: service-version
   x-cortex-description: api-gateway service version 3.1.1
+  x-cortex-definition: {}
   x-cortex-custom-data:
     service: api-gateway
     version: 3.1.1
@@ -14,7 +15,3 @@ info:
       - name: openssl
         version: 3.2.1
         vulnerabilities: []
-  x-cortex-relationships:
-    - tag: environments
-      destinations:
-        - tag: release-2026-07-10-dev

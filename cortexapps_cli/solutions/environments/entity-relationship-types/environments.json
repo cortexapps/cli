@@ -8,12 +8,19 @@
   "allowCycles": false,
   "sourcesFilter": {
     "include": true,
-    "types": ["environment", "release"],
+    "types": [
+      "environment",
+      "release"
+    ],
     "providers": []
   },
   "destinationsFilter": {
     "include": true,
-    "types": ["release", "service-version"],
+    "types": [
+      "release",
+      "service-version"
+    ],
     "providers": []
-  }
+  },
+  "inheritances": []
 }

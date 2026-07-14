@@ -5,6 +5,8 @@ info:
   x-cortex-type: release
   x-cortex-description: Dev release on 2026-07-07
   x-cortex-relationships:
-    - tag: environments
+    - type: environments
       destinations:
-        - tag: aws-dev-us-west-2
+        - tag: api-gateway-3.1.0
+        - tag: notifications-1.0.1
+        - tag: payments-1.7.0

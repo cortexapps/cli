@@ -1,52 +1,61 @@
 tag: create-environment
-filter:
-  type: GLOBAL
 name: Create Environment
 description: >
   Creates a new environment entity in Cortex.
   Prompts for cloud type, environment type, and region.
-  Add your cluster provisioning steps after the entity creation step.
-trigger:
-  type: manual
-
-inputs:
-  - name: cloudType
-    type: string
-    description: Cloud provider (e.g. gcp, aws, azure)
-    required: true
-    options:
-      - gcp
-      - aws
-      - azure
-  - name: envType
-    type: string
-    description: Environment tier
-    required: true
-    options:
-      - prod
-      - staging
-      - dev
-  - name: region
-    type: string
-    description: Cloud region (e.g. us-east-1, us-west-2, eu-west-1)
-    required: true
-
-steps:
-  - name: create-entity
-    description: Create the environment entity in Cortex
-    type: cortex-api
-    method: POST
-    path: /api/v1/catalog
-    body:
-      openapi: "3.0.0"
-      info:
-        title: "${{ inputs.cloudType }}-${{ inputs.envType }}-${{ inputs.region }}"
-        x-cortex-tag: "${{ inputs.cloudType }}-${{ inputs.envType }}-${{ inputs.region }}"
-        x-cortex-type: environment
-        x-cortex-description: "${{ inputs.cloudType }} ${{ inputs.envType }} cluster in ${{ inputs.region }}"
-        x-cortex-groups:
-          - "cloudType:${{ inputs.cloudType }}"
-          - "envType:${{ inputs.envType }}"
-          - "region:${{ inputs.region }}"
-
-  # TODO: Add your cluster provisioning steps here (Terraform, GKE, EKS, etc.)
+  Add your cluster provisioning steps after the entity creation action.
+filter:
+  type: GLOBAL
+isDraft: true
+actions:
+  - name: Collect Inputs
+    slug: collect-inputs
+    isRootAction: true
+    outgoingActions:
+      - create-entity
+    schema:
+      type: USER_INPUT
+      inputs:
+        - name: Cloud Type
+          key: cloudType
+          description: Cloud provider
+          required: true
+          type: SELECT_FIELD
+          options:
+            - gcp
+            - aws
+            - azure
+        - name: Environment Type
+          key: envType
+          description: Environment tier
+          required: true
+          type: SELECT_FIELD
+          options:
+            - prod
+            - staging
+            - dev
+        - name: Region
+          key: region
+          description: Cloud region (e.g. us-east-1, us-west-2, eu-west-1)
+          required: true
+          type: INPUT_FIELD
+      inputOverrides: []
+      jsValidatorScript: null
+  - name: Create Environment Entity
+    slug: create-entity
+    isRootAction: false
+    outgoingActions: []
+    schema:
+      type: ADVANCED_HTTP_REQUEST
+      actionIdentifier: cortex.createOrUpdateEntity
+      integrationAlias: null
+      inputs:
+        mode: CREATE
+        dryRun: false
+        body: "openapi: \"3.0.0\"\ninfo:\n  title: \"{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}\"\n\
+          \  x-cortex-tag: \"{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}\"\n\
+          \  x-cortex-type: environment\n  x-cortex-description: \"{{actions.collect-inputs.outputs.cloudType}}\
+          \ {{actions.collect-inputs.outputs.envType}} cluster in {{actions.collect-inputs.outputs.region}}\"\n\
+          \  x-cortex-groups:\n    - \"cloudType:{{actions.collect-inputs.outputs.cloudType}}\"\
+          \n    - \"envType:{{actions.collect-inputs.outputs.envType}}\"\n    - \"region:{{actions.collect-inputs.outputs.region}}\"\
+          \n"

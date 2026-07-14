@@ -4,6 +4,7 @@ info:
   x-cortex-tag: payments-1.5.2
   x-cortex-type: service-version
   x-cortex-description: payments service version 1.5.2
+  x-cortex-definition: {}
   x-cortex-custom-data:
     service: payments
     version: 1.5.2
@@ -14,7 +15,3 @@ info:
       - name: boto3
         version: 1.33.2
         vulnerabilities: []
-  x-cortex-relationships:
-    - tag: environments
-      destinations:
-        - tag: release-2026-06-15-prod
