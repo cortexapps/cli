@@ -15,6 +15,19 @@ This solution provides a starting point for teams using GitHub with Cortex.
 
 - GitHub integration enabled in your Cortex workspace
 
+## Installation
+
+```
+cortex solutions install -s github-starter
+```
+
+To overwrite existing resources:
+
+```
+cortex solutions install -s github-starter --force
+```
+
 ## After Installing
 
-Run `cortex scorecards list` to see the installed scorecards.
+Run `cortex scorecards list` to confirm the scorecard was imported, then navigate
+to the Scorecards page in the Cortex UI to see scores across your services.

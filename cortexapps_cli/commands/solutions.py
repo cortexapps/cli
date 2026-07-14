@@ -159,6 +159,7 @@ def install(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
     force: bool = typer.Option(False, "--force", help="Recreate entities if they already exist"),
+    show_info: bool = typer.Option(True, "--info/--no-info", help="Show solution README after installing"),
 ):
     """Install a solution into the current Cortex workspace."""
     if solution not in _list_solution_tags():
@@ -172,3 +173,9 @@ def install(
 
     with as_file(_solutions_root() / solution) as solution_path:
         backup.import_tenant(ctx, directory=str(solution_path), force=force)
+
+    if show_info:
+        readme = _get_readme(solution)
+        if readme:
+            console.print()
+            _print_readme(readme)
