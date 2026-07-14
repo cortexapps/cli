@@ -76,7 +76,12 @@ def _build_client(ctx: typer.Context) -> CortexClient:
                     f"Error: Tenant '{tenant}' not found in config. Run 'cortex login' first."
                 )
                 raise typer.Exit(1)
-            api_key = config[tenant]["api_key"]
+            api_key = config[tenant].get("api_key")
+            if not api_key:
+                typer.echo(
+                    f"Error: No api_key found for tenant '{tenant}' in config. Run 'cortex login' first."
+                )
+                raise typer.Exit(1)
         if not url:
             url = config[tenant].get("base_url", "https://api.getcortexapp.com")
 
