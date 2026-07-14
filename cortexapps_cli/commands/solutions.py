@@ -117,10 +117,9 @@ def _print_readme(text: str) -> None:
     # Strip YAML frontmatter
     body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL).strip()
 
-    # Process line by line: headings get Rich markup; everything else is
-    # collected into blocks and rendered via Markdown (preserving bullets, code, etc.)
     heading_styles = {"# ": "bold", "## ": "bold underline", "### ": "bold"}
     pending: list[str] = []
+    in_code_block = False
 
     def flush() -> None:
         block = "\n".join(pending).strip()
@@ -129,6 +128,16 @@ def _print_readme(text: str) -> None:
         pending.clear()
 
     for line in body.split("\n"):
+        if line.startswith("```"):
+            if not in_code_block:
+                flush()
+            in_code_block = not in_code_block
+            continue
+
+        if in_code_block:
+            console.print(f"  [cyan]{line}[/cyan]" if line else "")
+            continue
+
         for prefix, style in heading_styles.items():
             if line.startswith(prefix):
                 flush()
