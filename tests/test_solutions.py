@@ -35,3 +35,23 @@ def test_solutions_info_unknown_tag():
     result = cli(["solutions", "info", "-s", "nonexistent-xyz-abc"], return_type=ReturnType.RAW)
     assert result.exit_code == 1
     assert "not found" in result.output.lower()
+
+
+def test_solutions_install_unknown_tag():
+    # Unknown-tag check runs before auth check, so no credentials needed
+    result = cli(["solutions", "install", "-s", "nonexistent-xyz-abc"], return_type=ReturnType.RAW)
+    assert result.exit_code == 1
+    assert "not found" in result.output.lower()
+
+
+def test_solutions_install_no_auth():
+    # Known tag, but no credentials configured — should fail with auth error
+    # This test only applies when no config file or CORTEX_API_KEY is present.
+    # Skip if the test environment has credentials set up.
+    import os
+    if os.path.isfile(os.path.join(os.path.expanduser("~"), ".cortex", "config")):
+        import pytest
+        pytest.skip("Skipping: credentials are configured in this environment")
+    result = cli(["solutions", "install", "-s", "github-starter"], return_type=ReturnType.RAW)
+    assert result.exit_code == 1
+    assert "authentication required" in result.output.lower()

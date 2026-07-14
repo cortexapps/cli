@@ -119,3 +119,23 @@ def info(
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
     console.print(Markdown(readme))
+
+
+@app.command()
+def install(
+    ctx: typer.Context,
+    solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+    force: bool = typer.Option(False, "--force", help="Recreate entities if they already exist"),
+):
+    """Install a solution into the current Cortex workspace."""
+    if solution not in _list_solution_tags():
+        avail = ", ".join(_list_solution_tags())
+        typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
+        raise typer.Exit(1)
+
+    ctx.obj["client"] = _build_client(ctx)
+
+    import cortexapps_cli.commands.backup as backup
+
+    with as_file(_solutions_root() / solution) as solution_path:
+        backup.import_tenant(ctx, directory=str(solution_path), force=force)
