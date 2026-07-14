@@ -112,6 +112,34 @@ def list_solutions(ctx: typer.Context):
     console.print(table)
 
 
+def _print_readme(text: str) -> None:
+    """Render README with left-justified headings and Rich Markdown body blocks."""
+    # Strip YAML frontmatter
+    body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL).strip()
+
+    # Process line by line: headings get Rich markup; everything else is
+    # collected into blocks and rendered via Markdown (preserving bullets, code, etc.)
+    heading_styles = {"# ": "bold", "## ": "bold underline", "### ": "bold"}
+    pending: list[str] = []
+
+    def flush() -> None:
+        block = "\n".join(pending).strip()
+        if block:
+            console.print(Markdown(block))
+        pending.clear()
+
+    for line in body.split("\n"):
+        for prefix, style in heading_styles.items():
+            if line.startswith(prefix):
+                flush()
+                console.print(f"\n[{style}]{line[len(prefix):]}[/{style}]")
+                break
+        else:
+            pending.append(line)
+
+    flush()
+
+
 @app.command()
 def info(
     ctx: typer.Context,
@@ -123,7 +151,7 @@ def info(
         avail = ", ".join(_list_solution_tags())
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
-    console.print(Markdown(readme))
+    _print_readme(readme)
 
 
 @app.command()
