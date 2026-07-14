@@ -15,23 +15,27 @@ Every solution lives at `cortexapps_cli/solutions/<tag>/` and is a valid Cortex 
 
 ```
 cortexapps_cli/solutions/<tag>/
-├── README.md                    ← required — YAML frontmatter + ASCII diagram
-├── entity-types/                ← custom entity type definitions
-│   └── <type>.yaml
-├── relationship-types/          ← custom relationship type definitions
-│   └── <type>.yaml
-├── entities/                    ← sample or seed entities
-│   └── <entity-type>/
-│       └── <tag>.yaml
-├── scorecards/                  ← scorecard definitions
+├── README.md                         ← required — YAML frontmatter + ASCII diagram
+├── entity-types/                     ← custom entity type definitions (JSON files)
+│   └── <type>.json
+├── entity-relationship-types/        ← custom relationship type definitions (JSON files)
+│   └── <type>.json
+├── catalog/                          ← sample or seed entities (flat — no subdirs)
 │   └── <tag>.yaml
-├── catalogs/                    ← catalog definitions (placeholder until API supported)
+├── scorecards/                       ← scorecard definitions
 │   └── <tag>.yaml
-└── workflows/                   ← Cortex workflow YAML files
+└── workflows/                        ← Cortex workflow YAML files (must include `tag:` field)
     └── <name>.yaml
 ```
 
 The solution root IS the backup root — `backup.import_tenant` is called directly on this directory. Do not add a `backup/` subdirectory.
+
+**File format rules (important):**
+- `entity-types/` — **JSON only**. `entity_types.create` uses `json.loads`. Fields: `type`, `name`, `description`.
+- `entity-relationship-types/` — **JSON only**. Fields: `tag`, `name`, `description`, `sourceTypes`, `targetTypes`.
+- `catalog/` — **YAML** (OpenAPI format with `x-cortex-*` extensions). Must be **flat** — the importer only reads files at the top level, not subdirectories.
+- `scorecards/` — YAML or JSON.
+- `workflows/` — YAML or JSON, but **must include a `tag:` field** at the top level.
 
 ---
 
@@ -95,26 +99,30 @@ info:
       type: relationship-type-tag
 ```
 
-## Entity Type YAML Format
+## Entity Type JSON Format
 
-```yaml
-tag: my-type
-name: My Type
-description: >
-  What this entity type represents.
+Entity types must be **JSON** (the CLI's `entity_types.create` uses `json.loads`):
+
+```json
+{
+  "type": "my-type",
+  "name": "My Type",
+  "description": "What this entity type represents."
+}
 ```
 
-## Relationship Type YAML Format
+## Relationship Type JSON Format
 
-```yaml
-tag: my-relationship
-name: My Relationship
-description: What this relationship means.
-sourceTypes:
-  - entity-type-a
-  - entity-type-b
-targetTypes:
-  - entity-type-c
+Relationship types must be **JSON** and go in `entity-relationship-types/` (not `relationship-types/`):
+
+```json
+{
+  "tag": "my-relationship",
+  "name": "My Relationship",
+  "description": "What this relationship means.",
+  "sourceTypes": ["entity-type-a", "entity-type-b"],
+  "targetTypes": ["entity-type-c"]
+}
 ```
 
 ## Scorecard YAML Format
@@ -138,12 +146,12 @@ rules:
 
 1. **Create the directory:**
    ```bash
-   mkdir -p cortexapps_cli/solutions/<tag>/{entity-types,relationship-types,entities,scorecards,catalogs,workflows}
+   mkdir -p cortexapps_cli/solutions/<tag>/{entity-types,entity-relationship-types,catalog,scorecards,workflows}
    ```
 
 2. **Write README.md** with YAML frontmatter (name + description required).
 
-3. **Add backup content** — entity types, relationship types, entities, scorecards.
+3. **Add backup content** — entity types (JSON), relationship types (JSON), catalog entities (flat YAML), scorecards, workflows (with `tag:` field).
 
 4. **Verify `importlib.resources` discovers it:**
    ```bash
