@@ -41,6 +41,7 @@ import cortexapps_cli.commands.rest as rest
 import cortexapps_cli.commands.scim as scim
 import cortexapps_cli.commands.scorecards as scorecards
 import cortexapps_cli.commands.secrets as secrets
+import cortexapps_cli.commands.solutions as solutions
 import cortexapps_cli.commands.teams as teams
 import cortexapps_cli.commands.users as users
 import cortexapps_cli.commands.workflows as workflows
@@ -83,6 +84,17 @@ def global_callback(
 
     # login command handles its own auth setup
     if ctx.invoked_subcommand == "login":
+        return
+
+    if ctx.invoked_subcommand == "solutions":
+        ctx.obj["_auth_params"] = {
+            "api_key": api_key,
+            "url": url,
+            "config_file": config_file,
+            "tenant": tenant,
+            "log_level": log_level,
+            "rate_limit": rate_limit,
+        }
         return
 
     numeric_level = getattr(logging, log_level.upper(), None)
@@ -264,6 +276,7 @@ app.add_typer(rest.app, name="rest")
 app.add_typer(scim.app, name="scim")
 app.add_typer(scorecards.app, name="scorecards")
 app.add_typer(secrets.app, name="secrets")
+app.add_typer(solutions.app, name="solutions")
 app.add_typer(teams.app, name="teams")
 app.add_typer(users.app, name="users")
 app.command()(version)
