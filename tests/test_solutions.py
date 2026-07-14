@@ -23,3 +23,15 @@ def test_solutions_list_shows_description():
     result = cli(["solutions", "list"], return_type=ReturnType.RAW)
     assert result.exit_code == 0, result.output
     assert "GitHub-integrated" in result.output
+
+
+def test_solutions_info_known_tag():
+    result = cli(["solutions", "info", "-s", "github-starter"], return_type=ReturnType.RAW)
+    assert result.exit_code == 0, result.output
+    assert "GitHub Starter" in result.output
+
+
+def test_solutions_info_unknown_tag():
+    result = cli(["solutions", "info", "-s", "nonexistent-xyz-abc"], return_type=ReturnType.RAW)
+    assert result.exit_code == 1
+    assert "not found" in result.output.lower()

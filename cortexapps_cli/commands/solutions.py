@@ -105,3 +105,17 @@ def list_solutions(ctx: typer.Context):
         fm = _parse_frontmatter(readme)
         table.add_row(tag, fm.get("name", tag), fm.get("description", ""))
     console.print(table)
+
+
+@app.command()
+def info(
+    ctx: typer.Context,
+    solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+):
+    """Show README for a solution."""
+    readme = _get_readme(solution)
+    if readme is None:
+        avail = ", ".join(_list_solution_tags())
+        typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
+        raise typer.Exit(1)
+    console.print(Markdown(readme))
