@@ -1,7 +1,7 @@
 openapi: "3.0.0"
 info:
-  title: release-2026-07-07-dev
-  x-cortex-tag: release-2026-07-07-dev
+  title: release-2026-07-07
+  x-cortex-tag: release-2026-07-07
   x-cortex-type: release
   x-cortex-description: Dev release on 2026-07-07
   x-cortex-relationships:

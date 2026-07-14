@@ -1,7 +1,7 @@
 openapi: "3.0.0"
 info:
-  title: release-2026-06-28-staging
-  x-cortex-tag: release-2026-06-28-staging
+  title: release-2026-06-28
+  x-cortex-tag: release-2026-06-28
   x-cortex-type: release
   x-cortex-description: Staging release on 2026-06-28
   x-cortex-relationships:

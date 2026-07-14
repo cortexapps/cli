@@ -11,5 +11,5 @@ info:
   x-cortex-relationships:
     - type: environments
       destinations:
-        - tag: release-2026-06-15-prod
-        - tag: release-2026-07-01-prod
+        - tag: release-2026-06-15
+        - tag: release-2026-07-01
