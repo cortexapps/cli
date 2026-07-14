@@ -88,3 +88,20 @@ def _build_client(ctx: typer.Context) -> CortexClient:
 
     numeric_level = getattr(logging, log_level_str.upper(), logging.WARNING)
     return CortexClient(api_key, tenant, numeric_level, url, rate_limit)
+
+
+@app.command("list")
+def list_solutions(ctx: typer.Context):
+    """List all available solutions."""
+    tags = _list_solution_tags()
+    table = Table(title="Available Solutions")
+    table.add_column("Tag", style="cyan", no_wrap=True)
+    table.add_column("Name")
+    table.add_column("Description")
+    for tag in tags:
+        readme = _get_readme(tag)
+        if readme is None:
+            continue
+        fm = _parse_frontmatter(readme)
+        table.add_row(tag, fm.get("name", tag), fm.get("description", ""))
+    console.print(table)
