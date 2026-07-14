@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.21.1](https://github.com/cortexapps/cli/releases/tag/1.21.1) - 2026-07-14
+
+<small>[Compare with 1.21.0](https://github.com/cortexapps/cli/compare/1.21.0...1.21.1)</small>
+
+### Bug Fixes
+
+- convert deploy timestamps to UTC before sending #patch ([685811e](https://github.com/cortexapps/cli/commit/685811e3dacdd6c7f20f71efce3778edc7cec569) by Hanna Vigil).
+
 ## [1.21.0](https://github.com/cortexapps/cli/releases/tag/1.21.0) - 2026-07-07
 
 <small>[Compare with 1.20.1](https://github.com/cortexapps/cli/compare/1.20.1...1.21.0)</small>
