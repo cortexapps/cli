@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import json
 from rich import print_json
@@ -168,7 +168,7 @@ def add(
 
         if customData:
             data["customData"] = dict(customData)
-        data["timestamp"] = data["timestamp"].strftime('%Y-%m-%dT%H:%M:%SZ')
+        data["timestamp"] = data["timestamp"].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     r = client.post("api/v1/catalog/" + tag + "/deploys", data=data)
     print_json(data=r)
@@ -236,7 +236,7 @@ def update_by_uuid(
                 data["deployer"]["email"] = email
             if name:
                 data["deployer"]["name"] = name
-        data["timestamp"] = data["timestamp"].strftime('%Y-%m-%dT%H:%M:%SZ')
+        data["timestamp"] = data["timestamp"].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     r = client.put("api/v1/catalog/" + tag + "/deploys/" + uuid, data=data)
     print_json(data=r)
