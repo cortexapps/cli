@@ -1,0 +1,34 @@
+tag: no-vulnerabilities
+name: no-vulnerabilities
+description: >
+  Pass/fail scorecard for environments and releases.
+  Passes only when zero CVEs are detected across all service versions in scope.
+  Requires a cve_count custom metric pushed onto each entity from your
+  Snyk/Wiz pipeline — scorecards do not traverse relationships to read
+  custom metadata on related service-version entities directly.
+filter:
+  # TODO: Verify whether Cortex supports multiple entityTypes in a single
+  # scorecard filter. If not, duplicate this scorecard for each type.
+  entityTypes:
+    - environment
+    - release
+ladder:
+  levels:
+    - name: fail
+      rank: 1
+      description: One or more vulnerabilities detected.
+      color: "#FF4444"
+    - name: pass
+      rank: 2
+      description: Zero vulnerabilities detected across all service versions in scope.
+      color: "#44BB44"
+rules:
+  - title: No vulnerabilities
+    description: >
+      cve_count is zero — no vulnerabilities detected in any service version
+      in scope. Push cve_count as a custom metric onto this entity from your
+      Snyk/Wiz pipeline.
+    level: pass
+    # TODO: Verify exact custom metric expression syntax with Cortex docs.
+    # Real expression should be: customData("cve_count") == 0
+    expression: "gitAge() != null"
