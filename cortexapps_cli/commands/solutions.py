@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from importlib.resources import as_file, files
+from pathlib import Path
 
 import typer
 import yaml
@@ -16,12 +17,29 @@ app = typer.Typer(help="Solutions commands", no_args_is_help=True)
 console = Console()
 
 
-def _solutions_root():
+@app.callback()
+def solutions_callback(
+    ctx: typer.Context,
+    solutions_dir: str | None = typer.Option(
+        None,
+        "--solutions-dir",
+        help="Path to a custom solutions directory (overrides the built-in solutions).",
+        show_default=False,
+    ),
+) -> None:
+    ctx.ensure_object(dict)
+    if solutions_dir:
+        ctx.obj["solutions_dir"] = solutions_dir
+
+
+def _solutions_root(path: str | None = None):
+    if path:
+        return Path(path)
     return files("cortexapps_cli.solutions")
 
 
-def _list_solution_tags() -> list[str]:
-    root = _solutions_root()
+def _list_solution_tags(path: str | None = None) -> list[str]:
+    root = _solutions_root(path)
     return sorted(
         item.name
         for item in root.iterdir()
@@ -40,10 +58,10 @@ def _parse_frontmatter(content: str) -> dict:
         return {}
 
 
-def _get_readme(tag: str) -> str | None:
+def _get_readme(tag: str, path: str | None = None) -> str | None:
     """Return README.md content for a solution tag, or None if not found."""
     try:
-        return (_solutions_root() / tag / "README.md").read_text(encoding="utf-8")
+        return (_solutions_root(path) / tag / "README.md").read_text(encoding="utf-8")
     except Exception:
         return None
 
@@ -98,13 +116,14 @@ def _build_client(ctx: typer.Context) -> CortexClient:
 @app.command("list")
 def list_solutions(ctx: typer.Context):
     """List all available solutions."""
-    tags = _list_solution_tags()
+    solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
+    tags = _list_solution_tags(solutions_dir)
     table = Table(title="Available Solutions")
     table.add_column("Tag", style="cyan", no_wrap=True)
     table.add_column("Name")
     table.add_column("Description")
     for tag in tags:
-        readme = _get_readme(tag)
+        readme = _get_readme(tag, solutions_dir)
         if readme is None:
             continue
         fm = _parse_frontmatter(readme)
@@ -112,10 +131,29 @@ def list_solutions(ctx: typer.Context):
     console.print(table)
 
 
-def _print_readme(text: str) -> None:
-    """Render README with left-justified headings and Rich Markdown body blocks."""
+def _print_readme(text: str, plain: bool = False) -> None:
+    """Render README with left-justified headings and Rich Markdown body blocks.
+
+    When plain=True, output is rendered without any color or Rich markup,
+    suitable for light-mode terminals.
+    """
     # Strip YAML frontmatter
     body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL).strip()
+
+    if plain:
+        # Plain black output: strip markdown markers, print raw text
+        plain_console = Console(highlight=False, markup=False)
+        for line in body.split("\n"):
+            # Strip heading markers
+            for prefix in ("### ", "## ", "# "):
+                if line.startswith(prefix):
+                    line = line[len(prefix):]
+                    break
+            # Strip code fence markers
+            if line.startswith("```"):
+                continue
+            plain_console.print(line)
+        return
 
     heading_styles = {"# ": "bold", "## ": "bold underline", "### ": "bold"}
     pending: list[str] = []
@@ -153,14 +191,16 @@ def _print_readme(text: str) -> None:
 def info(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+    plain: bool = typer.Option(False, "--plain", help="Render README in plain black text (no colors)."),
 ):
     """Show README for a solution."""
-    readme = _get_readme(solution)
+    solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
+    readme = _get_readme(solution, solutions_dir)
     if readme is None:
-        avail = ", ".join(_list_solution_tags())
+        avail = ", ".join(_list_solution_tags(solutions_dir))
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
-    _print_readme(readme)
+    _print_readme(readme, plain=plain)
 
 
 @app.command()
@@ -171,8 +211,9 @@ def install(
     show_info: bool = typer.Option(True, "--info/--no-info", help="Show solution README after installing"),
 ):
     """Install a solution into the current Cortex workspace."""
-    if solution not in _list_solution_tags():
-        avail = ", ".join(_list_solution_tags())
+    solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
+    if solution not in _list_solution_tags(solutions_dir):
+        avail = ", ".join(_list_solution_tags(solutions_dir))
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
 
@@ -180,11 +221,15 @@ def install(
 
     import cortexapps_cli.commands.backup as backup
 
-    with as_file(_solutions_root() / solution) as solution_path:
-        backup.import_tenant(ctx, directory=str(solution_path), force=force)
+    root = _solutions_root(solutions_dir)
+    if solutions_dir:
+        backup.import_tenant(ctx, directory=str(root / solution), force=force)
+    else:
+        with as_file(root / solution) as solution_path:
+            backup.import_tenant(ctx, directory=str(solution_path), force=force)
 
     if show_info:
-        readme = _get_readme(solution)
+        readme = _get_readme(solution, solutions_dir)
         if readme:
             console.print()
             _print_readme(readme)

@@ -10,23 +10,39 @@ def test_solutions_help():
 def test_solutions_list_shows_tag():
     result = cli(["solutions", "list"], return_type=ReturnType.RAW)
     assert result.exit_code == 0, result.output
-    assert "github-starter" in result.output
+    assert "environments" in result.output
 
 
 def test_solutions_list_shows_name():
     result = cli(["solutions", "list"], return_type=ReturnType.RAW)
     assert result.exit_code == 0, result.output
-    assert "GitHub Starter" in result.output
+    assert "Environments" in result.output
 
 
 def test_solutions_list_shows_description():
     result = cli(["solutions", "list"], return_type=ReturnType.RAW)
     assert result.exit_code == 0, result.output
-    assert "GitHub-integrated" in result.output
+    assert "CVE" in result.output
+
+
+def test_solutions_list_custom_dir():
+    import os
+    test_dir = os.path.join(os.path.dirname(__file__), "solutions")
+    result = cli(["solutions", "--solutions-dir", test_dir, "list"], return_type=ReturnType.RAW)
+    assert result.exit_code == 0, result.output
+    assert "github-starter" in result.output
 
 
 def test_solutions_info_known_tag():
-    result = cli(["solutions", "info", "-s", "github-starter"], return_type=ReturnType.RAW)
+    result = cli(["solutions", "info", "-s", "environments"], return_type=ReturnType.RAW)
+    assert result.exit_code == 0, result.output
+    assert "environment" in result.output
+
+
+def test_solutions_info_custom_dir():
+    import os
+    test_dir = os.path.join(os.path.dirname(__file__), "solutions")
+    result = cli(["solutions", "--solutions-dir", test_dir, "info", "-s", "github-starter"], return_type=ReturnType.RAW)
     assert result.exit_code == 0, result.output
     assert "GitHub Starter" in result.output
 
@@ -52,6 +68,6 @@ def test_solutions_install_no_auth():
     if os.path.isfile(os.path.join(os.path.expanduser("~"), ".cortex", "config")):
         import pytest
         pytest.skip("Skipping: credentials are configured in this environment")
-    result = cli(["solutions", "install", "-s", "github-starter"], return_type=ReturnType.RAW)
+    result = cli(["solutions", "install", "-s", "environments"], return_type=ReturnType.RAW)
     assert result.exit_code == 1
     assert "authentication required" in result.output.lower()

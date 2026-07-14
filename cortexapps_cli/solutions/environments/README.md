@@ -11,33 +11,32 @@ Model your deployment hierarchy — from clusters down to service versions — a
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     ENVIRONMENT                         │
+│                     environment                         │
 │               gcp-prod-us-east-1                        │
-│   cloudType:gcp  │  envType:prod  │  region:us-east-1   │
+│   cloudType:gcp  |  envType:prod  |  region:us-east-1   │
 └─────────────────────────┬───────────────────────────────┘
                           │ environments
                           ▼
               ┌───────────────────────┐
-              │        RELEASE        │
+              │        release        │
               │  release-2026-07-01   │
               └───────────┬───────────┘
                           │ environments
-              ┌───────────┴───────────┐
-              ▼                       ▼
-   ┌────────────────────┐  ┌────────────────────┐
-   │  SERVICE VERSION   │  │  SERVICE VERSION   │
-   │   payments-1.6.1   │  │    auth-2.1.0      │
-   │  ⚠ CVE-2024-3195  │  │  packages: clean   │
-   │  python-requests   │  │  flask, pyjwt      │
-   │     2.32.1         │  │                    │
-   └────────────────────┘  └────────────────────┘
-            │
-            │ custom-data.service
-            ▼
-   ┌────────────────────┐
-   │      SERVICE       │
-   │      payments      │
-   └────────────────────┘
+                          ▼
+   ┌──────────────────┐  ┌────────────────────────┐
+   │     service      │  │    service-version     │
+   │     payments     ├─►│     payments-1.6.1     │
+   └──────────────────┘  └────────────┬───────────┘
+                                      │ packages
+                                      ▼
+                          ┌───────────────────────┐
+                          │        package        │
+                          │  python-requests      │
+                          │       2.32.1          │
+                          └───────────┬───────────┘
+                                      │
+                                      ▼
+                              ! cve-2024-3195 (HIGH)
 ```
 
 Query: *"Which environments are affected by CVE-2024-3195?"*
