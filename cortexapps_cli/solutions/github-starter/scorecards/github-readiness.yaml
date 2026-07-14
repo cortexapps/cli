@@ -1,0 +1,15 @@
+tag: github-readiness
+name: GitHub Readiness
+description: Basic checks for GitHub integration readiness
+ladder:
+  levels:
+    - name: Bronze
+      rank: 1
+      description: Basic GitHub configuration
+      color: "#CD7F32"
+rules:
+  - title: Has GitHub repository
+    description: Service has a GitHub repository configured
+    expression: "git != null"
+    weight: 1
+    level: Bronze
