@@ -15,5 +15,6 @@ info:
         version: 3.1.4
         vulnerabilities: []
   x-cortex-relationships:
-    - tag: release-2026-07-01-prod
-      type: environments
+    - tag: environments
+      destinations:
+        - tag: release-2026-07-01-prod

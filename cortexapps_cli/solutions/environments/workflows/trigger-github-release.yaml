@@ -1,4 +1,6 @@
 tag: trigger-github-release
+filter:
+  type: ENTITY
 name: Trigger GitHub Release
 description: >
   Creates a GitHub release for a service. Triggers the cortex-service-version

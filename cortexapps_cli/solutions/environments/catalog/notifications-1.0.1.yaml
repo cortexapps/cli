@@ -15,5 +15,6 @@ info:
         version: 5.0.4
         vulnerabilities: []
   x-cortex-relationships:
-    - tag: release-2026-07-07-dev
-      type: environments
+    - tag: environments
+      destinations:
+        - tag: release-2026-07-07-dev

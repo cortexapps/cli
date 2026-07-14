@@ -15,5 +15,6 @@ info:
         version: 5.0.3
         vulnerabilities: []
   x-cortex-relationships:
-    - tag: release-2026-06-28-staging
-      type: environments
+    - tag: environments
+      destinations:
+        - tag: release-2026-06-28-staging

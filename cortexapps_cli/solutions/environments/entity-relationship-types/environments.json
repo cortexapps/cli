@@ -1,1 +1,19 @@
-{"tag": "environments", "name": "Environments", "description": "Hierarchical relationship powering the environment -> release -> service-version catalog view. Sources: environment, release. Targets: release, service-version.", "sourceTypes": ["environment", "release"], "targetTypes": ["release", "service-version"]}
+{
+  "tag": "environments",
+  "name": "Environments",
+  "description": "Hierarchical relationship powering the environment -> release -> service-version catalog view. Sources: environment, release. Targets: release, service-version.",
+  "definitionLocation": "SOURCE",
+  "isSingleSource": false,
+  "isSingleDestination": false,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": true,
+    "types": ["environment", "release"],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": true,
+    "types": ["release", "service-version"],
+    "providers": []
+  }
+}

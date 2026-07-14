@@ -15,5 +15,6 @@ info:
         version: 1.33.2
         vulnerabilities: []
   x-cortex-relationships:
-    - tag: release-2026-06-15-prod
-      type: environments
+    - tag: environments
+      destinations:
+        - tag: release-2026-06-15-prod

@@ -1,4 +1,6 @@
 tag: create-release
+filter:
+  type: GLOBAL
 name: Create Release
 description: >
   Creates a release entity in Cortex linked to an environment.
