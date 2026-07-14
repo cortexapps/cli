@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.22.0](https://github.com/cortexapps/cli/releases/tag/1.22.0) - 2026-07-14
+
+<small>[Compare with 1.21.1](https://github.com/cortexapps/cli/compare/1.21.1...1.22.0)</small>
+
+### Features
+
+- show README after install by default (--no-info to suppress); update github-starter README with install instructions ([4b996c2](https://github.com/cortexapps/cli/commit/4b996c271127cbb4217df9aab7f420492963cb6b) by Jeff Schnitter).
+- add solutions install command ([a6a21a7](https://github.com/cortexapps/cli/commit/a6a21a7362506ae744e8fce28d356eac9fb7c651) by Jeff Schnitter).
+- add solutions info command ([de17360](https://github.com/cortexapps/cli/commit/de173603d9f459052e1cff9e714db027d2f7ada6) by Jeff Schnitter).
+- add solutions list command ([02655a1](https://github.com/cortexapps/cli/commit/02655a1c984771a7de099a3a83c5c6a79bfe0e6f) by Jeff Schnitter).
+- add solutions command skeleton, cli wiring, and auth bypass ([0018115](https://github.com/cortexapps/cli/commit/001811573fda9702276d631fc67aa681766ef1b4) by Jeff Schnitter).
+- add solutions package scaffold with github-starter bundle ([8c010d7](https://github.com/cortexapps/cli/commit/8c010d7a005a5dbe1041ea2663794060d5900d61) by Jeff Schnitter).
+
+### Bug Fixes
+
+- render code blocks as cyan text instead of Rich dark panels in solutions info ([ef8c766](https://github.com/cortexapps/cli/commit/ef8c766c2325753fd439a16f426cf192ac6a07d4) by Jeff Schnitter).
+- strip frontmatter and left-justify headings in solutions info ([485a061](https://github.com/cortexapps/cli/commit/485a061623aa0749f06c7e0970a2c58a6efca9c3) by Jeff Schnitter).
+- handle missing api_key in config section in _build_client ([9b140a7](https://github.com/cortexapps/cli/commit/9b140a71d355ba6dd486507a37d06508d24d0230) by Jeff Schnitter).
+
 ## [1.21.1](https://github.com/cortexapps/cli/releases/tag/1.21.1) - 2026-07-14
 
 <small>[Compare with 1.21.0](https://github.com/cortexapps/cli/compare/1.21.0...1.21.1)</small>
