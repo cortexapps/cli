@@ -7,6 +7,23 @@ description: Pre-configured scorecards for a GitHub-integrated Cortex workspace.
 
 This solution provides a starting point for teams using GitHub with Cortex.
 
+## Overview
+
+```
+┌────────────────┐   GitHub integration   ┌─────────────────┐
+│  GitHub Repo   │ ─────────────────────▶ │ Service Entity  │
+└────────────────┘                        └────────┬────────┘
+                                                   │ evaluated by
+                                                   ▼
+                                          ┌─────────────────────┐
+                                          │  GitHub Readiness   │
+                                          │     Scorecard       │
+                                          ├─────────────────────┤
+                                          │ 🥉 Bronze           │
+                                          │   git != null       │
+                                          └─────────────────────┘
+```
+
 ## What's Included
 
 - **GitHub Readiness Scorecard** — checks that services have GitHub repositories configured
