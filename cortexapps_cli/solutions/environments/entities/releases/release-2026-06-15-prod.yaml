@@ -1,0 +1,9 @@
+openapi: "3.0.0"
+info:
+  title: release-2026-06-15-prod
+  x-cortex-tag: release-2026-06-15-prod
+  x-cortex-type: release
+  x-cortex-description: Production release on 2026-06-15
+  x-cortex-relationships:
+    - tag: gcp-prod-us-east-1
+      type: environments

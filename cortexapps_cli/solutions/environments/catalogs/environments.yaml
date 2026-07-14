@@ -1,0 +1,16 @@
+# PLACEHOLDER — pending catalog API support in Cortex CLI backup command
+#
+# When available, this file will define:
+#   tag: environments-catalog
+#   name: Environments
+#   description: Full hierarchy — environments -> releases -> service versions
+#   relationshipType: environments
+#   rootEntityType: environment
+#
+# Until then, after running `cortex solutions install -s environments`,
+# manually create the catalog:
+#   1. Go to Catalogs in the Cortex UI
+#   2. Click "New Catalog"
+#   3. Select relationship type: environments
+#   4. Set root entity type: environment
+#   5. Name it "Environments"

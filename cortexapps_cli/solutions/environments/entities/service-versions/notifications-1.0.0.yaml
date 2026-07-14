@@ -1,0 +1,19 @@
+openapi: "3.0.0"
+info:
+  title: notifications-1.0.0
+  x-cortex-tag: notifications-1.0.0
+  x-cortex-type: service-version
+  x-cortex-description: notifications service version 1.0.0
+  x-cortex-custom-data:
+    service: notifications
+    version: 1.0.0
+    packages:
+      - name: celery
+        version: 5.3.6
+        vulnerabilities: []
+      - name: redis-py
+        version: 5.0.3
+        vulnerabilities: []
+  x-cortex-relationships:
+    - tag: release-2026-06-28-staging
+      type: environments

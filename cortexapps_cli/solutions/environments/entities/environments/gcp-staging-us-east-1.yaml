@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: gcp-staging-us-east-1
+  x-cortex-tag: gcp-staging-us-east-1
+  x-cortex-type: environment
+  x-cortex-description: GCP staging cluster in us-east-1
+  x-cortex-groups:
+    - cloudType:gcp
+    - envType:staging
+    - region:us-east-1

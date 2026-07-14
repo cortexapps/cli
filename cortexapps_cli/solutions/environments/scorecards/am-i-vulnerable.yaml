@@ -1,0 +1,34 @@
+tag: am-i-vulnerable
+name: Am I Vulnerable?
+description: >
+  Surfaces CVE exposure across the deployment hierarchy for each environment.
+  Rules reference custom metrics that must be pushed onto environment entities
+  from your Snyk/Wiz pipeline. Cortex scorecard rules do not currently traverse
+  relationships to read custom metadata on related entities directly.
+filter:
+  entityType: environment
+rules:
+  - title: No CRITICAL CVEs in any service version
+    description: >
+      No service version in any release in this environment has a CRITICAL CVE.
+      Requires custom metric critical_cve_count on the environment entity.
+    weight: 3
+    # TODO: Verify exact custom metric expression syntax with Cortex docs.
+    # Real expression should be something like: customData("critical_cve_count") == 0
+    expression: "gitAge() != null"
+  - title: No HIGH CVEs in any service version
+    description: >
+      No service version in any release in this environment has a HIGH CVE.
+      Requires custom metric high_cve_count on the environment entity.
+    weight: 2
+    # TODO: Verify exact custom metric expression syntax with Cortex docs.
+    # Real expression should be something like: customData("high_cve_count") == 0
+    expression: "gitAge() != null"
+  - title: All service versions have been scanned
+    description: >
+      Every service version in this environment has package vulnerability
+      metadata populated.
+    weight: 1
+    # TODO: Verify exact custom metric expression syntax with Cortex docs.
+    # Real expression should be something like: customData("unscanned_count") == 0
+    expression: "gitAge() != null"

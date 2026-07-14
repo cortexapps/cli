@@ -1,0 +1,46 @@
+name: Trigger GitHub Release
+description: >
+  Creates a GitHub release for a service. Triggers the cortex-service-version
+  GitHub Actions workflow to register the new service version in Cortex.
+  Add pre-release validation steps before the GitHub API call.
+trigger:
+  type: manual
+  entityTypes:
+    - service
+
+inputs:
+  - name: versionTag
+    type: string
+    description: "Release version tag (e.g. v1.6.1)"
+    required: true
+  - name: releaseName
+    type: string
+    description: "Human-readable release name"
+    required: true
+  - name: releaseNotes
+    type: string
+    description: "Release notes / changelog"
+    required: false
+  - name: cortexReleaseTag
+    type: string
+    description: "Cortex release entity tag to link this version to (e.g. release-2026-07-01-prod)"
+    required: false
+
+steps:
+  # TODO: Add pre-release validation steps here (tests, approvals, scorecard checks)
+
+  - name: create-github-release
+    description: Create the GitHub release, which triggers the service-version workflow
+    type: http
+    method: POST
+    url: "https://api.github.com/repos/${{ entity.gitRepositories[0].repository }}/releases"
+    headers:
+      Authorization: "Bearer ${{ secrets.GITHUB_TOKEN }}"
+      Accept: "application/vnd.github+json"
+      X-GitHub-Api-Version: "2022-11-28"
+    body:
+      tag_name: "${{ inputs.versionTag }}"
+      name: "${{ inputs.releaseName }}"
+      body: "${{ inputs.releaseNotes }}"
+      draft: false
+      prerelease: false

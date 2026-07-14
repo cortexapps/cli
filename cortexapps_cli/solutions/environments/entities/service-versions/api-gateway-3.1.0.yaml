@@ -1,0 +1,21 @@
+openapi: "3.0.0"
+info:
+  title: api-gateway-3.1.0
+  x-cortex-tag: api-gateway-3.1.0
+  x-cortex-type: service-version
+  x-cortex-description: api-gateway service version 3.1.0
+  x-cortex-custom-data:
+    service: api-gateway
+    version: 3.1.0
+    packages:
+      - name: nginx
+        version: 1.25.3
+        vulnerabilities: []
+      - name: openssl
+        version: 3.2.0
+        vulnerabilities: []
+  x-cortex-relationships:
+    - tag: release-2026-07-09-staging
+      type: environments
+    - tag: release-2026-07-07-dev
+      type: environments

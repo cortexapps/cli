@@ -1,0 +1,57 @@
+name: Create Cortex Service Version Entity
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  create-service-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version and service name
+        id: meta
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          SERVICE="${{ github.event.repository.name }}"
+          ENTITY_TAG="${SERVICE}-${VERSION}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "service=${SERVICE}" >> $GITHUB_OUTPUT
+          echo "entity_tag=${ENTITY_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Create service-version entity in Cortex
+        env:
+          CORTEX_API_TOKEN: ${{ secrets.CORTEX_API_TOKEN }}
+        run: |
+          RELEASE_TAG="${{ vars.CORTEX_RELEASE_TAG }}"
+          if [ -n "$RELEASE_TAG" ]; then
+            RELATIONSHIPS='[{"tag":"'"$RELEASE_TAG"'","type":"environments"}]'
+          else
+            RELATIONSHIPS='[]'
+          fi
+
+          curl --fail-with-body -X POST \
+            -H "Authorization: Bearer ${CORTEX_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "https://api.getcortexapp.com/api/v1/catalog" \
+            -d '{
+              "openapi": "3.0.0",
+              "info": {
+                "title": "${{ steps.meta.outputs.entity_tag }}",
+                "x-cortex-tag": "${{ steps.meta.outputs.entity_tag }}",
+                "x-cortex-type": "service-version",
+                "x-cortex-description": "${{ steps.meta.outputs.service }} version ${{ steps.meta.outputs.version }}",
+                "x-cortex-custom-data": {
+                  "service": "${{ steps.meta.outputs.service }}",
+                  "version": "${{ steps.meta.outputs.version }}",
+                  "github_release_url": "${{ github.event.release.html_url }}",
+                  "packages": []
+                },
+                "x-cortex-relationships": '"$RELATIONSHIPS"'
+              }
+            }'
+
+      - name: Confirm entity created
+        run: |
+          echo "Created: ${{ steps.meta.outputs.entity_tag }}"
+          echo "View at: https://app.getcortexapp.com/admin/catalog/${{ steps.meta.outputs.entity_tag }}"

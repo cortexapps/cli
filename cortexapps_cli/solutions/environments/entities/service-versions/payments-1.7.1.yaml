@@ -1,0 +1,19 @@
+openapi: "3.0.0"
+info:
+  title: payments-1.7.1
+  x-cortex-tag: payments-1.7.1
+  x-cortex-type: service-version
+  x-cortex-description: payments service version 1.7.1
+  x-cortex-custom-data:
+    service: payments
+    version: 1.7.1
+    packages:
+      - name: python-requests
+        version: 2.32.3
+        vulnerabilities: []
+      - name: boto3
+        version: 1.34.7
+        vulnerabilities: []
+  x-cortex-relationships:
+    - tag: release-2026-07-10-dev
+      type: environments

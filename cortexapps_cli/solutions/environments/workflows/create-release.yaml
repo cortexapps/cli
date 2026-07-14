@@ -1,0 +1,39 @@
+name: Create Release
+description: >
+  Creates a release entity in Cortex linked to an environment.
+  Add your deployment steps after entity creation.
+trigger:
+  type: manual
+
+inputs:
+  - name: releaseTag
+    type: string
+    description: "Release identifier (e.g. release-2026-07-01-prod)"
+    required: true
+  - name: environmentTag
+    type: string
+    description: "Target environment entity tag (e.g. gcp-prod-us-east-1)"
+    required: true
+  - name: releaseDescription
+    type: string
+    description: "Description of what is in this release"
+    required: false
+
+steps:
+  - name: create-release-entity
+    description: Create the release entity linked to the target environment
+    type: cortex-api
+    method: POST
+    path: /api/v1/catalog
+    body:
+      openapi: "3.0.0"
+      info:
+        title: "${{ inputs.releaseTag }}"
+        x-cortex-tag: "${{ inputs.releaseTag }}"
+        x-cortex-type: release
+        x-cortex-description: "${{ inputs.releaseDescription }}"
+        x-cortex-relationships:
+          - tag: "${{ inputs.environmentTag }}"
+            type: environments
+
+  # TODO: Add your deployment steps here (ArgoCD sync, Helm upgrade, etc.)

@@ -1,0 +1,9 @@
+openapi: "3.0.0"
+info:
+  title: release-2026-07-10-dev
+  x-cortex-tag: release-2026-07-10-dev
+  x-cortex-type: release
+  x-cortex-description: Dev release on 2026-07-10
+  x-cortex-relationships:
+    - tag: aws-dev-us-west-2
+      type: environments

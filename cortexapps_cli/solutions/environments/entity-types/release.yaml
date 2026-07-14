@@ -1,0 +1,5 @@
+tag: release
+name: Release
+description: >
+  A named collection of service versions deployed together into an environment.
+  Named release-YYYY-MM-DD-envType (e.g. release-2026-07-01-prod).
