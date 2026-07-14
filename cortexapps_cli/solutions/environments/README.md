@@ -68,12 +68,6 @@ Query: *"Which environments are affected by CVE-2024-3195?"*
 cortex solutions install -s environments
 ```
 
-To overwrite existing resources:
-
-```
-cortex solutions install -s environments --force
-```
-
 ## After Installing
 
 1. Go to **Catalogs** in the Cortex UI
