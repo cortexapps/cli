@@ -4,3 +4,9 @@ info:
   x-cortex-tag: api-gateway
   x-cortex-type: service
   x-cortex-description: API gateway and routing service
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: api-gateway-3.0.1
+        - tag: api-gateway-3.1.0
+        - tag: api-gateway-3.1.1

@@ -27,6 +27,7 @@ Model your deployment hierarchy — from clusters down to service versions — a
    │     service      │  │    service-version     │
    │     payments     ├─►│     payments-1.6.1     │
    └──────────────────┘  └────────────┬───────────┘
+        versions ──────────────────────┘
                                       │ packages
                                       ▼
                           ┌───────────────────────┐
@@ -46,7 +47,9 @@ Query: *"Which environments are affected by CVE-2024-3195?"*
 
 **Entity types:** `environment`, `release`, `service-version`
 
-**Relationship type:** `environments` — one type powers a single catalog view of the full hierarchy (environment → release → service-version)
+**Relationship types:**
+- `environments` — powers the deployment catalog view (environment → release → service-version)
+- `versions` — connects each service to its versioned artifacts (service → service-version)
 
 **Sample entities:**
 - 3 environments: `gcp-prod-us-east-1`, `gcp-staging-us-east-1`, `aws-dev-us-west-2`

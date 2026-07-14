@@ -4,3 +4,9 @@ info:
   x-cortex-tag: notifications
   x-cortex-type: service
   x-cortex-description: Notification delivery service
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: notifications-0.9.5
+        - tag: notifications-1.0.0
+        - tag: notifications-1.0.1
