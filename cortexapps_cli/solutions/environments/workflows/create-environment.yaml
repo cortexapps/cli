@@ -10,7 +10,7 @@ isDraft: true
 runResponseTemplate: |
   Environment **{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}** created successfully.
 
-  [View entity](/catalog/{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}})
+  [View entity](https://app.getcortexapp.com/admin/resources/{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}})
 failedRunResponseTemplate: |
   Failed to create environment **{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}**. Check the action logs for details.
 actions:
