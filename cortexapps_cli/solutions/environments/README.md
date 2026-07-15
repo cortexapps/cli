@@ -41,7 +41,7 @@ Model your deployment hierarchy — from clusters down to service versions — a
 ```
 
 Query: *"Which environments are affected by CVE-2024-3195?"*
-→ service-version with CVE → release → environment: `gcp-prod-us-east-1`, `gcp-staging-us-east-1`
+→ service-version with CVE → release → environment: `gcp-prod-us-east-1`, `gcp-prod-us-west-1`
 
 ## What's Included
 
@@ -52,18 +52,19 @@ Query: *"Which environments are affected by CVE-2024-3195?"*
 - `versions` — connects each service to its versioned artifacts (service → service-version)
 
 **Sample entities:**
-- 3 environments: `gcp-prod-us-east-1`, `gcp-staging-us-east-1`, `aws-dev-us-west-2`
-- 6 releases (2 per environment)
-- 14 service versions across 4 services (`payments`, `auth`, `api-gateway`, `notifications`)
-- Demo CVE: `cve-2024-3195` in `payments-1.6.1` — exposed in prod and staging
-
-**Scorecard:** Am I Vulnerable? — surfaces CVE exposure per environment
+- 4 environments: `gcp-prod-us-east-1`, `gcp-prod-us-west-1`, `gcp-staging-us-east-1`, `aws-dev-us-west-2`
+- 4 releases (1 per environment)
+- 10 services: `payments`, `auth`, `api-gateway`, `notifications`, `user-service`, `order-service`, `billing`, `search`, `cart`, `checkout`
+- 30 service-versions (2–3 per service)
+- Demo CVE: `cve-2024-3195` in `payments-1.6.1` — exposed in both prod environments
+- `auth-2.1.0` deployed in prod-east, prod-west, and staging (stable, rarely changes)
+- `cart-1.0.2` deployed in all 4 environments (extremely stable)
+- `checkout` has different versions per environment (active development + staggered rollout)
 
 **Workflows:**
 - `create-environment.yaml` — Cortex workflow: prompts for cloudType/envType/region, creates environment entity
-- `create-release.yaml` — Cortex workflow: creates release entity linked to an environment
+- `create-release.yaml` — Cortex workflow: entity picker for service-versions, creates release entity with relationships
 - `trigger-github-release.yaml` — Cortex workflow: triggers a GitHub release for a service
-- `.github/workflows/cortex-service-version.yaml` — GitHub Actions: creates service-version entity on release publish
 
 ## Installation
 
@@ -92,7 +93,8 @@ cortex solutions install -s environments
 
 2. Create a Release
    Cortex Workflow: create-release
-   └── Creates release entity linked to environment via `environments` relationship
+   └── Entity picker selects service versions to include
+   └── Creates release entity with environments relationships to each version
    └── [Add your] deployment orchestration here
 
 3. Publish Service Versions
@@ -106,7 +108,6 @@ cortex solutions install -s environments
    Your Snyk/Wiz pipeline
    └── Pushes CVE data to service-version custom metadata
    └── Pushes aggregated counts to environment custom metrics
-       └── "Am I Vulnerable?" scorecard evaluates per environment
 
 5. Query with MCP
    └── "Which environments are affected by cve-2024-3195?"
@@ -117,5 +118,12 @@ cortex solutions install -s environments
 
 - *"Which environments are affected by cve-2024-3195?"*
 - *"What version of payments is running in gcp-prod-us-east-1?"*
-- *"List all HIGH CVEs across service versions in the prod environment"*
+- *"List all service versions deployed in the prod environments"*
 - *"Which environments have payments-1.6.1 deployed?"*
+- *"What is the difference between gcp-prod-us-east-1 and gcp-prod-us-west-1?"*
+
+## Caveats
+
+- **MCP queries are multi-hop.** The deployment hierarchy (environment → release → service-version) requires multiple API calls to traverse. For large catalogs with many environments, releases, and service-versions, these queries can be slow. This solution works best as a pure catalog/browsing solution with MCP for ad-hoc queries.
+
+- **CQL cannot traverse related entity metadata.** CQL rules can traverse relationship chains (e.g. `entity.destinations(relationshipType = "environments", depth = 2)`) and filter by entity type or tag, but cannot access custom metadata on related entities. A scorecard rule like "does any deployed service-version have a HIGH CVE?" is not expressible in CQL today without modeling vulnerabilities as first-class entities linked via a dedicated relationship type.
