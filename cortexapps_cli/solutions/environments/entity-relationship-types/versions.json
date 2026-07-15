@@ -7,17 +7,13 @@
   "isSingleDestination": false,
   "allowCycles": false,
   "sourcesFilter": {
-    "include": true,
-    "types": [
-      "service"
-    ],
+    "include": false,
+    "types": [],
     "providers": []
   },
   "destinationsFilter": {
-    "include": true,
-    "types": [
-      "service-version"
-    ],
+    "include": false,
+    "types": [],
     "providers": []
   },
   "inheritances": []
