@@ -9,7 +9,7 @@ isDraft: true
 runResponseTemplate: |
   Release **{{actions.collect-inputs.outputs.releaseTag}}** created successfully.
 
-  [View entity](https://app.getcortexapp.com/admin/resources/{{actions.collect-inputs.outputs.releaseTag}})
+  [View entity](https://app.getcortexapp.com/admin/resources/{{context.entity.id}})
 failedRunResponseTemplate: |
   Failed to create release **{{actions.collect-inputs.outputs.releaseTag}}**. Check the action logs for details.
 actions:
