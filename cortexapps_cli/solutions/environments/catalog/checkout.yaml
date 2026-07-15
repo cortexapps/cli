@@ -1,0 +1,12 @@
+openapi: "3.0.0"
+info:
+  title: checkout
+  x-cortex-tag: checkout
+  x-cortex-type: service
+  x-cortex-description: Checkout flow, address validation, and order submission
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: checkout-2.2.0
+        - tag: checkout-2.3.0
+        - tag: checkout-2.4.0

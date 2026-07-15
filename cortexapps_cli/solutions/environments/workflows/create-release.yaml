@@ -28,9 +28,21 @@ actions:
           type: INPUT_FIELD
         - name: Service Versions
           key: serviceVersions
-          description: "Comma-separated service version tags (e.g. payments-1.6.1, auth-2.1.0, api-gateway-3.0.1)"
+          description: Select the service versions included in this release
           required: true
-          type: INPUT_FIELD
+          type: CORTEX_ENTITY_FIELD
+          allowMultiple: true
+          limitEntitiesToRunnerUserScope: false
+          defaultValue: []
+          entityFilter:
+            typeFilter:
+              types:
+                - service-version
+            domainIds: []
+            emailOwners: []
+            excludedGroupTags: []
+            groupTags: []
+            teamIds: []
         - name: Description
           key: description
           description: What is in this release
@@ -46,9 +58,12 @@ actions:
     schema:
       type: JAVASCRIPT
       script: |
-        const input = actions["collect-inputs"].outputs.serviceVersions;
-        const arr = input.split(",").map(s => s.trim()).filter(s => s.length > 0);
-        const items = arr.map(tag => `        - tag: "${tag}"`).join("\n");
+        const versions = actions["collect-inputs"].outputs.serviceVersions;
+        const arr = Array.isArray(versions) ? versions : [versions];
+        const items = arr.map(sv => {
+          const tag = (sv && typeof sv === 'object') ? sv.tag : sv;
+          return `        - tag: "${tag}"`;
+        }).join("\n");
         return {
           relationshipsYaml: `  x-cortex-relationships:\n    - type: environments\n      destinations:\n${items}`
         };

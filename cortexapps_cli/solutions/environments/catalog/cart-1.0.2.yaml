@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: cart-1.0.2
+  x-cortex-tag: cart-1.0.2
+  x-cortex-type: service-version
+  x-cortex-description: cart version 1.0.2
+  x-cortex-definition: {}
+  x-cortex-custom-data:
+    service: cart
+    version: 1.0.2

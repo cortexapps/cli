@@ -1,0 +1,11 @@
+openapi: "3.0.0"
+info:
+  title: user-service
+  x-cortex-tag: user-service
+  x-cortex-type: service
+  x-cortex-description: User profile, preferences, and account management
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: user-service-1.2.0
+        - tag: user-service-1.3.0

@@ -1,9 +1,9 @@
 openapi: "3.0.0"
 info:
-  title: release-2026-07-01
-  x-cortex-tag: release-2026-07-01
+  title: release-2026-06-20
+  x-cortex-tag: release-2026-06-20
   x-cortex-type: release
-  x-cortex-description: Production east release on 2026-07-01
+  x-cortex-description: Production west release on 2026-06-20
   x-cortex-definition: {}
   x-cortex-relationships:
     - type: environments
@@ -12,7 +12,7 @@ info:
         - tag: auth-2.1.0
         - tag: billing-1.1.0
         - tag: cart-1.0.2
-        - tag: checkout-2.3.0
+        - tag: checkout-2.2.0
         - tag: notifications-1.0.0
         - tag: order-service-2.0.1
         - tag: payments-1.6.1

@@ -1,0 +1,11 @@
+openapi: "3.0.0"
+info:
+  title: billing
+  x-cortex-tag: billing
+  x-cortex-type: service
+  x-cortex-description: Subscription billing, invoicing, and payment processing
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: billing-1.1.0
+        - tag: billing-1.2.0
