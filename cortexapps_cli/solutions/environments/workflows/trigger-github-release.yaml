@@ -1,12 +1,14 @@
 tag: trigger-github-release
 name: Trigger GitHub Release
 description: >
-  Collects release inputs for a service version deployment.
+  Collects the version tag for a service release.
   Add a GitHub release step using your tenant's GitHub integration alias
   to trigger the cortex-service-version GitHub Actions workflow.
 filter:
   type: ENTITY
 isDraft: true
+runResponseTemplate: "GitHub release **{{actions.collect-inputs.outputs.versionTag}}** triggered for `{{context.entity.tag}}`."
+failedRunResponseTemplate: "Failed to trigger GitHub release for version **{{actions.collect-inputs.outputs.versionTag}}**. Check the action logs for details."
 actions:
   - name: Collect Inputs
     slug: collect-inputs
@@ -19,21 +21,6 @@ actions:
           key: versionTag
           description: Release version tag (e.g. v1.6.1)
           required: true
-          type: INPUT_FIELD
-        - name: Release Name
-          key: releaseName
-          description: Human-readable release name
-          required: true
-          type: INPUT_FIELD
-        - name: Release Notes
-          key: releaseNotes
-          description: Release notes / changelog
-          required: false
-          type: INPUT_FIELD
-        - name: Cortex Release Tag
-          key: cortexReleaseTag
-          description: Cortex release entity to link this version to (e.g. release-2026-07-01-prod)
-          required: false
           type: INPUT_FIELD
       inputOverrides: []
       jsValidatorScript: null
