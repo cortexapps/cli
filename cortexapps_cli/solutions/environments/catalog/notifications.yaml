@@ -7,6 +7,6 @@ info:
   x-cortex-relationships:
     - type: versions
       destinations:
-        - tag: notifications-0.9.5
         - tag: notifications-1.0.0
         - tag: notifications-1.0.1
+        - tag: notifications-1.1.0

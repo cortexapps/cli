@@ -9,4 +9,5 @@ info:
       destinations:
         - tag: api-gateway-3.0.1
         - tag: auth-2.1.0
+        - tag: notifications-1.0.0
         - tag: payments-1.6.1

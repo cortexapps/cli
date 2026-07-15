@@ -7,11 +7,5 @@ info:
   x-cortex-definition: {}
   x-cortex-custom-data:
     service: notifications
-    version: 1.0.1
-    packages:
-      - name: celery
-        version: 5.3.6
-        vulnerabilities: []
-      - name: redis-py
-        version: 5.0.4
-        vulnerabilities: []
+    version: "1.0.1"
+    packages: []
