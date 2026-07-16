@@ -26,21 +26,12 @@ Model your deployment hierarchy — from clusters down to service versions — a
    ┌──────────────────┐  ┌────────────────────────┐
    │     service      │  │    service-version     │
    │     payments     ├─►│     payments-1.6.1     │
-   └──────────────────┘  └────────────┬───────────┘
+   └──────────────────┘  └────────────────────────┘
         versions ──────────────────────┘
-                                      │ packages
-                                      ▼
-                          ┌───────────────────────┐
-                          │        package        │
-                          │  python-requests      │
-                          │       2.32.1          │
-                          └───────────┬───────────┘
-                                      │
-                                      ▼
-                              ! cve-2024-3195 (HIGH)
 ```
 
-Query: *"Which environments are affected by CVE-2024-3195?"*
+Once service-versions carry package and CVE metadata (via Snyk/Wiz), MCP can answer:
+*"Which environments are affected by CVE-2024-3195?"*
 → service-version with CVE → release → environment: `gcp-prod-us-east-1`, `gcp-prod-us-west-1`
 
 ## What's Included

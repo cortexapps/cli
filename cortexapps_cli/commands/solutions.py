@@ -448,18 +448,48 @@ def _osc8(url: str, text: str) -> str:
     return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
 
 
+def _apply_hyperlinks(line: str, entity_tags: set[str], ui_url: str) -> str:
+    """Single-pass replacement: find non-overlapping tag matches, longest wins."""
+    covered: list[tuple[int, int]] = []
+    matches: list[tuple[int, int, str]] = []
+
+    for tag in sorted(entity_tags, key=len, reverse=True):
+        start = 0
+        while True:
+            pos = line.find(tag, start)
+            if pos == -1:
+                break
+            end = pos + len(tag)
+            if not any(pos < c_end and end > c_start for c_start, c_end in covered):
+                matches.append((pos, end, tag))
+                covered.append((pos, end))
+            start = pos + 1
+
+    if not matches:
+        return line
+
+    matches.sort()
+    parts = []
+    cur = 0
+    for start, end, tag in matches:
+        parts.append(line[cur:start])
+        parts.append(_osc8(f"{ui_url}/admin?tag={tag}", tag))
+        cur = end
+    parts.append(line[cur:])
+    return "".join(parts)
+
+
 def _show_diagram(readme: str, entity_tags: set[str] | None = None, ui_url: str = "https://app.getcortexapp.com") -> None:
     block = _extract_first_codeblock(readme)
     if not block:
         return
-    console.print()
+    print()
     for line in block.split("\n"):
         if entity_tags:
-            # Replace longest matches first to avoid partial-tag substitutions
-            for tag in sorted(entity_tags, key=len, reverse=True):
-                if tag in line:
-                    line = line.replace(tag, _osc8(f"{ui_url}/admin?tag={tag}", tag))
-        console.print(f"  {line}", highlight=False, markup=False)
+            line = _apply_hyperlinks(line, entity_tags, ui_url)
+        # Use print() not console.print(): Rich counts OSC 8 escape bytes as
+        # visible characters, shifting ASCII art alignment.
+        print(f"  {line}")
 
 
 def _show_next_steps(readme: str) -> None:
