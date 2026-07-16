@@ -84,6 +84,8 @@ Three workflows were installed. Go to [Workflows](https://app.getcortexapp.com/a
 - **Create Release** (`create-release`) — create a release linked to service versions
 - **Trigger GitHub Release** (`trigger-github-release`) — publish a service version via GitHub Actions
 
+These are all stub workflows. You might add the creation of these entities as part of your automated CI/CD process. You might extend these workflows and call them via the Cortex API. These are included to show conceptually what you'll want to create/maintain.
+
 ## How the process works
 
 ```
