@@ -480,7 +480,7 @@ def _apply_hyperlinks(line: str, entity_tags: set[str], ui_url: str) -> str:
     cur = 0
     for start, end, tag in matches:
         parts.append(line[cur:start])
-        parts.append(_osc8(f"{ui_url}/admin?tag={tag}", tag))
+        parts.append(_osc8(f"{ui_url}/admin/resources?tag={tag}", tag))
         cur = end
     parts.append(line[cur:])
     return "".join(parts)
@@ -491,6 +491,9 @@ def _show_diagram(readme: str, entity_tags: set[str] | None = None, ui_url: str 
     if not block:
         return
     print()
+    if entity_tags:
+        print("  If your terminal supports hyperlinks, click on the underlined entities to see them in your workspace.")
+        print()
     for line in block.split("\n"):
         if entity_tags:
             line = _apply_hyperlinks(line, entity_tags, ui_url)
