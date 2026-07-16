@@ -1,7 +1,9 @@
 import configparser
+import json
 import logging
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib.resources import as_file, files
 from pathlib import Path
 
@@ -113,6 +115,137 @@ def _build_client(ctx: typer.Context) -> CortexClient:
     return CortexClient(api_key, tenant, numeric_level, url, rate_limit)
 
 
+def _read_catalog_tag(content: str) -> str | None:
+    """Extract x-cortex-tag from a catalog YAML file."""
+    try:
+        data = yaml.safe_load(content)
+        return data.get("info", {}).get("x-cortex-tag") if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def _read_resource_tag(content: str, kind: str) -> str | None:
+    """Extract tag/type identifier from a JSON or YAML resource file."""
+    try:
+        data = yaml.safe_load(content)
+        if not isinstance(data, dict):
+            data = json.loads(content)
+        return data.get("type") if kind == "entity-types" else data.get("tag")
+    except Exception:
+        return None
+
+
+def _collect_solution_resources(path: Path) -> dict[str, list[str]]:
+    """Return {kind: [tag, ...]} for all deletable resources in a solution directory."""
+    resources: dict[str, list[str]] = {
+        "entity-types": [],
+        "entity-relationship-types": [],
+        "catalog": [],
+        "scorecards": [],
+        "workflows": [],
+    }
+    for kind in resources:
+        subdir = path / kind
+        if not subdir.exists() or not subdir.is_dir():
+            continue
+        for f in sorted(subdir.iterdir()):
+            if not f.is_file() or f.suffix not in (".json", ".yaml", ".yml"):
+                continue
+            try:
+                content = f.read_text(encoding="utf-8")
+                tag = (
+                    _read_catalog_tag(content)
+                    if kind == "catalog"
+                    else _read_resource_tag(content, kind)
+                )
+                if tag:
+                    resources[kind].append(tag)
+            except Exception:
+                pass
+    return resources
+
+
+def _delete_parallel(client, tags: list[str], endpoint_fn) -> tuple[int, int]:
+    """Delete resources in parallel. Returns (removed, failed) counts."""
+    deleted = failed = 0
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_tag = {
+            executor.submit(client.delete, endpoint_fn(tag)): tag for tag in tags
+        }
+        for future in as_completed(future_to_tag):
+            tag = future_to_tag[future]
+            try:
+                future.result()
+                typer.echo(f"   Deleted: {tag}")
+                deleted += 1
+            except Exception as e:
+                err = str(e)
+                if "404" in err or "Not Found" in err:
+                    typer.echo(f"   Not found (skipped): {tag}")
+                    deleted += 1
+                else:
+                    typer.echo(f"   Failed: {tag} — {err}")
+                    failed += 1
+    return deleted, failed
+
+
+def _run_uninstall(client, path: Path, yes: bool) -> None:
+    """Collect resources, confirm, then delete in reverse import order."""
+    resources = _collect_solution_resources(path)
+    total = sum(len(v) for v in resources.values())
+
+    if total == 0:
+        typer.echo("No resources found to remove.")
+        return
+
+    typer.echo("\nThis will remove the following resources:")
+    for kind in ("workflows", "scorecards", "catalog", "entity-relationship-types", "entity-types"):
+        count = len(resources[kind])
+        if count:
+            typer.echo(f"  {kind}: {count}")
+    typer.echo()
+
+    if not yes:
+        confirmed = typer.confirm("Proceed with uninstall?", default=False)
+        if not confirmed:
+            typer.echo("Aborted.")
+            raise typer.Exit(0)
+
+    # Delete in reverse import order
+    steps = [
+        ("workflows",                 lambda t: f"api/v1/workflows/{t}"),
+        ("scorecards",                lambda t: f"api/v1/scorecards/{t}"),
+        ("catalog",                   lambda t: f"api/v1/catalog/{t}"),
+        ("entity-relationship-types", lambda t: f"api/v1/relationship-types/{t}"),
+        ("entity-types",              lambda t: f"api/v1/catalog/definitions/{t}"),
+    ]
+
+    stats: dict[str, tuple[int, int]] = {}
+    for kind, endpoint_fn in steps:
+        tags = resources[kind]
+        if not tags:
+            continue
+        typer.echo(f"\nRemoving {kind}...")
+        deleted, failed = _delete_parallel(client, tags, endpoint_fn)
+        stats[kind] = (deleted, failed)
+
+    total_removed = sum(d for d, _ in stats.values())
+    total_failed = sum(f for _, f in stats.values())
+
+    width = 80
+    typer.echo(f"\n{'=' * width}")
+    typer.echo("UNINSTALL SUMMARY")
+    typer.echo(f"{'=' * width}\n")
+    for kind, (d, f) in stats.items():
+        if d + f > 0:
+            typer.echo(f"{kind}:")
+            typer.echo(f"  Removed: {d}")
+            if f:
+                typer.echo(f"  Failed:  {f}")
+    typer.echo(f"\nTOTAL: {total_removed} removed, {total_failed} failed\n")
+    typer.echo("=" * width)
+
+
 @app.command("list")
 def list_solutions(ctx: typer.Context):
     """List all available solutions."""
@@ -219,3 +352,27 @@ def install(
         if readme:
             console.print()
             _print_readme(readme)
+
+
+@app.command()
+def uninstall(
+    ctx: typer.Context,
+    solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
+):
+    """Remove all entities installed by a solution from the current Cortex workspace."""
+    solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
+    if solution not in _list_solution_tags(solutions_dir):
+        avail = ", ".join(_list_solution_tags(solutions_dir))
+        typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
+        raise typer.Exit(1)
+
+    ctx.obj["client"] = _build_client(ctx)
+    client = ctx.obj["client"]
+
+    root = _solutions_root(solutions_dir)
+    if solutions_dir:
+        _run_uninstall(client, root / solution, yes)
+    else:
+        with as_file(root / solution) as solution_path:
+            _run_uninstall(client, solution_path, yes)
