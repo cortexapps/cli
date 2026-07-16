@@ -17,17 +17,17 @@ Model your deployment hierarchy — from clusters down to service versions — a
 └─────────────────────────┬───────────────────────────────┘
                           │ environments
                           ▼
-              ┌───────────────────────┐
-              │        release        │
-              │  release-2026-07-01   │
-              └───────────┬───────────┘
-                          │ environments
-                          ▼
-   ┌──────────────────┐  ┌────────────────────────┐
-   │     service      │  │    service-version     │
-   │     payments     ├─►│     payments-1.6.1     │
-   └──────────────────┘  └────────────────────────┘
-        versions ──────────────────────┘
+              ┌───────────────────────┐    ┌──────────────────┐
+              │        release        │    │     service      │
+              │  release-2026-07-01   │    │     payments     │
+              └───────────┬───────────┘    └────────┬─────────┘
+                          │ environments            │ versions
+                          └────────────┬────────────┘
+                                       ▼
+                           ┌───────────────────────┐
+                           │    service-version    │
+                           │    payments-1.6.1     │
+                           └───────────────────────┘
 ```
 
 Once service-versions carry package and CVE metadata (via Snyk/Wiz), MCP can answer:
