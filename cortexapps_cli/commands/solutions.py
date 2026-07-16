@@ -509,7 +509,7 @@ def _show_next_steps(readme: str) -> None:
         console.print(Markdown(section))
     console.print()
     console.print(
-        "[magenta]Coming in Q4 2027:[/magenta] CQL metadata traversal will enable scorecard rules "
+        "[magenta]Planned for Q4 2027:[/magenta] CQL metadata traversal will enable scorecard rules "
         "across relationship chains — for example, a Vulnerability Scorecard checking that no "
         "deployed service-version has open Snyk issues:"
     )
