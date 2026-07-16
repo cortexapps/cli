@@ -63,7 +63,7 @@ class _ToggleableCapture:
 
 
 def _run_import_with_toggle(fn) -> str:
-    """Run fn() capturing stdout. On a TTY, Ctrl+O toggles live output."""
+    """Run fn() capturing stdout. On a TTY, Ctrl+o toggles live output."""
     real_stdout = sys.stdout
     capture = _ToggleableCapture(real_stdout)
 
@@ -80,10 +80,10 @@ def _run_import_with_toggle(fn) -> str:
         try:
             _tty.setcbreak(fd)
             while not done.is_set():
-                r, _, _ = _select.select([sys.stdin], [], [], 0.05)
+                r, _, _ = _select.select([fd], [], [], 0.05)
                 if r:
-                    ch = sys.stdin.read(1)
-                    if ch == "\x0f":  # Ctrl+O
+                    ch = os.read(fd, 1)  # bypass Python stdin buffering
+                    if ch == b"\x0f":  # Ctrl+o
                         on = capture.toggle()
                         label = "on" if on else "off"
                         real_stdout.write(f"  -- output {label} --\n")
@@ -496,7 +496,7 @@ def install(
     root = _solutions_root(solutions_dir)
     typer.echo(f"\nInstalling {solution}...")
     if _TTY_SUPPORT and sys.stdin.isatty():
-        console.print("  [dim]Ctrl+O to show/hide import details[/dim]")
+        console.print("  [dim]Ctrl+o to show/hide import details[/dim]")
 
     def _do_import() -> None:
         if solutions_dir:
