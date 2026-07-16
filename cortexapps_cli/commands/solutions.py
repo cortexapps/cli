@@ -198,7 +198,7 @@ def _extract_section(text: str, heading: str) -> str | None:
 def _get_ui_url(ctx: typer.Context) -> str:
     """Derive the Cortex app UI URL from the configured API URL."""
     params = ctx.obj.get("_auth_params", {})
-    api_url = params.get("url", "https://api.getcortexapp.com").strip("\"' /")
+    api_url = (params.get("url") or "https://api.getcortexapp.com").strip("\"' /")
     if api_url == "https://api.getcortexapp.com":
         return "https://app.getcortexapp.com"
     return api_url.replace("://api.", "://app.")
