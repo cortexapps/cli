@@ -400,7 +400,7 @@ def list_solutions(ctx: typer.Context):
     console.print(table)
 
 
-def _print_readme(text: str, plain: bool = False) -> None:
+def _print_readme(text: str, plain: bool = False, entity_tags: set[str] | None = None, ui_url: str = "https://app.getcortexapp.com") -> None:
     """Render README with left-justified headings and Rich Markdown body blocks.
 
     When plain=True, markdown structure is preserved (bold, code blocks, etc.)
@@ -429,6 +429,13 @@ def _print_readme(text: str, plain: bool = False) -> None:
             continue
 
         if in_code_block:
+            if entity_tags and not plain:
+                linked = _apply_hyperlinks(line, entity_tags, ui_url)
+                if linked != line:
+                    # Use print() not console.print(): Rich counts OSC 8 escape
+                    # bytes as visible characters, shifting ASCII art alignment.
+                    print(f"  {linked}")
+                    continue
             out.print(f"  [cyan]{line}[/cyan]" if line else "")
             continue
 
@@ -497,6 +504,17 @@ def _show_next_steps(readme: str) -> None:
     if section:
         console.print()
         console.print(Markdown(section))
+    console.print()
+    console.print(
+        "[magenta]Coming in Q4 2027:[/magenta] CQL metadata traversal will enable scorecard rules "
+        "across relationship chains — for example, a Vulnerability Scorecard checking that no "
+        "deployed service-version has open Snyk issues:"
+    )
+    console.print(
+        "  [dim]entity.destinations(relationshipType = \"environments\", depth = 3)\n"
+        "    .filter((d) => d.type == \"service-version\")\n"
+        "    .all((sv) => sv.snyk.issues == 0)[/dim]"
+    )
 
 
 def _post_install_menu(
@@ -515,7 +533,7 @@ def _post_install_menu(
     actions = {
         "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url),
         "2": lambda: _show_next_steps(readme),
-        "3": lambda: (console.print(), _print_readme(readme)),
+        "3": lambda: (console.print(), _print_readme(readme, entity_tags=entity_tags, ui_url=ui_url)),
         "4": lambda: (console.print(), typer.echo(import_report)),
     }
 

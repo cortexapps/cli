@@ -28,6 +28,14 @@ Model your deployment hierarchy — from clusters down to service versions — a
                            │    service-version    │
                            │    payments-1.6.1     │
                            └───────────────────────┘
+
+Legend
+┌──────────────────────────────────┐
+│  x-cortex-type                   │
+│  x-cortex-tag → workspace link   │
+└─────────────────┬────────────────┘
+                  │ relationship-tag
+                  ▼
 ```
 
 Once service-versions carry package and CVE metadata (via Snyk/Wiz), MCP can answer:
@@ -85,49 +93,3 @@ Three workflows were installed. Go to [Workflows](https://app.getcortexapp.com/a
 - **Trigger GitHub Release** (`trigger-github-release`) — publish a service version via GitHub Actions
 
 These are all stub workflows. You might add the creation of these entities as part of your automated CI/CD process. You might extend these workflows and call them via the Cortex API. These are included to show conceptually what you'll want to create/maintain.
-
-## How the process works
-
-```
-1. Create Environment
-   Cortex Workflow: create-environment
-   └── Prompts: cloudType, envType, region
-   └── Creates environment entity (e.g. gcp-prod-us-east-1) with groups
-   └── [Add your] cluster provisioning logic here
-
-2. Create a Release
-   Cortex Workflow: create-release
-   └── Entity picker selects service versions to include
-   └── Creates release entity with environments relationships to each version
-   └── [Add your] deployment orchestration here
-
-3. Publish Service Versions
-   Cortex Workflow: trigger-github-release
-   └── Triggers GitHub release on service repo
-       └── GitHub Actions: cortex-service-version.yaml fires
-           └── Creates service-version entity with package/CVE metadata
-           └── Links to release via `environments` relationship
-
-4. Vulnerability Data
-   Your Snyk/Wiz pipeline
-   └── Pushes CVE data to service-version custom metadata
-   └── Pushes aggregated counts to environment custom metrics
-
-5. Query with MCP
-   └── "Which environments are affected by cve-2024-3195?"
-   └── "What version of payments is in prod?"
-```
-
-## MCP Query Examples
-
-- *"Which environments are affected by cve-2024-3195?"*
-- *"What version of payments is running in gcp-prod-us-east-1?"*
-- *"List all service versions deployed in the prod environments"*
-- *"Which environments have payments-1.6.1 deployed?"*
-- *"What is the difference between gcp-prod-us-east-1 and gcp-prod-us-west-1?"*
-
-## Caveats
-
-- **MCP queries are multi-hop.** The deployment hierarchy (environment → release → service-version) requires multiple API calls to traverse. For large catalogs with many environments, releases, and service-versions, these queries can be slow. This solution works best as a pure catalog/browsing solution with MCP for ad-hoc queries.
-
-- **CQL cannot traverse related entity metadata.** CQL rules can traverse relationship chains (e.g. `entity.destinations(relationshipType = "environments", depth = 2)`) and filter by entity type or tag, but cannot access custom metadata on related entities. A scorecard rule like "does any deployed service-version have a HIGH CVE?" is not expressible in CQL today without modeling vulnerabilities as first-class entities linked via a dedicated relationship type.
