@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import re
+import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib.resources import as_file, files
 from pathlib import Path
@@ -19,8 +21,90 @@ from rich.table import Table
 
 from cortexapps_cli.cortex_client import CortexClient
 
+try:
+    import select as _select
+    import termios as _termios
+    import tty as _tty
+    _TTY_SUPPORT = True
+except ImportError:
+    _TTY_SUPPORT = False
+
 app = typer.Typer(help="Solutions commands", no_args_is_help=True)
 console = Console()
+
+
+class _ToggleableCapture:
+    """Stdout proxy that buffers all output and optionally mirrors it live."""
+
+    def __init__(self, real_stdout):
+        self._real = real_stdout
+        self._buf = io.StringIO()
+        self._on = False
+        self._lock = threading.Lock()
+
+    def write(self, text: str) -> int:
+        with self._lock:
+            self._buf.write(text)
+            if self._on:
+                self._real.write(text)
+                self._real.flush()
+        return len(text)
+
+    def flush(self) -> None:
+        pass
+
+    def toggle(self) -> bool:
+        with self._lock:
+            self._on = not self._on
+            return self._on
+
+    def getvalue(self) -> str:
+        return self._buf.getvalue()
+
+
+def _run_import_with_toggle(fn) -> str:
+    """Run fn() capturing stdout. On a TTY, Ctrl+O toggles live output."""
+    real_stdout = sys.stdout
+    capture = _ToggleableCapture(real_stdout)
+
+    if not (_TTY_SUPPORT and sys.stdin.isatty()):
+        with contextlib.redirect_stdout(capture):
+            fn()
+        return capture.getvalue()
+
+    done = threading.Event()
+    fd = sys.stdin.fileno()
+    old_settings = _termios.tcgetattr(fd)
+
+    def _listen() -> None:
+        try:
+            _tty.setcbreak(fd)
+            while not done.is_set():
+                r, _, _ = _select.select([sys.stdin], [], [], 0.05)
+                if r:
+                    ch = sys.stdin.read(1)
+                    if ch == "\x0f":  # Ctrl+O
+                        on = capture.toggle()
+                        label = "on" if on else "off"
+                        real_stdout.write(f"  -- output {label} --\n")
+                        real_stdout.flush()
+        except Exception:
+            pass
+
+    t = threading.Thread(target=_listen, daemon=True)
+    t.start()
+    try:
+        with contextlib.redirect_stdout(capture):
+            fn()
+    finally:
+        done.set()
+        t.join(timeout=0.5)
+        try:
+            _termios.tcsetattr(fd, _termios.TCSADRAIN, old_settings)
+        except Exception:
+            pass
+
+    return capture.getvalue()
 
 
 @app.callback()
@@ -411,16 +495,17 @@ def install(
 
     root = _solutions_root(solutions_dir)
     typer.echo(f"\nInstalling {solution}...")
+    if _TTY_SUPPORT and sys.stdin.isatty():
+        console.print("  [dim]Ctrl+O to show/hide import details[/dim]")
 
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
+    def _do_import() -> None:
         if solutions_dir:
             backup.import_tenant(ctx, directory=str(root / solution), force=False)
         else:
             with as_file(root / solution) as solution_path:
                 backup.import_tenant(ctx, directory=str(solution_path), force=False)
 
-    output = buf.getvalue()
+    output = _run_import_with_toggle(_do_import)
     total_match = re.search(r"TOTAL: (\d+) imported, (\d+) failed", output)
     if total_match:
         total_imported = int(total_match.group(1))
