@@ -18,6 +18,7 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.table import Table
+from rich.theme import Theme
 
 from cortexapps_cli.cortex_client import CortexClient
 
@@ -30,7 +31,7 @@ except ImportError:
     _TTY_SUPPORT = False
 
 app = typer.Typer(help="Solutions commands", no_args_is_help=True)
-console = Console()
+console = Console(theme=Theme({"markdown.code": "cyan"}))
 
 
 class _ToggleableCapture:
