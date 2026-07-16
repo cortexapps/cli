@@ -529,7 +529,7 @@ def _post_install_menu(
     options = [
         ("1", "Data Model"),
         ("2", "Next steps"),
-        ("3", "Full README"),
+        ("3", "README"),
         ("4", "Import report"),
         ("5", "Exit"),
     ]
