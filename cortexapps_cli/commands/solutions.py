@@ -40,6 +40,7 @@ class _ToggleableCapture:
         self._real = real_stdout
         self._buf = io.StringIO()
         self._on = False
+        self._shown_pos = 0  # chars already written to real_stdout
         self._lock = threading.Lock()
 
     def write(self, text: str) -> int:
@@ -48,6 +49,7 @@ class _ToggleableCapture:
             if self._on:
                 self._real.write(text)
                 self._real.flush()
+                self._shown_pos += len(text)
         return len(text)
 
     def flush(self) -> None:
@@ -56,6 +58,14 @@ class _ToggleableCapture:
     def toggle(self) -> bool:
         with self._lock:
             self._on = not self._on
+            if self._on:
+                # Flush everything buffered since the last toggle-on
+                content = self._buf.getvalue()
+                pending = content[self._shown_pos:]
+                if pending:
+                    self._real.write(pending)
+                    self._real.flush()
+                self._shown_pos = len(content)
             return self._on
 
     def getvalue(self) -> str:
@@ -78,11 +88,19 @@ def _run_import_with_toggle(fn) -> str:
 
     def _listen() -> None:
         try:
-            _tty.setcbreak(fd)
+            # setcbreak() keeps IEXTEN, which makes the kernel intercept \x0f
+            # as VDISCARD before it reaches the app. Manually disable ECHO,
+            # ICANON, and IEXTEN while keeping OPOST (output processing) and
+            # ISIG (so Ctrl+c still works).
+            mode = _termios.tcgetattr(fd)
+            mode[3] &= ~(_termios.ECHO | _termios.ICANON | _termios.IEXTEN)
+            mode[6][_termios.VMIN] = 1
+            mode[6][_termios.VTIME] = 0
+            _termios.tcsetattr(fd, _termios.TCSAFLUSH, mode)
             while not done.is_set():
                 r, _, _ = _select.select([fd], [], [], 0.05)
                 if r:
-                    ch = os.read(fd, 1)  # bypass Python stdin buffering
+                    ch = os.read(fd, 1)
                     if ch == b"\x0f":  # Ctrl+o
                         on = capture.toggle()
                         label = "on" if on else "off"
@@ -175,6 +193,15 @@ def _extract_section(text: str, heading: str) -> str | None:
     m2 = next_heading.search(body, start + 1)
     end = m2.start() if m2 else len(body)
     return body[start:end].strip()
+
+
+def _get_ui_url(ctx: typer.Context) -> str:
+    """Derive the Cortex app UI URL from the configured API URL."""
+    params = ctx.obj.get("_auth_params", {})
+    api_url = params.get("url", "https://api.getcortexapp.com").strip("\"' /")
+    if api_url == "https://api.getcortexapp.com":
+        return "https://app.getcortexapp.com"
+    return api_url.replace("://api.", "://app.")
 
 
 def _build_client(ctx: typer.Context) -> CortexClient:
@@ -416,12 +443,23 @@ def _print_readme(text: str, plain: bool = False) -> None:
     flush()
 
 
-def _show_diagram(readme: str) -> None:
+def _osc8(url: str, text: str) -> str:
+    """Wrap text in an OSC 8 terminal hyperlink."""
+    return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
+
+
+def _show_diagram(readme: str, entity_tags: set[str] | None = None, ui_url: str = "https://app.getcortexapp.com") -> None:
     block = _extract_first_codeblock(readme)
-    if block:
-        console.print()
-        for line in block.split("\n"):
-            console.print(f"  {line}", highlight=False, markup=False)
+    if not block:
+        return
+    console.print()
+    for line in block.split("\n"):
+        if entity_tags:
+            # Replace longest matches first to avoid partial-tag substitutions
+            for tag in sorted(entity_tags, key=len, reverse=True):
+                if tag in line:
+                    line = line.replace(tag, _osc8(f"{ui_url}/admin?tag={tag}", tag))
+        console.print(f"  {line}", highlight=False, markup=False)
 
 
 def _show_next_steps(readme: str) -> None:
@@ -431,7 +469,12 @@ def _show_next_steps(readme: str) -> None:
         console.print(Markdown(section))
 
 
-def _post_install_menu(readme: str, import_report: str = "") -> None:
+def _post_install_menu(
+    readme: str,
+    import_report: str = "",
+    entity_tags: set[str] | None = None,
+    ui_url: str = "https://app.getcortexapp.com",
+) -> None:
     options = [
         ("1", "Project diagram"),
         ("2", "Next steps"),
@@ -440,7 +483,7 @@ def _post_install_menu(readme: str, import_report: str = "") -> None:
         ("5", "Exit"),
     ]
     actions = {
-        "1": lambda: _show_diagram(readme),
+        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url),
         "2": lambda: _show_next_steps(readme),
         "3": lambda: (console.print(), _print_readme(readme)),
         "4": lambda: (console.print(), typer.echo(import_report)),
@@ -523,7 +566,18 @@ def install(
     if not no_prompt:
         readme = _get_readme(solution, solutions_dir)
         if readme:
-            _post_install_menu(readme, import_report=output)
+            entity_tags: set[str] = set()
+            ui_url = _get_ui_url(ctx)
+            try:
+                if solutions_dir:
+                    resources = _collect_solution_resources(root / solution)
+                else:
+                    with as_file(root / solution) as sp:
+                        resources = _collect_solution_resources(sp)
+                entity_tags = set(resources.get("catalog", []))
+            except Exception:
+                pass
+            _post_install_menu(readme, import_report=output, entity_tags=entity_tags, ui_url=ui_url)
 
 
 @app.command()

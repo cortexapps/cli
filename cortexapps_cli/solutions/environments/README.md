@@ -78,7 +78,7 @@ cortex solutions install -s environments
 
 Create a catalog to visualize the deployment hierarchy:
 
-1. Go to [Catalogs](https://app.getcortexapp.com/catalog) → **New Catalog**
+1. Go to [Catalogs](https://app.getcortexapp.com/admin/catalog) → **New Catalog**
 2. Relationship type: `environments`
 3. Root entity type: `environment`
 4. Name it **Environments**
@@ -87,7 +87,7 @@ Create a catalog to visualize the deployment hierarchy:
 
 **Try the workflows**
 
-Three workflows were installed. Go to [Workflows](https://app.getcortexapp.com/workflows) in the Cortex UI:
+Three workflows were installed. Go to [Workflows](https://app.getcortexapp.com/admin/workflows) in the Cortex UI:
 
 - **Create Environment** (`create-environment`) — provision a new environment entity
 - **Create Release** (`create-release`) — create a release linked to service versions
