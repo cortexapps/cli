@@ -577,7 +577,7 @@ def install(
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
     no_prompt: bool = typer.Option(False, "--no-prompt", help="Skip the post-install interactive menu"),
 ):
-    """Install a solution into the current Cortex workspace."""
+    """Install a solution."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
     if solution not in _list_solution_tags(solutions_dir):
         avail = ", ".join(_list_solution_tags(solutions_dir))
@@ -638,7 +638,7 @@ def uninstall(
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
 ):
-    """Remove all entities installed by a solution from the current Cortex workspace."""
+    """Remove all entities installed by a solution."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
     if solution not in _list_solution_tags(solutions_dir):
         avail = ", ".join(_list_solution_tags(solutions_dir))
