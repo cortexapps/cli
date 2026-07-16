@@ -347,17 +347,19 @@ def _show_next_steps(readme: str) -> None:
         console.print(Markdown(section))
 
 
-def _post_install_menu(readme: str) -> None:
+def _post_install_menu(readme: str, import_report: str = "") -> None:
     options = [
         ("1", "Project diagram"),
         ("2", "Next steps"),
         ("3", "Full README"),
-        ("4", "Exit"),
+        ("4", "Import report"),
+        ("5", "Exit"),
     ]
     actions = {
         "1": lambda: _show_diagram(readme),
         "2": lambda: _show_next_steps(readme),
         "3": lambda: (console.print(), _print_readme(readme)),
+        "4": lambda: (console.print(), typer.echo(import_report)),
     }
 
     while True:
@@ -369,7 +371,7 @@ def _post_install_menu(readme: str) -> None:
 
         choice = Prompt.ask("Choice", choices=[k for k, _ in options], show_choices=False)
 
-        if choice == "4":
+        if choice == "5":
             break
         actions[choice]()
 
@@ -436,7 +438,7 @@ def install(
     if not no_prompt:
         readme = _get_readme(solution, solutions_dir)
         if readme:
-            _post_install_menu(readme)
+            _post_install_menu(readme, import_report=output)
 
 
 @app.command()
