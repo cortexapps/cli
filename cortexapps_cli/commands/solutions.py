@@ -524,7 +524,7 @@ def _post_install_menu(
     ui_url: str = "https://app.getcortexapp.com",
 ) -> None:
     options = [
-        ("1", "Project diagram"),
+        ("1", "Data Model"),
         ("2", "Next steps"),
         ("3", "Full README"),
         ("4", "Import report"),
