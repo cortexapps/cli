@@ -1,4 +1,6 @@
 import configparser
+import contextlib
+import io
 import json
 import logging
 import os
@@ -11,6 +13,8 @@ import typer
 import yaml
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.prompt import Prompt
+from rich.rule import Rule
 from rich.table import Table
 
 from cortexapps_cli.cortex_client import CortexClient
@@ -66,6 +70,27 @@ def _get_readme(tag: str, path: str | None = None) -> str | None:
         return (_solutions_root(path) / tag / "README.md").read_text(encoding="utf-8")
     except Exception:
         return None
+
+
+def _extract_first_codeblock(text: str) -> str | None:
+    """Return content of the first fenced code block."""
+    m = re.search(r"```[^\n]*\n(.*?)```", text, re.DOTALL)
+    return m.group(1).rstrip("\n") if m else None
+
+
+def _extract_section(text: str, heading: str) -> str | None:
+    """Return the body of the first section with the given heading text."""
+    body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL)
+    pattern = re.compile(r"^(#{1,3})\s+" + re.escape(heading) + r"\s*$", re.MULTILINE)
+    m = pattern.search(body)
+    if not m:
+        return None
+    level = len(m.group(1))
+    start = m.end()
+    next_heading = re.compile(r"^#{1," + str(level) + r"}\s", re.MULTILINE)
+    m2 = next_heading.search(body, start + 1)
+    end = m2.start() if m2 else len(body)
+    return body[start:end].strip()
 
 
 def _build_client(ctx: typer.Context) -> CortexClient:
@@ -307,6 +332,48 @@ def _print_readme(text: str, plain: bool = False) -> None:
     flush()
 
 
+def _show_diagram(readme: str) -> None:
+    block = _extract_first_codeblock(readme)
+    if block:
+        console.print()
+        for line in block.split("\n"):
+            console.print(f"  {line}", highlight=False, markup=False)
+
+
+def _show_next_steps(readme: str) -> None:
+    section = _extract_section(readme, "After Installing")
+    if section:
+        console.print()
+        console.print(Markdown(section))
+
+
+def _post_install_menu(readme: str) -> None:
+    options = [
+        ("1", "Project diagram"),
+        ("2", "Next steps"),
+        ("3", "Full README"),
+        ("4", "Exit"),
+    ]
+    actions = {
+        "1": lambda: _show_diagram(readme),
+        "2": lambda: _show_next_steps(readme),
+        "3": lambda: (console.print(), _print_readme(readme)),
+    }
+
+    while True:
+        console.print()
+        console.print(Rule(" What next? ", style="bold"))
+        for key, label in options:
+            console.print(f"  [cyan]{key}[/cyan]  {label}")
+        console.print()
+
+        choice = Prompt.ask("Choice", choices=[k for k, _ in options], show_choices=False)
+
+        if choice == "4":
+            break
+        actions[choice]()
+
+
 @app.command()
 def info(
     ctx: typer.Context,
@@ -327,7 +394,7 @@ def info(
 def install(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
-    show_info: bool = typer.Option(True, "--info/--no-info", help="Show solution README after installing"),
+    no_prompt: bool = typer.Option(False, "--no-prompt", help="Skip the post-install interactive menu"),
 ):
     """Install a solution into the current Cortex workspace."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
@@ -341,17 +408,35 @@ def install(
     import cortexapps_cli.commands.backup as backup
 
     root = _solutions_root(solutions_dir)
-    if solutions_dir:
-        backup.import_tenant(ctx, directory=str(root / solution), force=False)
-    else:
-        with as_file(root / solution) as solution_path:
-            backup.import_tenant(ctx, directory=str(solution_path), force=False)
+    typer.echo(f"\nInstalling {solution}...")
 
-    if show_info:
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        if solutions_dir:
+            backup.import_tenant(ctx, directory=str(root / solution), force=False)
+        else:
+            with as_file(root / solution) as solution_path:
+                backup.import_tenant(ctx, directory=str(solution_path), force=False)
+
+    output = buf.getvalue()
+    total_match = re.search(r"TOTAL: (\d+) imported, (\d+) failed", output)
+    if total_match:
+        total_imported = int(total_match.group(1))
+        total_failed = int(total_match.group(2))
+        if total_failed:
+            failed_m = re.search(r"={20,}\nFAILED IMPORTS.*", output, re.DOTALL)
+            if failed_m:
+                typer.echo(failed_m.group(0))
+            typer.echo(f"\n  {total_imported} imported, {total_failed} failed")
+        else:
+            typer.echo(f"  {total_imported} resources imported")
+    else:
+        typer.echo(output)
+
+    if not no_prompt:
         readme = _get_readme(solution, solutions_dir)
         if readme:
-            console.print()
-            _print_readme(readme)
+            _post_install_menu(readme)
 
 
 @app.command()

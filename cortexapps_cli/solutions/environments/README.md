@@ -74,13 +74,24 @@ cortex solutions install -s environments
 
 ## After Installing
 
-1. Go to **Catalogs** in the Cortex UI
-2. Click **New Catalog**
-3. Select relationship type: **environments**
-4. Set root entity type: **environment**
-5. Name it **Environments**
+**Set up your Environments catalog**
 
-> **Coming soon:** Catalog creation will be automated once catalog API support is added to the CLI.
+Create a catalog to visualize the deployment hierarchy:
+
+1. Go to [Catalogs](https://app.getcortexapp.com/catalog) → **New Catalog**
+2. Relationship type: `environments`
+3. Root entity type: `environment`
+4. Name it **Environments**
+
+> Catalog creation will be automated once catalog API support is added to the CLI.
+
+**Try the workflows**
+
+Three workflows were installed. Go to [Workflows](https://app.getcortexapp.com/workflows) in the Cortex UI:
+
+- **Create Environment** (`create-environment`) — provision a new environment entity
+- **Create Release** (`create-release`) — create a release linked to service versions
+- **Trigger GitHub Release** (`trigger-github-release`) — publish a service version via GitHub Actions
 
 ## How the process works
 
