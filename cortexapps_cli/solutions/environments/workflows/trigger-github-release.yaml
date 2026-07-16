@@ -7,7 +7,7 @@ description: >
 filter:
   type: ENTITY
 isDraft: true
-runResponseTemplate: "GitHub release **{{actions.collect-inputs.outputs.versionTag}}** triggered for [{{context.entity.tag}}](https://app.getcortexapp.com/admin/resources/{{context.entity.id}})."
+runResponseTemplate: "GitHub release **{{actions.collect-inputs.outputs.versionTag}}** triggered for [{{context.entity.tag}}](https://app.getcortexapp.com/admin?tag={{context.entity.tag}})."
 failedRunResponseTemplate: "Failed to trigger GitHub release for version **{{actions.collect-inputs.outputs.versionTag}}**. Check the action logs for details."
 actions:
   - name: Collect Inputs
