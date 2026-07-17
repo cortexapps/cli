@@ -18,3 +18,5 @@ state.json
 screenshots/
 videos/
 *.jwt
+.worktrees/
+.claude/worktrees/
