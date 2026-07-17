@@ -1,0 +1,17 @@
+openapi: "3.0.0"
+info:
+  title: auth-2.1.0
+  x-cortex-tag: auth-2.1.0
+  x-cortex-type: service-version
+  x-cortex-description: auth service version 2.1.0
+  x-cortex-definition: {}
+  x-cortex-custom-data:
+    service: auth
+    version: 2.1.0
+    packages:
+      - name: flask
+        version: 3.0.2
+        vulnerabilities: []
+      - name: pyjwt
+        version: 2.8.0
+        vulnerabilities: []

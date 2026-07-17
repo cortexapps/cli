@@ -17,6 +17,22 @@ import os
 from cortexapps_cli.utils import guess_data_key
 
 
+class CortexApiError(typer.Exit):
+    """
+    Subclass of typer.Exit that carries a human-readable error message.
+
+    When raised inside batch import functions (backup.py), the message is captured
+    and surfaced in the final import summary. When raised at the top level, typer
+    catches it as a normal Exit and terminates with the given exit code.
+    """
+    def __init__(self, message: str, code: int = 1):
+        super().__init__(code=code)
+        self._message = message
+
+    def __str__(self) -> str:
+        return self._message
+
+
 class TokenBucket:
     """
     Token bucket rate limiter for client-side rate limiting.
@@ -160,6 +176,7 @@ class CortexClient:
                 # Check for validation error format with violations array
                 if 'violations' in error and isinstance(error['violations'], list):
                     print(f'[red][bold]HTTP Error {status}[/bold][/red]: Validation failed')
+                    violation_summaries = []
                     for violation in error['violations']:
                         title = violation.get('title', 'Validation Error')
                         description = violation.get('description', 'No description')
@@ -170,22 +187,21 @@ class CortexClient:
                             print(f'    [dim]Location: {pointer}[/dim]')
                         if violation_type:
                             print(f'    [dim]Type: {violation_type}[/dim]')
-                    raise typer.Exit(code=1)
+                        violation_summaries.append(f"{title}: {description}")
+                    raise CortexApiError(f"HTTP Error {status}: Validation failed - " + "; ".join(violation_summaries))
 
                 # Standard error format with message/details
                 message = error.get('message', 'Unknown error')
                 details = error.get('details', 'No details')
                 request_id = error.get('requestId', 'No request ID')
-                error_str = f'[red][bold]HTTP Error {status}[/bold][/red]: {message} - {details} [dim](Request ID: {request_id})[/dim]'
-                print(error_str)
-                raise typer.Exit(code=1)
+                print(f'[red][bold]HTTP Error {status}[/bold][/red]: {message} - {details} [dim](Request ID: {request_id})[/dim]')
+                raise CortexApiError(f"HTTP Error {status}: {message} - {details}")
             except json.JSONDecodeError:
                 # if we can't parse the error message, print a clean error and exit
                 status = response.status_code
                 reason = response.reason or 'Unknown error'
-                error_str = f'[red][bold]HTTP Error {status}[/bold][/red]: {reason}'
-                print(error_str)
-                raise typer.Exit(code=1)
+                print(f'[red][bold]HTTP Error {status}[/bold][/red]: {reason}')
+                raise CortexApiError(f"HTTP Error {status}: {reason}")
 
         if raw_response:
             return response

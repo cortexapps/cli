@@ -1,0 +1,11 @@
+openapi: "3.0.0"
+info:
+  title: order-service
+  x-cortex-tag: order-service
+  x-cortex-type: service
+  x-cortex-description: Order creation, tracking, and fulfillment
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: order-service-2.0.1
+        - tag: order-service-2.1.0

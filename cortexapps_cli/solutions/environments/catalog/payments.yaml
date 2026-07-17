@@ -1,0 +1,13 @@
+openapi: "3.0.0"
+info:
+  title: payments
+  x-cortex-tag: payments
+  x-cortex-type: service
+  x-cortex-description: Payment processing service
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: payments-1.5.2
+        - tag: payments-1.6.1
+        - tag: payments-1.7.0
+        - tag: payments-1.7.1

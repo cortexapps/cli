@@ -1,0 +1,12 @@
+openapi: "3.0.0"
+info:
+  title: auth
+  x-cortex-tag: auth
+  x-cortex-type: service
+  x-cortex-description: Authentication and authorization service
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: auth-2.1.0
+        - tag: auth-2.1.1
+        - tag: auth-2.2.0

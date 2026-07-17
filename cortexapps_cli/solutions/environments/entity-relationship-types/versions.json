@@ -1,0 +1,20 @@
+{
+  "tag": "versions",
+  "name": "Versions",
+  "description": "Connects a service to its versioned artifacts. Source: service. Destination: service-version.",
+  "definitionLocation": "SOURCE",
+  "isSingleSource": true,
+  "isSingleDestination": false,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": false,
+    "types": [],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": false,
+    "types": [],
+    "providers": []
+  },
+  "inheritances": []
+}

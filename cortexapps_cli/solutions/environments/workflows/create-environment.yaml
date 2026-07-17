@@ -1,0 +1,71 @@
+tag: create-environment
+name: Create Environment
+description: >
+  Creates a new environment entity in Cortex.
+  Prompts for cloud type, environment type, and region.
+  Add your cluster provisioning steps after the entity creation action.
+filter:
+  type: GLOBAL
+isDraft: true
+runResponseTemplate: |
+  Environment **{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}** created successfully.
+
+  [View entity](https://app.getcortexapp.com/admin?tag={{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}})
+failedRunResponseTemplate: |
+  Failed to create environment **{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}**. Check the action logs for details.
+actions:
+  - name: Collect Inputs
+    slug: collect-inputs
+    isRootAction: true
+    outgoingActions:
+      - create-entity
+    schema:
+      type: USER_INPUT
+      inputs:
+        - name: Cloud Type
+          key: cloudType
+          description: Cloud provider
+          required: true
+          type: SELECT_FIELD
+          options:
+            - gcp
+            - aws
+            - azure
+        - name: Environment Type
+          key: envType
+          description: Environment tier
+          required: true
+          type: SELECT_FIELD
+          options:
+            - prod
+            - staging
+            - dev
+        - name: Region
+          key: region
+          description: Cloud region (e.g. us-east-1, us-west-2, eu-west-1)
+          required: true
+          type: INPUT_FIELD
+      inputOverrides: []
+      jsValidatorScript: null
+  - name: Create Environment Entity
+    slug: create-entity
+    isRootAction: false
+    outgoingActions: []
+    schema:
+      type: ADVANCED_HTTP_REQUEST
+      actionIdentifier: cortex.createOrUpdateEntity
+      integrationAlias: null
+      inputs:
+        mode: CREATE
+        dryRun: false
+        body: |
+          openapi: "3.0.0"
+          info:
+            title: "{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}"
+            x-cortex-tag: "{{actions.collect-inputs.outputs.cloudType}}-{{actions.collect-inputs.outputs.envType}}-{{actions.collect-inputs.outputs.region}}"
+            x-cortex-type: environment
+            x-cortex-description: "{{actions.collect-inputs.outputs.cloudType}} {{actions.collect-inputs.outputs.envType}} cluster in {{actions.collect-inputs.outputs.region}}"
+            x-cortex-groups:
+              - "cloudType:{{actions.collect-inputs.outputs.cloudType}}"
+              - "envType:{{actions.collect-inputs.outputs.envType}}"
+              - "region:{{actions.collect-inputs.outputs.region}}"

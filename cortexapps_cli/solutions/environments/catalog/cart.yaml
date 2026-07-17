@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: cart
+  x-cortex-tag: cart
+  x-cortex-type: service
+  x-cortex-description: Shopping cart and session management
+  x-cortex-relationships:
+    - type: versions
+      destinations:
+        - tag: cart-1.0.2

@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: order-service-2.1.0
+  x-cortex-tag: order-service-2.1.0
+  x-cortex-type: service-version
+  x-cortex-description: order-service version 2.1.0
+  x-cortex-definition: {}
+  x-cortex-custom-data:
+    service: order-service
+    version: 2.1.0
