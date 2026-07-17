@@ -1,1 +1,1 @@
-{"type": "service-version", "name": "Service Version", "description": "A versioned artifact of a service. Carries package and CVE metadata as custom data."}
+{"type": "service-version", "name": "Service Version", "description": "A versioned artifact of a service. Carries package and CVE metadata as custom data.", "schema": {"type": "object", "properties": {}}}

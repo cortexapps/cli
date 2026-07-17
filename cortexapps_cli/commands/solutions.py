@@ -451,6 +451,18 @@ def _print_readme(text: str, plain: bool = False, entity_tags: set[str] | None =
     flush()
 
 
+def _terminal_supports_hyperlinks() -> bool:
+    """Return True if the terminal is known to support OSC 8 hyperlinks."""
+    term_program = os.environ.get("TERM_PROGRAM", "")
+    if term_program == "Apple_Terminal":
+        return False
+    if term_program in ("iTerm.app", "vscode", "WarpTerminal", "Hyper"):
+        return True
+    if os.environ.get("WT_SESSION"):  # Windows Terminal
+        return True
+    return False
+
+
 def _osc8(url: str, text: str) -> str:
     """Wrap text in an OSC 8 terminal hyperlink."""
     return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
@@ -491,21 +503,37 @@ def _show_diagram(readme: str, entity_tags: set[str] | None = None, ui_url: str 
     block = _extract_first_codeblock(readme)
     if not block:
         return
+
+    links_supported = _terminal_supports_hyperlinks()
+
     print()
-    if entity_tags:
-        print("  If your terminal supports hyperlinks, click on the underlined entities to see them in your workspace.")
-        print()
     for line in block.split("\n"):
-        if entity_tags:
+        if entity_tags and links_supported:
             line = _apply_hyperlinks(line, entity_tags, ui_url)
         # Use print() not console.print(): Rich counts OSC 8 escape bytes as
         # visible characters, shifting ASCII art alignment.
         print(f"  {line}")
 
+    if entity_tags and not links_supported:
+        diagram_tags = sorted(
+            (tag for tag in entity_tags if tag in block),
+            key=lambda t: t.lower(),
+        )
+        if diagram_tags:
+            print()
+            table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2, 0, 0))
+            table.add_column("Entity")
+            table.add_column("URL")
+            for tag in diagram_tags:
+                table.add_row(tag, f"{ui_url}/admin/resources?tag={tag}")
+            console.print(table)
+
 
 def _show_next_steps(readme: str) -> None:
     section = _extract_section(readme, "After Installing")
     if section:
+        if not _terminal_supports_hyperlinks():
+            section = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1 (\2)', section)
         console.print()
         console.print(Markdown(section))
     console.print()
@@ -530,15 +558,13 @@ def _post_install_menu(
     options = [
         ("1", "Data Model"),
         ("2", "Next steps"),
-        ("3", "README"),
-        ("4", "Import report"),
-        ("5", "Exit"),
+        ("3", "Import report"),
+        ("4", "Exit"),
     ]
     actions = {
         "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url),
         "2": lambda: _show_next_steps(readme),
-        "3": lambda: (console.print(), _print_readme(readme, entity_tags=entity_tags, ui_url=ui_url)),
-        "4": lambda: (console.print(), typer.echo(import_report)),
+        "3": lambda: (console.print(), typer.echo(import_report)),
     }
 
     while True:
@@ -550,7 +576,7 @@ def _post_install_menu(
 
         choice = Prompt.ask("Choice", choices=[k for k, _ in options], show_choices=False)
 
-        if choice == "5":
+        if choice == "4":
             break
         actions[choice]()
 

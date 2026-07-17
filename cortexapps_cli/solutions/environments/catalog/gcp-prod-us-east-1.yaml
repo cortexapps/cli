@@ -4,7 +4,11 @@ info:
   x-cortex-tag: gcp-prod-us-east-1
   x-cortex-type: environment
   x-cortex-description: GCP production cluster in us-east-1
+  x-cortex-definition: {}
   x-cortex-groups:
+    - cloudType:gcp
+    - envType:prod
+    - region:us-east-1
   x-cortex-relationships:
     - type: environments
       destinations:

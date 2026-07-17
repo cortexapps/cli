@@ -1,1 +1,1 @@
-{"type": "environment", "name": "Environment", "description": "A deployment cluster. Named cloudType-envType-region (e.g. gcp-prod-us-east-1). Groups carry cloudType, envType, and region for independent filtering."}
+{"type": "environment", "name": "Environment", "description": "A deployment cluster. Named cloudType-envType-region (e.g. gcp-prod-us-east-1). Groups carry cloudType, envType, and region for independent filtering.", "schema": {"type": "object", "properties": {}}}

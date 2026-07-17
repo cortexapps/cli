@@ -4,7 +4,11 @@ info:
   x-cortex-tag: aws-dev-us-west-2
   x-cortex-type: environment
   x-cortex-description: AWS development cluster in us-west-2
+  x-cortex-definition: {}
   x-cortex-groups:
+    - cloudType:aws
+    - envType:dev
+    - region:us-west-2
   x-cortex-relationships:
     - type: environments
       destinations:
