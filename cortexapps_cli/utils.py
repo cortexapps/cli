@@ -104,6 +104,13 @@ def humanize_value(value):
         return json.dumps(value, indent=2)
     return str(value)
 
+
+def validate_sort_path(table_data, jsonpath):
+    if not table_data:
+        return
+    if not any(get_value_at_path(item, jsonpath) is not None for item in table_data):
+        raise typer.BadParameter(f"Sort path '{jsonpath}' did not match any values")
+
 def print_output(data, columns=None, filters=None, sort=None, output_format='json', no_headers=False):
     """
     Print output in the specified format.
@@ -161,6 +168,7 @@ def print_output(data, columns=None, filters=None, sort=None, output_format='jso
             if not re.match(r"^[a-zA-Z0-9_.]+:(asc|ASC|desc|DESC)$", sort_item):
                 raise typer.BadParameter("Sort must be in the format jsonpath:asc or jsonpath:desc")
             (jsonpath, order) = sort_item.split(':')
+            validate_sort_path(table_data, jsonpath)
             if order.lower() == 'asc':
                 table_data = sorted(table_data, key=lambda x: get_value_at_path(x, jsonpath))
             elif order.lower() == 'desc':
