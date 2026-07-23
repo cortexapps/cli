@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.24.0](https://github.com/cortexapps/cli/releases/tag/1.24.0) - 2026-07-23
+
+<small>[Compare with 1.23.0](https://github.com/cortexapps/cli/compare/1.23.0...1.24.0)</small>
+
+### Features
+
+- add aws and k8s subcommands to catalog, handle connection errors ([6a75a53](https://github.com/cortexapps/cli/commit/6a75a53eea589f2aa0025d0dcf774f1ec8c4a11e) by Jeff Schnitter).
+
+### Bug Fixes
+
+- correct three more test bugs exposed by ConnectionError handler ([8f79f96](https://github.com/cortexapps/cli/commit/8f79f9674180492880d5a4bf4ff77cd381aeaf71) by Jeff Schnitter).
+- correct validate URL construction for 12 integrations ([b2bb8dc](https://github.com/cortexapps/cli/commit/b2bb8dc5c977b55f078fab7465a8f7cd58a73299) by Jeff Schnitter).
+
 ## [1.23.0](https://github.com/cortexapps/cli/releases/tag/1.23.0) - 2026-07-17
 
 <small>[Compare with 1.22.0](https://github.com/cortexapps/cli/compare/1.22.0...1.23.0)</small>
