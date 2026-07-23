@@ -162,7 +162,7 @@ def validate(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/coralogix/configurations/validate" + alias)
+    r = client.post("api/v1/coralogix/configuration/validate/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -175,5 +175,5 @@ def validate_all(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/coralogix/configurations")
+    r = client.post("api/v1/coralogix/configuration/validate")
     print_json(data=r)
