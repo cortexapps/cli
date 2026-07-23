@@ -1,0 +1,88 @@
+tag: create-release
+name: Create Release
+description: >
+  Creates a release entity in Cortex linked to the selected service versions.
+  Add your deployment orchestration steps after the entity creation action.
+filter:
+  type: GLOBAL
+isDraft: true
+runResponseTemplate: |
+  Release **{{actions.collect-inputs.outputs.releaseTag}}** created successfully.
+
+  [View entity](https://app.getcortexapp.com/admin?tag={{actions.collect-inputs.outputs.releaseTag}})
+failedRunResponseTemplate: |
+  Failed to create release **{{actions.collect-inputs.outputs.releaseTag}}**. Check the action logs for details.
+actions:
+  - name: Collect Inputs
+    slug: collect-inputs
+    isRootAction: true
+    outgoingActions:
+      - build-destinations
+    schema:
+      type: USER_INPUT
+      inputs:
+        - name: Release Tag
+          key: releaseTag
+          description: Release identifier (e.g. release-2026-07-15)
+          required: true
+          type: INPUT_FIELD
+        - name: Service Versions
+          key: serviceVersions
+          description: Select the service versions included in this release
+          required: true
+          type: CORTEX_ENTITY_FIELD
+          allowMultiple: true
+          limitEntitiesToRunnerUserScope: false
+          defaultValue: []
+          entityFilter:
+            typeFilter:
+              types:
+                - service-version
+            domainIds: []
+            emailOwners: []
+            excludedGroupTags: []
+            groupTags: []
+            teamIds: []
+        - name: Description
+          key: description
+          description: What is in this release
+          required: false
+          type: INPUT_FIELD
+      inputOverrides: []
+      jsValidatorScript: null
+  - name: Build Destinations YAML
+    slug: build-destinations
+    isRootAction: false
+    outgoingActions:
+      - create-entity
+    schema:
+      type: JAVASCRIPT
+      script: |
+        const versions = actions["collect-inputs"].outputs.serviceVersions;
+        const arr = Array.isArray(versions) ? versions : [versions];
+        const items = arr.map(sv => {
+          const tag = (sv && typeof sv === 'object') ? sv.tag : sv;
+          return `        - tag: "${tag}"`;
+        }).join("\n");
+        return {
+          relationshipsYaml: `  x-cortex-relationships:\n    - type: environments\n      destinations:\n${items}`
+        };
+  - name: Create Release Entity
+    slug: create-entity
+    isRootAction: false
+    outgoingActions: []
+    schema:
+      type: ADVANCED_HTTP_REQUEST
+      actionIdentifier: cortex.createOrUpdateEntity
+      integrationAlias: null
+      inputs:
+        mode: CREATE
+        dryRun: false
+        body: |
+          openapi: "3.0.0"
+          info:
+            title: "{{actions.collect-inputs.outputs.releaseTag}}"
+            x-cortex-tag: "{{actions.collect-inputs.outputs.releaseTag}}"
+            x-cortex-type: release
+            x-cortex-description: "{{actions.collect-inputs.outputs.description}}"
+          {{{actions.build-destinations.outputs.relationshipsYaml}}}

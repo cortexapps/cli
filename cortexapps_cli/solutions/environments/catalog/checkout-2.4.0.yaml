@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: checkout-2.4.0
+  x-cortex-tag: checkout-2.4.0
+  x-cortex-type: service-version
+  x-cortex-description: checkout version 2.4.0
+  x-cortex-definition: {}
+  x-cortex-custom-data:
+    service: checkout
+    version: 2.4.0

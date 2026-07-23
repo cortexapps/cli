@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: search-4.1.0
+  x-cortex-tag: search-4.1.0
+  x-cortex-type: service-version
+  x-cortex-description: search version 4.1.0
+  x-cortex-definition: {}
+  x-cortex-custom-data:
+    service: search
+    version: 4.1.0

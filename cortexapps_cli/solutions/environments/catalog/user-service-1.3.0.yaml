@@ -1,0 +1,10 @@
+openapi: "3.0.0"
+info:
+  title: user-service-1.3.0
+  x-cortex-tag: user-service-1.3.0
+  x-cortex-type: service-version
+  x-cortex-description: user-service version 1.3.0
+  x-cortex-definition: {}
+  x-cortex-custom-data:
+    service: user-service
+    version: 1.3.0

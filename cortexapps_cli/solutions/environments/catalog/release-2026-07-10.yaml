@@ -1,0 +1,20 @@
+openapi: "3.0.0"
+info:
+  title: release-2026-07-10
+  x-cortex-tag: release-2026-07-10
+  x-cortex-type: release
+  x-cortex-description: Dev release on 2026-07-10
+  x-cortex-definition: {}
+  x-cortex-relationships:
+    - type: environments
+      destinations:
+        - tag: api-gateway-3.1.1
+        - tag: auth-2.1.1
+        - tag: billing-1.2.0
+        - tag: cart-1.0.2
+        - tag: checkout-2.4.0
+        - tag: notifications-1.1.0
+        - tag: order-service-2.1.0
+        - tag: payments-1.7.1
+        - tag: search-4.1.0
+        - tag: user-service-1.3.0

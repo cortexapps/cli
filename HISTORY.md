@@ -6,6 +6,101 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.23.0](https://github.com/cortexapps/cli/releases/tag/1.23.0) - 2026-07-17
+
+<small>[Compare with 1.22.0](https://github.com/cortexapps/cli/compare/1.22.0...1.23.0)</small>
+
+### Features
+
+- remove background box from inline code in README display ([ad11bd7](https://github.com/cortexapps/cli/commit/ad11bd7c23d96de3dc93ff7453161a2d2f6d56a3) by Jeff Schnitter).
+- rename 'Full README' menu option to 'README' ([3bca9a4](https://github.com/cortexapps/cli/commit/3bca9a429e8f8e241170e45bb7d00e02cdcb0883) by Jeff Schnitter).
+- rename 'Project diagram' menu option to 'Data Model' ([e4c81bb](https://github.com/cortexapps/cli/commit/e4c81bb7f7a50f6d2e48e4b80998aca10b6d7217) by Jeff Schnitter).
+- add diagram legend, future CQL note, fix full-readme hyperlinks, trim README sections ([9fe214f](https://github.com/cortexapps/cli/commit/9fe214f8eb46271238499bcb84db227d104b2835) by Jeff Schnitter).
+- Ctrl+O toggle for live import output ([ec246b4](https://github.com/cortexapps/cli/commit/ec246b43926959e49a9f6ffe2ea43a12b1eed1c6) by Jeff Schnitter).
+- add import report option to post-install menu ([c4d6e3f](https://github.com/cortexapps/cli/commit/c4d6e3fc42c9e8ae508bc29b0912da692095a946) by Jeff Schnitter).
+- add post-install interactive menu and clean up install output ([776972f](https://github.com/cortexapps/cli/commit/776972fe33c6bfe3021d374e5251a479318c68a1) by Jeff Schnitter).
+- add solutions uninstall command ([f646a4b](https://github.com/cortexapps/cli/commit/f646a4b174972977e70bb06cdf5c2d8d12ba3d28) by Jeff Schnitter).
+- expand to 4 envs / 10 services, improve create-release workflow ([61e3ef1](https://github.com/cortexapps/cli/commit/61e3ef1dd02850e2caa6e92eac91202700a99693) by Jeff Schnitter).
+- update workflows with response templates and improved create-release ([f3bfba5](https://github.com/cortexapps/cli/commit/f3bfba54dcc26e051e868d2c53419ea2e1e60148) by Jeff Schnitter).
+- add versions relationship type connecting service to service-version ([dc94faa](https://github.com/cortexapps/cli/commit/dc94faa9800fcd349d5718f6ab30f47a61dd7133) by Jeff Schnitter).
+- add no-vulnerabilities pass/fail scorecard for environments and releases ([6c075c3](https://github.com/cortexapps/cli/commit/6c075c3362be2100d7ff57e0b4c305a091ab7c4c) by Jeff Schnitter).
+- remove --force from solutions install ([57138c5](https://github.com/cortexapps/cli/commit/57138c5cf53f7007515ae65b14534b016ad7281b) by Jeff Schnitter).
+- add --solutions-dir flag, --plain flag, move github-starter to tests, fix ASCII diagram ([3fe169d](https://github.com/cortexapps/cli/commit/3fe169ddf01f080b26e0dd16756ceb55aa096662) by Jeff Schnitter).
+- add building-solutions Claude skill ([04b1ca4](https://github.com/cortexapps/cli/commit/04b1ca434fd1187076eaa72a7d06ed3845976703) by Jeff Schnitter).
+- populate environments solution with entity types, sample data, scorecard, and workflows ([12e7823](https://github.com/cortexapps/cli/commit/12e78233a9ea30489a545b6337e5dd678537efc7) by Jeff Schnitter).
+- add solutions package scaffold with environments bundle ([99382b1](https://github.com/cortexapps/cli/commit/99382b1206c98fca8a1c5b6a1d43e8f77b9ca59b) by Jeff Schnitter).
+- add solutions package scaffold with github-starter bundle ([a974f1e](https://github.com/cortexapps/cli/commit/a974f1e012996309a2cb26ca2c5166e8bc4886d7) by Jeff Schnitter).
+
+### Bug Fixes
+
+- surface API errors in import summary, fix environments solution install ([2aa0fa9](https://github.com/cortexapps/cli/commit/2aa0fa9bfb5ca61b50dac84db181f402c172fcd8) by Jeff Schnitter).
+- correct entity hyperlink URL to /admin/resources?tag=, add hyperlink hint to data model ([2884c6a](https://github.com/cortexapps/cli/commit/2884c6a5b9c8ed56440d9a199b024a759b345682) by Jeff Schnitter).
+- diagram hyperlinks and trim to installed sample data ([e635c6c](https://github.com/cortexapps/cli/commit/e635c6ce5bf8aa61999902f9748810f05493b673) by Jeff Schnitter).
+- _get_ui_url handles None url in auth params ([2eae2a6](https://github.com/cortexapps/cli/commit/2eae2a6a99a89e39cb9d5133a886c174aa1ccf7d) by Jeff Schnitter).
+- Ctrl+o toggle and add OSC 8 hyperlinks in diagram ([1ff0095](https://github.com/cortexapps/cli/commit/1ff00951d4f1bf1f4e782f9133d5f5128ddb6ebf) by Jeff Schnitter).
+- Ctrl+o toggle - use os.read() to bypass stdin buffering ([2d60571](https://github.com/cortexapps/cli/commit/2d60571f3380a9cc1517c6621f08a2020075ed67) by Jeff Schnitter).
+- response template links use ?tag= query param format ([1c1fc92](https://github.com/cortexapps/cli/commit/1c1fc925b336e9b8900c45238e356279117b5278) by Jeff Schnitter).
+- use context.entity.id for response template links in all workflows ([88d4049](https://github.com/cortexapps/cli/commit/88d40498fd3fb30f6575bea95709fee875098bba) by Jeff Schnitter).
+- correct response template links to use /admin/resources/ URL format ([b1ba08f](https://github.com/cortexapps/cli/commit/b1ba08f56c7a8f664e2407e2df02df452fd3e465) by Jeff Schnitter).
+- use unrestricted filters for versions relationship type ([8d28762](https://github.com/cortexapps/cli/commit/8d28762378817189a4f62c8d8042dfa041dee2c1) by Jeff Schnitter).
+- correct all entity/relationship/workflow formats for successful install ([572c2b3](https://github.com/cortexapps/cli/commit/572c2b37709ef2ad544185da73806413fc94ab7e) by Jeff Schnitter).
+- correct relationship format and add workflow filter fields ([0f2ff94](https://github.com/cortexapps/cli/commit/0f2ff94b01ca21ce18acbf261e20f87fc6de0267) by Jeff Schnitter).
+- correct directory names and file formats in building-solutions skill ([a31a538](https://github.com/cortexapps/cli/commit/a31a538e5dcb0956e979685810700dd4b1be1638) by Jeff Schnitter).
+- correct solution directory structure for backup importer compatibility ([d7c8716](https://github.com/cortexapps/cli/commit/d7c87164bcf27f83cfb514e0d94006a6a6a4f5f9) by Jeff Schnitter).
+- --plain renders markdown in black, no color stripping ([29786cc](https://github.com/cortexapps/cli/commit/29786cc6df911c64dab0be3b01a5dad82869146e) by Jeff Schnitter).
+
+### Reverts
+
+- remove no-vulnerabilities scorecard (CQL relationship traversal not yet supported) ([e959c72](https://github.com/cortexapps/cli/commit/e959c72fd4615dc2a125ae03070ccda75793595f) by Jeff Schnitter).
+
+### Code Refactoring
+
+- simplify to 1 release per environment, add notifications versions ([0062e8f](https://github.com/cortexapps/cli/commit/0062e8f515732babfdb565c9b078822a05158f09) by Jeff Schnitter).
+- remove environment suffix from release tags ([a41da28](https://github.com/cortexapps/cli/commit/a41da28bcbb2e68f5b8be8d9e7e39d97df9449f1) by Jeff Schnitter).
+
+## [1.22.0](https://github.com/cortexapps/cli/releases/tag/1.22.0) - 2026-07-14
+
+<small>[Compare with 1.21.1](https://github.com/cortexapps/cli/compare/1.21.1...1.22.0)</small>
+
+### Features
+
+- show README after install by default (--no-info to suppress); update github-starter README with install instructions ([4b996c2](https://github.com/cortexapps/cli/commit/4b996c271127cbb4217df9aab7f420492963cb6b) by Jeff Schnitter).
+- add solutions install command ([a6a21a7](https://github.com/cortexapps/cli/commit/a6a21a7362506ae744e8fce28d356eac9fb7c651) by Jeff Schnitter).
+- add solutions info command ([de17360](https://github.com/cortexapps/cli/commit/de173603d9f459052e1cff9e714db027d2f7ada6) by Jeff Schnitter).
+- add solutions list command ([02655a1](https://github.com/cortexapps/cli/commit/02655a1c984771a7de099a3a83c5c6a79bfe0e6f) by Jeff Schnitter).
+- add solutions command skeleton, cli wiring, and auth bypass ([0018115](https://github.com/cortexapps/cli/commit/001811573fda9702276d631fc67aa681766ef1b4) by Jeff Schnitter).
+- add solutions package scaffold with github-starter bundle ([8c010d7](https://github.com/cortexapps/cli/commit/8c010d7a005a5dbe1041ea2663794060d5900d61) by Jeff Schnitter).
+
+### Bug Fixes
+
+- render code blocks as cyan text instead of Rich dark panels in solutions info ([ef8c766](https://github.com/cortexapps/cli/commit/ef8c766c2325753fd439a16f426cf192ac6a07d4) by Jeff Schnitter).
+- strip frontmatter and left-justify headings in solutions info ([485a061](https://github.com/cortexapps/cli/commit/485a061623aa0749f06c7e0970a2c58a6efca9c3) by Jeff Schnitter).
+- handle missing api_key in config section in _build_client ([9b140a7](https://github.com/cortexapps/cli/commit/9b140a71d355ba6dd486507a37d06508d24d0230) by Jeff Schnitter).
+
+## [1.21.1](https://github.com/cortexapps/cli/releases/tag/1.21.1) - 2026-07-14
+
+<small>[Compare with 1.21.0](https://github.com/cortexapps/cli/compare/1.21.0...1.21.1)</small>
+
+### Bug Fixes
+
+- convert deploy timestamps to UTC before sending #patch ([685811e](https://github.com/cortexapps/cli/commit/685811e3dacdd6c7f20f71efce3778edc7cec569) by Hanna Vigil).
+
+## [1.21.0](https://github.com/cortexapps/cli/releases/tag/1.21.0) - 2026-07-07
+
+<small>[Compare with 1.20.1](https://github.com/cortexapps/cli/compare/1.20.1...1.21.0)</small>
+
+### Features
+
+- add login command, alphabetize help, remove workflows Beta label ([a89c6c7](https://github.com/cortexapps/cli/commit/a89c6c7e85479bb116eda3bfb6f657b888f186db) by Jeff Schnitter).
+
+## [1.20.1](https://github.com/cortexapps/cli/releases/tag/1.20.1) - 2026-07-06
+
+<small>[Compare with 1.20.0](https://github.com/cortexapps/cli/compare/1.20.0...1.20.1)</small>
+
+### Bug Fixes
+
+- two-pass re-import for catalog entities with x-cortex-relationships #patch ([1d75640](https://github.com/cortexapps/cli/commit/1d75640f3ac6314f9723c12d9434747aa8c93d4b) by Jeff Schnitter).
+
 ## [1.20.0](https://github.com/cortexapps/cli/releases/tag/1.20.0) - 2026-06-11
 
 <small>[Compare with 1.19.2](https://github.com/cortexapps/cli/compare/1.19.2...1.20.0)</small>
