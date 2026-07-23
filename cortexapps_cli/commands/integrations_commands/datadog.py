@@ -161,7 +161,7 @@ def validate(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/datadog/configurations/validate" + alias)
+    r = client.post("api/v1/datadog/configuration/validate/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -174,5 +174,5 @@ def validate_all(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/datadog/configurations")
+    r = client.post("api/v1/datadog/configuration/validate")
     print_json(data=r)

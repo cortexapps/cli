@@ -146,7 +146,7 @@ def validate(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/aws/configurations/validate" + accountId)
+    r = client.post("api/v1/aws/configurations/validate/" + accountId)
     print_json(data=r)
 
 @app.command()
@@ -159,7 +159,7 @@ def validate_all(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/aws/configurations")
+    r = client.post("api/v1/aws/configurations/all/validate")
     print_json(data=r)
 
 @app.command()

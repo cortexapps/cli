@@ -53,7 +53,7 @@ def test_config_file_bad_url(monkeypatch, tmp_path):
     content = template.substitute(cortex_api_key=cortex_api_key)
     f.write_text(content)
     response =  cli(["-c", str(f), "-l", "DEBUG", "-t", "mySection", "entity-types", "list"], return_type=ReturnType.RAW)
-    assert "Max retries exceeded with url" in str(response), "should get max retries error"
+    assert "Connection error" in response.output, "should get connection error"
 
 def test_config_file_base_url_env_var(monkeypatch, tmp_path):
     cortex_api_key = os.getenv('CORTEX_API_KEY')

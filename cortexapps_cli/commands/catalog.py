@@ -65,6 +65,197 @@ class CatalogCommandOptions:
         typer.Option("--types", "-t", help="Filter the response to specific types of entities. By default, this includes services, resources, and domains. Corresponds to the x-cortex-type field in the Entity Descriptor.", show_default=False)
     ]
 
+@app.command()
+def archive(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Archive an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.put("api/v1/catalog/" + tag + "/archive")
+
+@app.command()
+def aws(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Get AWS resource details for an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/catalog/" + tag + "/aws")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def create(
+    ctx: typer.Context,
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing YAML content of entity; can be passed as stdin with -, example: -f-")] = None,
+    dry_run: CatalogCommandOptions.dry_run = False,
+    _print: CommandOptions._print = True,
+):
+    """
+    Create entity
+    """
+    client = ctx.obj["client"]
+
+    params = {
+        "dryRun": dry_run
+    }
+
+    r = client.post("api/v1/open-api", data=file_input.read(), params=params, content_type="application/openapi;charset=UTF-8")
+    if _print:
+        print_output_with_context(ctx, r)
+
+@app.command()
+def delete(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Delete an entity
+    """
+    client = ctx.obj["client"]
+
+    client.delete("api/v1/catalog/" + tag)
+
+@app.command()
+def delete_by_type(
+    ctx: typer.Context,
+    types: CatalogCommandOptions.types = None,
+):
+    """
+    Dangerous operation that will delete all entities that are of the given type
+    """
+    client = ctx.obj["client"]
+
+    #TODO: check if types is a regex of form: ([-A-Za-z]+,)+
+
+    params = {
+        "types": types
+    }
+
+    client.delete("api/v1/catalog", params=params)
+
+@app.command()
+def descriptor(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    yaml: bool = typer.Option(False, "--yaml", "-y", help="When true, returns the YAML representation of the descriptor."),
+    _print: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
+):
+    """
+    Retrieve entity descriptor
+    """
+    client = ctx.obj["client"]
+
+    params = {
+        "yaml": str(yaml).lower()
+    }
+
+    r = client.get("api/v1/catalog/" + tag + "/openapi", params=params)
+    if _print:
+        if yaml:
+           print(r)
+        else:
+           print_output_with_context(ctx, r)
+           #print(r)
+    else:
+        if yaml:
+           return(r)
+        else:
+           print_output_with_context(ctx, r)
+
+@app.command()
+def details(
+    ctx: typer.Context,
+    hierarchy_depth: CatalogCommandOptions.hierarchy_depth = 'full',
+    include_hierarchy_fields: CatalogCommandOptions.include_hierarchy_fields = None,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    no_headers: ListCommandOptions.no_headers = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filters = [],
+):
+    """
+    Get details for a specific entity in the catalog
+    """
+    client = ctx.obj["client"]
+
+    if table_output and csv_output:
+        raise typer.BadParameter("Only one of --table and --csv can be specified")
+
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "ID=id",
+            "Tag=tag",
+            "Name=name",
+            "Type=type",
+            "Git Repository=git.repository",
+        ]
+
+    output_format = "table" if table_output else "csv" if csv_output else "json"
+
+    params = {
+        "hierarchyDepth": hierarchy_depth,
+        "includeHierarchyFields": include_hierarchy_fields
+    }
+
+    # remove any params that are None
+    params = {k: v for k, v in params.items() if v is not None}
+
+    r = client.get("api/v1/catalog/" + tag, params=params)
+
+    data = r if output_format == 'json' else [r]
+    print_output_with_context(ctx, data)
+
+@app.command()
+def gitops_log(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Retrieve most recent GitOps log for entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.get("api/v1/catalog/" + tag + "/gitops-logs")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def k8s(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    no_headers: ListCommandOptions.no_headers = False,
+    columns: ListCommandOptions.columns = [],
+    filters: ListCommandOptions.filters = [],
+):
+    """
+    Get Kubernetes resource details for an entity
+    """
+    client = ctx.obj["client"]
+
+    if table_output and csv_output:
+        raise typer.BadParameter("Only one of --table and --csv can be specified")
+
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "Namespace=namespace",
+            "Name=name",
+            "Cluster=cluster",
+            "Type=type",
+            "Last Updated=lastUpdated",
+        ]
+
+    r = client.get("api/v1/catalog/" + tag + "/k8s")
+    print_output_with_context(ctx, r)
+
 @app.command(name="list")
 def catalog_list(
     ctx: typer.Context,
@@ -141,153 +332,29 @@ def catalog_list(
         return(r)
 
 @app.command()
-def details(
+def list_descriptors(
     ctx: typer.Context,
-    hierarchy_depth: CatalogCommandOptions.hierarchy_depth = 'full',
-    include_hierarchy_fields: CatalogCommandOptions.include_hierarchy_fields = None,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-    table_output: ListCommandOptions.table_output = False,
-    csv_output: ListCommandOptions.csv_output = False,
-    no_headers: ListCommandOptions.no_headers = False,
-    columns: ListCommandOptions.columns = [],
-    filters: ListCommandOptions.filters = [],
-):
-    """
-    Get details for a specific entity in the catalog
-    """
-    client = ctx.obj["client"]
-
-    if table_output and csv_output:
-        raise typer.BadParameter("Only one of --table and --csv can be specified")
-
-    if (table_output or csv_output) and not ctx.params.get('columns'):
-        ctx.params['columns'] = [
-            "ID=id",
-            "Tag=tag",
-            "Name=name",
-            "Type=type",
-            "Git Repository=git.repository",
-        ]
-
-    output_format = "table" if table_output else "csv" if csv_output else "json"
-
-    params = {
-        "hierarchyDepth": hierarchy_depth,
-        "includeHierarchyFields": include_hierarchy_fields
-    }
-
-    # remove any params that are None
-    params = {k: v for k, v in params.items() if v is not None}
-
-    r = client.get("api/v1/catalog/" + tag, params=params)
-
-    data = r if output_format == 'json' else [r]
-    print_output_with_context(ctx, data)
-
-@app.command()
-def archive(
-    ctx: typer.Context,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-):
-    """
-    Archive an entity
-    """
-    client = ctx.obj["client"]
-
-    r = client.put("api/v1/catalog/" + tag + "/archive")
-
-@app.command()
-def unarchive(
-    ctx: typer.Context,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-):
-    """
-    Unarchive an entity
-    """
-    client = ctx.obj["client"]
-
-    r = client.put("api/v1/catalog/" + tag + "/unarchive")
-    print_output_with_context(ctx, r)
-
-@app.command()
-def delete(
-    ctx: typer.Context,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-):
-    """
-    Delete an entity
-    """
-    client = ctx.obj["client"]
-
-    client.delete("api/v1/catalog/" + tag)
-
-@app.command()
-def delete_by_type(
-    ctx: typer.Context,
-    types: CatalogCommandOptions.types = None,
-):
-    """
-    Dangerous operation that will delete all entities that are of the given type
-    """
-    client = ctx.obj["client"]
-
-    #TODO: check if types is a regex of form: ([-A-Za-z]+,)+
-
-    params = {
-        "types": types
-    }
-
-    client.delete("api/v1/catalog", params=params)
-
-
-@app.command()
-def descriptor(
-    ctx: typer.Context,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
     yaml: bool = typer.Option(False, "--yaml", "-y", help="When true, returns the YAML representation of the descriptor."),
-    _print: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
-):
-    """
-    Retrieve entity descriptor
-    """
-    client = ctx.obj["client"]
-
-    params = {
-        "yaml": str(yaml).lower()
-    }
-
-    r = client.get("api/v1/catalog/" + tag + "/openapi", params=params)
-    if _print:
-        if yaml:
-           print(r)
-        else:
-           print_output_with_context(ctx, r)
-           #print(r)
-    else:
-        if yaml:
-           return(r)
-        else:
-           print_output_with_context(ctx, r)
-
-@app.command()
-def create(
-    ctx: typer.Context,
-    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing YAML content of entity; can be passed as stdin with -, example: -f-")] = None,
-    dry_run: CatalogCommandOptions.dry_run = False,
+    types: CatalogCommandOptions.types = None,
+    page: ListCommandOptions.page = None,
+    page_size: ListCommandOptions.page_size = 250,
     _print: CommandOptions._print = True,
 ):
     """
-    Create entity
+    List entity descriptors
     """
     client = ctx.obj["client"]
 
     params = {
-        "dryRun": dry_run
+        "yaml": yaml,
+        "types": types,
+        "pageSize": page_size,
+        "page": page
     }
 
-    r = client.post("api/v1/open-api", data=file_input.read(), params=params, content_type="application/openapi;charset=UTF-8")
-    if _print:
-        print_output_with_context(ctx, r)
+    r = client.fetch_or_get("api/v1/catalog/descriptors", page, _print, params=params)
+    if not _print:
+        return(r)
 
 @app.command()
 def patch(
@@ -314,44 +381,6 @@ def patch(
     print_output_with_context(ctx, r)
 
 @app.command()
-def list_descriptors(
-    ctx: typer.Context,
-    yaml: bool = typer.Option(False, "--yaml", "-y", help="When true, returns the YAML representation of the descriptor."),
-    types: CatalogCommandOptions.types = None,
-    page: ListCommandOptions.page = None,
-    page_size: ListCommandOptions.page_size = 250,
-    _print: CommandOptions._print = True,
-):
-    """
-    List entity descriptors
-    """
-    client = ctx.obj["client"]
-
-    params = {
-        "yaml": yaml,
-        "types": types,
-        "pageSize": page_size,
-        "page": page
-    }
-
-    r = client.fetch_or_get("api/v1/catalog/descriptors", page, _print, params=params)
-    if not _print:
-        return(r)
-
-@app.command()
-def gitops_log(
-    ctx: typer.Context,
-    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
-):
-    """
-    Retrieve most recent GitOps log for entity
-    """
-    client = ctx.obj["client"]
-
-    r = client.get("api/v1/catalog/" + tag + "/gitops-logs")
-    print_output_with_context(ctx, r)
-
-@app.command()
 def scorecard_scores(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
@@ -362,4 +391,17 @@ def scorecard_scores(
     client = ctx.obj["client"]
 
     r = client.get("api/v1/catalog/" + tag + "/scorecards")
+    print_output_with_context(ctx, r)
+
+@app.command()
+def unarchive(
+    ctx: typer.Context,
+    tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
+):
+    """
+    Unarchive an entity
+    """
+    client = ctx.obj["client"]
+
+    r = client.put("api/v1/catalog/" + tag + "/unarchive")
     print_output_with_context(ctx, r)

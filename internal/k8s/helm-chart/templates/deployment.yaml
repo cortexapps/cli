@@ -11,8 +11,9 @@ spec:
       {{- include "helm-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
@@ -22,6 +23,12 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      ######### remove before deploy - used for local testing ###########
+      # hostAliases:
+      #  - ip: "192.168.64.1"
+      #    hostnames:
+      #    - "host.minikube.internal"
+      ###################################################################
       serviceAccountName: {{ include "helm-chart.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}

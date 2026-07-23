@@ -153,7 +153,7 @@ def validate(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/launchdarkly/configurations/validate" + alias)
+    r = client.post("api/v1/launchdarkly/configuration/validate/" + alias)
     print_json(data=r)
 
 @app.command()
@@ -166,5 +166,5 @@ def validate_all(
 
     client = ctx.obj["client"]
 
-    r = client.post("api/v1/launchdarkly/configurations")
+    r = client.post("api/v1/launchdarkly/configuration/validate")
     print_json(data=r)

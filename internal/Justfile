@@ -11,6 +11,25 @@ help:
    @just -l
 
 # ---------------------------------------------------------------------------
+# Environment profiles
+# ---------------------------------------------------------------------------
+
+# Switch environment profile (default=cloud workspace, local=local dev)
+env profile="default":
+    @./scripts/switch-env.sh {{profile}}
+
+# Show the active environment profile
+env-show:
+    @if [ -f .env.active ]; then \
+        echo "Active profile: $(cat .env.active)"; \
+    else \
+        echo "No active profile (using .env as-is)"; \
+    fi
+    @echo ""
+    @grep -E '^(CORTEX_API_KEY|CORTEX_BASE_URL|CORTEX_APP_URL|CORTEX_TENANT_CODE)=' .env 2>/dev/null | \
+        sed 's/\(CORTEX_API_KEY=\).*/\1...redacted.../' || true
+
+# ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
 
@@ -104,21 +123,17 @@ k8s-agent-setup:
         --set image.tag="${IMAGE_TAG}" \
         --set app.baseUrl="${CORTEX_BASE_URL}"
 
-    # 5. Wait for agent pod readiness
+    # 5. Restart agent pod to pick up any secret/configmap changes
+    kubectl rollout restart deployment -l app.kubernetes.io/name=cortex-k8s-agent
+
+    # 6. Wait for agent pod readiness
     echo "Waiting for k8s-agent pod to be ready..."
-    for i in $(seq 1 30); do
-        if kubectl get pod -l app.kubernetes.io/name=cortex-k8s-agent 2>/dev/null | grep -q .; then
-            break
-        fi
-        sleep 2
-    done
-    kubectl wait --for=condition=ready pod \
-        -l app.kubernetes.io/name=cortex-k8s-agent \
-        --timeout=120s
+    sleep 5  # Give k8s time to start the rollout
+    kubectl rollout status deployment -l app.kubernetes.io/name=cortex-k8s-agent --timeout=120s
 
     # 6. Create Cortex entity
     echo "Creating Cortex entity..."
-    {{cortex_cli}} catalog create -f k8s/cortex-entity.yaml || true
+    CORTEX_BASE_URL= CORTEX_API_KEY= {{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog create -f k8s/cortex-entity.yaml || true
 
     # 7. Install Argo Rollouts CRD (required for Rollout test manifest)
     echo "Installing Argo Rollouts CRD..."
@@ -128,6 +143,13 @@ k8s-agent-setup:
     echo "Applying test manifests..."
     kubectl apply -f k8s/manifests/
 
+    # 9. Show initial agent logs
+    echo ""
+    echo "Agent logs (waiting 15s for first cache push)..."
+    sleep 15
+    kubectl logs -l app.kubernetes.io/name=cortex-k8s-agent --tail=10
+
+    echo ""
     echo "Setup complete. Run 'just k8s-agent-test' to verify."
 
 # Verify test objects show up in Cortex (checks agent logs, then runs Playwright UI test)
@@ -167,9 +189,41 @@ k8s-agent-test:
         exit 1
     fi
 
+    # 3. Verify k8s data is accessible via the public API
     echo ""
-    echo "Agent is healthy and all test manifests are deployed."
-    echo "Run 'just test-k8s-agent-ui' to verify workloads appear in the Cortex UI."
+    echo "Checking k8s data via CLI..."
+    FAILED=0
+    CLI_CMD="cortex -t ${CORTEX_TENANT_CODE} catalog k8s -t k8s-test-annotation"
+    echo "  \$ ${CLI_CMD}"
+    K8S_RESULT=$(CORTEX_BASE_URL= CORTEX_API_KEY= {{cortex_cli}} -t "${CORTEX_TENANT_CODE}" catalog k8s -t k8s-test-annotation 2>&1) && RC=0 || RC=$?
+    if [ "$RC" -ne 0 ]; then
+        echo "  FAILED: catalog k8s command exited with code $RC"
+        echo "  $K8S_RESULT" | head -5
+        FAILED=1
+    elif echo "$K8S_RESULT" | grep -q '"resources"'; then
+        RESOURCE_COUNT=$(echo "$K8S_RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['resources']))")
+        echo "  OK: ${RESOURCE_COUNT} resource(s) returned"
+        echo ""
+        echo "  Resources:"
+        echo "$K8S_RESULT" | python3 -c "import sys,json; [print(f'    {r[\"type\"]:12s} {r[\"namespace\"]}/{r[\"name\"]} (cluster: {r[\"cluster\"]})') for r in json.load(sys.stdin).get('resources',[])]"
+        echo ""
+        echo "  Sample JSON (first resource):"
+        echo "$K8S_RESULT" | python3 -c "import sys,json; r=json.load(sys.stdin)['resources'][0]; print(json.dumps({k:r[k] for k in ['type','namespace','name','cluster','lastUpdated']}, indent=4))" | sed 's/^/    /'
+    elif echo "$K8S_RESULT" | grep -q "404"; then
+        echo "  FAILED: catalog k8s returned 404 — agent may not have pushed data yet."
+        FAILED=1
+    else
+        echo "  FAILED: unexpected response from catalog k8s:"
+        echo "  $K8S_RESULT" | head -5
+        FAILED=1
+    fi
+
+    echo ""
+    if [ "$FAILED" -eq 1 ] || [ "$MISSING" -eq 1 ]; then
+        echo "ERROR: One or more checks failed."
+        exit 1
+    fi
+    echo "All checks passed."
 
 # Tear down k8s-agent (keeps minikube running)
 k8s-agent-stop:
