@@ -36,7 +36,7 @@ def test_integrations_sonarqube_add():
 @responses.activate
 def test_integrations_sonarqube_add_multiple(tmp_path):
     f = _dummy_file(tmp_path)
-    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configurations", json={}, status=200)
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/sonarqube/configurations", json={}, status=200)
     cli(["integrations", "sonarqube", "add-multiple", "-f", str(f)])
 
 @responses.activate

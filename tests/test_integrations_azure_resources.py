@@ -60,10 +60,10 @@ def test_integrations_azure_resources_validate_all():
 
 @responses.activate
 def test_integrations_list_types():
-    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/azure-resoures/types", json={}, status=200)
+    responses.add(responses.GET, os.getenv("CORTEX_BASE_URL") + "/api/v1/azure-resources/types", json={}, status=200)
     cli(["integrations", "azure-resources", "list-types"])
 
 @responses.activate
 def test_integrations_azure_resoures_update_types():
-    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/azure-resoures/types", json={}, status=200)
+    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/azure-resources/types", json={}, status=200)
     cli(["integrations", "azure-resources", "update-types", "-t", "microsoft.insights/workbooks=true", "-t", "microsoft.resources/subscriptions=false"], ReturnType.RAW)
