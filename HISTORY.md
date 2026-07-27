@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.25.0](https://github.com/cortexapps/cli/releases/tag/1.25.0) - 2026-07-27
+
+<small>[Compare with 1.24.0](https://github.com/cortexapps/cli/compare/1.24.0...1.25.0)</small>
+
+### Bug Fixes
+
+- remove environment-dependent skip from solutions no-auth tests ([9799311](https://github.com/cortexapps/cli/commit/9799311a0a7099508e7937ab4126bdd9f73c4653) by Jeff Schnitter).
+- address final review findings in entity-types update and post_coverage.py ([b3cecb4](https://github.com/cortexapps/cli/commit/b3cecb40328e6d19e60940b7e9d93dea2756968b) by Jeff Schnitter).
+- entity-types update calls nonexistent client method ([d230323](https://github.com/cortexapps/cli/commit/d230323ed3e9352b59c5e5666ee33ccd35a83b3a) by Jeff Schnitter).
+
 ## [1.24.0](https://github.com/cortexapps/cli/releases/tag/1.24.0) - 2026-07-23
 
 <small>[Compare with 1.23.0](https://github.com/cortexapps/cli/compare/1.23.0...1.24.0)</small>
