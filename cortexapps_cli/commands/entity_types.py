@@ -100,6 +100,7 @@ def update(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help=" File containing custom entity definition; can be passed as stdin with -, example: -f-")] = None,
     entity_type: str = typer.Option(..., "--type", "-t", help="The entity type"),
+    _print: CommandOptions._print = True,
 ):
     """
     Update entity type
@@ -108,7 +109,11 @@ def update(
     client = ctx.obj["client"]
     data = json.loads("".join([line for line in file_input]))
 
-    r = client.update("api/v1/catalog/definitions/" + entity_type, data=data)
+    r = client.put("api/v1/catalog/definitions/" + entity_type, data=data)
+    if _print:
+        print_output_with_context(ctx, r)
+    else:
+        return(r)
 
 @app.command()
 def get(

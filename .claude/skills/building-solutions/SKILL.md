@@ -87,9 +87,9 @@ All entities use OpenAPI 3.0 format with `x-cortex-*` extensions:
 openapi: "3.0.0"
 info:
   title: my-entity
+  description: Human readable description
   x-cortex-tag: my-entity
   x-cortex-type: <entity-type-tag>
-  x-cortex-description: Human readable description
   x-cortex-definition: {}      ← REQUIRED for custom entity types (e.g. non-service/domain/team)
   x-cortex-groups:
     - groupName:value
@@ -100,6 +100,8 @@ info:
       destinations:
         - tag: child-entity-tag
 ```
+
+**`description`** — the plain OpenAPI `info.description` field, not `x-cortex-description`. Confirmed live: `x-cortex-description` is not a recognized Cortex attribute and is silently dropped — the entity imports fine but its description stays null in `catalog list`/`catalog details` and the UI. Use plain `description:` alongside `title:`.
 
 **`x-cortex-definition: {}`** — Required for custom entity types (anything not service, domain, or team). Omitting it causes "Standard cortex tags: Definition is required" on import.
 
@@ -254,13 +256,24 @@ tag: my-scorecard
 name: My Scorecard
 description: What this scorecard measures.
 filter:
-  entityType: <entity-type-tag>
+  kind: GENERIC
+  types:
+    include:
+      - <entity-type-tag>
 rules:
   - title: Rule title
     description: What passes/fails and why.
     weight: 1
     expression: "git != null"
 ```
+
+**`filter`** — `filter: {entityType: <tag>}` (as an older version of this doc showed) 400s with "Invalid scorecard yaml" and no further detail. The real schema, confirmed live: `kind: GENERIC` plus one of `types` (`{include: [...]}` or `{exclude: [...]}`), `groups` (same shape), or `query` (a CQL string) — at least one of the three is required.
+
+**Rule expressions (CQL)** — a few patterns that aren't obvious and are easy to get wrong (all confirmed against a live tenant):
+- Relationship existence: `entity.destinations(relationshipType = "my-relationship").length > 0` (or `.sources(...)` for the reverse direction).
+- Numeric custom data: `custom("key")` only reads values pushed via the **Custom Data API** (`POST api/v1/catalog/<tag>/custom-data`, i.e. `cortex custom-data add`) — the `x-cortex-custom-data` block in the catalog descriptor YAML is invisible to `custom()`. Values also come back as strings even when numeric, so comparisons need a jq cast: `jq(custom("key"), ". | tonumber") <= 200`, not `custom("key") <= 200` (silently scores 0, no error).
+- Boolean custom data: use `jq(custom("key"), "not")` or `jq(custom("key"), ". == false")` — `custom("key") == false` and `custom("key") == "false"` both silently score 0 against the live evaluator despite the value being stored and typed correctly.
+- Regex/string ops: `entity.tag().matches(".*pattern.*")`; combine with `OR` (not `||`) and `!(...)` (not `NOT ...`) — e.g. `!(entity.tag().matches(".*a.*") OR entity.tag().matches(".*b.*"))`.
 
 ---
 
