@@ -19,7 +19,8 @@ def test_resource_definitions(capsys):
     # Verify default columns are set when using --table output
     cli(["entity-types", "list", "--table"], return_type=ReturnType.STDOUT)
 
-    cli(["entity-types", "update", "-t", "cli-test", "-f", "data/run-time/entity-type-update.json"])
+    response = cli(["entity-types", "update", "-t", "cli-test", "-f", "data/run-time/entity-type-update.json"], return_type=ReturnType.RAW)
+    assert response.exit_code == 0
 
 
 def test_resource_definitions_invalid_icon():
