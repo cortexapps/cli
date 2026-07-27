@@ -1,0 +1,24 @@
+{
+  "tag": "ai-plugin-skills",
+  "name": "AI Plugin Skills",
+  "description": "Links an AI Plugin to the AI Skills it bundles. Sources: ai-plugin. Destinations: ai-skill.",
+  "definitionLocation": "SOURCE",
+  "isSingleSource": false,
+  "isSingleDestination": false,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": true,
+    "types": [
+      "ai-plugin"
+    ],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": true,
+    "types": [
+      "ai-skill"
+    ],
+    "providers": []
+  },
+  "inheritances": []
+}

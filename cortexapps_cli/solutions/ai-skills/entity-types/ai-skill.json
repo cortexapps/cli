@@ -1,0 +1,1 @@
+{"type": "ai-skill", "name": "AI Skill", "description": "An individual AI skill (e.g. a Claude Code SKILL.md) bundled inside an AI Plugin.", "iconTag": "Cortex-builtin::MagicWand", "schema": {"type": "object", "properties": {}}}

@@ -1,0 +1,24 @@
+{
+  "tag": "ai-plugin-service",
+  "name": "AI Plugin Service",
+  "description": "Links an AI Plugin to the Cortex Service that owns and hosts it, so ownership is inherited from the Catalog instead of duplicated. Sources: ai-plugin. Destinations: service.",
+  "definitionLocation": "SOURCE",
+  "isSingleSource": false,
+  "isSingleDestination": true,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": true,
+    "types": [
+      "ai-plugin"
+    ],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": true,
+    "types": [
+      "service"
+    ],
+    "providers": []
+  },
+  "inheritances": []
+}
