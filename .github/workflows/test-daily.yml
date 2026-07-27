@@ -66,4 +66,7 @@ jobs:
         just test-all
 
     - name: Post coverage metrics to Cortex
+      env:
+        CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY_PRODUCTION }}
+        CORTEX_BASE_URL: https://api.getcortexapp.com
       run: poetry run python scripts/post_coverage.py
