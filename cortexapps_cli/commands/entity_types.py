@@ -112,6 +112,8 @@ def update(
     r = client.put("api/v1/catalog/definitions/" + entity_type, data=data)
     if _print:
         print_output_with_context(ctx, r)
+    else:
+        return(r)
 
 @app.command()
 def get(

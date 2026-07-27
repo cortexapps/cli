@@ -11,8 +11,10 @@ Requires CORTEX_API_KEY in the environment (or ~/.cortex/config).
 """
 
 import json
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -52,10 +54,10 @@ def run(cmd):
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.stdout:
         print(result.stdout)
+    if result.stderr:
+        print(result.stderr, file=sys.stderr)
     if result.returncode != 0:
         print(f"ERROR: command failed (exit {result.returncode})", file=sys.stderr)
-        if result.stderr:
-            print(result.stderr, file=sys.stderr)
         sys.exit(result.returncode)
 
 
@@ -69,7 +71,6 @@ def post_metric(total_pct):
 
 
 def post_custom_data(report):
-    import tempfile, os
     payload = {
         "key": CUSTOM_DATA_KEY,
         "description": "pytest coverage report",

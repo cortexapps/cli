@@ -66,4 +66,4 @@ jobs:
         just test-all
 
     - name: Post coverage metrics to Cortex
-      run: python scripts/post_coverage.py
+      run: poetry run python scripts/post_coverage.py
