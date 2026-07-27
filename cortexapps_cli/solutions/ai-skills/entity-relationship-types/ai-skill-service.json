@@ -1,0 +1,24 @@
+{
+  "tag": "ai-skill-service",
+  "name": "AI Skill Service",
+  "description": "Links an AI Skill directly to the Cortex Service that owns it, for cases where a skill's ownership differs from its parent plugin's (e.g. distinct CODEOWNERS within a monorepo). Sources: ai-skill. Destinations: service.",
+  "definitionLocation": "SOURCE",
+  "isSingleSource": false,
+  "isSingleDestination": true,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": true,
+    "types": [
+      "ai-skill"
+    ],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": true,
+    "types": [
+      "service"
+    ],
+    "providers": []
+  },
+  "inheritances": []
+}

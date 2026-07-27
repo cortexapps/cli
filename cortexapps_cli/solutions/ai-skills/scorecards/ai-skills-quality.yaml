@@ -1,0 +1,76 @@
+# AI Skill quality & ownership scorecard.
+#
+# The "Concise", "Description substantive/hard-limit", and "Line count hard
+# limit" rules read numeric/boolean values via Cortex custom metadata.
+# `cortex ai-skills sync` populates these via the Custom Data API (POST
+# api/v1/custom-data) for each key referenced below -- you can also set them
+# yourself with `cortex custom-data add --tag <skill> --key <key> --value
+# <value>` (or the bulk endpoint):
+#   lineCount              (int)  - line count of the skill's SKILL.md body
+#   descriptionCharCount    (int)  - character length of the skill's description
+#                                    (named to avoid confusion with the
+#                                    entity's own "description" field, which
+#                                    already appears in both this YAML and the
+#                                    API response)
+#   hasDeepReferences       (bool) - whether the skill's docs reference files
+#                                    more than one level deep from SKILL.md (see
+#                                    https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices#avoid-deeply-nested-references)
+#
+# `--value true`/`--value false` on the CLI are stored and evaluated as real
+# booleans (confirmed live) -- use jq(custom("key"), "not") or
+# jq(custom("key"), ". == false") for boolean checks, not custom("key") ==
+# false/"false" directly (both fail against the live evaluator).
+#
+# Recompute these on change, not on a timer: wire a GitHub Action or webhook
+# to fire when a plugin/skill's files change and re-run the sync, rather than
+# recalculating on a fixed schedule -- these values move maybe a couple of
+# times a year, so there's no reason to redo the work (or hit the git API)
+# every time the scorecard evaluates.
+tag: ai-skills-quality
+name: AI Skill Quality & Ownership
+description: Checks that AI skills are owned via a linked Cortex Service, bundled under a plugin, and follow Anthropic's Agent Skills authoring best practices.
+filter:
+  kind: GENERIC
+  types:
+    include:
+      - ai-skill
+rules:
+  - title: Owned by a Cortex Service
+    description: The skill is linked to a Service via the ai-skill-service relationship, so there's a clear owning team in the Catalog.
+    weight: 3
+    expression: 'entity.destinations(relationshipType = "ai-skill-service").length > 0'
+
+  - title: Belongs to a plugin
+    description: The skill is bundled under an AI Plugin rather than managed ad hoc.
+    weight: 2
+    expression: 'entity.sources(relationshipType = "ai-plugin-skills").length > 0'
+
+  - title: Concise (team target -- <=200 lines)
+    description: '"Good skills should only be 200 lines" -- keeps SKILL.md focused and maintainable. Requires custom-data key "lineCount".'
+    weight: 2
+    expression: 'jq(custom("lineCount"), ". | tonumber") <= 200'
+
+  - title: Within Anthropic's SKILL.md line limit (<=500 lines)
+    description: 'Anthropic''s Agent Skills docs recommend keeping SKILL.md body under 500 lines for optimal performance -- a looser ceiling than this org''s 200-line target, useful for skills that miss the team target but aren''t badly bloated. Requires custom-data key "lineCount".'
+    weight: 1
+    expression: 'jq(custom("lineCount"), ". | tonumber") <= 500'
+
+  - title: Description is substantive
+    description: 'Per Anthropic''s guidance, avoid vague descriptions like "Helps with documents" -- the description drives skill discovery/triggering, so it needs real content. Requires custom-data key "descriptionCharCount".'
+    weight: 1
+    expression: 'jq(custom("descriptionCharCount"), ". | tonumber") >= 40'
+
+  - title: Description within Anthropic's hard limit (<=1024 chars)
+    description: 'The Agent Skills spec caps the description frontmatter field at 1024 characters. Requires custom-data key "descriptionCharCount".'
+    weight: 1
+    expression: 'jq(custom("descriptionCharCount"), ". | tonumber") <= 1024'
+
+  - title: No reserved words in tag/name
+    description: Anthropic's naming rules forbid "claude" or "anthropic" in a Skill's name field -- checked here against the Cortex tag as a proxy.
+    weight: 1
+    expression: '!(entity.tag().matches(".*claude.*") OR entity.tag().matches(".*anthropic.*"))'
+
+  - title: References stay one level deep
+    description: 'Per Anthropic''s progressive-disclosure guidance, all reference files should link directly from SKILL.md -- nested references (SKILL.md -> advanced.md -> details.md) cause Claude to partially read files with `head`, losing information. Requires custom-data key "hasDeepReferences" (boolean, as "true"/"false").'
+    weight: 1
+    expression: 'jq(custom("hasDeepReferences"), "not")'

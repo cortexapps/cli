@@ -1,0 +1,1 @@
+{"type": "ai-plugin", "name": "AI Plugin", "description": "A bundle of AI skills distributed and versioned together (e.g. a Claude Code plugin). Installed as a unit, managed like a service.", "iconTag": "Cortex-builtin::PlugsConnected", "schema": {"type": "object", "properties": {}}}

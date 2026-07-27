@@ -1,0 +1,11 @@
+openapi: "3.0.0"
+info:
+  title: changelog-writer
+  x-cortex-tag: changelog-writer
+  x-cortex-type: ai-skill
+  description: Drafts changelog entries from merged PR titles and descriptions, grouped by conventional-commit type.
+  x-cortex-definition: {}
+  x-cortex-relationships:
+    - type: ai-skill-service
+      destinations:
+        - tag: docs-portal
