@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.27.0](https://github.com/cortexapps/cli/releases/tag/1.27.0) - 2026-07-30
+
+<small>[Compare with 1.26.0](https://github.com/cortexapps/cli/compare/1.26.0...1.27.0)</small>
+
+### Features
+
+- add ai-agents solution with governance scorecard ([89016e1](https://github.com/cortexapps/cli/commit/89016e16c584111768fac22b066438159eec5c6d) by Jeff Schnitter).
+
+### Bug Fixes
+
+- show login instructions and prompt before opening browser ([376188d](https://github.com/cortexapps/cli/commit/376188dd808d3e626e8b3ceb09a03e1b34b5a5ee) by Jeff Schnitter).
+
 ## [1.26.0](https://github.com/cortexapps/cli/releases/tag/1.26.0) - 2026-07-27
 
 <small>[Compare with 1.25.0](https://github.com/cortexapps/cli/compare/1.25.0...1.26.0)</small>
