@@ -1,0 +1,21 @@
+openapi: "3.0.0"
+info:
+  title: jira-to-kb
+  description: End-to-end pipeline that takes a Jira issue key, retrieves all relevant context (issue details, linked GitHub PRs, PR diffs), and uploads a troubleshooting record to the engineering knowledge base with auto-generated embeddings. Fully autonomous — no human approval needed per record.
+  x-cortex-tag: jira-to-kb
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-model:claude-haiku-4-5-20251001
+    - tier-3
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/jira-to-kb
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

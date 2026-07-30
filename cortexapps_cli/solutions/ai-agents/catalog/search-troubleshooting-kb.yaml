@@ -1,0 +1,20 @@
+openapi: "3.0.0"
+info:
+  title: search-troubleshooting-kb
+  description: Search the engineering troubleshooting knowledge base in BigQuery for past incidents, fixes, and diagnostic patterns. Use during active debugging sessions to find similar past incidents and their resolutions. Also used proactively at the start of any debugging session to check for prior art.
+  x-cortex-tag: search-troubleshooting-kb
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  # No model group set — scores Baseline but not Mature.
+  # Add x-cortex-groups with an ai-model: tag to reach Mature.
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/search-troubleshooting-kb
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

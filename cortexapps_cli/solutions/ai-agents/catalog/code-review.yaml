@@ -1,0 +1,21 @@
+openapi: "3.0.0"
+info:
+  title: code-review
+  description: Code review of branch changes, optionally informed by a Jira issue for context. Fetches the diff, reads related tickets, and posts structured feedback covering correctness, security, and style.
+  x-cortex-tag: code-review
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-model:claude-opus-4-6
+    - tier-1
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/code-review
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

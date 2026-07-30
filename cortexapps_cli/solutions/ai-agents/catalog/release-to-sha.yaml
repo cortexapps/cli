@@ -1,0 +1,15 @@
+openapi: "3.0.0"
+info:
+  title: release-to-sha
+  description: Map a Cortex on-prem helm chart version to the git SHAs baked into it across all components — brain-backend, epv-consumer, auth-service, frontend, brain-web. Used during incident triage when a self-hosted customer reports a version.
+  x-cortex-tag: release-to-sha
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-model:claude-haiku-4-5-20251001
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/release-to-sha
+  # No owner set — fails Baseline "Agent has a business owner" rule.
+  # Replace with a real owner to start scoring.

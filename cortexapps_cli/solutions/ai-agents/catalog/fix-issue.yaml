@@ -1,0 +1,21 @@
+openapi: "3.0.0"
+info:
+  title: fix-issue
+  description: Fix a bug documented in a Jira or Linear issue. Reads the issue, investigates the codebase, presents a plan with fix and tests, then implements upon approval.
+  x-cortex-tag: fix-issue
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-model:claude-opus-4-6
+    - tier-2
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/fix-issue
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

@@ -1,0 +1,21 @@
+openapi: "3.0.0"
+info:
+  title: address-reviews
+  description: Address findings from PR reviews — both automated Claude reviews and human reviewer comments. Reads all feedback, applies fixes, and pushes an updated commit.
+  x-cortex-tag: address-reviews
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-model:claude-sonnet-4-6
+    - tier-2
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/address-reviews
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

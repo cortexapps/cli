@@ -1,0 +1,21 @@
+openapi: "3.0.0"
+info:
+  title: audit-flags
+  description: Audit all LaunchDarkly feature flags across codebases — generates descriptions, links Jira tickets, checks code usage, and classifies each flag. Outputs a CSV report for flag cleanup decisions.
+  x-cortex-tag: audit-flags
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-model:claude-sonnet-4-6
+    - tier-3
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/audit-flags
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner
