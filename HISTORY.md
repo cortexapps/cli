@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.28.0](https://github.com/cortexapps/cli/releases/tag/1.28.0) - 2026-07-30
+
+<small>[Compare with 1.27.0](https://github.com/cortexapps/cli/compare/1.27.0...1.28.0)</small>
+
+### Bug Fixes
+
+- upgrade setuptools and msgpack in Docker image to fix Trivy HIGH vulnerabilities ([2314894](https://github.com/cortexapps/cli/commit/2314894f5879da33550f3fbae7cd1373f3216d2c) by Jeff Schnitter).
+
 ## [1.27.0](https://github.com/cortexapps/cli/releases/tag/1.27.0) - 2026-07-30
 
 <small>[Compare with 1.26.0](https://github.com/cortexapps/cli/compare/1.26.0...1.27.0)</small>
