@@ -181,9 +181,11 @@ def login(
     pat_url = f"{ui_base}{DEFAULT_UI_KEYS_PATH}?tenantCode={tenant}"
 
     if open_browser:
-        typer.echo(f"\nOpening browser to the Personal Access Tokens page for workspace '{tenant}'.")
-        typer.echo(f"Create or copy a personal access token, then come back here and paste it below.\n")
+        typer.echo(f"\nWe'll open the Personal Access Tokens page for workspace '{tenant}' in your browser.")
+        typer.echo(f"Create or copy a personal access token, then come back here and paste it below.")
+        typer.confirm("\nReady to open browser?", default=True, abort=True)
         webbrowser.open(pat_url)
+        typer.echo("")
     else:
         typer.echo(f"\nGo to {pat_url} to create or copy a personal access token, then paste it below.\n")
 

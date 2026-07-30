@@ -1,0 +1,20 @@
+openapi: "3.0.0"
+info:
+  title: simplify-test
+  description: Simplify a heavy integration test by splitting it into controller unit tests, service unit tests, and lightweight integration tests. Applies a migration playbook and enforces the integration test ratchet.
+  x-cortex-tag: simplify-test
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  # No model group set — scores Baseline but not Mature.
+  # Add x-cortex-groups with an ai-model: tag to reach Mature.
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/simplify-test
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

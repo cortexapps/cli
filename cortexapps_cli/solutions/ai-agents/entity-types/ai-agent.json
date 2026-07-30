@@ -1,0 +1,7 @@
+{
+  "type": "ai-agent",
+  "name": "AI Agent",
+  "description": "An internally-built AI agent — a workflow, assistant, or automation powered by an LLM (e.g. Claude, GPT-4o) and deployed to handle a repeatable task.",
+  "iconTag": "Cortex-builtin::Robot",
+  "schema": {"type": "object", "properties": {}}
+}

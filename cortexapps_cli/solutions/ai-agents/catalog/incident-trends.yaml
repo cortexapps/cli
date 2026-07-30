@@ -1,0 +1,20 @@
+openapi: "3.0.0"
+info:
+  title: incident-trends
+  description: Analyze incident trends and patterns from the engineering troubleshooting knowledge base. Answers aggregate questions like "what keeps breaking?" and "which product areas have the most incidents?" by translating natural language questions into BigQuery analytics.
+  x-cortex-tag: incident-trends
+  x-cortex-type: ai-agent
+  x-cortex-definition: {}
+  # No model group set — scores Baseline but not Mature.
+  # Add x-cortex-groups with an ai-model: tag to reach Mature.
+  x-cortex-git:
+    github:
+      repository: cortexapps/brain-backend
+      basepath: .claude/skills/incident-trends
+  x-cortex-owners:
+    - type: GROUP
+      name: platform-engineering
+      provider: CORTEX
+    - type: EMAIL
+      email: owner@example.com
+      description: business-owner

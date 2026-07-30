@@ -1,0 +1,69 @@
+tag: ai-agent-governance
+name: AI Agent Governance
+description: Checks that AI agents are documented, owned, classified by model and criticality, and regularly verified — the minimum bar for answering "where and how are we using AI tooling?"
+draft: false
+notifications:
+  enabled: true
+  scoreDropNotificationsEnabled: true
+exemptions:
+  enabled: true
+  autoApprove: false
+  userSpecificNotifications: false
+evaluation:
+  window: 24
+ladder:
+  name: Default Ladder
+  levels:
+    - name: Bronze
+      rank: 1
+      description: The agent is documented, owned by a team, and linked to its source implementation.
+      color: "#CD7F32"
+    - name: Silver
+      rank: 2
+      description: The agent is classified by AI model and criticality tier, enabling org-wide reporting on model adoption and business impact.
+      color: "#C0C0C0"
+    - name: Gold
+      rank: 3
+      description: The agent has been explicitly verified as active and current.
+      color: "#D7AC58"
+filter:
+  kind: GENERIC
+  types:
+    include:
+      - ai-agent
+rules:
+  - title: Agent has a description
+    description: Every AI agent should describe what it does and why — the minimum signal for stakeholders asking "where are we using AI?"
+    expression: entity.description().length > 0
+    weight: 1
+    level: Bronze
+
+  - title: Agent is owned by a team
+    description: AI agents must be owned by a Cortex team so responsibility is shared and survives individual attrition.
+    expression: ownership.teams().length >= 1
+    weight: 1
+    level: Bronze
+
+  - title: Agent has a source code reference
+    description: The agent's implementation must be linked via x-cortex-git so the catalog entry stays connected to the code.
+    expression: git != null
+    weight: 1
+    level: Bronze
+
+  - title: Agent is tagged with an AI model
+    description: Tag this agent with its LLM using the ai-model group prefix (e.g. ai-model:claude-opus-4-6) so leadership can report on model adoption across the organization.
+    expression: groups().any((group) => group.name.matchesIn("ai-model:"))
+    weight: 1
+    level: Silver
+
+  - title: Agent has a criticality tier
+    description: Tag this agent with its business criticality (tier-1, tier-2, or tier-3) so incidents and ownership decisions can be prioritized accordingly.
+    expression: groups().any((group) => group.name.matchesIn("tier-"))
+    weight: 1
+    level: Silver
+
+  - title: Agent verified in the last 90 days
+    description: The agent has been verified within the last 90 days — confirming it is still in active use and its metadata is current. Verify via the Cortex UI or API.
+    expression: verifications().lastVerifiedAt() != null and verifications().lastVerifiedAt().fromNow() > duration("P-90D")
+    weight: 1
+    level: Gold
