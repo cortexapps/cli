@@ -5,6 +5,12 @@ info:
   x-cortex-type: team
   x-cortex-description: Frontend engineering team
   x-cortex-definition: {}
+  x-cortex-team:
+    members:
+      - name: Carol Kim
+        email: carol.kim@cortex.io
+      - name: David Osei
+        email: david.osei@cortex.io
   x-cortex-relationships:
     - type: team-member
       destinations:

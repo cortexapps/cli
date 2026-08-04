@@ -5,6 +5,12 @@ info:
   x-cortex-type: team
   x-cortex-description: Platform engineering team
   x-cortex-definition: {}
+  x-cortex-team:
+    members:
+      - name: Alice Chen
+        email: alice.chen@cortex.io
+      - name: Bob Martinez
+        email: bob.martinez@cortex.io
   x-cortex-relationships:
     - type: team-member
       destinations:
