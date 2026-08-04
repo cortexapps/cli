@@ -16,5 +16,6 @@
     "types": ["team", "employee"],
     "providers": []
   },
-  "inheritances": []
+  "inheritances": [],
+  "createCatalog": true
 }
