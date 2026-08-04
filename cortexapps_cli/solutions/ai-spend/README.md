@@ -51,6 +51,14 @@ cortex solutions install -s ai-spend
 
 ## After Installing
 
+**Create the team-member catalog**
+
+Enable the relationship type catalog so you can browse team membership from the Cortex UI:
+
+1. Go to **Settings → Entity Relationship Types → team-member**
+2. Click **Edit** and enable **Create relationship type catalog**
+3. Save
+
 **Set up live Claude spend sync**
 
 The sample entities include fictional spend data. To push real data from your Anthropic Claude Enterprise account weekly:
