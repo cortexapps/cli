@@ -1,0 +1,7 @@
+openapi: "3.0.0"
+info:
+  title: Bob Martinez
+  x-cortex-tag: employee-bob-martinez
+  x-cortex-type: employee
+  x-cortex-description: Platform Engineer
+  x-cortex-definition: {}

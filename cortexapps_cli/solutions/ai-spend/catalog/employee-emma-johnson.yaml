@@ -1,0 +1,7 @@
+openapi: "3.0.0"
+info:
+  title: Emma Johnson
+  x-cortex-tag: employee-emma-johnson
+  x-cortex-type: employee
+  x-cortex-description: Data Engineer
+  x-cortex-definition: {}

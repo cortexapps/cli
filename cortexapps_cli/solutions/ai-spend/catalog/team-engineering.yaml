@@ -1,0 +1,13 @@
+openapi: "3.0.0"
+info:
+  title: Engineering
+  x-cortex-tag: team-engineering
+  x-cortex-type: team
+  x-cortex-description: Top-level engineering organization
+  x-cortex-definition: {}
+  x-cortex-relationships:
+    - type: team-member
+      destinations:
+        - tag: team-platform
+        - tag: team-frontend
+        - tag: team-data

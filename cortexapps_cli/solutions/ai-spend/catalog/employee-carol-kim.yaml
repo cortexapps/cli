@@ -1,0 +1,7 @@
+openapi: "3.0.0"
+info:
+  title: Carol Kim
+  x-cortex-tag: employee-carol-kim
+  x-cortex-type: employee
+  x-cortex-description: Frontend Engineer
+  x-cortex-definition: {}
