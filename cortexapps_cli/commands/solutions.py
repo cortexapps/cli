@@ -280,6 +280,7 @@ def _collect_solution_resources(path: Path) -> dict[str, list[str]]:
         "catalog": [],
         "scorecards": [],
         "workflows": [],
+        "plugins": [],
     }
     for kind in resources:
         subdir = path / kind
@@ -336,7 +337,7 @@ def _run_uninstall(client, path: Path, yes: bool) -> None:
         return
 
     typer.echo("\nThis will remove the following resources:")
-    for kind in ("workflows", "scorecards", "catalog", "entity-relationship-types", "entity-types"):
+    for kind in ("workflows", "scorecards", "plugins", "catalog", "entity-relationship-types", "entity-types"):
         count = len(resources[kind])
         if count:
             typer.echo(f"  {kind}: {count}")
@@ -352,6 +353,7 @@ def _run_uninstall(client, path: Path, yes: bool) -> None:
     steps = [
         ("workflows",                 lambda t: f"api/v1/workflows/{t}"),
         ("scorecards",                lambda t: f"api/v1/scorecards/{t}"),
+        ("plugins",                   lambda t: f"api/v1/plugins/{t}"),
         ("catalog",                   lambda t: f"api/v1/catalog/{t}"),
         ("entity-relationship-types", lambda t: f"api/v1/relationship-types/{t}"),
         ("entity-types",              lambda t: f"api/v1/catalog/definitions/{t}"),
