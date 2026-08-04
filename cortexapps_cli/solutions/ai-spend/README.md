@@ -35,6 +35,7 @@ Register every employee as a Cortex entity linked to their team, push weekly Cla
 | Teams | `team-engineering`, `team-platform`, `team-frontend`, `team-data` |
 | Employees | `employee-alice-chen`, `employee-bob-martinez`, `employee-carol-kim`, `employee-david-osei`, `employee-emma-johnson` |
 | Custom metric sample data | `ai-spend` (8 weeks, fictional) |
+| Plugin | `team-ai-spend` (team-scoped spend visualization) |
 | Sync script | `scripts/sync-claude-spend.py` |
 | GH Actions workflow | `.github/workflows/sync-claude-spend.yaml` |
 
@@ -58,6 +59,10 @@ Enable the relationship type catalog so you can browse team membership from the 
 1. Go to **Settings → Entity Relationship Types → team-member**
 2. Click **Edit** and enable **Create relationship type catalog**
 3. Save
+
+**View the Team AI Spend plugin**
+
+A `team-ai-spend` plugin is installed automatically and appears on every team entity page. It shows the team's total weekly AI spend and a per-member breakdown bar chart, pulling live data from the `ai-spend` custom metric.
 
 **Create a Tabular View for AI spend**
 
