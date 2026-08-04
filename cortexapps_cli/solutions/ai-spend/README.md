@@ -14,13 +14,13 @@ Register every employee as a Cortex entity linked to their team, push weekly Cla
 ```
   team-engineering
   ├── team-platform
-  │   ├── employee-alice-chen        ai-spend: $187/wk
-  │   └── employee-bob-martinez      ai-spend:  $98/wk
+  │   ├── employee-alice-chen        ai-spend: $291/wk
+  │   └── employee-bob-martinez      ai-spend: $182/wk
   ├── team-frontend
-  │   ├── employee-carol-kim         ai-spend: $144/wk
-  │   └── employee-david-osei        ai-spend:  $65/wk
+  │   ├── employee-carol-kim         ai-spend: $245/wk
+  │   └── employee-david-osei        ai-spend: $136/wk
   └── team-data
-      └── employee-emma-johnson      ai-spend: $212/wk
+      └── employee-emma-johnson      ai-spend: $359/wk
 
   Custom metric "ai-spend" on each employee entity
   Team rollup visible via entity relationships in Cortex catalog
