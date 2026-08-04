@@ -59,6 +59,18 @@ Enable the relationship type catalog so you can browse team membership from the 
 2. Click **Edit** and enable **Create relationship type catalog**
 3. Save
 
+**Create a Tabular View for AI spend**
+
+Build a Data Explorer table to compare spend across employees and teams:
+
+1. Go to **Eng Intelligence → Data Explorer**
+2. Select the **Table** view
+3. Click **Add column**, find `ai-spend` under the **Custom** category, and click **View metric**
+4. Set **Group by → Team** and enable **Show hierarchy** to roll up spend to team level
+5. Click **Save As** to name and save the view for future use
+
+> Note: Tabular View creation is not yet available via API. It must be configured manually.
+
 **Set up live Claude spend sync**
 
 The sample entities include fictional spend data. To push real data from your Anthropic Claude Enterprise account weekly:
