@@ -1,0 +1,7 @@
+{
+  "type": "employee",
+  "name": "Employee",
+  "description": "A member of the organization. Used to track AI tool usage and spend per person.",
+  "iconTag": "Cortex-builtin::Person",
+  "schema": {"type": "object", "properties": {}}
+}

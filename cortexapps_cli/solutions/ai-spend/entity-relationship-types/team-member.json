@@ -1,0 +1,20 @@
+{
+  "tag": "team-member",
+  "name": "Team Member",
+  "description": "Links a team to its direct members, which can be sub-teams or individual employees. Use this single relationship type to walk the full org hierarchy in the catalog.",
+  "definitionLocation": "SOURCE",
+  "isSingleSource": false,
+  "isSingleDestination": false,
+  "allowCycles": false,
+  "sourcesFilter": {
+    "include": true,
+    "types": ["team"],
+    "providers": []
+  },
+  "destinationsFilter": {
+    "include": true,
+    "types": ["team", "employee"],
+    "providers": []
+  },
+  "inheritances": []
+}
