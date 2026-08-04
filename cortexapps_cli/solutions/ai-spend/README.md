@@ -21,7 +21,7 @@ instance: **Eng Intel → Custom Metrics → New Metric**, key: `ai-spend`.
 ## Install
 
 ```bash
-cortex backup import -d /path/to/solutions/ai-spend
+cortex solutions install -s ai-spend
 ```
 
 ## Live Sync Setup
