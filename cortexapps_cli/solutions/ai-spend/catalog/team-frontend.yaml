@@ -5,6 +5,8 @@ info:
   x-cortex-type: team
   x-cortex-description: Frontend engineering team
   x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-spend-demo
   x-cortex-team:
     members:
       - name: Carol Kim

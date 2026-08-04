@@ -5,6 +5,8 @@ info:
   x-cortex-type: team
   x-cortex-description: Top-level engineering organization
   x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-spend-demo
   x-cortex-team:
     members:
       - name: Alice Chen
