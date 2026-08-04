@@ -1,0 +1,48 @@
+{
+  "values": [
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-06-09T00:00:00", "value": 162.70 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-06-16T00:00:00", "value": 195.40 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-06-23T00:00:00", "value": 134.60 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-06-30T00:00:00", "value": 178.90 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-07-07T00:00:00", "value": 156.20 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-07-14T00:00:00", "value": 203.80 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-07-21T00:00:00", "value": 142.50 },
+    { "entityTag": "employee-alice-chen", "timestamp": "2026-07-28T00:00:00", "value": 187.30 },
+
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-06-09T00:00:00", "value": 83.60 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-06-16T00:00:00", "value": 118.20 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-06-23T00:00:00", "value": 91.30 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-06-30T00:00:00", "value": 103.50 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-07-07T00:00:00", "value": 76.80 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-07-14T00:00:00", "value": 112.60 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-07-21T00:00:00", "value": 87.20 },
+    { "entityTag": "employee-bob-martinez", "timestamp": "2026-07-28T00:00:00", "value": 98.40 },
+
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-06-09T00:00:00", "value": 161.40 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-06-16T00:00:00", "value": 149.80 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-06-23T00:00:00", "value": 138.20 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-06-30T00:00:00", "value": 172.60 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-07-07T00:00:00", "value": 155.30 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-07-14T00:00:00", "value": 128.40 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-07-21T00:00:00", "value": 167.90 },
+    { "entityTag": "employee-carol-kim", "timestamp": "2026-07-28T00:00:00", "value": 143.70 },
+
+    { "entityTag": "employee-david-osei", "timestamp": "2026-06-09T00:00:00", "value": 63.70 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-06-16T00:00:00", "value": 89.40 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-06-23T00:00:00", "value": 58.90 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-06-30T00:00:00", "value": 71.60 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-07-07T00:00:00", "value": 82.10 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-07-14T00:00:00", "value": 54.20 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-07-21T00:00:00", "value": 78.40 },
+    { "entityTag": "employee-david-osei", "timestamp": "2026-07-28T00:00:00", "value": 65.30 },
+
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-06-09T00:00:00", "value": 201.50 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-06-16T00:00:00", "value": 193.40 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-06-23T00:00:00", "value": 219.80 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-06-30T00:00:00", "value": 208.60 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-07T00:00:00", "value": 187.30 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-14T00:00:00", "value": 225.10 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-21T00:00:00", "value": 198.70 },
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-28T00:00:00", "value": 212.40 }
+  ]
+}
