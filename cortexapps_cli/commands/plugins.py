@@ -87,6 +87,8 @@ def create(
             # Remove the 'tag' attribute if it exists
             data.pop("tag", None)
             r = client.put("api/v1/plugins/" + tag, data, raw_response=True)
+        else:
+            r = client.post("api/v1/plugins", data, raw_response=True)
     else:
         r = client.post("api/v1/plugins", data, raw_response=True)
 
