@@ -144,12 +144,18 @@ def get(
 def replace(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="File containing contents of plugin using schema defined at https://docs.cortex.io/docs/api/create-plugin")] = None,
-    tag_or_id: str = typer.Option(..., "--tag-or-id", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity.")
+    tag_or_id: str = typer.Option(None, "--tag-or-id", "-t", help="The tag or ID of the plugin to replace. Defaults to the tag field in the file."),
 ):
     """
     Replace an existing plugin by tag
     """
 
     client = ctx.obj["client"]
-    
-    client.put("api/v1/plugins/"+ tag_or_id, data=file_input.read())
+
+    data = json.loads(file_input.read())
+    resolved = tag_or_id or data.get("tag")
+    if not resolved:
+        typer.echo("Error: --tag-or-id is required when the file does not contain a 'tag' field.")
+        raise typer.Exit(1)
+
+    client.put("api/v1/plugins/" + resolved, data=data)
