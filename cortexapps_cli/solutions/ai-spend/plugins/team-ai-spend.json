@@ -5,7 +5,7 @@
   "isDraft": false,
   "minimumRoleRequired": "VIEWER",
   "contexts": [
-    { "type": "ENTITY", "entityFilter": { "type": "CQL_FILTER", "category": "Team", "query": "groups includes (\"ai-spend-demo\")" } }
+    { "type": "ENTITY", "entityFilter": { "type": "CQL_FILTER", "category": "Team", "query": "hasGroup(\"ai-spend-demo\")" } }
   ],
   "proxyTag": null,
   "iconTag": null,
