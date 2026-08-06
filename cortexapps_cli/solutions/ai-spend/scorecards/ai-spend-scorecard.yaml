@@ -27,7 +27,10 @@ ladder:
       description: Team AI spend is at or under the weekly budget.
       color: "#D7AC58"
 filter:
-  kind: TEAM
+  kind: GENERIC
+  types:
+    include:
+      - team
 rules:
   - title: AI spend data is being tracked
     description: The team has ai-spend custom metric data in the last 8 days, indicating the sync script is running and pushing spend rollups for this team.
