@@ -16,8 +16,6 @@ info:
   x-cortex-custom-data:
     - key: ai-budget-weekly
       value: 480
-    - key: ai-spend-weekly
-      value: 473.00
   x-cortex-relationships:
     - type: team-member
       destinations:

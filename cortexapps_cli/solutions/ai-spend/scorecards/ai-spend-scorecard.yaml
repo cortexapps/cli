@@ -30,8 +30,8 @@ filter:
   kind: TEAM
 rules:
   - title: AI spend data is being tracked
-    description: The team has ai-spend-weekly custom data set, indicating the sync script is running and pushing spend rollups for this team.
-    expression: custom("ai-spend-weekly") != null
+    description: The team has ai-spend custom metric data in the last 8 days, indicating the sync script is running and pushing spend rollups for this team.
+    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).size() > 0
     weight: 1
     level: Bronze
 
@@ -42,13 +42,13 @@ rules:
     level: Bronze
 
   - title: Spend is within 25% of budget
-    description: The team's weekly AI spend is no more than 25% over the budget (spend <= budget * 1.25). Teams exceeding this threshold should review usage and consider adjusting budgets or usage patterns.
-    expression: custom("ai-spend-weekly") <= custom("ai-budget-weekly") * 1.25
+    description: The team's weekly AI spend is no more than 25% over the budget. Teams exceeding this threshold should review usage and consider adjusting budgets or usage patterns.
+    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= custom("ai-budget-weekly") * 1.25
     weight: 1
     level: Silver
 
   - title: Spend is at or under budget
-    description: The team's weekly AI spend is at or under the budget (spend <= budget). This is the target state for all teams.
-    expression: custom("ai-spend-weekly") <= custom("ai-budget-weekly")
+    description: The team's weekly AI spend is at or under the budget. This is the target state for all teams.
+    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= custom("ai-budget-weekly")
     weight: 1
     level: Gold

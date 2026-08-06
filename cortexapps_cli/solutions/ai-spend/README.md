@@ -65,9 +65,9 @@ Enable the relationship type catalog so you can browse team membership from the 
 
 An `ai-spend-scorecard` is installed automatically and tracks whether each team's weekly spend stays within budget:
 
-- **Bronze** — team has spend data and a budget set
-- **Silver** — spend is within 25% of budget (`ai-spend-weekly <= ai-budget-weekly * 1.25`)
-- **Gold** — spend is at or under budget (`ai-spend-weekly <= ai-budget-weekly`)
+- **Bronze** — team has `ai-spend` metric data in the last 8 days and a budget set
+- **Silver** — spend is within 25% of budget
+- **Gold** — spend is at or under budget
 
 The sample data is pre-loaded with budgets that produce an interesting distribution: team-platform achieves Gold, team-frontend and team-engineering achieve Silver, and team-data achieves Bronze.
 

@@ -5,8 +5,8 @@ sync-claude-spend.py
 Pulls per-user spend from the Anthropic Claude Enterprise Analytics API
 and pushes weekly cost data to Cortex as custom metric data points.
 Also computes per-team rollups by walking the team-member relationship
-hierarchy, writing both an ai-spend custom metric and ai-spend-weekly
-custom data on each team entity.
+hierarchy and writing the aggregated spend to the ai-spend custom metric
+on each team entity.
 
 Requirements:
     pip install requests
@@ -44,7 +44,6 @@ import requests
 ANTHROPIC_BASE_URL = "https://api.anthropic.com"
 ANTHROPIC_VERSION = "2023-06-01"
 CORTEX_METRIC_KEY = "ai-spend"
-CORTEX_SPEND_DATA_KEY = "ai-spend-weekly"
 TEAM_MEMBER_RELATIONSHIP = "team-member"
 
 
@@ -219,23 +218,6 @@ def push_to_cortex(cortex_api_key, cortex_base_url, entity_tag, series):
     response.raise_for_status()
 
 
-def push_custom_data(cortex_api_key, cortex_base_url, entity_tag, key, value):
-    """
-    Write a single custom data value for an entity.
-
-    Calls: POST /api/v1/catalog/{tag}/custom-data
-    """
-    url = f"{cortex_base_url}/api/v1/catalog/{entity_tag}/custom-data"
-    headers = {
-        "Authorization": f"Bearer {cortex_api_key}",
-        "Content-Type": "application/json",
-    }
-    response = requests.post(
-        url, headers=headers, json={"key": key, "value": value}, timeout=30
-    )
-    response.raise_for_status()
-
-
 def main():
     args = parse_args()
 
@@ -328,10 +310,6 @@ def main():
             series = [{"timestamp": timestamp, "value": team_spend}]
             try:
                 push_to_cortex(cortex_api_key, cortex_base_url, team_tag, series)
-                push_custom_data(
-                    cortex_api_key, cortex_base_url, team_tag,
-                    CORTEX_SPEND_DATA_KEY, team_spend
-                )
                 print(f"  OK: {team_tag} = ${team_spend:.2f}/wk ({len(leaf_employees)} members)")
                 teams_updated += 1
             except requests.HTTPError as e:
