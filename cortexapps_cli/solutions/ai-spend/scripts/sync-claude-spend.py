@@ -4,6 +4,9 @@ sync-claude-spend.py
 
 Pulls per-user spend from the Anthropic Claude Enterprise Analytics API
 and pushes weekly cost data to Cortex as custom metric data points.
+Also computes per-team rollups by walking the team-member relationship
+hierarchy, writing both an ai-spend custom metric and ai-spend-weekly
+custom data on each team entity.
 
 Requirements:
     pip install requests
@@ -26,6 +29,8 @@ Notes:
     - The Cortex custom metric definition for "ai-spend" must already exist in your
       Cortex instance before running this script. Create it in the Cortex UI under
       Eng Intel > Custom Metrics.
+    - Team rollups require team entities to have team-member relationships pointing
+      to employee entities (or other teams, which are resolved recursively).
 """
 
 import argparse
@@ -39,6 +44,8 @@ import requests
 ANTHROPIC_BASE_URL = "https://api.anthropic.com"
 ANTHROPIC_VERSION = "2023-06-01"
 CORTEX_METRIC_KEY = "ai-spend"
+CORTEX_SPEND_DATA_KEY = "ai-spend-weekly"
+TEAM_MEMBER_RELATIONSHIP = "team-member"
 
 
 def parse_args():
@@ -135,6 +142,62 @@ def fetch_claude_spend(analytics_key, start_date, end_date):
     return results
 
 
+def fetch_team_member_relationships(cortex_api_key, cortex_base_url):
+    """
+    Fetch all team-member relationship instances from Cortex.
+
+    Returns a dict mapping source_tag -> list of dicts {"tag": str, "type": str}
+    where type is the entity type (e.g. "employee", "team").
+    """
+    url = f"{cortex_base_url}/api/v1/relationships/{TEAM_MEMBER_RELATIONSHIP}"
+    headers = {
+        "Authorization": f"Bearer {cortex_api_key}",
+        "Content-Type": "application/json",
+    }
+    adjacency = defaultdict(list)
+    page = 0
+    while True:
+        params = {"pageSize": 200, "page": page}
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        body = response.json()
+        for rel in body.get("relationships", []):
+            src = rel.get("sourceEntity", {})
+            dst = rel.get("destinationEntity", {})
+            if src.get("tag") and dst.get("tag"):
+                adjacency[src["tag"]].append({
+                    "tag": dst["tag"],
+                    "type": dst.get("type", ""),
+                })
+        if not body.get("hasNextPage") and not body.get("has_more"):
+            break
+        page += 1
+    return adjacency
+
+
+def collect_leaf_employees(team_tag, adjacency, visited=None):
+    """
+    DFS walk of the team-member hierarchy to collect all leaf employee tags.
+
+    Teams that point to sub-teams are resolved recursively; cycles are guarded
+    with the visited set. Returns a set of employee entity tags.
+    """
+    if visited is None:
+        visited = set()
+    if team_tag in visited:
+        return set()
+    visited.add(team_tag)
+
+    employees = set()
+    for member in adjacency.get(team_tag, []):
+        if member["type"] == "employee":
+            employees.add(member["tag"])
+        else:
+            # Recurse into sub-teams
+            employees |= collect_leaf_employees(member["tag"], adjacency, visited)
+    return employees
+
+
 def push_to_cortex(cortex_api_key, cortex_base_url, entity_tag, series):
     """
     Push spend data points for a single entity to Cortex.
@@ -152,6 +215,23 @@ def push_to_cortex(cortex_api_key, cortex_base_url, entity_tag, series):
     }
     response = requests.post(
         url, headers=headers, json={"series": series}, timeout=30
+    )
+    response.raise_for_status()
+
+
+def push_custom_data(cortex_api_key, cortex_base_url, entity_tag, key, value):
+    """
+    Write a single custom data value for an entity.
+
+    Calls: POST /api/v1/catalog/{tag}/custom-data
+    """
+    url = f"{cortex_base_url}/api/v1/catalog/{entity_tag}/custom-data"
+    headers = {
+        "Authorization": f"Bearer {cortex_api_key}",
+        "Content-Type": "application/json",
+    }
+    response = requests.post(
+        url, headers=headers, json={"key": key, "value": value}, timeout=30
     )
     response.raise_for_status()
 
@@ -212,8 +292,61 @@ def main():
             print(f"\nERROR: Failed to push {len(push_errors)} entities.", file=sys.stderr)
             sys.exit(1)
 
+    # Build a flat map of employee tag → spend for rollup calculations
+    employee_spend = {
+        tag: series[0]["value"]
+        for tag, series in entity_series.items()
+        if series
+    }
+
+    # Compute and push team rollups
+    print("\nFetching team-member relationships for team rollups...")
+    try:
+        adjacency = fetch_team_member_relationships(cortex_api_key, cortex_base_url)
+    except requests.HTTPError as e:
+        print(f"WARNING: Could not fetch team relationships, skipping rollups: {e}", file=sys.stderr)
+        adjacency = {}
+
+    if adjacency:
+        # Identify all team nodes (source entities that have team-member relationships)
+        team_tags = list(adjacency.keys())
+        print(f"Computing rollups for {len(team_tags)} team(s)...")
+        rollup_errors = []
+        teams_updated = 0
+
+        for team_tag in sorted(team_tags):
+            leaf_employees = collect_leaf_employees(team_tag, adjacency)
+            if not leaf_employees:
+                continue
+
+            team_spend = round(
+                sum(employee_spend.get(e, 0.0) for e in leaf_employees), 2
+            )
+            if team_spend == 0:
+                continue
+
+            series = [{"timestamp": timestamp, "value": team_spend}]
+            try:
+                push_to_cortex(cortex_api_key, cortex_base_url, team_tag, series)
+                push_custom_data(
+                    cortex_api_key, cortex_base_url, team_tag,
+                    CORTEX_SPEND_DATA_KEY, team_spend
+                )
+                print(f"  OK: {team_tag} = ${team_spend:.2f}/wk ({len(leaf_employees)} members)")
+                teams_updated += 1
+            except requests.HTTPError as e:
+                print(f"  FAIL: {team_tag}: {e}", file=sys.stderr)
+                rollup_errors.append(team_tag)
+
+        if rollup_errors:
+            print(f"\nERROR: Failed to push rollups for {len(rollup_errors)} teams.", file=sys.stderr)
+            sys.exit(1)
+    else:
+        teams_updated = 0
+
     print(f"\nSummary:")
-    print(f"  Updated: {len(entity_series)} employee(s)")
+    print(f"  Employees updated: {len(entity_series)}")
+    print(f"  Teams updated: {teams_updated}")
     print(f"  Skipped: {len(skipped)}")
     for email, reason in skipped:
         print(f"    - {email}: {reason}")

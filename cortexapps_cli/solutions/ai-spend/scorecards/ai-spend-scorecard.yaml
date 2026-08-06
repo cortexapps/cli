@@ -1,0 +1,54 @@
+tag: ai-spend-scorecard
+name: AI Spend Budget Compliance
+description: Tracks whether team AI spend stays within the team's weekly budget, with bronze for data tracking, silver for near-budget compliance, and gold for on-budget status.
+draft: false
+notifications:
+  enabled: true
+  scoreDropNotificationsEnabled: true
+exemptions:
+  enabled: true
+  autoApprove: false
+  userSpecificNotifications: false
+evaluation:
+  window: 24
+ladder:
+  name: Default Ladder
+  levels:
+    - name: Bronze
+      rank: 1
+      description: Team is tracking AI spend with the ai-spend custom metric and has a weekly budget set.
+      color: "#CD7F32"
+    - name: Silver
+      rank: 2
+      description: Team AI spend is within 25% of the weekly budget.
+      color: "#C0C0C0"
+    - name: Gold
+      rank: 3
+      description: Team AI spend is at or under the weekly budget.
+      color: "#D7AC58"
+filter:
+  kind: TEAM
+rules:
+  - title: AI spend data is being tracked
+    description: The team has ai-spend-weekly custom data set, indicating the sync script is running and pushing spend rollups for this team.
+    expression: custom("ai-spend-weekly") != null
+    weight: 1
+    level: Bronze
+
+  - title: Weekly budget is defined
+    description: The team has a weekly AI budget set via the ai-budget-weekly custom data key. Without a budget, compliance cannot be measured.
+    expression: custom("ai-budget-weekly") != null
+    weight: 1
+    level: Bronze
+
+  - title: Spend is within 25% of budget
+    description: The team's weekly AI spend is no more than 25% over the budget (spend <= budget * 1.25). Teams exceeding this threshold should review usage and consider adjusting budgets or usage patterns.
+    expression: custom("ai-spend-weekly") <= custom("ai-budget-weekly") * 1.25
+    weight: 1
+    level: Silver
+
+  - title: Spend is at or under budget
+    description: The team's weekly AI spend is at or under the budget (spend <= budget). This is the target state for all teams.
+    expression: custom("ai-spend-weekly") <= custom("ai-budget-weekly")
+    weight: 1
+    level: Gold

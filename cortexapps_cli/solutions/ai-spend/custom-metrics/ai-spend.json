@@ -43,6 +43,42 @@
     { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-07T00:00:00", "value": 231.60 },
     { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-14T00:00:00", "value": 279.30 },
     { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-21T00:00:00", "value": 341.20 },
-    { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-28T00:00:00", "value": 358.70 }
+    { "entityTag": "employee-emma-johnson", "timestamp": "2026-07-28T00:00:00", "value": 358.70 },
+
+    { "entityTag": "team-platform", "timestamp": "2026-06-09T00:00:00", "value": 62.30 },
+    { "entityTag": "team-platform", "timestamp": "2026-06-16T00:00:00", "value": 88.20 },
+    { "entityTag": "team-platform", "timestamp": "2026-06-23T00:00:00", "value": 134.00 },
+    { "entityTag": "team-platform", "timestamp": "2026-06-30T00:00:00", "value": 202.70 },
+    { "entityTag": "team-platform", "timestamp": "2026-07-07T00:00:00", "value": 297.90 },
+    { "entityTag": "team-platform", "timestamp": "2026-07-14T00:00:00", "value": 376.50 },
+    { "entityTag": "team-platform", "timestamp": "2026-07-21T00:00:00", "value": 442.80 },
+    { "entityTag": "team-platform", "timestamp": "2026-07-28T00:00:00", "value": 473.00 },
+
+    { "entityTag": "team-frontend", "timestamp": "2026-06-09T00:00:00", "value": 42.10 },
+    { "entityTag": "team-frontend", "timestamp": "2026-06-16T00:00:00", "value": 74.40 },
+    { "entityTag": "team-frontend", "timestamp": "2026-06-23T00:00:00", "value": 108.00 },
+    { "entityTag": "team-frontend", "timestamp": "2026-06-30T00:00:00", "value": 164.00 },
+    { "entityTag": "team-frontend", "timestamp": "2026-07-07T00:00:00", "value": 246.60 },
+    { "entityTag": "team-frontend", "timestamp": "2026-07-14T00:00:00", "value": 294.40 },
+    { "entityTag": "team-frontend", "timestamp": "2026-07-21T00:00:00", "value": 361.20 },
+    { "entityTag": "team-frontend", "timestamp": "2026-07-28T00:00:00", "value": 380.20 },
+
+    { "entityTag": "team-data", "timestamp": "2026-06-09T00:00:00", "value": 46.20 },
+    { "entityTag": "team-data", "timestamp": "2026-06-16T00:00:00", "value": 62.90 },
+    { "entityTag": "team-data", "timestamp": "2026-06-23T00:00:00", "value": 107.40 },
+    { "entityTag": "team-data", "timestamp": "2026-06-30T00:00:00", "value": 149.80 },
+    { "entityTag": "team-data", "timestamp": "2026-07-07T00:00:00", "value": 231.60 },
+    { "entityTag": "team-data", "timestamp": "2026-07-14T00:00:00", "value": 279.30 },
+    { "entityTag": "team-data", "timestamp": "2026-07-21T00:00:00", "value": 341.20 },
+    { "entityTag": "team-data", "timestamp": "2026-07-28T00:00:00", "value": 358.70 },
+
+    { "entityTag": "team-engineering", "timestamp": "2026-06-09T00:00:00", "value": 150.60 },
+    { "entityTag": "team-engineering", "timestamp": "2026-06-16T00:00:00", "value": 225.50 },
+    { "entityTag": "team-engineering", "timestamp": "2026-06-23T00:00:00", "value": 349.40 },
+    { "entityTag": "team-engineering", "timestamp": "2026-06-30T00:00:00", "value": 516.50 },
+    { "entityTag": "team-engineering", "timestamp": "2026-07-07T00:00:00", "value": 776.10 },
+    { "entityTag": "team-engineering", "timestamp": "2026-07-14T00:00:00", "value": 950.20 },
+    { "entityTag": "team-engineering", "timestamp": "2026-07-21T00:00:00", "value": 1145.20 },
+    { "entityTag": "team-engineering", "timestamp": "2026-07-28T00:00:00", "value": 1211.90 }
   ]
 }

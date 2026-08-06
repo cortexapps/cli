@@ -12,18 +12,18 @@ Register every employee as a Cortex entity linked to their team, push weekly Cla
 ## Overview
 
 ```
-  team-engineering
-  ├── team-platform
-  │   ├── employee-alice-chen        ai-spend: $291/wk
-  │   └── employee-bob-martinez      ai-spend: $182/wk
-  ├── team-frontend
-  │   ├── employee-carol-kim         ai-spend: $245/wk
-  │   └── employee-david-osei        ai-spend: $136/wk
-  └── team-data
-      └── employee-emma-johnson      ai-spend: $359/wk
+  team-engineering                   ai-spend: $1,212/wk  (Silver)
+  ├── team-platform                  ai-spend:   $473/wk  (Gold)
+  │   ├── employee-alice-chen        ai-spend:   $291/wk
+  │   └── employee-bob-martinez      ai-spend:   $182/wk
+  ├── team-frontend                  ai-spend:   $380/wk  (Silver)
+  │   ├── employee-carol-kim         ai-spend:   $245/wk
+  │   └── employee-david-osei        ai-spend:   $136/wk
+  └── team-data                      ai-spend:   $359/wk  (Bronze)
+      └── employee-emma-johnson      ai-spend:   $359/wk
 
-  Custom metric "ai-spend" on each employee entity
-  Team rollup visible via entity relationships in Cortex catalog
+  Custom metric "ai-spend" on employees and teams (team = sum of members)
+  Scorecard "ai-spend-scorecard" tracks budget compliance per team
 ```
 
 ## What's Included
@@ -34,8 +34,9 @@ Register every employee as a Cortex entity linked to their team, push weekly Cla
 | Relationship type | `team-member` (team → team\|employee) |
 | Teams | `team-engineering`, `team-platform`, `team-frontend`, `team-data` |
 | Employees | `employee-alice-chen`, `employee-bob-martinez`, `employee-carol-kim`, `employee-david-osei`, `employee-emma-johnson` |
-| Custom metric sample data | `ai-spend` (8 weeks, fictional) |
+| Custom metric sample data | `ai-spend` (8 weeks, fictional, per-employee and team rollups) |
 | Plugin | `team-ai-spend` (team-scoped spend visualization) |
+| Scorecard | `ai-spend-scorecard` (bronze/silver/gold budget compliance) |
 | Sync script | `scripts/sync-claude-spend.py` |
 | GH Actions workflow | `.github/workflows/sync-claude-spend.yaml` |
 
@@ -59,6 +60,22 @@ Enable the relationship type catalog so you can browse team membership from the 
 1. Go to **Settings → Entity Relationship Types → team-member**
 2. Click **Edit** and enable **Create relationship type catalog**
 3. Save
+
+**View the AI Spend Budget Compliance scorecard**
+
+An `ai-spend-scorecard` is installed automatically and tracks whether each team's weekly spend stays within budget:
+
+- **Bronze** — team has spend data and a budget set
+- **Silver** — spend is within 25% of budget (`ai-spend-weekly <= ai-budget-weekly * 1.25`)
+- **Gold** — spend is at or under budget (`ai-spend-weekly <= ai-budget-weekly`)
+
+The sample data is pre-loaded with budgets that produce an interesting distribution: team-platform achieves Gold, team-frontend and team-engineering achieve Silver, and team-data achieves Bronze.
+
+To set a budget for a real team, add `ai-budget-weekly` as custom data on the team entity:
+
+```bash
+cortex custom-data add -t <team-tag> -k ai-budget-weekly -v <weekly-budget-dollars>
+```
 
 **View the Team AI Spend plugin**
 

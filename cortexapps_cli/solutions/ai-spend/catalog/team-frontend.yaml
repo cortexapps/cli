@@ -13,6 +13,11 @@ info:
         email: carol.kim@cortex.io
       - name: David Osei
         email: david.osei@cortex.io
+  x-cortex-custom-data:
+    - key: ai-budget-weekly
+      value: 360
+    - key: ai-spend-weekly
+      value: 380.20
   x-cortex-relationships:
     - type: team-member
       destinations:

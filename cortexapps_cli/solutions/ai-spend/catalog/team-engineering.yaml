@@ -19,6 +19,11 @@ info:
         email: david.osei@cortex.io
       - name: Emma Johnson
         email: emma.johnson@cortex.io
+  x-cortex-custom-data:
+    - key: ai-budget-weekly
+      value: 1100
+    - key: ai-spend-weekly
+      value: 1211.90
   x-cortex-relationships:
     - type: team-member
       destinations:
