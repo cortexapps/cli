@@ -9,21 +9,46 @@ Answers the question: **"How much are we spending on Claude AI, and who's spendi
 
 Register every employee as a Cortex entity linked to their team, push weekly Claude spend as a custom metric, and roll costs up the org hierarchy — from individual → sub-team → top-level engineering.
 
-## Overview
+## How It Works
 
 ```
-  team-engineering                   ai-spend: $1,212/wk  (Silver)
-  ├── team-platform                  ai-spend:   $473/wk  (Gold)
-  │   ├── employee-alice-chen        ai-spend:   $291/wk
-  │   └── employee-bob-martinez      ai-spend:   $182/wk
-  ├── team-frontend                  ai-spend:   $380/wk  (Silver)
-  │   ├── employee-carol-kim         ai-spend:   $245/wk
-  │   └── employee-david-osei        ai-spend:   $136/wk
-  └── team-data                      ai-spend:   $359/wk  (Bronze)
-      └── employee-emma-johnson      ai-spend:   $359/wk
-
-  Custom metric "ai-spend" on employees and teams (team = sum of members)
-  Scorecard "ai-spend-scorecard" tracks budget compliance per team
+  ┌─────────────────────┐        every Monday 06:00 UTC
+  │   GitHub Actions    │◄──────────────────────────────────┐
+  │  sync-claude-spend  │                                   │
+  └────────┬────────────┘                             (cron schedule)
+           │
+           │ GET /v1/organizations/analytics/costs
+           ▼
+  ┌─────────────────────┐
+  │  Anthropic Claude   │   per-user spend for the week
+  │   Analytics API     │
+  └────────┬────────────┘
+           │
+           │ map email → employee-first-last
+           │ sum members → team rollups
+           ▼
+  ┌─────────────────────┐
+  │    Cortex API       │   POST ai-spend custom metric
+  │  Custom Metrics     │   per employee + per team
+  └────────┬────────────┘
+           │
+           ▼
+  ┌──────────────────────────────────────────────┐
+  │              Cortex Catalog                  │
+  │                                              │
+  │  team-engineering        $1,212/wk  Silver   │
+  │  ├── team-platform         $473/wk  Gold     │
+  │  │   ├── employee-alice      $291/wk         │
+  │  │   └── employee-bob        $182/wk         │
+  │  ├── team-frontend         $380/wk  Silver   │
+  │  │   ├── employee-carol      $245/wk         │
+  │  │   └── employee-david      $136/wk         │
+  │  └── team-data             $359/wk  Bronze   │
+  │      └── employee-emma      $359/wk          │
+  │                                              │
+  │  Scorecard: ai-spend-scorecard               │
+  │  Plugin:    team-ai-spend (per-team chart)   │
+  └──────────────────────────────────────────────┘
 ```
 
 ## What's Included
