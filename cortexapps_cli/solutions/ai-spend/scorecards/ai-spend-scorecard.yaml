@@ -47,12 +47,12 @@ rules:
 
   - title: Spend is within 25% of budget
     description: The team's weekly AI spend is no more than 25% over the budget. The P8D lookback averages the last week of data — adjust to match your sync frequency if needed.
-    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= custom("ai-budget-weekly") * 1.25
+    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= jq(custom("ai-budget-weekly"), ". | tonumber") * 1.25
     weight: 1
     level: Silver
 
   - title: Spend is at or under budget
     description: The team's weekly AI spend is at or under the budget. This is the target state for all teams. The P8D lookback averages the last week of data — adjust to match your sync frequency if needed.
-    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= custom("ai-budget-weekly")
+    expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= jq(custom("ai-budget-weekly"), ". | tonumber")
     weight: 1
     level: Gold
