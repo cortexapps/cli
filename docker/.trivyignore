@@ -1,0 +1,12 @@
+# These CVEs are reported by Trivy from the Debian system Python layer (installed
+# via apt as OS packages), NOT from the application Python environment.
+#
+# The application Python (/usr/local/lib/python3.13/site-packages/) has safe
+# versions installed and shows 0 vulnerabilities in Trivy's METADATA scans:
+#   - msgpack:    installed at 1.2.1 (GHSA-6v7p-g79w-8964 fixed at 1.2.1)
+#   - setuptools: installed at 83.0.0 (CVE-2025-47273 fixed at 78.1.1)
+#
+# The Debian-packaged versions in the system Python cannot be upgraded via pip.
+
+GHSA-6v7p-g79w-8964
+CVE-2025-47273
