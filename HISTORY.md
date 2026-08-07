@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.30.0](https://github.com/cortexapps/cli/releases/tag/1.30.0) - 2026-08-07
+
+<small>[Compare with 1.29.0](https://github.com/cortexapps/cli/compare/1.29.0...1.30.0)</small>
+
+### Bug Fixes
+
+- suppress Trivy false positives for msgpack and setuptools CVEs ([3936a0f](https://github.com/cortexapps/cli/commit/3936a0f3884a6d66f631639cf483c282571b578f) by Jeff Schnitter).
+
 ## [1.29.0](https://github.com/cortexapps/cli/releases/tag/1.29.0) - 2026-08-07
 
 <small>[Compare with 1.28.0](https://github.com/cortexapps/cli/compare/1.28.0...1.29.0)</small>
