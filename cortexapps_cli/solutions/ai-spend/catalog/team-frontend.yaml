@@ -1,0 +1,23 @@
+openapi: "3.0.0"
+info:
+  title: Frontend
+  x-cortex-tag: team-frontend
+  x-cortex-type: team
+  x-cortex-description: Frontend engineering team
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-spend-demo
+  x-cortex-team:
+    members:
+      - name: Carol Kim
+        email: carol.kim@cortex.io
+      - name: David Osei
+        email: david.osei@cortex.io
+  x-cortex-custom-data:
+    - key: ai-budget-weekly
+      value: 360
+  x-cortex-relationships:
+    - type: team-member
+      destinations:
+        - tag: employee-carol-kim
+        - tag: employee-david-osei

@@ -1,0 +1,7 @@
+openapi: "3.0.0"
+info:
+  title: David Osei
+  x-cortex-tag: employee-david-osei
+  x-cortex-type: employee
+  x-cortex-description: Frontend Engineer
+  x-cortex-definition: {}

@@ -1,0 +1,30 @@
+openapi: "3.0.0"
+info:
+  title: Engineering
+  x-cortex-tag: team-engineering
+  x-cortex-type: team
+  x-cortex-description: Top-level engineering organization
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-spend-demo
+  x-cortex-team:
+    members:
+      - name: Alice Chen
+        email: alice.chen@cortex.io
+      - name: Bob Martinez
+        email: bob.martinez@cortex.io
+      - name: Carol Kim
+        email: carol.kim@cortex.io
+      - name: David Osei
+        email: david.osei@cortex.io
+      - name: Emma Johnson
+        email: emma.johnson@cortex.io
+  x-cortex-custom-data:
+    - key: ai-budget-weekly
+      value: 1100
+  x-cortex-relationships:
+    - type: team-member
+      destinations:
+        - tag: team-platform
+        - tag: team-frontend
+        - tag: team-data

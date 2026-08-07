@@ -1,6 +1,35 @@
 from tests.helpers.utils import *
 import os
 import tempfile
+import json
+
+def test_backup_import_custom_metrics_invalid_api_key(monkeypatch):
+    """
+    Test that backup import of custom-metrics fails cleanly with invalid API key.
+    """
+    monkeypatch.setenv("CORTEX_API_KEY", "invalidKey")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        metrics_dir = os.path.join(tmpdir, "custom-metrics")
+        os.makedirs(metrics_dir)
+
+        metric_file = os.path.join(metrics_dir, "ai-spend.json")
+        with open(metric_file, "w") as f:
+            json.dump({
+                "values": [
+                    {
+                        "entityTag": "employee-alice-chen",
+                        "timestamp": "2026-07-28T00:00:00",
+                        "value": 142.50
+                    }
+                ]
+            }, f)
+
+        result = cli(["backup", "import", "-d", tmpdir], return_type=ReturnType.RAW)
+        assert result.exit_code != 0, (
+            f"backup import should exit with non-zero code on failure, "
+            f"got exit_code={result.exit_code}"
+        )
 
 def test_backup_import_invalid_api_key(monkeypatch):
     """

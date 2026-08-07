@@ -1,0 +1,20 @@
+openapi: "3.0.0"
+info:
+  title: Data
+  x-cortex-tag: team-data
+  x-cortex-type: team
+  x-cortex-description: Data engineering team
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-spend-demo
+  x-cortex-team:
+    members:
+      - name: Emma Johnson
+        email: emma.johnson@cortex.io
+  x-cortex-custom-data:
+    - key: ai-budget-weekly
+      value: 280
+  x-cortex-relationships:
+    - type: team-member
+      destinations:
+        - tag: employee-emma-johnson

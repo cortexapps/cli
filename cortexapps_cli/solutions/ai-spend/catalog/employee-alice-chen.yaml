@@ -1,0 +1,7 @@
+openapi: "3.0.0"
+info:
+  title: Alice Chen
+  x-cortex-tag: employee-alice-chen
+  x-cortex-type: employee
+  x-cortex-description: Platform Engineer
+  x-cortex-definition: {}

@@ -471,6 +471,47 @@ def _import_entity_relationships(ctx, directory):
 
     return ("entity-relationships", len(results) - failed_count, [(fp, et, em) for rt, fp, et, em in results if et])
 
+def _import_custom_metrics(ctx, directory):
+    imported = 0
+    failed = []
+    if os.path.isdir(directory):
+        print("Processing: " + directory)
+        client = ctx.obj["client"]
+        for filename in sorted(os.listdir(directory)):
+            if not filename.endswith(".json"):
+                continue
+            file_path = os.path.join(directory, filename)
+            if not os.path.isfile(file_path):
+                continue
+            metric_key = filename[:-5]  # strip .json
+            try:
+                print("   Importing: " + filename)
+                with open(file_path) as f:
+                    data = json.load(f)
+
+                # Group flat values list by entityTag
+                grouped = {}
+                for entry in data.get("values", []):
+                    tag = entry["entityTag"]
+                    if tag not in grouped:
+                        grouped[tag] = []
+                    grouped[tag].append({
+                        "timestamp": entry["timestamp"],
+                        "value": entry["value"],
+                    })
+
+                # Call per-entity bulk endpoint once per entity
+                for entity_tag, series in grouped.items():
+                    client.post(
+                        f"api/v1/eng-intel/custom-metrics/{metric_key}/entity/{entity_tag}/bulk",
+                        data={"series": series},
+                    )
+                imported += 1
+            except Exception as e:
+                print(f"   Failed to import {filename}: {type(e).__name__} - {str(e)}")
+                failed.append((file_path, type(e).__name__, str(e)))
+    return ("custom-metrics", imported, failed)
+
 def _has_relationships(file_path):
     """Check if a catalog YAML file contains x-cortex-relationships."""
     try:
@@ -760,6 +801,7 @@ def import_tenant(
     all_stats.append(_import_entity_relationship_types(ctx, directory + "/entity-relationship-types"))
     all_stats.append(_import_catalog(ctx, directory + "/catalog"))
     all_stats.append(_import_entity_relationships(ctx, directory + "/entity-relationships"))
+    all_stats.append(_import_custom_metrics(ctx, directory + "/custom-metrics"))
     all_stats.append(_import_plugins(ctx, directory + "/plugins"))
     all_stats.append(_import_scorecards(ctx, directory + "/scorecards"))
     all_stats.append(_import_workflows(ctx, directory + "/workflows"))
@@ -811,6 +853,8 @@ def import_tenant(
             elif import_type == "entity-relationships":
                 # These need special handling - would need the relationship type
                 print(f"# Manual retry needed for entity-relationships: {file_path}")
+            elif import_type == "custom-metrics":
+                print(f"# Manual retry needed for custom-metrics: {file_path}")
             elif import_type == "plugins":
                 print(f"cortex plugins create --force -f \"{file_path}\"")
             elif import_type == "scorecards":

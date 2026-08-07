@@ -1,0 +1,23 @@
+openapi: "3.0.0"
+info:
+  title: Platform
+  x-cortex-tag: team-platform
+  x-cortex-type: team
+  x-cortex-description: Platform engineering team
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - ai-spend-demo
+  x-cortex-team:
+    members:
+      - name: Alice Chen
+        email: alice.chen@cortex.io
+      - name: Bob Martinez
+        email: bob.martinez@cortex.io
+  x-cortex-custom-data:
+    - key: ai-budget-weekly
+      value: 480
+  x-cortex-relationships:
+    - type: team-member
+      destinations:
+        - tag: employee-alice-chen
+        - tag: employee-bob-martinez
