@@ -34,8 +34,8 @@ filter:
   query: "hasGroup(\"ai-spend-demo\")"
 rules:
   - title: AI spend data is being tracked
-    description: The team has ai-spend custom metric data in the last 8 days, indicating the sync script is running and pushing spend rollups for this team.
-    expression: customMetrics(key="ai-spend", lookback = duration("P8D")).length > 0
+    description: The team has ai-spend custom metric data within the last year, indicating the sync script has run at least once. Adjust the P1Y lookback to a tighter window (e.g. P8D) once the weekly sync is running consistently.
+    expression: customMetrics(key="ai-spend", lookback = duration("P1Y")).length > 0
     weight: 1
     level: Bronze
 
@@ -46,13 +46,13 @@ rules:
     level: Bronze
 
   - title: Spend is within 25% of budget
-    description: The team's weekly AI spend is no more than 25% over the budget. Teams exceeding this threshold should review usage and consider adjusting budgets or usage patterns.
+    description: The team's weekly AI spend is no more than 25% over the budget. The P8D lookback averages the last week of data — adjust to match your sync frequency if needed.
     expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= custom("ai-budget-weekly") * 1.25
     weight: 1
     level: Silver
 
   - title: Spend is at or under budget
-    description: The team's weekly AI spend is at or under the budget. This is the target state for all teams.
+    description: The team's weekly AI spend is at or under the budget. This is the target state for all teams. The P8D lookback averages the last week of data — adjust to match your sync frequency if needed.
     expression: customMetrics(key="ai-spend", lookback=duration("P8D")).map((m) => m.value).average() <= custom("ai-budget-weekly")
     weight: 1
     level: Gold
