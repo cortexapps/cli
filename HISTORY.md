@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.29.0](https://github.com/cortexapps/cli/releases/tag/1.29.0) - 2026-08-07
+
+<small>[Compare with 1.28.0](https://github.com/cortexapps/cli/compare/1.28.0...1.29.0)</small>
+
+### Features
+
+- color-coded budget compliance in team-ai-spend plugin ([de53dd5](https://github.com/cortexapps/cli/commit/de53dd5a327460e1c07c980ea8732dcba3c807ef) by Jeff Schnitter).
+- add AI spend scorecard and team rollups to ai-spend solution ([5831624](https://github.com/cortexapps/cli/commit/5831624ed10018b025533fb3a5ac0b2ec239c4af) by Jeff Schnitter).
+- add custom-metrics directory support to backup import ([ee6a3be](https://github.com/cortexapps/cli/commit/ee6a3bee964a887f81355e11679793fef4c190c7) by Jeff Schnitter).
+
+### Bug Fixes
+
+- budget line, split bar colors, and per-segment tooltips ([277a858](https://github.com/cortexapps/cli/commit/277a85822d9098c35a256814de884773cbc682a1) by Jeff Schnitter).
+- read metric values from d.data, not d.values ([673ea71](https://github.com/cortexapps/cli/commit/673ea715e235eed17d54d9ef651cadd0902aa9c6) by Jeff Schnitter).
+- read entity tag from ctx.entity.tag, not ctx.tag ([cb1a775](https://github.com/cortexapps/cli/commit/cb1a775fd04f27e3a6f55b633cd44440b7ee65eb) by Jeff Schnitter).
+- detect leaf employees by adjacency map presence, not entity type ([69d8ed8](https://github.com/cortexapps/cli/commit/69d8ed863c32e92cf38347c684c1b724daa1cfd6) by Jeff Schnitter).
+- walk team hierarchy recursively in team-ai-spend plugin ([e32ce0f](https://github.com/cortexapps/cli/commit/e32ce0f3f0097bdce35f4d11396078284f52ef11) by Jeff Schnitter).
+- scope ai-spend-scorecard to ai-spend-demo group teams only ([b0cfa5f](https://github.com/cortexapps/cli/commit/b0cfa5f5eb945b2df7ce58cb3019fe2188e306c2) by Jeff Schnitter).
+- use kind: GENERIC with types.include for scorecard team filter ([0d3b9fa](https://github.com/cortexapps/cli/commit/0d3b9fa3b27d2b918ca9cd3089cb8f0fa4123ee8) by Jeff Schnitter).
+- correct entity relationships endpoint and response parsing in plugin ([ed6503c](https://github.com/cortexapps/cli/commit/ed6503c8cb6731f5440b7ebe4cec4c534f3f489f) by Jeff Schnitter).
+- use proxyFetch for authenticated API calls in plugin ([47f3b91](https://github.com/cortexapps/cli/commit/47f3b916d2e2282c691650b5f9ce28dcf6798a84) by Jeff Schnitter).
+- use MessageChannel protocol for Cortex plugin context (getContext) ([a326e5e](https://github.com/cortexapps/cli/commit/a326e5ee8b40717f2cb4c5b3ec7df0d67cbb0123) by Jeff Schnitter).
+- make --tag-or-id optional in plugins replace, defaulting to tag in file ([6b6b998](https://github.com/cortexapps/cli/commit/6b6b9986db33beb78b3b17c78f79c0af723f739d) by Jeff Schnitter).
+- create plugin when tag does not exist in force mode ([f679efe](https://github.com/cortexapps/cli/commit/f679efe995ca98b98c4a9e4ad564244cd605740e) by Jeff Schnitter).
+- correct CQL group filter syntax to hasGroup() ([5ba9e88](https://github.com/cortexapps/cli/commit/5ba9e88366d4ab29e14b1d4801058551c2ba2342) by Jeff Schnitter).
+- include plugins in solutions uninstall ([5474cef](https://github.com/cortexapps/cli/commit/5474cefd59810ec6e3a6224c038f42fba28c2406) by Jeff Schnitter).
+- scope team-ai-spend plugin to x-cortex-groups: ai-spend-demo ([68e18ba](https://github.com/cortexapps/cli/commit/68e18badbd168e89b2587644d1529b81329e8713) by Jeff Schnitter).
+- add x-cortex-team members to team entities ([67711b4](https://github.com/cortexapps/cli/commit/67711b4d967b6f8ee6e8fceb8c22fd1a3a2d4169) by Jeff Schnitter).
+- reshape sample ai-spend metrics to show steep adoption growth curve ([8379d19](https://github.com/cortexapps/cli/commit/8379d19985082d1b0b6f2c687d54fc12bccda583) by Jeff Schnitter).
+- add manual step to create Data Explorer Tabular View in After Installing ([ce7b0c7](https://github.com/cortexapps/cli/commit/ce7b0c78dd40ec95f8aeb131f712d3fe7b8e2dc1) by Jeff Schnitter).
+- add manual step to create team-member catalog in After Installing ([dc5513c](https://github.com/cortexapps/cli/commit/dc5513c9f2b3101c74a7443eb4e67286af9dcb4a) by Jeff Schnitter).
+- enable createCatalog for team-member relationship type ([3c8cb88](https://github.com/cortexapps/cli/commit/3c8cb887204484aa7be1701b0a2aa5f795a5e04d) by Jeff Schnitter).
+- restructure ai-spend README to match solutions install conventions ([40b2448](https://github.com/cortexapps/cli/commit/40b24483db03889b05e49dd20a4f696b825200a4) by Jeff Schnitter).
+- correct install command in ai-spend README ([b67e5cb](https://github.com/cortexapps/cli/commit/b67e5cbc5f05ea4ad29012ecad2b385d3d9f7224) by Jeff Schnitter).
+
+### Reverts
+
+- remove createCatalog from team-member (API support pending) ([5fc27a9](https://github.com/cortexapps/cli/commit/5fc27a986ab71f64eb9df254a9784abcb30a3297) by Jeff Schnitter).
+
 ## [1.28.0](https://github.com/cortexapps/cli/releases/tag/1.28.0) - 2026-07-30
 
 <small>[Compare with 1.27.0](https://github.com/cortexapps/cli/compare/1.27.0...1.28.0)</small>
