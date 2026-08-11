@@ -191,9 +191,6 @@ def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None
     root = _solutions_root(solutions_dir)
     try:
         with as_file(root / solution_tag / "setup.py") as setup_path:
-            if not setup_path.exists():
-                typer.echo("No post-install setup available for this solution.")
-                return
             spec = importlib.util.spec_from_file_location(f"{solution_tag}_setup", setup_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
@@ -635,6 +632,7 @@ def install(
         False,
         "--skip-post-install-setup",
         help="Skip the post-install setup script prompt",
+        is_flag=True,
     ),
 ):
     """Install a solution."""
