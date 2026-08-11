@@ -178,32 +178,23 @@ class GitHubActionsSetup(SolutionSetup):
                     result = self._trigger_via_cortex_workflow()
                     status = result.get("status", "").upper()
                     if status == "COMPLETED":
-                        run_result = (
-                            result.get("actions", {})
-                            .get("trigger-deploy", {})
-                            .get("outputs", {})
-                            .get("result", {})
-                            .get("output", {})
-                        )
-                        conclusion = run_result.get("conclusion", "success")
-                        run_url = run_result.get("run_url", "")
-                        print(f"[5/5] Deploy complete: {conclusion} \u2713")
-                        if run_url:
-                            print(f"  {_hyperlink(run_url, 'View GitHub Actions run')}")
+                        gh_actions_url = f"https://github.com/{owner}/{repo}/actions"
+                        print(f"  Deploy complete \u2713")
+                        print(f"  {_hyperlink(gh_actions_url, 'View GitHub Actions runs')}")
                         self.mark_done("first_deploy")
                     else:
-                        print(f"[5/5] Workflow ended with status: {status}", file=sys.stderr)
+                        print(f"  Workflow ended with status: {status}", file=sys.stderr)
                 except Exception as e:
-                    print(f"[5/5] Trigger failed: {e}", file=sys.stderr)
+                    print(f"  Trigger failed: {e}", file=sys.stderr)
                     print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
             else:
                 # No integration — trigger GitHub Actions directly
                 try:
                     self._trigger_direct()
-                    print(f"[5/5] GitHub Actions workflow triggered \u2713")
+                    print(f"  GitHub Actions workflow triggered \u2713")
                     print("  (No Cortex integration configured — cannot wait for completion)")
                 except Exception as e:
-                    print(f"[5/5] Trigger failed: {e}", file=sys.stderr)
+                    print(f"  Trigger failed: {e}", file=sys.stderr)
 
         print(f"\nDone! Watch your first deploy appear at:")
         print(f"  {_hyperlink(cortex_url)}")
