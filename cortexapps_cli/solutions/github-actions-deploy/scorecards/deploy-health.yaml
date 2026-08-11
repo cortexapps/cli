@@ -1,6 +1,6 @@
 tag: deploy-health
 name: Deploy Health
-description: Measures deployment cadence for services using GitHub Actions deploy tracking. Scoped to demo-github-actions-deploys group by default — remove the filter to apply to all services.
+description: Measures deployment cadence for services using GitHub Actions deploy tracking. The deploy-count custom metric is posted by the included GitHub Actions workflow on each successful build. Scoped to demo-github-actions-deploys group by default — remove the filter to apply to all services.
 draft: false
 notifications:
   enabled: true
@@ -21,7 +21,7 @@ ladder:
   levels:
     - name: Bronze
       rank: 1
-      description: Service has at least one recorded deployment.
+      description: Service has at least one recorded deployment in the last year.
       color: "#CD7F32"
     - name: Silver
       rank: 2
@@ -33,19 +33,19 @@ ladder:
       color: "#D7AC58"
 rules:
   - title: Has at least one deploy
-    description: At least one deployment event has been recorded for this service.
-    expression: deploys().count() > 0
+    description: At least one deployment has been recorded via the deploy-count custom metric in the last year.
+    expression: customMetrics(key="deploy-count", lookback=duration("P1Y")).length > 0
     weight: 1
     level: Bronze
 
   - title: Deployed in the last 30 days
     description: A deployment was recorded within the past 30 days.
-    expression: deploys(lookback=duration("P30D")).count() > 0
+    expression: customMetrics(key="deploy-count", lookback=duration("P30D")).length > 0
     weight: 1
     level: Silver
 
   - title: Deployed in the last 7 days
     description: A deployment was recorded within the past 7 days, indicating an active delivery cadence.
-    expression: deploys(lookback=duration("P7D")).count() > 0
+    expression: customMetrics(key="deploy-count", lookback=duration("P7D")).length > 0
     weight: 1
     level: Gold
