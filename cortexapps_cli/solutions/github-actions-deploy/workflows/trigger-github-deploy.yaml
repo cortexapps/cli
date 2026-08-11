@@ -34,7 +34,6 @@ actions:
       url: "/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
       integration: GitHub
       integrationAlias: "{{variables.github-integration}}"
-      headers: {}
       payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
       timeoutInSeconds: 300
     outgoingActions: []
