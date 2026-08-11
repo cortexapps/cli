@@ -74,13 +74,26 @@ class _ToggleableCapture:
 
 
 def _run_import_with_toggle(fn) -> str:
-    """Run fn() capturing stdout. On a TTY, Ctrl+o toggles live output."""
+    """Run fn() capturing stdout. On a TTY, Ctrl+o toggles live output.
+
+    If fn() raises for any reason, all buffered output is flushed to the
+    terminal before the exception propagates — no silent failures.
+    """
     real_stdout = sys.stdout
     capture = _ToggleableCapture(real_stdout)
 
     if not (_TTY_SUPPORT and sys.stdin.isatty()):
-        with contextlib.redirect_stdout(capture):
-            fn()
+        success = False
+        try:
+            with contextlib.redirect_stdout(capture):
+                fn()
+            success = True
+        finally:
+            if not success:
+                buffered = capture.getvalue()
+                if buffered:
+                    real_stdout.write(buffered)
+                    real_stdout.flush()
         return capture.getvalue()
 
     done = threading.Event()
@@ -112,9 +125,11 @@ def _run_import_with_toggle(fn) -> str:
 
     t = threading.Thread(target=_listen, daemon=True)
     t.start()
+    success = False
     try:
         with contextlib.redirect_stdout(capture):
             fn()
+        success = True
     finally:
         done.set()
         t.join(timeout=0.5)
@@ -122,6 +137,11 @@ def _run_import_with_toggle(fn) -> str:
             _termios.tcsetattr(fd, _termios.TCSADRAIN, old_settings)
         except Exception:
             pass
+        if not success:
+            buffered = capture.getvalue()
+            if buffered:
+                real_stdout.write(buffered)
+                real_stdout.flush()
 
     return capture.getvalue()
 
