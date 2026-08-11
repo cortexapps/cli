@@ -1,3 +1,4 @@
+import getpass
 import json
 import os
 import sys
@@ -45,16 +46,20 @@ class SolutionSetup(ABC):
             env_val = os.environ.get(env_var)
             if env_val:
                 masked = "********" if secret else env_val
-                print(f"{message} [{masked} from {env_var}]")
-                self._answers[key] = env_val
-                return env_val
+                if self.confirm(f"{message} [{masked} from {env_var}]", default=True):
+                    self._answers[key] = env_val
+                    return env_val
+                # User declined — fall through to manual prompt
 
         prompt_str = message
         if default:
             prompt_str += f" [{default}]"
         prompt_str += ": "
 
-        value = input(prompt_str).strip()
+        if secret:
+            value = getpass.getpass(prompt_str).strip()
+        else:
+            value = input(prompt_str).strip()
         if not value:
             value = default or ""
         self._answers[key] = value

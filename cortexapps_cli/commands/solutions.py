@@ -184,8 +184,8 @@ def _has_post_install(tag: str, path: str | None = None) -> bool:
         return False
 
 
-def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None) -> None:
-    """Find and invoke the solution's setup.py main() function."""
+def _load_setup_module(solution_tag: str, solutions_dir: str | None = None):
+    """Load a solution's setup.py module. Returns the module or None if not found."""
     import importlib.util
 
     root = _solutions_root(solutions_dir)
@@ -194,9 +194,31 @@ def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None
             spec = importlib.util.spec_from_file_location(f"{solution_tag}_setup", setup_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            module.main()
+            return module
     except FileNotFoundError:
+        return None
+
+
+def _get_setup_description(solution_tag: str, solutions_dir: str | None = None) -> str:
+    """Return the SETUP_DESCRIPTION from a solution's setup.py, or a generic fallback."""
+    module = _load_setup_module(solution_tag, solutions_dir)
+    if module:
+        return getattr(module, "SETUP_DESCRIPTION", "This solution includes a post-install setup script.")
+    return "This solution includes a post-install setup script."
+
+
+def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None) -> None:
+    """Find and invoke the solution's setup.py main() function."""
+    module = _load_setup_module(solution_tag, solutions_dir)
+    if module is None:
         typer.echo("No post-install setup available for this solution.")
+        return
+    kwargs = {}
+    if ctx and ctx.obj and "client" in ctx.obj:
+        client = ctx.obj["client"]
+        kwargs["cortex_api_key"] = client.api_key
+        kwargs["cortex_base_url"] = client.base_url
+    module.main(**kwargs)
 
 
 def _extract_first_codeblock(text: str) -> str | None:
@@ -675,9 +697,10 @@ def install(
 
     # Post-install setup hook — runs before the informational menu
     if not no_prompt and not skip_post_install_setup and _has_post_install(solution, solutions_dir):
-        typer.echo("\nThis solution includes a post-install setup script.")
+        desc = _get_setup_description(solution, solutions_dir)
+        typer.echo(f"\n{desc}")
         if typer.confirm("Run setup now?", default=True):
-            _run_post_install_script(solution, solutions_dir=solutions_dir)
+            _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx)
         else:
             typer.echo(f"\nRun setup later with: cortex solutions post-install -s {solution}")
     elif skip_post_install_setup and _has_post_install(solution, solutions_dir):
@@ -711,7 +734,8 @@ def post_install(
         avail = ", ".join(_list_solution_tags(solutions_dir))
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
-    _run_post_install_script(solution, solutions_dir=solutions_dir)
+    ctx.obj["client"] = _build_client(ctx)
+    _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx)
 
 
 @app.command()

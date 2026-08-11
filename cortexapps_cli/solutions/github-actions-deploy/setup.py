@@ -3,6 +3,11 @@ Post-install setup script for the github-actions-deploy solution.
 Creates and seeds a GitHub repo with the Cortex deploy workflow.
 Run via: cortex solutions post-install -s github-actions-deploy
 """
+
+SETUP_DESCRIPTION = (
+    "This solution includes a post-install setup script that will create a GitHub "
+    "repository, seed it with the Cortex deploy workflow, and configure the required secrets."
+)
 import base64
 import sys
 from pathlib import Path
@@ -19,6 +24,12 @@ GITHUB_API = "https://api.github.com"
 TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy.yml"
 
 
+def _hyperlink(url: str, text: str = None) -> str:
+    """Return an OSC 8 hyperlink for terminals that support it (iTerm2, etc.)."""
+    label = text if text is not None else url
+    return f"\033]8;;{url}\033\\{label}\033]8;;\033\\"
+
+
 def _encrypt_secret(public_key_b64: str, secret_value: str) -> str:
     """Encrypt a secret using the repo's libsodium public key."""
     pk = public.PublicKey(public_key_b64.encode("utf-8"), encoding.Base64Encoder())
@@ -29,6 +40,11 @@ def _encrypt_secret(public_key_b64: str, secret_value: str) -> str:
 
 class GitHubActionsSetup(SolutionSetup):
     solution_tag = "github-actions-deploy"
+
+    def __init__(self, cortex_api_key: str = None, cortex_base_url: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self._session_api_key = cortex_api_key
+        self._session_base_url = cortex_base_url
 
     def _gh_headers(self) -> dict:
         return {
@@ -52,13 +68,27 @@ class GitHubActionsSetup(SolutionSetup):
 
         self.prompt("github_owner", "GitHub org or username", default=default_owner)
         self.prompt("repo_name", "Repository name", default="cortex-deploy-demo")
-        self.prompt("cortex_api_key", "Cortex API key", env_var="CORTEX_API_KEY", secret=True)
-        self.prompt(
-            "cortex_base_url",
-            "Cortex base URL",
-            env_var="CORTEX_BASE_URL",
-            default="https://api.getcortexapp.com",
-        )
+
+        if self._session_api_key:
+            if self.confirm("Use current Cortex API key?", default=True):
+                self._answers["cortex_api_key"] = self._session_api_key
+            else:
+                self.prompt("cortex_api_key", "Cortex API key", secret=True)
+        else:
+            self.prompt("cortex_api_key", "Cortex API key", env_var="CORTEX_API_KEY", secret=True)
+
+        if self._session_base_url:
+            if self.confirm(f"Use current Cortex base URL [{self._session_base_url}]?", default=True):
+                self._answers["cortex_base_url"] = self._session_base_url
+            else:
+                self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
+        else:
+            self.prompt(
+                "cortex_base_url",
+                "Cortex base URL",
+                env_var="CORTEX_BASE_URL",
+                default="https://api.getcortexapp.com",
+            )
 
     def steps(self) -> list[tuple[str, callable]]:
         return [
@@ -82,9 +112,11 @@ class GitHubActionsSetup(SolutionSetup):
         repo = self._answers["repo_name"]
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        cortex_url = f"{app_url}/catalog/github-actions-demo"
+        gh_url = f"https://github.com/{owner}/{repo}"
         print(f"\nDone! Watch your first deploy appear at:")
-        print(f"  {app_url}/catalog/github-actions-demo")
-        print(f"\nGitHub repo: https://github.com/{owner}/{repo}")
+        print(f"  {_hyperlink(cortex_url)}")
+        print(f"\nGitHub repo: {_hyperlink(gh_url)}")
 
     def _create_repo(self) -> None:
         owner = self._answers["github_owner"]
@@ -176,8 +208,8 @@ class GitHubActionsSetup(SolutionSetup):
             raise RuntimeError(f"Failed to trigger workflow: {resp.status_code} {resp.text}")
 
 
-def main():
-    GitHubActionsSetup().run()
+def main(**kwargs):
+    GitHubActionsSetup(**kwargs).run()
 
 
 if __name__ == "__main__":
