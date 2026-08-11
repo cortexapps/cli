@@ -1,0 +1,37 @@
+name: Cortex Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: echo "Hello, Cortex deploys!"
+
+  notify-cortex:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Register deploy in Cortex
+        run: |
+          curl -s -f -X POST \
+            "${{ secrets.CORTEX_BASE_URL }}/api/v1/catalog/github-actions-demo/deploys" \
+            -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "sha": "${{ github.sha }}",
+              "environment": "production",
+              "type": "DEPLOY",
+              "title": "Triggered by ${{ github.actor }}",
+              "deployer": { "name": "${{ github.actor }}" },
+              "customData": {
+                "branch": "${{ github.ref_name }}",
+                "runId": "${{ github.run_id }}",
+                "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "trigger": "${{ github.event_name }}"
+              }
+            }'

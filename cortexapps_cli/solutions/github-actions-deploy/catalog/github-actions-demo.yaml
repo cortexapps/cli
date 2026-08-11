@@ -1,0 +1,9 @@
+openapi: "3.0.0"
+info:
+  title: GitHub Actions Demo
+  x-cortex-tag: github-actions-demo
+  x-cortex-type: service
+  x-cortex-description: Sample service for demonstrating deploy tracking via GitHub Actions.
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - demo-github-actions-deploys

@@ -1,0 +1,51 @@
+tag: deploy-health
+name: Deploy Health
+description: Measures deployment cadence for services using GitHub Actions deploy tracking. Scoped to demo-github-actions-deploys group by default — remove the filter to apply to all services.
+draft: false
+notifications:
+  enabled: true
+  scoreDropNotificationsEnabled: true
+exemptions:
+  enabled: true
+  autoApprove: false
+evaluation:
+  window: 24
+filter:
+  kind: GENERIC
+  types:
+    include:
+      - service
+  query: hasGroup("demo-github-actions-deploys")
+ladder:
+  name: Default Ladder
+  levels:
+    - name: Bronze
+      rank: 1
+      description: Service has at least one recorded deployment.
+      color: "#CD7F32"
+    - name: Silver
+      rank: 2
+      description: Service has deployed within the last 30 days.
+      color: "#C0C0C0"
+    - name: Gold
+      rank: 3
+      description: Service has deployed within the last 7 days.
+      color: "#D7AC58"
+rules:
+  - title: Has at least one deploy
+    description: At least one deployment event has been recorded for this service.
+    expression: deploys().count() > 0
+    weight: 1
+    level: Bronze
+
+  - title: Deployed in the last 30 days
+    description: A deployment was recorded within the past 30 days.
+    expression: deploys(lookback=duration("P30D")).count() > 0
+    weight: 1
+    level: Silver
+
+  - title: Deployed in the last 7 days
+    description: A deployment was recorded within the past 7 days, indicating an active delivery cadence.
+    expression: deploys(lookback=duration("P7D")).count() > 0
+    weight: 1
+    level: Gold
