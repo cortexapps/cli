@@ -229,9 +229,9 @@ class GitHubActionsSetup(SolutionSetup):
             "scope": {"type": "GLOBAL"},
             "initialContext": {
                 "variables": {
-                    "github_token": self._answers["github_token"],
-                    "github_owner": self._answers["github_owner"],
-                    "repo_name": self._answers["repo_name"],
+                    "github-token": self._answers["github_token"],
+                    "github-owner": self._answers["github_owner"],
+                    "repo-name": self._answers["repo_name"],
                 }
             },
         }
