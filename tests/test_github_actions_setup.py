@@ -64,6 +64,16 @@ def test_create_repo_creates_when_missing(setup):
     mock_post.assert_called_once()
 
 
+def test_create_repo_raises_on_unexpected_status(setup):
+    resp = MagicMock(status_code=403)
+    resp.text = "Forbidden"
+    with patch("requests.get", return_value=resp), \
+         patch("requests.post") as mock_post:
+        with pytest.raises(RuntimeError, match="Unexpected status checking repo existence: 403"):
+            setup._create_repo()
+    mock_post.assert_not_called()
+
+
 def test_seed_workflow_skips_if_unchanged(setup, tmp_path):
     # Read the actual template to simulate matching content
     template_path = Path("cortexapps_cli/solutions/github-actions-deploy/_templates/cortex-deploy.yml")
@@ -93,7 +103,7 @@ def test_seed_workflow_creates_when_missing(setup):
 def test_set_secret(setup):
     # Valid Curve25519 public key (generated via nacl.public.PrivateKey.generate())
     from nacl.public import PrivateKey
-    dummy_key = base64.b64encode(PrivateKey.generate().public_key._public_key).decode()
+    dummy_key = base64.b64encode(bytes(PrivateKey.generate().public_key)).decode()
     key_resp = MagicMock(status_code=200)
     key_resp.json.return_value = {"key_id": "key123", "key": dummy_key}
     key_resp.raise_for_status = MagicMock()

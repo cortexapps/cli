@@ -6,8 +6,6 @@ Run via: cortex solutions post-install -s github-actions-deploy
 import base64
 import sys
 from pathlib import Path
-from typing import Optional
-
 import requests
 from nacl import encoding, public
 
@@ -95,6 +93,8 @@ class GitHubActionsSetup(SolutionSetup):
         check = requests.get(f"{GITHUB_API}/repos/{owner}/{repo}", headers=self._gh_headers())
         if check.status_code == 200:
             return  # already exists
+        if check.status_code != 404:
+            raise RuntimeError(f"Unexpected status checking repo existence: {check.status_code} {check.text}")
 
         user_login = self._get_authenticated_user()
         url = f"{GITHUB_API}/user/repos" if owner == user_login else f"{GITHUB_API}/orgs/{owner}/repos"
