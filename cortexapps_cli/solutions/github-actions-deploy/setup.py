@@ -112,7 +112,7 @@ class GitHubActionsSetup(SolutionSetup):
         repo = self._answers["repo_name"]
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        cortex_url = f"{app_url}/catalog/github-actions-demo"
+        cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
         print(f"\nDone! Watch your first deploy appear at:")
         print(f"  {_hyperlink(cortex_url)}")
