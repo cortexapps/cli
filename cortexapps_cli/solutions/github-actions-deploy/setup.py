@@ -228,11 +228,9 @@ class GitHubActionsSetup(SolutionSetup):
         body = {
             "scope": {"type": "GLOBAL"},
             "initialContext": {
-                "variables": {
-                    "github-token": self._answers["github_token"],
-                    "github-owner": self._answers["github_owner"],
-                    "repo-name": self._answers["repo_name"],
-                }
+                "github-token": self._answers["github_token"],
+                "github-owner": self._answers["github_owner"],
+                "repo-name": self._answers["repo_name"],
             },
         }
         resp = requests.post(
