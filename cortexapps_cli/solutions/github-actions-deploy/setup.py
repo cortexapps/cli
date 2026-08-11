@@ -23,6 +23,7 @@ except ImportError:
 
 GITHUB_API = "https://api.github.com"
 TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy.yml"
+WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "trigger-github-deploy.yaml"
 
 
 def _hyperlink(url: str, text: str = None) -> str:
@@ -150,12 +151,15 @@ class GitHubActionsSetup(SolutionSetup):
             )
 
     def steps(self) -> list[tuple[str, callable]]:
-        return [
+        steps = [
             ("Creating GitHub repository", self._create_repo),
             ("Seeding Cortex deploy workflow", self._seed_workflow),
             ("Setting CORTEX_API_KEY secret", lambda: self._set_secret("CORTEX_API_KEY", self._answers["cortex_api_key"])),
             ("Setting CORTEX_BASE_URL secret", lambda: self._set_secret("CORTEX_BASE_URL", self._answers["cortex_base_url"])),
         ]
+        if self._answers.get("github_integration_alias"):
+            steps.append(("Importing Cortex trigger workflow", self._import_cortex_workflow))
+        return steps
 
     def post_steps(self) -> None:
         print()
@@ -294,6 +298,30 @@ class GitHubActionsSetup(SolutionSetup):
         if resp.status_code != 204:
             raise RuntimeError(f"Failed to trigger workflow: {resp.status_code} {resp.text}")
 
+    def _import_cortex_workflow(self) -> None:
+        """Import the Cortex trigger workflow with the selected GitHub integration alias."""
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+        alias = self._answers["github_integration_alias"]
+
+        yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
+            "PLACEHOLDER_INTEGRATION_ALIAS", alias
+        )
+
+        resp = requests.post(
+            f"{base_url}/api/v1/workflows",
+            data=yaml_content.encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/yaml",
+            },
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
+            )
+
     def _trigger_via_cortex_workflow(self) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
         import time
@@ -309,7 +337,6 @@ class GitHubActionsSetup(SolutionSetup):
         body = {
             "scope": {"type": "GLOBAL"},
             "initialContext": {
-                "github-integration": self._answers["github_integration_alias"],
                 "github-owner": self._answers["github_owner"],
                 "repo-name": self._answers["repo_name"],
             },

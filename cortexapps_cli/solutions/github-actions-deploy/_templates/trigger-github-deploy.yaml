@@ -8,8 +8,6 @@ isRunnableViaApi: true
 filter:
   type: GLOBAL
 variables:
-  - slug: github-integration
-    type: STRING
   - slug: github-owner
     type: STRING
   - slug: repo-name
@@ -17,13 +15,9 @@ variables:
 runResponseTemplate: |
   # GitHub Actions Deploy
 
-  ## Result
+  Deploy triggered for **{{variables.github-owner}}/{{variables.repo-name}}** and completed successfully.
 
-  | Field | Value |
-  |-------|-------|
-  | **Conclusion** | {{actions.trigger-deploy.outputs.result.output.conclusion}} |
-  | **Commit** | {{actions.trigger-deploy.outputs.result.output.sha}} |
-  | **Workflow Run** | [View on GitHub]({{actions.trigger-deploy.outputs.result.output.run_url}}) |
+  [View GitHub Actions runs](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/actions)
 
 actions:
   - name: Trigger GitHub Actions Deploy
@@ -33,7 +27,8 @@ actions:
       httpMethod: POST
       url: "/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
       integration: GitHub
-      integrationAlias: "{{variables.github-integration}}"
+      integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
+      headers: {}
       payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
       timeoutInSeconds: 300
     outgoingActions: []

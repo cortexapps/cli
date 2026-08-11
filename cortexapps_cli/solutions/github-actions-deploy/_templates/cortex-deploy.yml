@@ -52,13 +52,15 @@ jobs:
             -d "{\"timestamp\": \"${TIMESTAMP}\", \"value\": 1}"
 
       - name: Notify Cortex workflow callback
-        if: ${{ inputs.cortex_callback_url != '' }}
+        if: ${{ always() && inputs.cortex_callback_url != '' }}
         run: |
           curl -s -f -X POST \
             "${{ inputs.cortex_callback_url }}" \
             -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d "{
+              \"status\": \"SUCCESS\",
+              \"message\": \"\",
               \"output\": {
                 \"conclusion\": \"success\",
                 \"sha\": \"${{ github.sha }}\",
