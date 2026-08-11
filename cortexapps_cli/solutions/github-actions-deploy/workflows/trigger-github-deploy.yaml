@@ -1,0 +1,43 @@
+name: Trigger GitHub Actions Deploy
+tag: github-actions-trigger-deploy
+description: |
+  Triggers the Cortex deploy workflow on GitHub Actions and waits for the deployment to complete.
+  GitHub Actions calls back to Cortex when finished, surfacing the result directly in this workflow run.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+  - slug: github_token
+    type: STRING
+  - slug: github_owner
+    type: STRING
+  - slug: repo_name
+    type: STRING
+runResponseTemplate: |
+  # GitHub Actions Deploy
+
+  ## Result
+
+  | Field | Value |
+  |-------|-------|
+  | **Conclusion** | {{actions.trigger-deploy.outputs.result.output.conclusion}} |
+  | **Commit** | {{actions.trigger-deploy.outputs.result.output.sha}} |
+  | **Workflow Run** | [View on GitHub]({{actions.trigger-deploy.outputs.result.output.run_url}}) |
+
+actions:
+  - name: Trigger GitHub Actions Deploy
+    slug: trigger-deploy
+    schema:
+      type: HTTP_REQUEST_ASYNC
+      httpMethod: POST
+      url: "https://api.github.com/repos/{{variables.github_owner}}/{{variables.repo_name}}/actions/workflows/cortex-deploy.yml/dispatches"
+      headers:
+        Authorization: "Bearer {{variables.github_token}}"
+        Accept: "application/vnd.github+json"
+        X-GitHub-Api-Version: "2022-11-28"
+        Content-Type: application/json
+      payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
+      timeoutInSeconds: 300
+    outgoingActions: []
+    isRootAction: true

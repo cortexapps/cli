@@ -100,20 +100,38 @@ class GitHubActionsSetup(SolutionSetup):
 
     def post_steps(self) -> None:
         print()
-        if self.confirm("Ready to trigger your first workflow run?", default=True):
-            try:
-                self._trigger_workflow()
-                print(f"[5/5] Triggering workflow... \u2713")
-            except Exception as e:
-                print(f"Trigger failed: {e}", file=sys.stderr)
-                raise SystemExit(1)
-
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
         cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
+
+        if self.confirm("Ready to trigger your first workflow run?", default=True):
+            print("  Starting Cortex workflow run (waiting for GitHub Actions to complete)...")
+            try:
+                result = self._trigger_via_cortex_workflow()
+                status = result.get("status", "").upper()
+                if status == "COMPLETED":
+                    run_result = (
+                        result.get("actions", {})
+                        .get("trigger-deploy", {})
+                        .get("outputs", {})
+                        .get("result", {})
+                        .get("output", {})
+                    )
+                    conclusion = run_result.get("conclusion", "success")
+                    run_url = run_result.get("run_url", "")
+                    print(f"[5/5] Deploy complete: {conclusion} \u2713")
+                    if run_url:
+                        print(f"  {_hyperlink(run_url, 'View GitHub Actions run')}")
+                    self.mark_done("first_deploy")
+                else:
+                    print(f"[5/5] Workflow ended with status: {status}", file=sys.stderr)
+            except Exception as e:
+                print(f"[5/5] Trigger failed: {e}", file=sys.stderr)
+                print(f"  You can re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
+
         print(f"\nDone! Watch your first deploy appear at:")
         print(f"  {_hyperlink(cortex_url)}")
         print(f"\nGitHub repo: {_hyperlink(gh_url)}")
@@ -195,17 +213,58 @@ class GitHubActionsSetup(SolutionSetup):
         if resp.status_code not in (201, 204):
             raise RuntimeError(f"Failed to set secret {secret_name}: {resp.status_code} {resp.text}")
 
-    def _trigger_workflow(self) -> None:
-        owner = self._answers["github_owner"]
-        repo = self._answers["repo_name"]
+    def _trigger_via_cortex_workflow(self) -> dict:
+        """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
+        import time
 
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+        cortex_headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        workflow_tag = "github-actions-trigger-deploy"
+
+        body = {
+            "scope": {"type": "GLOBAL"},
+            "initialContext": {
+                "variables": {
+                    "github_token": self._answers["github_token"],
+                    "github_owner": self._answers["github_owner"],
+                    "repo_name": self._answers["repo_name"],
+                }
+            },
+        }
         resp = requests.post(
-            f"{GITHUB_API}/repos/{owner}/{repo}/actions/workflows/cortex-deploy.yml/dispatches",
-            headers=self._gh_headers(),
-            json={"ref": "main"},
+            f"{base_url}/api/v1/workflows/{workflow_tag}/runs",
+            json=body,
+            headers=cortex_headers,
         )
-        if resp.status_code != 204:
-            raise RuntimeError(f"Failed to trigger workflow: {resp.status_code} {resp.text}")
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(f"Failed to start workflow run: {resp.status_code} {resp.text}")
+
+        run_id = resp.json().get("id")
+        if not run_id:
+            raise RuntimeError("No run ID returned from workflow start")
+
+        terminal = {"COMPLETED", "FAILED", "CANCELLED"}
+        start = time.time()
+        dots = 0
+        while time.time() - start < 300:
+            time.sleep(5)
+            r = requests.get(
+                f"{base_url}/api/v1/workflows/{workflow_tag}/runs/{run_id}",
+                headers=cortex_headers,
+            )
+            r.raise_for_status()
+            status = r.json().get("status", "").upper()
+            dots += 1
+            print(f"\r  Waiting for GitHub Actions{'.' * (dots % 4)}   ", end="", flush=True)
+            if status in terminal:
+                print()  # newline after dots
+                return r.json()
+
+        raise TimeoutError("Timed out waiting for workflow to complete (5 min)")
 
 
 def main(**kwargs):
