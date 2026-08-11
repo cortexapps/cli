@@ -8,7 +8,7 @@ isRunnableViaApi: true
 filter:
   type: GLOBAL
 variables:
-  - slug: github-token
+  - slug: github-integration
     type: STRING
   - slug: github-owner
     type: STRING
@@ -32,8 +32,8 @@ actions:
       type: HTTP_REQUEST_ASYNC
       httpMethod: POST
       url: "https://api.github.com/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
+      integrationAlias: "{{variables.github-integration}}"
       headers:
-        Authorization: "Bearer {{variables.github-token}}"
         Accept: "application/vnd.github+json"
         X-GitHub-Api-Version: "2022-11-28"
         Content-Type: application/json

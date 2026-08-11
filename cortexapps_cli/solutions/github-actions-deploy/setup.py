@@ -9,6 +9,7 @@ SETUP_DESCRIPTION = (
     "repository, seed it with the Cortex deploy workflow, and configure the required secrets."
 )
 import base64
+import os
 import sys
 from pathlib import Path
 import requests
@@ -47,8 +48,9 @@ class GitHubActionsSetup(SolutionSetup):
         self._session_base_url = cortex_base_url
 
     def _gh_headers(self) -> dict:
+        token = self._answers.get("github_token") or os.environ.get("GITHUB_TOKEN", "")
         return {
-            "Authorization": f"Bearer {self._answers['github_token']}",
+            "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
         }
@@ -58,9 +60,65 @@ class GitHubActionsSetup(SolutionSetup):
         resp.raise_for_status()
         return resp.json()["login"]
 
-    def collect_prompts(self) -> None:
-        self.prompt("github_token", "GitHub token", env_var="GITHUB_TOKEN", secret=True)
+    def _fetch_github_integrations(self) -> list:
+        """Fetch GitHub integrations configured in Cortex."""
+        if not (self._session_api_key and self._session_base_url):
+            return []
+        try:
+            resp = requests.get(
+                f"{self._session_base_url.rstrip('/')}/api/v1/github/configurations",
+                headers={"Authorization": f"Bearer {self._session_api_key}"},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                return resp.json().get("configurations", [])
+        except Exception:
+            pass
+        return []
 
+    def _select_github_integration(self, integrations: list) -> str:
+        """Present a numbered list and return the chosen alias."""
+        default_idx = next(
+            (i for i, c in enumerate(integrations) if c.get("isDefault")), 0
+        )
+        print("\nGitHub integrations configured in Cortex:")
+        for i, cfg in enumerate(integrations):
+            marker = " *" if cfg.get("isDefault") else "  "
+            type_label = cfg.get("type", "").replace("_", " ").title()
+            print(f"  {marker}{i + 1}. {cfg['alias']} [{type_label}]")
+        print("   (* = default)")
+
+        while True:
+            choice = input(f"\nSelect integration [{default_idx + 1}]: ").strip()
+            if not choice:
+                return integrations[default_idx]["alias"]
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(integrations):
+                    return integrations[idx]["alias"]
+            except ValueError:
+                pass
+            print(f"  Enter a number between 1 and {len(integrations)}")
+
+    def collect_prompts(self) -> None:
+        # 1. Check for GitHub integrations — prefer those over a raw token
+        integrations = self._fetch_github_integrations()
+
+        if integrations:
+            alias = self._select_github_integration(integrations)
+            self._answers["github_integration_alias"] = alias
+            # Token still needed for the setup steps (create repo, seed, set secrets).
+            # Pull from env var silently; no prompt when integration is configured.
+            env_token = os.environ.get("GITHUB_TOKEN", "")
+            if env_token:
+                self._answers["github_token"] = env_token
+            # If GITHUB_TOKEN is not set the setup steps will fail with a clear
+            # error — user can export GITHUB_TOKEN and re-run post-install.
+        else:
+            # No integration — prompt for token (setup steps + workflow fallback)
+            self.prompt("github_token", "GitHub token", env_var="GITHUB_TOKEN", secret=True)
+
+        # 2. GitHub owner (derived from auth if token is available)
         try:
             default_owner = self._get_authenticated_user()
         except Exception:
@@ -69,6 +127,7 @@ class GitHubActionsSetup(SolutionSetup):
         self.prompt("github_owner", "GitHub org or username", default=default_owner)
         self.prompt("repo_name", "Repository name", default="cortex-deploy-demo")
 
+        # 3. Cortex credentials from CLI session
         if self._session_api_key:
             if self.confirm("Use current Cortex API key?", default=True):
                 self._answers["cortex_api_key"] = self._session_api_key
@@ -108,29 +167,39 @@ class GitHubActionsSetup(SolutionSetup):
         gh_url = f"https://github.com/{owner}/{repo}"
 
         if self.confirm("Ready to trigger your first workflow run?", default=True):
-            print("  Starting Cortex workflow run (waiting for GitHub Actions to complete)...")
-            try:
-                result = self._trigger_via_cortex_workflow()
-                status = result.get("status", "").upper()
-                if status == "COMPLETED":
-                    run_result = (
-                        result.get("actions", {})
-                        .get("trigger-deploy", {})
-                        .get("outputs", {})
-                        .get("result", {})
-                        .get("output", {})
-                    )
-                    conclusion = run_result.get("conclusion", "success")
-                    run_url = run_result.get("run_url", "")
-                    print(f"[5/5] Deploy complete: {conclusion} \u2713")
-                    if run_url:
-                        print(f"  {_hyperlink(run_url, 'View GitHub Actions run')}")
-                    self.mark_done("first_deploy")
-                else:
-                    print(f"[5/5] Workflow ended with status: {status}", file=sys.stderr)
-            except Exception as e:
-                print(f"[5/5] Trigger failed: {e}", file=sys.stderr)
-                print(f"  You can re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
+            if self._answers.get("github_integration_alias"):
+                # Use Cortex async workflow — waits for GitHub Actions callback
+                print("  Starting Cortex workflow run (waiting for GitHub Actions to complete)...")
+                try:
+                    result = self._trigger_via_cortex_workflow()
+                    status = result.get("status", "").upper()
+                    if status == "COMPLETED":
+                        run_result = (
+                            result.get("actions", {})
+                            .get("trigger-deploy", {})
+                            .get("outputs", {})
+                            .get("result", {})
+                            .get("output", {})
+                        )
+                        conclusion = run_result.get("conclusion", "success")
+                        run_url = run_result.get("run_url", "")
+                        print(f"[5/5] Deploy complete: {conclusion} \u2713")
+                        if run_url:
+                            print(f"  {_hyperlink(run_url, 'View GitHub Actions run')}")
+                        self.mark_done("first_deploy")
+                    else:
+                        print(f"[5/5] Workflow ended with status: {status}", file=sys.stderr)
+                except Exception as e:
+                    print(f"[5/5] Trigger failed: {e}", file=sys.stderr)
+                    print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
+            else:
+                # No integration — trigger GitHub Actions directly
+                try:
+                    self._trigger_direct()
+                    print(f"[5/5] GitHub Actions workflow triggered \u2713")
+                    print("  (No Cortex integration configured — cannot wait for completion)")
+                except Exception as e:
+                    print(f"[5/5] Trigger failed: {e}", file=sys.stderr)
 
         print(f"\nDone! Watch your first deploy appear at:")
         print(f"  {_hyperlink(cortex_url)}")
@@ -213,6 +282,18 @@ class GitHubActionsSetup(SolutionSetup):
         if resp.status_code not in (201, 204):
             raise RuntimeError(f"Failed to set secret {secret_name}: {resp.status_code} {resp.text}")
 
+    def _trigger_direct(self) -> None:
+        """Trigger the GitHub Actions workflow directly via the GitHub API."""
+        owner = self._answers["github_owner"]
+        repo = self._answers["repo_name"]
+        resp = requests.post(
+            f"{GITHUB_API}/repos/{owner}/{repo}/actions/workflows/cortex-deploy.yml/dispatches",
+            headers=self._gh_headers(),
+            json={"ref": "main"},
+        )
+        if resp.status_code != 204:
+            raise RuntimeError(f"Failed to trigger workflow: {resp.status_code} {resp.text}")
+
     def _trigger_via_cortex_workflow(self) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
         import time
@@ -228,7 +309,7 @@ class GitHubActionsSetup(SolutionSetup):
         body = {
             "scope": {"type": "GLOBAL"},
             "initialContext": {
-                "github-token": self._answers["github_token"],
+                "github-integration": self._answers["github_integration_alias"],
                 "github-owner": self._answers["github_owner"],
                 "repo-name": self._answers["repo_name"],
             },
