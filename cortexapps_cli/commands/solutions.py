@@ -175,6 +175,33 @@ def _get_readme(tag: str, path: str | None = None) -> str | None:
         return None
 
 
+def _has_post_install(tag: str, path: str | None = None) -> bool:
+    """Return True if this solution has a post-install setup.py."""
+    try:
+        (_solutions_root(path) / tag / "setup.py").read_bytes()
+        return True
+    except Exception:
+        return False
+
+
+def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None) -> None:
+    """Find and invoke the solution's setup.py main() function."""
+    import importlib.util
+
+    root = _solutions_root(solutions_dir)
+    try:
+        with as_file(root / solution_tag / "setup.py") as setup_path:
+            if not setup_path.exists():
+                typer.echo("No post-install setup available for this solution.")
+                return
+            spec = importlib.util.spec_from_file_location(f"{solution_tag}_setup", setup_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            module.main()
+    except FileNotFoundError:
+        typer.echo("No post-install setup available for this solution.")
+
+
 def _extract_first_codeblock(text: str) -> str | None:
     """Return content of the first fenced code block."""
     m = re.search(r"```[^\n]*\n(.*?)```", text, re.DOTALL)
@@ -604,6 +631,11 @@ def install(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
     no_prompt: bool = typer.Option(False, "--no-prompt", help="Skip the post-install interactive menu"),
+    skip_post_install_setup: bool = typer.Option(
+        False,
+        "--skip-post-install-setup",
+        help="Skip the post-install setup script prompt",
+    ),
 ):
     """Install a solution."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
@@ -643,6 +675,16 @@ def install(
     else:
         typer.echo(output)
 
+    # Post-install setup hook — runs before the informational menu
+    if not no_prompt and not skip_post_install_setup and _has_post_install(solution, solutions_dir):
+        typer.echo("\nThis solution includes a post-install setup script.")
+        if typer.confirm("Run setup now?", default=True):
+            _run_post_install_script(solution, solutions_dir=solutions_dir)
+        else:
+            typer.echo(f"\nRun setup later with: cortex solutions post-install -s {solution}")
+    elif skip_post_install_setup and _has_post_install(solution, solutions_dir):
+        typer.echo(f"\nRun setup later with: cortex solutions post-install -s {solution}")
+
     if not no_prompt:
         readme = _get_readme(solution, solutions_dir)
         if readme:
@@ -658,6 +700,20 @@ def install(
             except Exception:
                 pass
             _post_install_menu(readme, import_report=output, entity_tags=entity_tags, ui_url=ui_url)
+
+
+@app.command(name="post-install")
+def post_install(
+    ctx: typer.Context,
+    solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+):
+    """Run post-install setup for a solution."""
+    solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
+    if solution not in _list_solution_tags(solutions_dir):
+        avail = ", ".join(_list_solution_tags(solutions_dir))
+        typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
+        raise typer.Exit(1)
+    _run_post_install_script(solution, solutions_dir=solutions_dir)
 
 
 @app.command()
