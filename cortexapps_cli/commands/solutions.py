@@ -399,10 +399,10 @@ def _run_uninstall(client, path: Path, yes: bool) -> None:
     total = sum(len(v) for v in resources.values())
 
     if total == 0:
-        typer.echo("No resources found to remove.")
+        typer.echo("No entities found to remove.")
         return
 
-    typer.echo("\nThis will remove the following resources:")
+    typer.echo("\nThis will remove the following entities:")
     for kind in ("workflows", "scorecards", "plugins", "catalog", "entity-relationship-types", "entity-types"):
         count = len(resources[kind])
         if count:
@@ -711,7 +711,7 @@ def install(
                 typer.echo(failed_m.group(0))
             typer.echo(f"\n  {total_imported} imported, {total_failed} failed")
         else:
-            typer.echo(f"  {total_imported} resources imported")
+            typer.echo(f"  {total_imported} entities imported")
     else:
         typer.echo(output)
 
