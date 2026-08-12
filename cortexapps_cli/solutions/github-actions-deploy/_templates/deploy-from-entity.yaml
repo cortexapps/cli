@@ -1,0 +1,84 @@
+name: Deploy from Entity
+tag: github-actions-deploy-entity
+description: |
+  Triggers the Cortex deploy workflow on GitHub Actions using the GitHub
+  repository already linked to this service. No inputs required — the
+  repo is read directly from the entity's catalog configuration.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: ENTITY
+variables:
+- slug: github-owner
+  type: STRING
+  defaultValue: ""
+  description: GitHub organization or username (derived from entity git config).
+- slug: repo-name
+  type: STRING
+  defaultValue: ""
+  description: GitHub repository name (derived from entity git config).
+runResponseTemplate: |
+  # GitHub Actions Deploy
+
+  Deploy complete for **{{variables.github-owner}}/{{variables.repo-name}}**.
+
+  [View GitHub Actions runs](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/actions)
+actions:
+- name: Get entity details
+  slug: get-entity-details
+  schema:
+    type: HTTP_REQUEST
+    httpMethod: GET
+    url: "https://api.getcortexapp.com/api/v1/catalog/{{context.entity.tag}}"
+    headers:
+      Authorization: "Bearer {{&context.secrets.cortex_api_key}}"
+      Content-Type: application/json
+    integration: null
+    integrationAlias: null
+  outgoingActions:
+  - parse-repo
+  isRootAction: true
+- name: Parse repo info
+  slug: parse-repo
+  schema:
+    expression: |
+      .actions."get-entity-details".outputs.body.git.repository as $repo |
+      if ($repo == null or $repo == "") then
+        error("No GitHub repository linked to this entity. Add one via the catalog.")
+      else
+        ($repo | split("/")) as $parts |
+        {owner: $parts[0], repo: $parts[1]}
+      end
+    type: JQ
+  outgoingActions:
+  - set-variables
+  isRootAction: false
+- name: Set variables
+  slug: set-variables
+  schema:
+    variables:
+    - slug: github-owner
+      source:
+        path: actions.parse-repo.outputs.result.owner
+        type: REFERENCE
+    - slug: repo-name
+      source:
+        path: actions.parse-repo.outputs.result.repo
+        type: REFERENCE
+    type: SET_VARIABLES
+  outgoingActions:
+  - trigger-deploy
+  isRootAction: false
+- name: Trigger GitHub Actions Deploy
+  slug: trigger-deploy
+  schema:
+    type: HTTP_REQUEST_ASYNC
+    httpMethod: POST
+    url: "/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
+    integration: GitHub
+    integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
+    headers: {}
+    payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
+    timeoutInSeconds: 120
+  outgoingActions: []
+  isRootAction: false

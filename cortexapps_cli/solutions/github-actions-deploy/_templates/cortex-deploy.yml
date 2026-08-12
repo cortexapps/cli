@@ -17,10 +17,17 @@ jobs:
       - name: Build
         run: |
           echo "Starting deployment..."
-          sleep 15
+          sleep 10
           for i in 1 2 3; do
-            echo "Deployment progress: step $i/3"
             sleep 5
+            echo "Deployment progress: step $i/3"
+            if [ -n "${{ inputs.cortex_callback_url }}" ]; then
+              curl -s -X POST "${{ inputs.cortex_callback_url }}" \
+                -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
+                -H "Content-Type: application/json" \
+                -d "$(jq -n --arg msg "Deployment progress: step $i/3" \
+                  '{"status": "IN_PROGRESS", "message": $msg, "output": {}}')" || true
+            fi
           done
           echo "Build complete!"
 

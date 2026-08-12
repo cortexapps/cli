@@ -47,10 +47,17 @@ runResponseTemplate: |
         - name: Build
           run: |
             echo "Starting deployment..."
-            sleep 15
+            sleep 10
             for i in 1 2 3; do
-              echo "Deployment progress: step $i/3"
               sleep 5
+              echo "Deployment progress: step $i/3"
+              if [ -n "$CORTEX_CALLBACK_URL" ]; then
+                curl -s -X POST "$CORTEX_CALLBACK_URL" \
+                  -H "Authorization: Bearer $CORTEX_API_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d "$(jq -n --arg msg "Deployment progress: step $i/3" \
+                    '{"status": "IN_PROGRESS", "message": $msg, "output": {}}')" || true
+              fi
             done
             echo "Build complete!"
 

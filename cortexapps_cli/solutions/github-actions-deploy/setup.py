@@ -24,6 +24,7 @@ except ImportError:
 GITHUB_API = "https://api.github.com"
 TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy.yml"
 WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "trigger-github-deploy.yaml"
+ENTITY_WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "deploy-from-entity.yaml"
 
 
 def _hyperlink(url: str, text: str = None) -> str:
@@ -176,6 +177,7 @@ class GitHubActionsSetup(SolutionSetup):
         ]
         if self._answers.get("github_integration_alias"):
             steps.append(("Importing Cortex trigger workflow", self._import_cortex_workflow))
+            steps.append(("Importing Cortex entity deploy workflow", self._import_entity_workflow))
         return steps
 
     def post_steps(self) -> None:
@@ -376,6 +378,32 @@ info:
         if resp.status_code not in (200, 201):
             raise RuntimeError(
                 f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
+            )
+
+    def _import_entity_workflow(self) -> None:
+        """Import the entity-scoped deploy workflow."""
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+        alias = self._answers["github_integration_alias"]
+
+        yaml_content = ENTITY_WORKFLOW_TEMPLATE_PATH.read_text().replace(
+            "PLACEHOLDER_INTEGRATION_ALIAS", alias
+        ).replace(
+            "https://api.getcortexapp.com", base_url
+        )
+
+        resp = requests.post(
+            f"{base_url}/api/v1/workflows",
+            data=yaml_content.encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/yaml",
+            },
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to import entity workflow: {resp.status_code} {resp.text}"
             )
 
     def _trigger_via_cortex_workflow(self) -> dict:
