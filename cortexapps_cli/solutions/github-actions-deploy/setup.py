@@ -197,7 +197,7 @@ class GitHubActionsSetup(SolutionSetup):
                 except Exception as e:
                     print(f"  Trigger failed: {e}", file=sys.stderr)
 
-        print(f"\nDone! Watch your first deploy appear at:")
+        print(f"\nDone! Watch your deploy appear at:")
         print(f"  {_hyperlink(cortex_url)}")
         print(f"\nGitHub repo: {_hyperlink(gh_url)}")
 
