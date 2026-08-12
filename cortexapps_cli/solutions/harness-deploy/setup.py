@@ -48,7 +48,7 @@ class HarnessDeploySetup(SolutionSetup):
         return {"x-api-key": self._answers["harness_api_key"]}
 
     def _harness_base(self) -> str:
-        return self._answers.get("harness_host", HARNESS_APP_HOST).rstrip("/")
+        return (self._answers.get("harness_host") or HARNESS_APP_HOST).rstrip("/")
 
     def _harness_account(self) -> str:
         return self._answers["harness_account_id"]
