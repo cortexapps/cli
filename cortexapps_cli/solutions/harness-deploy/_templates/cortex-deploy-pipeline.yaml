@@ -1,0 +1,145 @@
+pipeline:
+  name: Cortex Deploy
+  identifier: cortex_deploy
+  orgIdentifier: default
+  projectIdentifier: default_project
+  description: "Sample Harness pipeline that registers a deploy event in Cortex and reports back to Cortex async workflows."
+  variables:
+    - name: callback_url
+      type: String
+      description: Cortex async callback URL (set automatically when triggered via Cortex workflow)
+      required: false
+      default: ""
+      value: "<+input>"
+    - name: cortex_entity_tag
+      type: String
+      description: Cortex entity tag to register the deploy against
+      required: false
+      default: "harness-demo"
+      value: "<+input>"
+  stages:
+    - stage:
+        name: Build
+        identifier: build
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Build
+                  identifier: build_step
+                  type: ShellScript
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: echo "Building..."
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 10m
+
+    - stage:
+        name: Notify Cortex
+        identifier: notify_cortex
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Register Deploy
+                  identifier: register_deploy
+                  type: ShellScript
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          curl -s -f -X POST \
+                            "$CORTEX_BASE_URL/api/v1/catalog/$CORTEX_ENTITY_TAG/deploys" \
+                            -H "Authorization: Bearer $CORTEX_API_KEY" \
+                            -H "Content-Type: application/json" \
+                            -d "$(jq -n \
+                              --arg sha "<+pipeline.executionId>" \
+                              --arg run_id "<+pipeline.sequenceId>" \
+                              --arg run_url "https://app.harness.io/ng/account/$HARNESS_ACCOUNT_ID/cd/orgs/<+pipeline.orgIdentifier>/projects/<+pipeline.projectIdentifier>/pipelines/<+pipeline.identifier>/executions/<+pipeline.executionId>/pipeline" \
+                              --arg actor "<+pipeline.triggeredBy.name>" \
+                              --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                              '{
+                                sha: $sha,
+                                timestamp: $timestamp,
+                                environment: "production",
+                                type: "DEPLOY",
+                                title: ("Triggered by " + $actor),
+                                deployer: {name: $actor},
+                                customData: {executionId: $sha, sequenceId: $run_id, executionUrl: $run_url}
+                              }')" || true
+                    environmentVariables:
+                      - name: CORTEX_API_KEY
+                        type: Secret
+                        value: cortex_api_key
+                      - name: CORTEX_BASE_URL
+                        type: String
+                        value: "https://api.getcortexapp.com"
+                      - name: CORTEX_ENTITY_TAG
+                        type: String
+                        value: "<+pipeline.variables.cortex_entity_tag>"
+                      - name: HARNESS_ACCOUNT_ID
+                        type: String
+                        value: "<+account.identifier>"
+                    outputVariables: []
+                  timeout: 5m
+
+              - step:
+                  name: Callback to Cortex
+                  identifier: cortex_callback
+                  type: ShellScript
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          if [ -z "$CALLBACK_URL" ]; then
+                            echo "No callback URL set, skipping"
+                            exit 0
+                          fi
+
+                          EXECUTION_URL="https://app.harness.io/ng/account/$HARNESS_ACCOUNT_ID/cd/orgs/<+pipeline.orgIdentifier>/projects/<+pipeline.projectIdentifier>/pipelines/<+pipeline.identifier>/executions/<+pipeline.executionId>/pipeline"
+
+                          HTTP_STATUS=$(curl -s -o /tmp/cb_response.txt -w "%{http_code}" -X POST "$CALLBACK_URL" \
+                            -H "Content-Type: application/json" \
+                            -H "Authorization: Bearer $CORTEX_API_KEY" \
+                            -d "$(jq -n \
+                              --arg exec_id "<+pipeline.executionId>" \
+                              --arg seq_id "<+pipeline.sequenceId>" \
+                              --arg name "<+pipeline.name>" \
+                              --arg url "$EXECUTION_URL" \
+                              '{
+                                status: "SUCCESS",
+                                message: "Pipeline completed successfully",
+                                response: {execution_id: $exec_id, execution_number: $seq_id, pipeline_name: $name, pipeline_url: $url}
+                              }')")
+
+                          echo "Callback HTTP status: $HTTP_STATUS"
+                          cat /tmp/cb_response.txt
+                          if [ "$HTTP_STATUS" != "200" ]; then
+                            echo "ERROR: Callback failed with HTTP $HTTP_STATUS"
+                            exit 1
+                          fi
+                    environmentVariables:
+                      - name: CALLBACK_URL
+                        type: String
+                        value: "<+pipeline.variables.callback_url>"
+                      - name: CORTEX_API_KEY
+                        type: Secret
+                        value: cortex_api_key
+                      - name: HARNESS_ACCOUNT_ID
+                        type: String
+                        value: "<+account.identifier>"
+                    outputVariables: []
+                  timeout: 10m

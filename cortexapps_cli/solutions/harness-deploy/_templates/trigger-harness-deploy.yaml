@@ -1,0 +1,39 @@
+name: Trigger Harness Deploy
+tag: harness-trigger-deploy
+description: |
+  Triggers a Harness pipeline and waits for it to report completion back to Cortex,
+  registering a deploy event on the target entity.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: GLOBAL
+variables:
+  - slug: harness-org
+    type: STRING
+  - slug: harness-project
+    type: STRING
+  - slug: harness-pipeline
+    type: STRING
+  - slug: entity-tag
+    type: STRING
+runResponseTemplate: |
+  # Harness Pipeline Deploy
+
+  Deploy triggered for pipeline **{{variables.harness-pipeline}}** in
+  `{{variables.harness-org}}/{{variables.harness-project}}`.
+
+  [View pipeline runs in Harness](https://app.harness.io/ng/account/PLACEHOLDER_HARNESS_ACCOUNT_ID/cd/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/executions)
+actions:
+  - name: Trigger Harness Pipeline
+    slug: trigger-deploy
+    schema:
+      type: HTTP_REQUEST_ASYNC
+      httpMethod: POST
+      url: "/v1/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/execute?notes=Submitted+by+{{context.initiatedBy.email}}"
+      integration: Harness
+      integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
+      headers: {}
+      payload: "{\"inputs_yaml\": \"pipeline:\\n  identifier: {{variables.harness-pipeline}}\\n  variables:\\n    - name: callback_url\\n      type: String\\n      value: \\\"{{{callbackUrl}}}\\\"\\n    - name: cortex_entity_tag\\n      type: String\\n      value: \\\"{{variables.entity-tag}}\\\"\"}"
+      timeoutInSeconds: 300
+    outgoingActions: []
+    isRootAction: true
