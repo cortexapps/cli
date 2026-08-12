@@ -1,12 +1,14 @@
 """
 Post-install setup script for the harness-deploy solution.
-Wires up Harness credentials, imports the Cortex async workflow, and optionally triggers a test run.
+Wires up Harness credentials, creates the pipeline and secret in Harness,
+imports the Cortex async workflow, and optionally triggers a test run.
 Run via: cortex solutions post-install -s harness-deploy
 """
 
 SETUP_DESCRIPTION = (
     "This solution includes a post-install setup script that will configure your Harness "
-    "integration in Cortex, import the trigger workflow, and optionally fire a test deploy."
+    "integration in Cortex, create the deploy pipeline and cortex_api_key secret in Harness, "
+    "import the Cortex trigger workflow, and optionally fire a test deploy."
 )
 
 import sys
@@ -24,6 +26,8 @@ except ImportError:
 WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "trigger-harness-deploy.yaml"
 PIPELINE_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy-pipeline.yaml"
 
+HARNESS_APP_HOST = "https://app.harness.io"
+
 
 def _hyperlink(url: str, text: str = None) -> str:
     label = text if text is not None else url
@@ -38,12 +42,27 @@ class HarnessDeploySetup(SolutionSetup):
         self._session_api_key = cortex_api_key
         self._session_base_url = cortex_base_url
 
-    def _cortex_headers(self) -> dict:
-        api_key = self._answers.get("cortex_api_key") or self._session_api_key or ""
-        return {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
+    # ── Harness API helpers ────────────────────────────────────────────────
+
+    def _harness_headers(self) -> dict:
+        return {"x-api-key": self._answers["harness_api_key"]}
+
+    def _harness_base(self) -> str:
+        return self._answers.get("harness_host", HARNESS_APP_HOST).rstrip("/")
+
+    def _harness_account(self) -> str:
+        return self._answers["harness_account_id"]
+
+    def _fetch_harness_account_id(self) -> str | None:
+        """Derive account ID from the first Harness configuration registered in Cortex."""
+        integrations = self._fetch_harness_integrations()
+        for cfg in integrations:
+            acct = cfg.get("accountId") or cfg.get("account_id")
+            if acct:
+                return acct
+        return None
+
+    # ── Cortex API helpers ─────────────────────────────────────────────────
 
     def _fetch_harness_integrations(self) -> list:
         if not (self._session_api_key and self._session_base_url):
@@ -56,7 +75,6 @@ class HarnessDeploySetup(SolutionSetup):
             )
             if resp.status_code == 200:
                 data = resp.json()
-                # Configurations may be a list or wrapped in a key
                 if isinstance(data, list):
                     return data
                 return data.get("configurations", data.get("items", []))
@@ -64,7 +82,8 @@ class HarnessDeploySetup(SolutionSetup):
             pass
         return []
 
-    def _select_harness_integration(self, integrations: list) -> str:
+    def _select_harness_integration(self, integrations: list) -> tuple[str, dict]:
+        """Return (alias, config_dict) for the chosen integration."""
         integrations = sorted(integrations, key=lambda c: c.get("alias", "").lower())
         default_idx = next(
             (i for i, c in enumerate(integrations) if c.get("isDefault")), 0
@@ -78,21 +97,30 @@ class HarnessDeploySetup(SolutionSetup):
         while True:
             choice = input(f"\nSelect integration [{default_idx + 1}]: ").strip()
             if not choice:
-                return integrations[default_idx]["alias"]
-            try:
-                idx = int(choice) - 1
-                if 0 <= idx < len(integrations):
-                    return integrations[idx]["alias"]
-            except ValueError:
-                pass
+                idx = default_idx
+            else:
+                try:
+                    idx = int(choice) - 1
+                except ValueError:
+                    idx = -1
+            if 0 <= idx < len(integrations):
+                cfg = integrations[idx]
+                return cfg["alias"], cfg
             print(f"  Enter a number between 1 and {len(integrations)}")
 
+    # ── Prompts ────────────────────────────────────────────────────────────
+
     def collect_prompts(self) -> None:
-        # 1. Harness integration alias
+        # 1. Harness integration alias (from Cortex config)
         integrations = self._fetch_harness_integrations()
         if integrations:
-            alias = self._select_harness_integration(integrations)
+            alias, cfg = self._select_harness_integration(integrations)
             self._answers["harness_integration_alias"] = alias
+            # Capture account ID and host if the config exposes them
+            if cfg.get("accountId"):
+                self._answers["harness_account_id"] = cfg["accountId"]
+            if cfg.get("host"):
+                self._answers["harness_host"] = cfg["host"].rstrip("/")
         else:
             if self._session_api_key and self._session_base_url:
                 print("\nNo Harness integration is configured in Cortex.")
@@ -101,15 +129,32 @@ class HarnessDeploySetup(SolutionSetup):
                 sys.exit(0)
             self.prompt("harness_integration_alias", "Harness integration alias", default="default")
 
-        # 2. Harness pipeline coordinates
+        # 2. Harness API key (for creating pipeline + secret directly in Harness)
+        self.prompt(
+            "harness_api_key",
+            "Harness API key (for creating the pipeline and secret in your project)",
+            env_var="HARNESS_API_KEY",
+            secret=True,
+        )
+
+        # 3. Account ID (needed for Harness secret API — try to derive, else prompt)
+        if not self._answers.get("harness_account_id"):
+            derived = self._fetch_harness_account_id()
+            self.prompt("harness_account_id", "Harness account ID", default=derived)
+
+        # 4. Pipeline coordinates
         self.prompt("harness_org", "Harness org identifier", default="default")
         self.prompt("harness_project", "Harness project identifier", default="default_project")
-        self.prompt("harness_pipeline", "Harness pipeline identifier (the pipeline to trigger)")
+        self.prompt(
+            "harness_pipeline",
+            "Harness pipeline identifier (will be created if it doesn't exist)",
+            default="cortex_deploy",
+        )
 
-        # 3. Cortex entity to record deploys against
+        # 5. Cortex entity to record deploys against
         self.prompt("entity_tag", "Cortex entity tag to record deploys against", default="harness-demo")
 
-        # 4. Cortex credentials
+        # 6. Cortex credentials
         if self._session_api_key:
             if self.confirm("Use current Cortex API key?", default=True):
                 self._answers["cortex_api_key"] = self._session_api_key
@@ -131,8 +176,12 @@ class HarnessDeploySetup(SolutionSetup):
                 default="https://api.getcortexapp.com",
             )
 
+    # ── Steps ──────────────────────────────────────────────────────────────
+
     def steps(self) -> list[tuple[str, callable]]:
         return [
+            ("Creating Harness pipeline", self._create_harness_pipeline),
+            ("Creating cortex_api_key secret in Harness", self._create_harness_secret),
             ("Importing Cortex trigger workflow", self._import_cortex_workflow),
         ]
 
@@ -141,16 +190,15 @@ class HarnessDeploySetup(SolutionSetup):
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
         entity_tag = self._answers["entity_tag"]
         cortex_url = f"{app_url}/admin/resources?tag={entity_tag}"
-        pipeline_template_path = PIPELINE_TEMPLATE_PATH
+
+        harness_pipeline_url = (
+            f"{self._harness_base()}/ng/account/{self._harness_account()}"
+            f"/cd/orgs/{self._answers['harness_org']}"
+            f"/projects/{self._answers['harness_project']}"
+            f"/pipelines/{self._answers['harness_pipeline']}/executions"
+        )
 
         print()
-        print("Next step: import the Harness pipeline template into your Harness project.")
-        print(f"  Pipeline YAML: {pipeline_template_path}")
-        print()
-        print("  In Harness: Pipelines → Import Pipeline → paste or upload the YAML above.")
-        print("  Add a 'cortex_api_key' secret to your Harness project for the callback to authenticate.")
-        print()
-
         if self.confirm("Trigger a test workflow run now?", default=True):
             print("  Starting Cortex workflow run (waiting for Harness pipeline to complete)...")
             try:
@@ -158,7 +206,7 @@ class HarnessDeploySetup(SolutionSetup):
                 status = result.get("status", "").upper()
                 if status == "COMPLETED":
                     print("  Deploy complete \u2713")
-                    print(f"  {_hyperlink(cortex_url, 'View entity in Cortex')}")
+                    print(f"  {_hyperlink(harness_pipeline_url, 'View pipeline runs in Harness')}")
                     self.mark_done("first_deploy")
                 else:
                     print(f"  Workflow ended with status: {status}", file=sys.stderr)
@@ -168,6 +216,98 @@ class HarnessDeploySetup(SolutionSetup):
 
         print(f"\nDone! Watch your deploy appear at:")
         print(f"  {_hyperlink(cortex_url)}")
+        print(f"\nHarness pipeline: {_hyperlink(harness_pipeline_url)}")
+
+    # ── Harness pipeline creation ──────────────────────────────────────────
+
+    def _create_harness_pipeline(self) -> None:
+        org = self._answers["harness_org"]
+        project = self._answers["harness_project"]
+        pipeline_id = self._answers["harness_pipeline"]
+        base = self._harness_base()
+
+        # Check whether the pipeline already exists
+        check = requests.get(
+            f"{base}/v1/orgs/{org}/projects/{project}/pipelines/{pipeline_id}",
+            headers=self._harness_headers(),
+            timeout=10,
+        )
+        if check.status_code == 200:
+            return  # already exists — leave it alone
+
+        # Build pipeline YAML from template, substituting the pipeline identifier
+        pipeline_yaml = (
+            PIPELINE_TEMPLATE_PATH.read_text()
+            .replace("identifier: cortex_deploy", f"identifier: {pipeline_id}")
+            .replace("name: Cortex Deploy", f"name: Cortex Deploy")
+        )
+
+        resp = requests.post(
+            f"{base}/v1/orgs/{org}/projects/{project}/pipelines",
+            headers={**self._harness_headers(), "Content-Type": "application/yaml"},
+            data=pipeline_yaml.encode("utf-8"),
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to create Harness pipeline: {resp.status_code} {resp.text}"
+            )
+
+    # ── Harness secret creation ────────────────────────────────────────────
+
+    def _create_harness_secret(self) -> None:
+        """Create a cortex_api_key text secret in the Harness project."""
+        account_id = self._harness_account()
+        org = self._answers["harness_org"]
+        project = self._answers["harness_project"]
+        base = self._harness_base()
+        cortex_key = self._answers["cortex_api_key"]
+
+        # Check if secret already exists
+        check = requests.get(
+            f"{base}/ng/api/v2/secrets/cortex_api_key",
+            params={
+                "accountIdentifier": account_id,
+                "orgIdentifier": org,
+                "projectIdentifier": project,
+            },
+            headers=self._harness_headers(),
+            timeout=10,
+        )
+        if check.status_code == 200:
+            return  # already exists
+
+        payload = {
+            "secret": {
+                "type": "SecretText",
+                "name": "cortex_api_key",
+                "identifier": "cortex_api_key",
+                "orgIdentifier": org,
+                "projectIdentifier": project,
+                "spec": {
+                    "secretManagerIdentifier": "harnessSecretManager",
+                    "valueType": "Inline",
+                    "value": cortex_key,
+                },
+            }
+        }
+        resp = requests.post(
+            f"{base}/ng/api/v2/secrets/text",
+            params={
+                "accountIdentifier": account_id,
+                "orgIdentifier": org,
+                "projectIdentifier": project,
+            },
+            headers=self._harness_headers(),
+            json=payload,
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to create Harness secret: {resp.status_code} {resp.text}"
+            )
+
+    # ── Cortex workflow import ─────────────────────────────────────────────
 
     def _import_cortex_workflow(self) -> None:
         base_url = self._answers["cortex_base_url"].rstrip("/")
@@ -191,6 +331,8 @@ class HarnessDeploySetup(SolutionSetup):
             raise RuntimeError(
                 f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
             )
+
+    # ── Cortex workflow trigger ────────────────────────────────────────────
 
     def _trigger_via_cortex_workflow(self) -> dict:
         base_url = self._answers["cortex_base_url"].rstrip("/")
