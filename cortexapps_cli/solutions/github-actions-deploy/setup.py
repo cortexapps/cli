@@ -117,8 +117,23 @@ class GitHubActionsSetup(SolutionSetup):
             # If GITHUB_TOKEN is not set the setup steps will fail with a clear
             # error — user can export GITHUB_TOKEN and re-run post-install.
         else:
-            # No integration — prompt for token (setup steps + workflow fallback)
-            self.prompt("github_token", "GitHub token", env_var="GITHUB_TOKEN", secret=True)
+            # No integrations configured
+            if self._session_api_key and self._session_base_url:
+                print("\nNo GitHub integration is configured in Cortex.")
+                if self.confirm("Set up a Personal Access Token (PAT) integration now?", default=True):
+                    self.prompt("github_token", "GitHub Personal Access Token", env_var="GITHUB_TOKEN", secret=True)
+                    self.prompt("github_integration_alias", "Integration alias", default="github-pat")
+                    try:
+                        self._create_github_pat_integration()
+                        print(f"  Integration '{self._answers['github_integration_alias']}' created \u2713")
+                    except Exception as e:
+                        print(f"  Could not create integration: {e}", file=sys.stderr)
+                        print("  Continuing without Cortex integration.", file=sys.stderr)
+                        self._answers.pop("github_integration_alias", None)
+                else:
+                    self.prompt("github_token", "GitHub token", env_var="GITHUB_TOKEN", secret=True)
+            else:
+                self.prompt("github_token", "GitHub token", env_var="GITHUB_TOKEN", secret=True)
 
         # 2. GitHub owner (derived from auth if token is available)
         try:
@@ -290,6 +305,21 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code != 204:
             raise RuntimeError(f"Failed to trigger workflow: {resp.status_code} {resp.text}")
+
+    def _create_github_pat_integration(self) -> None:
+        """Create a GitHub PAT integration in Cortex."""
+        resp = requests.post(
+            f"{self._session_base_url.rstrip('/')}/api/v1/github/configurations/personal",
+            json={
+                "alias": self._answers["github_integration_alias"],
+                "accessToken": self._answers["github_token"],
+                "isDefault": True,
+            },
+            headers={"Authorization": f"Bearer {self._session_api_key}"},
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(f"{resp.status_code} {resp.text}")
 
     def _link_github_repo(self) -> None:
         """PATCH the Cortex entity to link the GitHub repository so workflows are discovered."""
