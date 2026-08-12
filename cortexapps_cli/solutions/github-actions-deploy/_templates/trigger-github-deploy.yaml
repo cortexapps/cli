@@ -110,24 +110,18 @@ actions:
     - name: UI invocation
       slug: ui-invocation
       outgoingAction: inputs
-      expression: "variables[\"github-owner\"] == \"\" && variables[\"repo-name\"] == \"\""
+      expression: "variables[\"github-owner\"] == \"\" || variables[\"repo-name\"] == \"\""
       type: CONDITIONAL
     - name: API invocation
       slug: api-invocation
-      outgoingAction: trigger-deploy
+      outgoingAction: pass-through
       expression: "variables[\"github-owner\"] != \"\" && variables[\"repo-name\"] != \"\""
       type: CONDITIONAL
-    fallbackBranch:
-      name: Invalid invocation
-      slug: invalid-invocation
-      outgoingAction: invalid-inputs
-      type: FALLBACK
-    joiningAction: null
+    joiningAction: merge
     type: CONDITIONAL_BRANCH
   outgoingActions:
   - inputs
-  - trigger-deploy
-  - invalid-inputs
+  - pass-through
   isRootAction: true
 - name: Inputs
   slug: inputs
@@ -160,14 +154,23 @@ actions:
       type: VALUE
     type: USER_INPUT
   outgoingActions:
-  - trigger-deploy
+  - merge
   isRootAction: false
-- name: Invalid inputs
-  slug: invalid-inputs
+- name: Pass through
+  slug: pass-through
   schema:
-    expression: error("github-owner and repo-name must both be provided for API invocation")
+    expression: "."
     type: JQ
-  outgoingActions: []
+  outgoingActions:
+  - merge
+  isRootAction: false
+- name: Merge branches
+  slug: merge
+  schema:
+    expression: "."
+    type: JQ
+  outgoingActions:
+  - trigger-deploy
   isRootAction: false
 - name: Trigger GitHub Actions Deploy
   slug: trigger-deploy
