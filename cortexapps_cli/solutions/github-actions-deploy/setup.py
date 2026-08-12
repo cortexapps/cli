@@ -170,7 +170,7 @@ class GitHubActionsSetup(SolutionSetup):
         cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
 
-        if self.confirm("Ready to trigger your first workflow run?", default=True):
+        if self.confirm("Trigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
                 # Use Cortex async workflow — waits for GitHub Actions callback
                 print("  Starting Cortex workflow run (waiting for GitHub Actions to complete)...")
