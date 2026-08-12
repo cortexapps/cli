@@ -55,32 +55,16 @@ jobs:
             CORTEX_STATUS="FAILURE"
           fi
 
-          CALLBACK_URL="${{ inputs.cortex_callback_url }}"
-          CORTEX_API_KEY="${{ secrets.CORTEX_API_KEY }}"
-
-          _callback() {
-            curl -s -f -X POST "$CALLBACK_URL" \
-              -H "Authorization: Bearer $CORTEX_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "$1"
-          }
-
-          # Update 1 of 2
-          _callback "$(jq -n '{status: "IN_PROGRESS", message: "Update 1 of 2: sleeping for 10 seconds", output: {}}')"
-          sleep 10
-
-          # Update 2 of 2
-          _callback "$(jq -n '{status: "IN_PROGRESS", message: "Update 2 of 2: finishing up", output: {}}')"
-          sleep 10
-
-          # Final callback
-          _callback "$(jq -n \
-            --arg status "$CORTEX_STATUS" \
-            --arg sha '${{ github.sha }}' \
-            --arg run_id '${{ github.run_id }}' \
-            --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
-            '{
-              status: $status,
-              message: "",
-              output: {sha: $sha, run_id: $run_id, run_url: $run_url}
-            }')"
+          curl -s -f -X POST "${{ inputs.cortex_callback_url }}" \
+            -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg status "$CORTEX_STATUS" \
+              --arg sha '${{ github.sha }}' \
+              --arg run_id '${{ github.run_id }}' \
+              --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+              '{
+                status: $status,
+                message: "",
+                output: {sha: $sha, run_id: $run_id, run_url: $run_url}
+              }')"

@@ -30,6 +30,6 @@ actions:
       integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
       headers: {}
       payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
-      timeoutInSeconds: 300
+      timeoutInSeconds: 120
     outgoingActions: []
     isRootAction: true
