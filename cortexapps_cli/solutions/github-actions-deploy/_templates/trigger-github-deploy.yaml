@@ -19,6 +19,85 @@ runResponseTemplate: |
 
   [View GitHub Actions runs](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/actions)
 
+  ---
+
+  ## GitHub workflow used for this deploy
+
+  ```yaml
+  name: Cortex Deploy
+
+  on:
+    push:
+      branches: [main]
+    workflow_dispatch:
+      inputs:
+        cortex_callback_url:
+          description: 'Cortex async workflow callback URL (set automatically when triggered via Cortex workflow)'
+          required: false
+          default: ''
+
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Build
+          run: echo "Hello, Cortex deploys!"
+
+    notify-cortex:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+        - name: Register deploy in Cortex
+          continue-on-error: true
+          run: |
+            curl -s -f -X POST \
+              "$CORTEX_BASE_URL/api/v1/catalog/github-actions-demo/deploys" \
+              -H "Authorization: Bearer $CORTEX_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$(jq -n \
+                --arg sha '$GITHUB_SHA' \
+                --arg actor '$GITHUB_ACTOR' \
+                --arg branch '$GITHUB_REF_NAME' \
+                --arg run_id '$GITHUB_RUN_ID' \
+                --arg run_url '$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID' \
+                --arg trigger '$GITHUB_EVENT_NAME' \
+                --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                '{
+                  sha: $sha,
+                  timestamp: $timestamp,
+                  environment: "production",
+                  type: "DEPLOY",
+                  title: ("Triggered by " + $actor),
+                  deployer: {name: $actor},
+                  customData: {branch: $branch, runId: $run_id, runUrl: $run_url, trigger: $trigger}
+                }')"
+
+        - name: Notify Cortex workflow callback
+          if: always() && inputs.cortex_callback_url != ''
+          run: |
+            if [ "$NEEDS_BUILD_RESULT" = "success" ]; then
+              CORTEX_STATUS="SUCCESS"
+            elif [ "$NEEDS_BUILD_RESULT" = "cancelled" ]; then
+              CORTEX_STATUS="CANCELLED"
+            else
+              CORTEX_STATUS="FAILURE"
+            fi
+
+            curl -s -f -X POST "$CORTEX_CALLBACK_URL" \
+              -H "Authorization: Bearer $CORTEX_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$(jq -n \
+                --arg status "$CORTEX_STATUS" \
+                --arg sha '$GITHUB_SHA' \
+                --arg run_id '$GITHUB_RUN_ID' \
+                --arg run_url '$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID' \
+                '{
+                  status: $status,
+                  message: "",
+                  output: {sha: $sha, run_id: $run_id, run_url: $run_url}
+                }')"
+  ```
+
 actions:
   - name: Trigger GitHub Actions Deploy
     slug: trigger-deploy
