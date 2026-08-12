@@ -312,7 +312,7 @@ info:
     github:
       repository: "{owner}/{repo}"
 """
-        resp = requests.put(
+        resp = requests.patch(
             f"{base_url}/api/v1/open-api",
             data=yaml_content.encode("utf-8"),
             headers={
