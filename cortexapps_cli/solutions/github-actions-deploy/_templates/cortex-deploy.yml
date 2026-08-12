@@ -35,8 +35,10 @@ jobs:
               --arg run_id '${{ github.run_id }}' \
               --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
               --arg trigger '${{ github.event_name }}' \
+              --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
               '{
                 sha: $sha,
+                timestamp: $timestamp,
                 environment: "production",
                 type: "DEPLOY",
                 title: ("Triggered by " + $actor),
