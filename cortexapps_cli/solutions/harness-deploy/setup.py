@@ -228,7 +228,7 @@ class HarnessDeploySetup(SolutionSetup):
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
         entity_tag = self._answers["entity_tag"]
-        cortex_url = f"{app_url}/admin/resources?tag={entity_tag}"
+        cortex_url = f"{app_url}/admin/resources?tag={entity_tag}"  # /admin/resources is the correct URL path (entity terminology in UI)
 
         harness_pipeline_url = (
             f"{self._harness_base()}/ng/account/{self._harness_account()}"
@@ -275,16 +275,19 @@ class HarnessDeploySetup(SolutionSetup):
             return  # already exists — leave it alone
 
         # Build pipeline YAML from template, substituting the pipeline identifier
-        pipeline_yaml = (
-            PIPELINE_TEMPLATE_PATH.read_text()
-            .replace("identifier: cortex_deploy", f"identifier: {pipeline_id}")
-            .replace("name: Cortex Deploy", f"name: Cortex Deploy")
+        pipeline_yaml = PIPELINE_TEMPLATE_PATH.read_text().replace(
+            "identifier: cortex_deploy", f"identifier: {pipeline_id}"
         )
 
+        # Harness v1 pipeline API expects JSON with the YAML embedded as a string
         resp = requests.post(
             f"{base}/v1/orgs/{org}/projects/{project}/pipelines",
-            headers={**self._harness_headers(), "Content-Type": "application/yaml"},
-            data=pipeline_yaml.encode("utf-8"),
+            headers={**self._harness_headers(), "Content-Type": "application/json"},
+            json={
+                "identifier": pipeline_id,
+                "name": "Cortex Deploy",
+                "yaml": pipeline_yaml,
+            },
             timeout=15,
         )
         if resp.status_code not in (200, 201):
