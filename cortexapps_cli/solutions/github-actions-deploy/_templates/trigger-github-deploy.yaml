@@ -15,11 +15,9 @@ variables:
 runResponseTemplate: |
   # GitHub Actions Deploy
 
-  **{{variables.github-owner}}/{{variables.repo-name}}** — `{{actions.trigger-deploy.outputs.output.conclusion}}`
+  **{{variables.github-owner}}/{{variables.repo-name}}** — SHA `{{actions.trigger-deploy.outputs.result.output.sha}}`
 
-  SHA: `{{actions.trigger-deploy.outputs.output.sha}}`
-
-  [View run]({{actions.trigger-deploy.outputs.output.run_url}})
+  [View run]({{actions.trigger-deploy.outputs.result.output.run_url}})
 
 actions:
   - name: Trigger GitHub Actions Deploy

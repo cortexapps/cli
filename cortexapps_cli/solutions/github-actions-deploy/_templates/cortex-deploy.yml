@@ -22,31 +22,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Register deploy in Cortex
+        continue-on-error: true
         run: |
           curl -s -f -X POST \
             "${{ secrets.CORTEX_BASE_URL }}/api/v1/catalog/github-actions-demo/deploys" \
             -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"sha\": \"${{ github.sha }}\",
-              \"environment\": \"production\",
-              \"type\": \"DEPLOY\",
-              \"title\": \"Triggered by ${{ github.actor }}\",
-              \"deployer\": { \"name\": \"${{ github.actor }}\" },
-              \"customData\": {
-                \"branch\": \"${{ github.ref_name }}\",
-                \"runId\": \"${{ github.run_id }}\",
-                \"runUrl\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\",
-                \"trigger\": \"${{ github.event_name }}\"
-              }
-            }"
+            -d "$(jq -n \
+              --arg sha '${{ github.sha }}' \
+              --arg actor '${{ github.actor }}' \
+              --arg branch '${{ github.ref_name }}' \
+              --arg run_id '${{ github.run_id }}' \
+              --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+              --arg trigger '${{ github.event_name }}' \
+              '{
+                sha: $sha,
+                environment: "production",
+                type: "DEPLOY",
+                title: ("Triggered by " + $actor),
+                deployer: {name: $actor},
+                customData: {branch: $branch, runId: $run_id, runUrl: $run_url, trigger: $trigger}
+              }')"
 
       - name: Notify Cortex workflow callback
         if: ${{ always() && inputs.cortex_callback_url != '' }}
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
+          if [ "${{ needs.build.result }}" = "success" ]; then
             CORTEX_STATUS="SUCCESS"
-          elif [ "${{ job.status }}" = "cancelled" ]; then
+          elif [ "${{ needs.build.result }}" = "cancelled" ]; then
             CORTEX_STATUS="CANCELLED"
           else
             CORTEX_STATUS="FAILURE"
@@ -56,13 +59,13 @@ jobs:
             "${{ inputs.cortex_callback_url }}" \
             -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"status\": \"${CORTEX_STATUS}\",
-              \"message\": \"\",
-              \"output\": {
-                \"conclusion\": \"${{ job.status }}\",
-                \"sha\": \"${{ github.sha }}\",
-                \"run_id\": \"${{ github.run_id }}\",
-                \"run_url\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
-              }
-            }"
+            -d "$(jq -n \
+              --arg status "$CORTEX_STATUS" \
+              --arg sha '${{ github.sha }}' \
+              --arg run_id '${{ github.run_id }}' \
+              --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+              '{
+                status: $status,
+                message: "",
+                output: {sha: $sha, run_id: $run_id, run_url: $run_url}
+              }')"
