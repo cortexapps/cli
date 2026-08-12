@@ -8,12 +8,14 @@ isRunnableViaApi: true
 filter:
   type: GLOBAL
 variables:
-  - slug: github-owner
-    type: STRING
-    defaultValue: PLACEHOLDER_GITHUB_OWNER
-  - slug: repo-name
-    type: STRING
-    defaultValue: PLACEHOLDER_REPO_NAME
+- slug: github-owner
+  type: STRING
+  defaultValue: ""
+  description: GitHub organization or username that owns the repository.
+- slug: repo-name
+  type: STRING
+  defaultValue: ""
+  description: Name of the GitHub repository to trigger the deploy workflow in.
 runResponseTemplate: |
   # GitHub Actions Deploy
 
@@ -101,16 +103,82 @@ runResponseTemplate: |
   ```
 
 actions:
-  - name: Trigger GitHub Actions Deploy
-    slug: trigger-deploy
-    schema:
-      type: HTTP_REQUEST_ASYNC
-      httpMethod: POST
-      url: "/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
-      integration: GitHub
-      integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
-      headers: {}
-      payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
-      timeoutInSeconds: 120
-    outgoingActions: []
-    isRootAction: true
+- name: Branch
+  slug: branch
+  schema:
+    branches:
+    - name: UI invocation
+      slug: ui-invocation
+      outgoingAction: inputs
+      expression: "variables[\"github-owner\"] == \"\" && variables[\"repo-name\"] == \"\""
+      type: CONDITIONAL
+    - name: API invocation
+      slug: api-invocation
+      outgoingAction: trigger-deploy
+      expression: "variables[\"github-owner\"] != \"\" && variables[\"repo-name\"] != \"\""
+      type: CONDITIONAL
+    fallbackBranch:
+      name: Invalid invocation
+      slug: invalid-invocation
+      outgoingAction: invalid-inputs
+      type: FALLBACK
+    joiningAction: trigger-deploy
+    type: CONDITIONAL_BRANCH
+  outgoingActions:
+  - inputs
+  - trigger-deploy
+  - invalid-inputs
+  isRootAction: true
+- name: Inputs
+  slug: inputs
+  schema:
+    inputs:
+    - name: GitHub Owner
+      description: GitHub organization or username that owns the repository.
+      key: github-owner
+      required: true
+      defaultValue: null
+      placeholder: e.g. my-org
+      validationRegex: null
+      type: INPUT_FIELD
+    - name: Repository Name
+      description: Name of the GitHub repository containing the Cortex deploy workflow.
+      key: repo-name
+      required: true
+      defaultValue: null
+      placeholder: e.g. cortex-deploy-demo
+      validationRegex: null
+      type: INPUT_FIELD
+    inputOverrides:
+    - inputKey: github-owner
+      outputVariable: variables.github-owner
+      editable: true
+      type: VALUE
+    - inputKey: repo-name
+      outputVariable: variables.repo-name
+      editable: true
+      type: VALUE
+    type: USER_INPUT
+  outgoingActions:
+  - trigger-deploy
+  isRootAction: false
+- name: Invalid inputs
+  slug: invalid-inputs
+  schema:
+    expression: error("github-owner and repo-name must both be provided for API invocation")
+    type: JQ
+  outgoingActions: []
+  isRootAction: false
+- name: Trigger GitHub Actions Deploy
+  slug: trigger-deploy
+  schema:
+    type: HTTP_REQUEST_ASYNC
+    httpMethod: POST
+    url: "/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
+    integration: GitHub
+    integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
+    headers: {}
+    payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
+    timeoutInSeconds: 120
+  outgoingActions: []
+  isRootAction: false
