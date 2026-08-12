@@ -317,7 +317,7 @@ info:
             data=yaml_content.encode("utf-8"),
             headers={
                 "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/yaml",
+                "Content-Type": "application/openapi;charset=UTF-8",
             },
             timeout=15,
         )
