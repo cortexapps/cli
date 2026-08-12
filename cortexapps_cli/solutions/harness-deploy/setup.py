@@ -110,8 +110,50 @@ class HarnessDeploySetup(SolutionSetup):
 
     # ── Prompts ────────────────────────────────────────────────────────────
 
+    def _create_cortex_harness_integration(self) -> str:
+        """Prompt for Harness credentials and register them in Cortex. Returns the alias."""
+        base_url = (self._session_base_url or "https://api.getcortexapp.com").rstrip("/")
+        api_key = self._session_api_key or self._answers.get("cortex_api_key", "")
+
+        print("\nNo Harness integration is configured in Cortex. Let's set one up.")
+        self.prompt("harness_integration_alias", "Integration alias", default="default")
+        self.prompt(
+            "harness_api_key",
+            "Harness API key",
+            env_var="HARNESS_API_KEY",
+            secret=True,
+        )
+        self.prompt("harness_account_id", "Harness account ID")
+        self.prompt(
+            "harness_host",
+            "Harness host URL (leave blank for https://app.harness.io)",
+            default="",
+        )
+
+        payload = {
+            "alias": self._answers["harness_integration_alias"],
+            "apiKey": self._answers["harness_api_key"],
+            "accountId": self._answers["harness_account_id"],
+            "isDefault": True,
+        }
+        if self._answers.get("harness_host"):
+            payload["host"] = self._answers["harness_host"]
+
+        resp = requests.post(
+            f"{base_url}/api/v1/harness/configuration",
+            json=payload,
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to create Harness integration in Cortex: {resp.status_code} {resp.text}"
+            )
+        print(f"  Harness integration '{self._answers['harness_integration_alias']}' created \u2713")
+        return self._answers["harness_integration_alias"]
+
     def collect_prompts(self) -> None:
-        # 1. Harness integration alias (from Cortex config)
+        # 1. Harness integration alias (from Cortex config, or create one)
         integrations = self._fetch_harness_integrations()
         if integrations:
             alias, cfg = self._select_harness_integration(integrations)
@@ -122,22 +164,19 @@ class HarnessDeploySetup(SolutionSetup):
             if cfg.get("host"):
                 self._answers["harness_host"] = cfg["host"].rstrip("/")
         else:
-            if self._session_api_key and self._session_base_url:
-                print("\nNo Harness integration is configured in Cortex.")
-                print("Configure one at: Settings → Integrations → Harness")
-                print("Then re-run: cortex solutions post-install -s harness-deploy")
-                sys.exit(0)
-            self.prompt("harness_integration_alias", "Harness integration alias", default="default")
+            alias = self._create_cortex_harness_integration()
+            self._answers["harness_integration_alias"] = alias
 
-        # 2. Harness API key (for creating pipeline + secret directly in Harness)
-        self.prompt(
-            "harness_api_key",
-            "Harness API key (for creating the pipeline and secret in your project)",
-            env_var="HARNESS_API_KEY",
-            secret=True,
-        )
+        # 2. Harness API key — only prompt if we didn't already collect it above
+        if not self._answers.get("harness_api_key"):
+            self.prompt(
+                "harness_api_key",
+                "Harness API key (for creating the pipeline and secret in your project)",
+                env_var="HARNESS_API_KEY",
+                secret=True,
+            )
 
-        # 3. Account ID (needed for Harness secret API — try to derive, else prompt)
+        # 3. Account ID — only prompt if not already captured from the integration config
         if not self._answers.get("harness_account_id"):
             derived = self._fetch_harness_account_id()
             self.prompt("harness_account_id", "Harness account ID", default=derived)

@@ -23,6 +23,7 @@ import cortexapps_cli.commands.integrations_commands.dynatrace as dynatrace
 import cortexapps_cli.commands.integrations_commands.firehydrant as firehydrant
 import cortexapps_cli.commands.integrations_commands.github as github
 import cortexapps_cli.commands.integrations_commands.gitlab as gitlab
+import cortexapps_cli.commands.integrations_commands.harness as harness
 import cortexapps_cli.commands.integrations_commands.incidentio as incidentio
 import cortexapps_cli.commands.integrations_commands.instana as instana
 import cortexapps_cli.commands.integrations_commands.jenkins as jenkins
@@ -72,6 +73,7 @@ app.add_typer(dynatrace.app, name="dynatrace")
 app.add_typer(firehydrant.app, name="firehydrant")
 app.add_typer(github.app, name="github")
 app.add_typer(gitlab.app, name="gitlab")
+app.add_typer(harness.app, name="harness")
 app.add_typer(incidentio.app, name="incidentio")
 app.add_typer(instana.app, name="instana")
 app.add_typer(jenkins.app, name="jenkins")
