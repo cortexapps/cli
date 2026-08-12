@@ -157,6 +157,7 @@ class GitHubActionsSetup(SolutionSetup):
             ("Seeding Cortex deploy workflow", self._seed_workflow),
             ("Setting CORTEX_API_KEY secret", lambda: self._set_secret("CORTEX_API_KEY", self._answers["cortex_api_key"])),
             ("Setting CORTEX_BASE_URL secret", lambda: self._set_secret("CORTEX_BASE_URL", self._answers["cortex_base_url"])),
+            ("Linking GitHub repository to entity", self._link_github_repo),
         ]
         if self._answers.get("github_integration_alias"):
             steps.append(("Importing Cortex trigger workflow", self._import_cortex_workflow))
@@ -289,6 +290,39 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code != 204:
             raise RuntimeError(f"Failed to trigger workflow: {resp.status_code} {resp.text}")
+
+    def _link_github_repo(self) -> None:
+        """PATCH the Cortex entity to link the GitHub repository so workflows are discovered."""
+        owner = self._answers["github_owner"]
+        repo = self._answers["repo_name"]
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+
+        yaml_content = f"""\
+openapi: "3.0.0"
+info:
+  title: GitHub Actions Demo
+  x-cortex-tag: github-actions-demo
+  x-cortex-type: service
+  x-cortex-description: Sample service for demonstrating deploy tracking via GitHub Actions.
+  x-cortex-definition: {{}}
+  x-cortex-groups:
+    - demo-github-actions-deploys
+  x-cortex-git:
+    github:
+      repository: "{owner}/{repo}"
+"""
+        resp = requests.put(
+            f"{base_url}/api/v1/open-api",
+            data=yaml_content.encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/yaml",
+            },
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(f"Failed to link GitHub repo to entity: {resp.status_code} {resp.text}")
 
     def _import_cortex_workflow(self) -> None:
         """Import the Cortex trigger workflow with the selected GitHub integration alias."""
