@@ -15,7 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build
-        run: echo "Hello, Cortex deploys!"
+        run: |
+          echo "Starting deployment..."
+          sleep 15
+          for i in 1 2 3; do
+            echo "Deployment progress: step $i/3"
+            sleep 5
+          done
+          echo "Build complete!"
 
   notify-cortex:
     needs: build
