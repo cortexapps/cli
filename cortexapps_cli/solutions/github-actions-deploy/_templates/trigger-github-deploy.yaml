@@ -10,8 +10,10 @@ filter:
 variables:
   - slug: github-owner
     type: STRING
+    defaultValue: PLACEHOLDER_GITHUB_OWNER
   - slug: repo-name
     type: STRING
+    defaultValue: PLACEHOLDER_REPO_NAME
 runResponseTemplate: |
   # GitHub Actions Deploy
 

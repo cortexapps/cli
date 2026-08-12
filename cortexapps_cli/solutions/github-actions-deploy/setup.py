@@ -360,8 +360,11 @@ info:
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
 
-        yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
-            "PLACEHOLDER_INTEGRATION_ALIAS", alias
+        yaml_content = (
+            WORKFLOW_TEMPLATE_PATH.read_text()
+            .replace("PLACEHOLDER_INTEGRATION_ALIAS", alias)
+            .replace("PLACEHOLDER_GITHUB_OWNER", self._answers["github_owner"])
+            .replace("PLACEHOLDER_REPO_NAME", self._answers["repo_name"])
         )
 
         resp = requests.post(
