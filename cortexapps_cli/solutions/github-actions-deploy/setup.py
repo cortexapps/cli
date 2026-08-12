@@ -79,6 +79,7 @@ class GitHubActionsSetup(SolutionSetup):
 
     def _select_github_integration(self, integrations: list) -> str:
         """Present a numbered list and return the chosen alias."""
+        integrations = sorted(integrations, key=lambda c: c.get("alias", "").lower())
         default_idx = next(
             (i for i, c in enumerate(integrations) if c.get("isDefault")), 0
         )
