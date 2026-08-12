@@ -274,19 +274,22 @@ class HarnessDeploySetup(SolutionSetup):
         if check.status_code == 200:
             return  # already exists — leave it alone
 
-        # Build pipeline YAML from template, substituting the pipeline identifier
-        pipeline_yaml = PIPELINE_TEMPLATE_PATH.read_text().replace(
-            "identifier: cortex_deploy", f"identifier: {pipeline_id}"
+        pipeline_name = "Cortex Deploy"
+        # Build pipeline YAML from template — name in YAML must match name in JSON body
+        pipeline_yaml = (
+            PIPELINE_TEMPLATE_PATH.read_text()
+            .replace("identifier: cortex_deploy", f"identifier: {pipeline_id}")
+            .replace("name: Cortex Deploy\n", f"name: {pipeline_name}\n")
         )
 
-        # Harness v1 pipeline API expects JSON with the YAML embedded as a string
+        # Harness v1 pipeline API: JSON body with pipeline_yaml containing the full YAML
         resp = requests.post(
             f"{base}/v1/orgs/{org}/projects/{project}/pipelines",
             headers={**self._harness_headers(), "Content-Type": "application/json"},
             json={
                 "identifier": pipeline_id,
-                "name": "Cortex Deploy",
-                "yaml": pipeline_yaml,
+                "name": pipeline_name,
+                "pipeline_yaml": pipeline_yaml,
             },
             timeout=15,
         )
