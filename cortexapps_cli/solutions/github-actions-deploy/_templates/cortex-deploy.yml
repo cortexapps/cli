@@ -23,9 +23,6 @@ jobs:
     steps:
       - name: Register deploy in Cortex
         run: |
-          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-
-          # Record the deploy event
           curl -s -f -X POST \
             "${{ secrets.CORTEX_BASE_URL }}/api/v1/catalog/github-actions-demo/deploys" \
             -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
@@ -43,13 +40,6 @@ jobs:
                 \"trigger\": \"${{ github.event_name }}\"
               }
             }"
-
-          # Post deploy-count metric (powers the Deploy Health scorecard)
-          curl -s -f -X POST \
-            "${{ secrets.CORTEX_BASE_URL }}/api/v1/eng-intel/custom-metrics/deploy-count/entity/github-actions-demo" \
-            -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"timestamp\": \"${TIMESTAMP}\", \"value\": 1}"
 
       - name: Notify Cortex workflow callback
         if: ${{ always() && inputs.cortex_callback_url != '' }}
