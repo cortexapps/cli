@@ -154,6 +154,22 @@ actions:
       type: VALUE
     type: USER_INPUT
   outgoingActions:
+  - set-variables
+  isRootAction: false
+- name: Set variables
+  slug: set-variables
+  schema:
+    variables:
+    - slug: github-owner
+      source:
+        path: actions.inputs.outputs.github-owner
+        type: REFERENCE
+    - slug: repo-name
+      source:
+        path: actions.inputs.outputs.repo-name
+        type: REFERENCE
+    type: SET_VARIABLES
+  outgoingActions:
   - merge
   isRootAction: false
 - name: Pass through
