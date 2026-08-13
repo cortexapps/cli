@@ -220,7 +220,7 @@ class GitHubActionsSetup(SolutionSetup):
         if self.confirm("\nTrigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
                 # Use Cortex async workflow — waits for GitHub Actions callback
-                print(f"  Running: POST /api/v1/workflows/{workflow_tag}/runs")
+                print(f"\n  Running: POST /api/v1/workflows/{workflow_tag}/runs")
                 try:
                     def _on_run_started(run_url: str) -> None:
                         print(f"  {_hyperlink(run_url, 'View this workflow run')}")
