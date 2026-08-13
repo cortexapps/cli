@@ -492,7 +492,7 @@ info:
         run_id = run_data.get("id")
         if not run_id:
             raise RuntimeError("No run ID returned from workflow start")
-        workflow_cid = run_data.get("workflow", {}).get("cid", "")
+        workflow_cid = run_data.get("workflow", {}).get("id", "")
 
         if on_run_started and workflow_cid:
             app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
