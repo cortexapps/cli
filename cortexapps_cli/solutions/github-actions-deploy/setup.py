@@ -425,6 +425,8 @@ info:
         yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
         ).replace(
+            "PLACEHOLDER_APP_URL", app_url
+        ).replace(
             "https://api.getcortexapp.com", base_url
         )
 
