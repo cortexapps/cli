@@ -106,6 +106,9 @@ class GitHubActionsSetup(SolutionSetup):
             print(f"  {marker}{i + 1}. {cfg['alias']} [{type_label}]")
         print("   (* = default)")
 
+        if self._no_prompt:
+            return integrations[default_idx]["alias"]
+
         while True:
             choice = input(f"\nSelect integration [{default_idx + 1}]: ").strip()
             if not choice:

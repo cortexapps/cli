@@ -707,6 +707,9 @@ def install(
 
     # Post-install setup hook — runs before the informational menu
     if not no_prompt and not skip_post_install_setup and _has_post_install(solution, solutions_dir):
+        state_file = Path.home() / ".cortex" / "solutions" / f"{solution}.json"
+        if state_file.exists():
+            typer.echo(f"\nRetrieving previous responses from: {state_file}")
         desc = _get_setup_description(solution, solutions_dir)
         typer.echo(f"\n{desc}")
         if typer.confirm("Run setup now?", default=True):
