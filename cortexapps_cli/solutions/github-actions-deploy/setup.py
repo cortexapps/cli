@@ -165,7 +165,7 @@ class GitHubActionsSetup(SolutionSetup):
 
         # 3. Cortex credentials from CLI session
         if self._session_api_key:
-            if self.confirm("Use current Cortex API key?", default=True):
+            if self.confirm("Use Cortex API key used by this CLI session?", default=True):
                 self._answers["cortex_api_key"] = self._session_api_key
             else:
                 self.prompt("cortex_api_key", "Cortex API key", secret=True)
@@ -173,7 +173,7 @@ class GitHubActionsSetup(SolutionSetup):
             self.prompt("cortex_api_key", "Cortex API key", env_var="CORTEX_API_KEY", secret=True)
 
         if self._session_base_url:
-            if self.confirm(f"Use current Cortex base URL [{self._session_base_url}]?", default=True):
+            if self.confirm(f"Use Cortex base URL used by this CLI session [{self._session_base_url}]?", default=True):
                 self._answers["cortex_base_url"] = self._session_base_url
             else:
                 self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
