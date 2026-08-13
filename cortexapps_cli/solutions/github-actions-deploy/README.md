@@ -3,14 +3,62 @@ name: GitHub Actions Deploy Tracking
 description: Track deployments from GitHub Actions in Cortex, with a deploy health scorecard measuring delivery cadence.
 ---
 
+# GitHub Actions Deploy Tracking
+
+Trigger deploys from Cortex, track them as they run in GitHub Actions, and surface deploy health back in your service catalog.
+
+```
+  ┌─────────────────────────────────┐
+  │         Cortex Catalog          │
+  │                                 │
+  │  github-actions-demo  (service) │
+  │  ├── x-cortex-git.github        │
+  │  │     repository: owner/repo   │
+  │  └── Scorecard: Deploy Health   │
+  │        Bronze / Silver / Gold   │
+  └──────────────┬──────────────────┘
+                 │
+                 │  Run workflow from entity page
+                 │  (or: cortex workflows run -t
+                 │   github-actions-deploy
+                 │   --scope ENTITY --entity <tag>)
+                 ▼
+  ┌─────────────────────────────────┐
+  │       Cortex Workflow           │
+  │  Solution: Add Cortex Deploy    │
+  │       from GitHub Actions       │
+  │                                 │
+  │  1. Read linked repo from       │
+  │     entity catalog config       │
+  │  2. POST workflow_dispatch      │
+  │     to GitHub Actions           │
+  │  3. Wait for callback           │
+  └──────────────┬──────────────────┘
+                 │  POST /dispatches  (GitHub integration)
+                 ▼
+  ┌─────────────────────────────────┐
+  │        GitHub Actions           │
+  │    cortex-deploy.yml            │
+  │                                 │
+  │  job: build                     │
+  │    └── run your deploy steps    │
+  │                                 │
+  │  job: notify-cortex             │
+  │    ├── POST /deploys            │◄── registers deploy event
+  │    │   (entity: github-actions- │    on the Cortex entity
+  │    │    demo)                   │
+  │    └── POST callbackUrl  ───────┼──► Cortex marks workflow
+  │        status: SUCCESS/FAILURE  │    run complete
+  └─────────────────────────────────┘
+```
+
 ## What's Included
 
 - **Entity:** `github-actions-demo` service — a sample entity to receive deploy events
 - **Scorecard:** Deploy Health — Bronze/Silver/Gold based on deploy frequency
-- **GitHub Actions workflow:** A two-job workflow (build → deploy notification) to seed into a GitHub repo
+- **GitHub Actions workflow:** `cortex-deploy.yml` — a two-job workflow (build → notify) seeded into your GitHub repo
+- **Cortex workflow:** `github-actions-deploy` — reads the linked repo from the entity, triggers the GitHub Actions deploy, and waits for the result
 - **Setup script:** Interactive wizard that creates and seeds a GitHub repo end-to-end
-- **Cortex workflow — Deploy from Entity** _(recommended)_: triggers a GitHub Actions deploy directly from any entity that has a linked GitHub repository — no manual input required
-- **Cortex workflow — Trigger GitHub Actions Deploy**: triggers a deploy by supplying the GitHub owner and repo name explicitly; handles both UI and API invocation via a branch + variables pattern
 
 ## Quick Start
 
@@ -26,27 +74,13 @@ description: Track deployments from GitHub Actions in Cortex, with a deploy heal
    cortex solutions post-install -s github-actions-deploy
    ```
 
-## Cortex Workflows
-
-Two Cortex workflows are included. Both trigger the same GitHub Actions deploy and wait for a callback, but differ in how the target repository is resolved.
-
-### Deploy from Entity _(recommended)_
-
-Reads the GitHub repository directly from the entity's catalog configuration — no user input needed. Run it from any entity that has a `x-cortex-git.github.repository` set.
-
-Use this workflow for day-to-day deploys. It will likely replace the trigger workflow below once entity-linked repos are the standard pattern.
-
-### Trigger GitHub Actions Deploy
-
-Prompts for a GitHub owner and repository name when triggered from the UI, or accepts them as variables when triggered via API. This workflow is a good reference example of:
-
-- **Variables + branch pattern**: a `CONDITIONAL_BRANCH` routes UI invocations through a `USER_INPUT` step to collect the owner and repo, while API invocations skip it entirely and pass through to the same merge point
-- **SET_VARIABLES**: copies `USER_INPUT` outputs into workflow variables so they're available to later steps regardless of which path was taken
-
 ## How It Works
 
-The included GitHub Actions workflow fires a deploy event to Cortex after every successful build.
-The `notify-cortex` job only runs if the `build` job succeeds, demonstrating conditional deploy tracking.
+The Cortex workflow reads `x-cortex-git.github.repository` from the entity's catalog config to determine which GitHub repo to deploy. It triggers `cortex-deploy.yml` via `workflow_dispatch` and waits asynchronously for a callback.
+
+GitHub Actions runs the build, then notifies Cortex twice on completion:
+- **Deploy registration** (`POST /api/v1/catalog/{tag}/deploys`) — records the deploy event on the entity, feeding the Deploy Health scorecard
+- **Workflow callback** — signals the Cortex workflow run as SUCCESS or FAILURE
 
 ## Customizing for Production
 
