@@ -1,0 +1,51 @@
+name: Cortex Register Deploy
+description: Register a deploy event on a Cortex entity.
+inputs:
+  cortex_api_key:
+    description: Cortex API key
+    required: true
+  cortex_base_url:
+    description: Cortex base URL
+    required: false
+    default: https://api.getcortexapp.com
+  entity_tag:
+    description: Cortex entity tag to register the deploy against
+    required: true
+  environment:
+    description: Deployment environment
+    required: false
+    default: production
+  sha:
+    description: Git commit SHA (defaults to github.sha)
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Register deploy
+      shell: bash
+      run: |
+        SHA="${{ inputs.sha }}"
+        SHA="${SHA:-${{ github.sha }}}"
+        curl -s -f -X POST \
+          "${{ inputs.cortex_base_url }}/api/v1/catalog/${{ inputs.entity_tag }}/deploys" \
+          -H "Authorization: Bearer ${{ inputs.cortex_api_key }}" \
+          -H "Content-Type: application/json" \
+          -d "$(jq -n \
+            --arg sha "$SHA" \
+            --arg actor "${{ github.actor }}" \
+            --arg branch "${{ github.ref_name }}" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg run_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg trigger "${{ github.event_name }}" \
+            --arg env "${{ inputs.environment }}" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              sha: $sha,
+              timestamp: $timestamp,
+              environment: $env,
+              type: "DEPLOY",
+              title: ("Triggered by " + $actor),
+              deployer: {name: $actor},
+              customData: {branch: $branch, runId: $run_id, runUrl: $run_url, trigger: $trigger}
+            }')"

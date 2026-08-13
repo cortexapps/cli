@@ -25,6 +25,18 @@ GITHUB_API = "https://api.github.com"
 TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy.yml"
 WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "github-actions-deploy.yaml"
 
+# Local GitHub Actions seeded into the customer repo
+_GH_ACTION_TEMPLATES = [
+    (
+        Path(__file__).parent / "_templates" / "cortex-async-callback.yml",
+        ".github/actions/cortex-async-callback/action.yml",
+    ),
+    (
+        Path(__file__).parent / "_templates" / "cortex-register-deploy.yml",
+        ".github/actions/cortex-register-deploy/action.yml",
+    ),
+]
+
 
 def _hyperlink(url: str, text: str = None) -> str:
     """Return an OSC 8 hyperlink for terminals that support it (iTerm2, etc.)."""
@@ -174,6 +186,8 @@ class GitHubActionsSetup(SolutionSetup):
         steps = [
             ("Creating GitHub repository", self._create_repo),
             ("Seeding Cortex deploy workflow", self._seed_workflow),
+            ("Seeding cortex-async-callback action", lambda: self._seed_file(*_GH_ACTION_TEMPLATES[0])),
+            ("Seeding cortex-register-deploy action", lambda: self._seed_file(*_GH_ACTION_TEMPLATES[1])),
             ("Setting CORTEX_API_KEY secret", lambda: self._set_secret("CORTEX_API_KEY", self._answers["cortex_api_key"])),
             ("Setting CORTEX_BASE_URL secret", lambda: self._set_secret("CORTEX_BASE_URL", self._answers["cortex_base_url"])),
             ("Linking GitHub repository to entity", self._link_github_repo),
@@ -267,20 +281,19 @@ class GitHubActionsSetup(SolutionSetup):
             raise RuntimeError(f"Failed to create repo: {resp.status_code} {resp.text}")
         return f"Created: {_hyperlink(gh_url)}"
 
-    def _seed_workflow(self) -> str:
+    def _seed_file(self, template_path: Path, dest_path: str) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
-        path = ".github/workflows/cortex-deploy.yml"
-        content = TEMPLATE_PATH.read_text()
+        content = template_path.read_text()
         content_b64 = base64.b64encode(content.encode()).decode()
-        file_url = f"https://github.com/{owner}/{repo}/blob/main/{path}"
+        file_url = f"https://github.com/{owner}/{repo}/blob/main/{dest_path}"
 
         check = requests.get(
-            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{path}",
+            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{dest_path}",
             headers=self._gh_headers(),
         )
 
-        payload = {"message": "Add Cortex deploy notification workflow", "content": content_b64}
+        payload = {"message": f"Add {dest_path}", "content": content_b64}
 
         if check.status_code == 200:
             existing = check.json()
@@ -293,13 +306,16 @@ class GitHubActionsSetup(SolutionSetup):
             action = "Added"
 
         resp = requests.put(
-            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{path}",
+            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{dest_path}",
             headers=self._gh_headers(),
             json=payload,
         )
         if resp.status_code not in (200, 201):
-            raise RuntimeError(f"Failed to seed workflow: {resp.status_code} {resp.text}")
+            raise RuntimeError(f"Failed to seed {dest_path}: {resp.status_code} {resp.text}")
         return f"{action}: {_hyperlink(file_url)}"
+
+    def _seed_workflow(self) -> str:
+        return self._seed_file(TEMPLATE_PATH, ".github/workflows/cortex-deploy.yml")
 
     def _set_secret(self, secret_name: str, secret_value: str) -> str:
         owner = self._answers["github_owner"]
