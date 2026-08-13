@@ -6,6 +6,55 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.31.0](https://github.com/cortexapps/cli/releases/tag/1.31.0) - 2026-08-13
+
+<small>[Compare with 1.30.0](https://github.com/cortexapps/cli/compare/1.30.0...1.31.0)</small>
+
+### Features
+
+- extract local GitHub Actions for callback and deploy registration ([862852b](https://github.com/cortexapps/cli/commit/862852b58aaaac3b70b62367ced840ef99d69116) by Jeff Schnitter).
+- persist solution answers to ~/.cortex/solutions/ with --no-prompt support ([528e295](https://github.com/cortexapps/cli/commit/528e295c9c6fc17652148e47443e09f41356c987) by Jeff Schnitter).
+- add entity-aware deploy workflow and incremental GH callbacks ([88e65a3](https://github.com/cortexapps/cli/commit/88e65a3f35900666b8f79f4be808b19736d459ed) by Jeff Schnitter).
+- add UI/API branch to Cortex workflow for manual vs API invocation ([9cdb333](https://github.com/cortexapps/cli/commit/9cdb333a435abe7038e449ff46cd0759130dcd8d) by Jeff Schnitter).
+- offer to create PAT GitHub integration when none is configured ([43793af](https://github.com/cortexapps/cli/commit/43793af427030b3caf745910924002149c78654f) by Jeff Schnitter).
+- embed cortex-deploy.yml in Cortex workflow run response template ([5de4a6e](https://github.com/cortexapps/cli/commit/5de4a6e66dd95ae5c6a660419d274a01f6209140) by Jeff Schnitter).
+- link GitHub repo to Cortex entity during post-install setup ([222f99a](https://github.com/cortexapps/cli/commit/222f99abe2b34b87c42907468427ffcd54592409) by Jeff Schnitter).
+- add IN_PROGRESS intermediate callbacks before terminal callback ([7887ffb](https://github.com/cortexapps/cli/commit/7887ffba4b3904db97f33cf541d30246cc4654e9) by Jeff Schnitter).
+- use Cortex GitHub integration creds for async workflow trigger for CX-6 ([723cb85](https://github.com/cortexapps/cli/commit/723cb85ffcdd55cb963f0ca09094e169f08022c3) by Jeff Schnitter).
+- add Cortex async workflow for GitHub Actions deploy trigger for CX-6 ([22ec396](https://github.com/cortexapps/cli/commit/22ec396cb7f731145010338552c09f696c89bfd7) by Jeff Schnitter).
+- add solutions post-install subcommand and install hook ([35fbce9](https://github.com/cortexapps/cli/commit/35fbce9dc4405ef309deafb8ea3397c923aeb46e) by Jeff Schnitter).
+
+### Bug Fixes
+
+- add SET_VARIABLES step to write UI inputs back to workflow variables ([d1398c5](https://github.com/cortexapps/cli/commit/d1398c5589032e1756747c1dc230db5dec7bbdc1) by Jeff Schnitter).
+- restructure workflow so trigger-deploy is outside the branch ([c7bc805](https://github.com/cortexapps/cli/commit/c7bc8051edeeefbe10afa3b183288c069849dfe1) by Jeff Schnitter).
+- set joiningAction to null in trigger-github-deploy workflow ([f79b9f1](https://github.com/cortexapps/cli/commit/f79b9f1cd5c819f29f5c1a2a7333686b448a2141) by Jeff Schnitter).
+- substitute github-owner and repo-name defaults into Cortex workflow at import ([41b0bfe](https://github.com/cortexapps/cli/commit/41b0bfeda98c60e0efc30c41f7f3436e2655833a) by Jeff Schnitter).
+- simplify runResponseTemplate to use only variables ([929ba4c](https://github.com/cortexapps/cli/commit/929ba4ce140d15ade3b72d72b9dd5c8d6a95b951) by Jeff Schnitter).
+- use application/openapi;charset=UTF-8 content type for entity PATCH ([55127c6](https://github.com/cortexapps/cli/commit/55127c626ade7718dd6247e5e3064a2c41f51baf) by Jeff Schnitter).
+- use PATCH not PUT for entity git link (405 Method Not Allowed) ([8ef5ee0](https://github.com/cortexapps/cli/commit/8ef5ee06edcef65bd8bdb86ce7c53317de8770f2) by Jeff Schnitter).
+- add required timestamp field to deploys API call ([cdea066](https://github.com/cortexapps/cli/commit/cdea06605ebbd294ce91abbbcfa3827d13e9fc04) by Jeff Schnitter).
+- remove 'first' from deploy completion message ([310a003](https://github.com/cortexapps/cli/commit/310a003543f2b601236c1cebedf863896b74af5c) by Jeff Schnitter).
+- sort GitHub integrations alphabetically by alias ([9b1717e](https://github.com/cortexapps/cli/commit/9b1717e225f0f667dcf091bc150fb278c94b363c) by Jeff Schnitter).
+- remove IN_PROGRESS callbacks (rejected by Cortex), reduce timeout to 120s ([d52a414](https://github.com/cortexapps/cli/commit/d52a414957cb80be1ca163fbaa59bde96f7b9718) by Jeff Schnitter).
+- use jq for callback JSON, needs.build.result for status, correct template path ([14e319e](https://github.com/cortexapps/cli/commit/14e319eba3f6aed5149a9628e83ab7fd44a98ab3) by Jeff Schnitter).
+- change workflow trigger prompt to not assume it is the first run ([413ac51](https://github.com/cortexapps/cli/commit/413ac51cf4a5070b0bc1d5db9a6cd7e69580e25d) by Jeff Schnitter).
+- remove deploy-count custom metric, drive scorecard from deploys() CQL ([92d853d](https://github.com/cortexapps/cli/commit/92d853d76a3195632b98c69049e3d5e98c082676) by Jeff Schnitter).
+- reflect actual job status in Cortex callback and surface run data in template ([f641b52](https://github.com/cortexapps/cli/commit/f641b52d9091f9b1b16988b2f7cb0a7d4e9a953e) by Jeff Schnitter).
+- correct post_steps result extraction and step numbering ([9bebb21](https://github.com/cortexapps/cli/commit/9bebb21f4c55fa4c1ec15e60cd97e4bd26e92ee9) by Jeff Schnitter).
+- correct Cortex workflow import and async callback for GitHub Actions deploy ([3c0ac85](https://github.com/cortexapps/cli/commit/3c0ac85f8d6580437089065939860406914f0c3d) by Jeff Schnitter).
+- add Authorization header to Cortex callback step for CX-6 ([4030392](https://github.com/cortexapps/cli/commit/40303924afc76d43aa62291017053d55cb945080) by Jeff Schnitter).
+- remove empty headers from workflow action for CX-6 ([5723ecd](https://github.com/cortexapps/cli/commit/5723ecd34b2c72c8174a0c8441cc0c90b02ed008) by Jeff Schnitter).
+- correct HTTP_REQUEST_ASYNC integration syntax for CX-6 ([15250fb](https://github.com/cortexapps/cli/commit/15250fb068e1a8b011841004dbb42f38b9f678a6) by Jeff Schnitter).
+- pass workflow variables directly in initialContext for CX-6 ([548b0d0](https://github.com/cortexapps/cli/commit/548b0d045ce5c9e7483de0866b3f4c2bbca416e3) by Jeff Schnitter).
+- use hyphens in workflow variable slugs for CX-6 ([dc58067](https://github.com/cortexapps/cli/commit/dc58067de7cbf76e9c67b3746a344576b4d4ede7) by Jeff Schnitter).
+- flush captured import output to terminal on failure for CX-6 ([4a7f9e9](https://github.com/cortexapps/cli/commit/4a7f9e9fb63c4d856c989e9e4d40b55e4d2fbd40) by Jeff Schnitter).
+- correct Cortex app URL pattern in post-install output for CX-6 ([e0a4bb9](https://github.com/cortexapps/cli/commit/e0a4bb9f27c56df4df4378c5a2c1a32edffe97be) by Jeff Schnitter).
+- improve post-install setup UX for CX-6 ([c9681cf](https://github.com/cortexapps/cli/commit/c9681cf5e519f5375499c6d92bc62d48f3eac116) by Jeff Schnitter).
+- use customMetrics expressions in deploy-health scorecard ([d61c35d](https://github.com/cortexapps/cli/commit/d61c35df6013af5f0f76f26bb059cd86aff6c014) by Jeff Schnitter).
+- address reviewer issues in solutions post-install ([a2d41d2](https://github.com/cortexapps/cli/commit/a2d41d24271bb980a699d40d74bd9fb1d7f94329) by Jeff Schnitter).
+- enforce 404-only repo creation, drop unused import, use public key bytes() ([ee5332e](https://github.com/cortexapps/cli/commit/ee5332e778bb4b8f35934d9285072f8b11fc6465) by Jeff Schnitter).
+
 ## [1.30.0](https://github.com/cortexapps/cli/releases/tag/1.30.0) - 2026-08-07
 
 <small>[Compare with 1.29.0](https://github.com/cortexapps/cli/compare/1.29.0...1.30.0)</small>
