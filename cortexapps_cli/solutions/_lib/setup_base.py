@@ -78,6 +78,10 @@ class SolutionSetup(ABC):
         if self._no_prompt and not secret and key in self._answers:
             return self._answers[key]
 
+        # Non-secret: use saved answer as default in interactive mode
+        if not secret and key in self._answers and default is None:
+            default = self._answers[key]
+
         if env_var:
             env_val = os.environ.get(env_var)
             if env_val:
