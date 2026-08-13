@@ -74,13 +74,26 @@ class _ToggleableCapture:
 
 
 def _run_import_with_toggle(fn) -> str:
-    """Run fn() capturing stdout. On a TTY, Ctrl+o toggles live output."""
+    """Run fn() capturing stdout. On a TTY, Ctrl+o toggles live output.
+
+    If fn() raises for any reason, all buffered output is flushed to the
+    terminal before the exception propagates — no silent failures.
+    """
     real_stdout = sys.stdout
     capture = _ToggleableCapture(real_stdout)
 
     if not (_TTY_SUPPORT and sys.stdin.isatty()):
-        with contextlib.redirect_stdout(capture):
-            fn()
+        success = False
+        try:
+            with contextlib.redirect_stdout(capture):
+                fn()
+            success = True
+        finally:
+            if not success:
+                buffered = capture.getvalue()
+                if buffered:
+                    real_stdout.write(buffered)
+                    real_stdout.flush()
         return capture.getvalue()
 
     done = threading.Event()
@@ -112,9 +125,11 @@ def _run_import_with_toggle(fn) -> str:
 
     t = threading.Thread(target=_listen, daemon=True)
     t.start()
+    success = False
     try:
         with contextlib.redirect_stdout(capture):
             fn()
+        success = True
     finally:
         done.set()
         t.join(timeout=0.5)
@@ -122,6 +137,11 @@ def _run_import_with_toggle(fn) -> str:
             _termios.tcsetattr(fd, _termios.TCSADRAIN, old_settings)
         except Exception:
             pass
+        if not success:
+            buffered = capture.getvalue()
+            if buffered:
+                real_stdout.write(buffered)
+                real_stdout.flush()
 
     return capture.getvalue()
 
@@ -173,6 +193,53 @@ def _get_readme(tag: str, path: str | None = None) -> str | None:
         return (_solutions_root(path) / tag / "README.md").read_text(encoding="utf-8")
     except Exception:
         return None
+
+
+def _has_post_install(tag: str, path: str | None = None) -> bool:
+    """Return True if this solution has a post-install setup.py."""
+    try:
+        (_solutions_root(path) / tag / "setup.py").read_bytes()
+        return True
+    except Exception:
+        return False
+
+
+def _load_setup_module(solution_tag: str, solutions_dir: str | None = None):
+    """Load a solution's setup.py module. Returns the module or None if not found."""
+    import importlib.util
+
+    root = _solutions_root(solutions_dir)
+    try:
+        with as_file(root / solution_tag / "setup.py") as setup_path:
+            spec = importlib.util.spec_from_file_location(f"{solution_tag}_setup", setup_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    except FileNotFoundError:
+        return None
+
+
+def _get_setup_description(solution_tag: str, solutions_dir: str | None = None) -> str:
+    """Return the SETUP_DESCRIPTION from a solution's setup.py, or a generic fallback."""
+    module = _load_setup_module(solution_tag, solutions_dir)
+    if module:
+        return getattr(module, "SETUP_DESCRIPTION", "This solution includes a post-install setup script.")
+    return "This solution includes a post-install setup script."
+
+
+def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None, no_prompt: bool = False) -> None:
+    """Find and invoke the solution's setup.py main() function."""
+    module = _load_setup_module(solution_tag, solutions_dir)
+    if module is None:
+        typer.echo("No post-install setup available for this solution.")
+        return
+    kwargs = {}
+    if ctx and ctx.obj and "client" in ctx.obj:
+        client = ctx.obj["client"]
+        kwargs["cortex_api_key"] = client.api_key
+        kwargs["cortex_base_url"] = client.base_url
+    kwargs["no_prompt"] = no_prompt
+    module.main(**kwargs)
 
 
 def _extract_first_codeblock(text: str) -> str | None:
@@ -538,17 +605,6 @@ def _show_next_steps(readme: str) -> None:
             section = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1 (\2)', section)
         console.print()
         console.print(Markdown(section))
-    console.print()
-    console.print(
-        "[magenta]Planned for Q4 2027:[/magenta] CQL metadata traversal will enable scorecard rules "
-        "across relationship chains — for example, a Vulnerability Scorecard checking that no "
-        "deployed service-version has open Snyk issues:"
-    )
-    console.print(
-        "  [dim]entity.destinations(relationshipType = \"environments\", depth = 3)\n"
-        "    .filter((d) => d.type == \"service-version\")\n"
-        "    .all((sv) => sv.snyk.issues == 0)[/dim]"
-    )
 
 
 def _post_install_menu(
@@ -604,6 +660,12 @@ def install(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
     no_prompt: bool = typer.Option(False, "--no-prompt", help="Skip the post-install interactive menu"),
+    skip_post_install_setup: bool = typer.Option(
+        False,
+        "--skip-post-install-setup",
+        help="Skip the post-install setup script prompt",
+        is_flag=True,
+    ),
 ):
     """Install a solution."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
@@ -643,6 +705,20 @@ def install(
     else:
         typer.echo(output)
 
+    # Post-install setup hook — runs before the informational menu
+    if not no_prompt and not skip_post_install_setup and _has_post_install(solution, solutions_dir):
+        state_file = Path.home() / ".cortex" / "solutions" / f"{solution}.json"
+        if state_file.exists():
+            typer.echo(f"\nRetrieving previous responses from: {state_file}")
+        desc = _get_setup_description(solution, solutions_dir)
+        typer.echo(f"\n{desc}")
+        if typer.confirm("Run setup now?", default=True):
+            _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx)
+        else:
+            typer.echo(f"\nRun setup later with: cortex solutions post-install -s {solution}")
+    elif skip_post_install_setup and _has_post_install(solution, solutions_dir):
+        typer.echo(f"\nRun setup later with: cortex solutions post-install -s {solution}")
+
     if not no_prompt:
         readme = _get_readme(solution, solutions_dir)
         if readme:
@@ -658,6 +734,27 @@ def install(
             except Exception:
                 pass
             _post_install_menu(readme, import_report=output, entity_tags=entity_tags, ui_url=ui_url)
+
+
+@app.command(name="post-install")
+def post_install(
+    ctx: typer.Context,
+    solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+    no_prompt: bool = typer.Option(
+        False,
+        "--no-prompt",
+        "-N",
+        help="Use saved answers from ~/.cortex/solutions/<tag>.json without prompting.",
+    ),
+):
+    """Run post-install setup for a solution."""
+    solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
+    if solution not in _list_solution_tags(solutions_dir):
+        avail = ", ".join(_list_solution_tags(solutions_dir))
+        typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
+        raise typer.Exit(1)
+    ctx.obj["client"] = _build_client(ctx)
+    _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx, no_prompt=no_prompt)
 
 
 @app.command()

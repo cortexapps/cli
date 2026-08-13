@@ -1,0 +1,51 @@
+name: Cortex Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      cortex_callback_url:
+        description: 'Cortex async workflow callback URL (set automatically when triggered via Cortex workflow)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: |
+          echo "Starting deployment..."
+          sleep 10
+          for i in 1 2 3; do
+            sleep 5
+            echo "Deployment progress: step $i/3"
+          done
+          echo "Build complete!"
+
+  cortex-callback:
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Checkout (for local actions)
+        uses: actions/checkout@v4
+
+      - name: Register deploy in Cortex
+        if: needs.build.result == 'success'
+        uses: ./.github/actions/cortex-register-deploy
+        with:
+          cortex_api_key: ${{ secrets.CORTEX_API_KEY }}
+          cortex_base_url: ${{ secrets.CORTEX_BASE_URL }}
+          entity_tag: github-actions-demo
+
+      - name: Cortex async callback
+        if: inputs.cortex_callback_url != ''
+        uses: ./.github/actions/cortex-async-callback
+        with:
+          cortex_api_key: ${{ secrets.CORTEX_API_KEY }}
+          cortex_callback_url: ${{ inputs.cortex_callback_url }}
+          status: ${{ needs.build.result == 'success' && 'SUCCESS' || needs.build.result == 'cancelled' && 'CANCELLED' || 'FAILURE' }}
+          sha: ${{ github.sha }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

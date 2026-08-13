@@ -1,0 +1,132 @@
+name: "Solution: Add Cortex Deploy from GitHub Actions"
+tag: github-actions-deploy
+description: |
+  Triggers the Cortex deploy workflow on GitHub Actions using the GitHub
+  repository already linked to this service. No inputs required — the
+  repo is read directly from the entity's catalog configuration.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: ENTITY
+variables:
+- slug: github-owner
+  type: STRING
+  defaultValue: ""
+  description: GitHub organization or username (derived from entity git config).
+- slug: repo-name
+  type: STRING
+  defaultValue: ""
+  description: GitHub repository name (derived from entity git config).
+- slug: app-url
+  type: STRING
+  defaultValue: "PLACEHOLDER_APP_URL"
+  description: Cortex app URL (set during installation).
+runResponseTemplate: |
+  # GitHub Actions Deploy — Complete
+
+  **Repo:** {{variables.github-owner}}/{{variables.repo-name}}
+
+  **Run:** [View on GitHub]({{actions.trigger-deploy.outputs.result.run_url}})
+
+  **Cortex Deploys:** [see deploys for {{context.entity.tag}}]({{variables.app-url}}/admin/service/{{actions.get-entity-details.outputs.body.id}}/deploys)
+
+  ---
+
+  ## How this workflow works
+
+  This Cortex workflow triggered a deploy in GitHub Actions and waited for it to finish. Here's what happened end-to-end:
+
+  **1. Cortex read the linked repo**
+
+  The workflow fetched this entity's catalog config and extracted `x-cortex-git.github.repository` to determine which GitHub repo to deploy — no manual input required.
+
+  **2. Cortex triggered GitHub Actions**
+
+  It called the GitHub API to dispatch `cortex-deploy.yml` via `workflow_dispatch`, passing a one-time callback URL as an input (`cortex_callback_url`).
+
+  **3. GitHub Actions ran the deploy**
+
+  `cortex-deploy.yml` runs two jobs:
+
+  - **build** — your deploy steps (replace the `sleep` placeholder with your real build/deploy)
+
+  - **cortex-callback** — runs after `build`, always, even on failure. It uses two local composite actions bundled in the repo:
+
+  - **`.github/actions/cortex-register-deploy`** — POSTs a deploy event to the Cortex API, recording the SHA, actor, branch, and run URL against this entity. This feeds the Deploy Health scorecard.
+
+  - **`.github/actions/cortex-async-callback`** — POSTs the final status (SUCCESS/FAILURE/CANCELLED) back to the callback URL, which is how Cortex knew this workflow run was done.
+
+  **4. Cortex received the callback**
+
+  When GitHub Actions posted to the callback URL, Cortex marked this workflow run complete and surfaced the result here.
+
+  ---
+
+  ## Adapting this to your own repos
+
+  1. Copy [`.github/actions/`](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/tree/main/.github/actions) into your repo
+
+  2. Add a `cortex-callback` job to your existing workflow that calls both actions
+
+  3. Set `CORTEX_API_KEY` and `CORTEX_BASE_URL` as repository secrets
+
+  4. Link the repo to your Cortex entity via `x-cortex-git.github.repository`
+actions:
+- name: Get entity details
+  slug: get-entity-details
+  schema:
+    type: HTTP_REQUEST
+    httpMethod: GET
+    url: "https://api.getcortexapp.com/api/v1/catalog/{{context.entity.tag}}"
+    headers:
+      Authorization: "Bearer {{&context.secrets.cortex_api_key}}"
+      Content-Type: application/json
+    integration: null
+    integrationAlias: null
+  outgoingActions:
+  - parse-repo
+  isRootAction: true
+- name: Parse repo info
+  slug: parse-repo
+  schema:
+    expression: |
+      .actions."get-entity-details".outputs.body.git.repository as $repo |
+      if ($repo == null or $repo == "") then
+        error("No GitHub repository linked to this entity. Add one via the catalog.")
+      else
+        ($repo | split("/")) as $parts |
+        {owner: $parts[0], repo: $parts[1]}
+      end
+    type: JQ
+  outgoingActions:
+  - set-variables
+  isRootAction: false
+- name: Set variables
+  slug: set-variables
+  schema:
+    variables:
+    - slug: github-owner
+      source:
+        path: actions.parse-repo.outputs.result.owner
+        type: REFERENCE
+    - slug: repo-name
+      source:
+        path: actions.parse-repo.outputs.result.repo
+        type: REFERENCE
+    type: SET_VARIABLES
+  outgoingActions:
+  - trigger-deploy
+  isRootAction: false
+- name: Trigger GitHub Actions Deploy
+  slug: trigger-deploy
+  schema:
+    type: HTTP_REQUEST_ASYNC
+    httpMethod: POST
+    url: "/repos/{{variables.github-owner}}/{{variables.repo-name}}/actions/workflows/cortex-deploy.yml/dispatches"
+    integration: GitHub
+    integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
+    headers: {}
+    payload: '{"ref": "main", "inputs": {"cortex_callback_url": "{{callbackUrl}}"}}'
+    timeoutInSeconds: 120
+  outgoingActions: []
+  isRootAction: false

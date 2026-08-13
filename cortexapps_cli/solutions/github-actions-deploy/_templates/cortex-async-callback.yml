@@ -1,0 +1,39 @@
+name: Cortex Async Callback
+description: Post a completion status back to a Cortex async workflow callback URL.
+inputs:
+  cortex_api_key:
+    description: Cortex API key
+    required: true
+  cortex_callback_url:
+    description: Cortex async workflow callback URL
+    required: true
+  status:
+    description: Completion status — SUCCESS, FAILURE, or CANCELLED
+    required: true
+  message:
+    description: Optional status message shown in the Cortex workflow run
+    required: false
+    default: ''
+  sha:
+    description: Git commit SHA to include in callback output
+    required: false
+    default: ''
+  run_url:
+    description: GitHub Actions run URL to include in callback output
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Post callback
+      shell: bash
+      run: |
+        curl -s -f -X POST "${{ inputs.cortex_callback_url }}" \
+          -H "Authorization: Bearer ${{ inputs.cortex_api_key }}" \
+          -H "Content-Type: application/json" \
+          -d "$(jq -n \
+            --arg status "${{ inputs.status }}" \
+            --arg message "${{ inputs.message }}" \
+            --arg sha "${{ inputs.sha }}" \
+            --arg run_url "${{ inputs.run_url }}" \
+            '{status: $status, message: $message, output: {sha: $sha, run_url: $run_url}}')"
