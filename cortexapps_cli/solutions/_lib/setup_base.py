@@ -162,6 +162,7 @@ class SolutionSetup(ABC):
                     lines = [detail] if isinstance(detail, str) else detail
                     for line in lines:
                         print(f"  {line}")
+                print()
             except Exception as e:
                 print(f"[{i}/{total}] {label}... \u2717  {e}", file=sys.stderr)
                 raise SystemExit(1)
