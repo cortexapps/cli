@@ -222,7 +222,10 @@ class GitHubActionsSetup(SolutionSetup):
                 # Use Cortex async workflow — waits for GitHub Actions callback
                 print(f"  Running: POST /api/v1/workflows/{workflow_tag}/runs")
                 try:
-                    result = self._trigger_via_cortex_workflow()
+                    def _on_run_started(run_url: str) -> None:
+                        print(f"  {_hyperlink(run_url, 'View this workflow run')}")
+
+                    result = self._trigger_via_cortex_workflow(on_run_started=_on_run_started)
                     status = result.get("status", "").upper()
                     run_id = result.get("_run_id", "")
                     workflow_cid = result.get("_workflow_cid", "")
@@ -450,7 +453,7 @@ info:
         action = "Created" if resp.status_code == 201 else "Updated"
         return f"{action} workflow 'github-actions-deploy': {_hyperlink(workflows_url, 'View workflows')}"
 
-    def _trigger_via_cortex_workflow(self) -> dict:
+    def _trigger_via_cortex_workflow(self, on_run_started=None) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
         import time
 
@@ -490,6 +493,10 @@ info:
         if not run_id:
             raise RuntimeError("No run ID returned from workflow start")
         workflow_cid = run_data.get("workflow", {}).get("cid", "")
+
+        if on_run_started and workflow_cid:
+            app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+            on_run_started(f"{app_url}/admin/workflows/{workflow_cid}/runs/{run_id}")
 
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()
