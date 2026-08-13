@@ -1,0 +1,55 @@
+template:
+  name: Cortex Record Deploy
+  identifier: cortex_record_deploy
+  versionLabel: "1.0"
+  type: Stage
+  orgIdentifier: default
+  projectIdentifier: default_project
+  spec:
+    type: Custom
+    spec:
+      execution:
+        steps:
+          - step:
+              name: Record Deploy
+              identifier: record_deploy
+              type: ShellScript
+              spec:
+                shell: Bash
+                executionTarget: {}
+                source:
+                  type: Inline
+                  spec:
+                    script: |
+                      RUN_URL="https://app.harness.io/ng/account/$HARNESS_ACCOUNT_ID/cd/orgs/<+pipeline.orgIdentifier>/projects/<+pipeline.projectIdentifier>/pipelines/<+pipeline.identifier>/executions/<+pipeline.executionId>/pipeline"
+                      TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                      ACTOR="<+pipeline.triggeredBy.name>"
+                      EXEC_ID="<+pipeline.executionId>"
+                      SEQ_ID="<+pipeline.sequenceId>"
+
+                      PAYLOAD="{\"sha\":\"$EXEC_ID\",\"timestamp\":\"$TIMESTAMP\",\"environment\":\"production\",\"type\":\"DEPLOY\",\"title\":\"Triggered by $ACTOR\",\"deployer\":{\"name\":\"$ACTOR\"},\"customData\":{\"executionId\":\"$EXEC_ID\",\"sequenceId\":\"$SEQ_ID\",\"executionUrl\":\"$RUN_URL\"}}"
+
+                      curl -s -f -X POST \
+                        "$CORTEX_BASE_URL/api/v1/catalog/$CORTEX_ENTITY_TAG/deploys" \
+                        -H "Authorization: Bearer $CORTEX_API_KEY" \
+                        -H "Content-Type: application/json" \
+                        -d "$PAYLOAD" || true
+                environmentVariables:
+                  - name: CORTEX_API_KEY
+                    type: Secret
+                    value: cortex_api_key
+                  - name: CORTEX_BASE_URL
+                    type: String
+                    value: "https://api.getcortexapp.com"
+                  - name: CORTEX_ENTITY_TAG
+                    type: String
+                    value: "<+stage.variables.cortex_entity_tag>"
+                  - name: HARNESS_ACCOUNT_ID
+                    type: String
+                    value: "<+account.identifier>"
+                outputVariables: []
+              timeout: 5m
+    variables:
+      - name: cortex_entity_tag
+        type: String
+        value: <+input>

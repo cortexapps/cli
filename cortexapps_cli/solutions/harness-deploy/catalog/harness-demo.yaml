@@ -7,3 +7,8 @@ info:
   x-cortex-definition: {}
   x-cortex-groups:
     - demo-harness-deploys
+  x-cortex-custom-metadata:
+    harness:
+      org: PLACEHOLDER_HARNESS_ORG
+      project: PLACEHOLDER_HARNESS_PROJECT
+      pipeline: PLACEHOLDER_HARNESS_PIPELINE

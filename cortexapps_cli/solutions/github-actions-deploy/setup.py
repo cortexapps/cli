@@ -163,20 +163,17 @@ class GitHubActionsSetup(SolutionSetup):
         self.prompt("github_owner", "GitHub org or username", default=default_owner)
         self.prompt("repo_name", "Repository name", default="cortex-deploy-demo")
 
-        # 3. Cortex credentials from CLI session
+        # 3. Cortex credentials — use CLI session silently; only prompt when running standalone
+        self._secret_keys.add("cortex_api_key")
         if self._session_api_key:
-            if self.confirm("Use Cortex API key used by this CLI session?", default=True):
-                self._answers["cortex_api_key"] = self._session_api_key
-            else:
-                self.prompt("cortex_api_key", "Cortex API key", secret=True)
+            self._answers["cortex_api_key"] = self._session_api_key
         else:
             self.prompt("cortex_api_key", "Cortex API key", env_var="CORTEX_API_KEY", secret=True)
 
         if self._session_base_url:
-            if self.confirm(f"Use Cortex base URL used by this CLI session [{self._session_base_url}]?", default=True):
-                self._answers["cortex_base_url"] = self._session_base_url
-            else:
-                self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
+            self._answers["cortex_base_url"] = self._session_base_url
+        else:
+            self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
         else:
             self.prompt(
                 "cortex_base_url",

@@ -17,6 +17,7 @@ class SolutionSetup(ABC):
 
     def __init__(self, state_dir: Optional[Path] = None, no_prompt: bool = False):
         self._no_prompt = no_prompt
+        self._save_answers = True
         self._secret_keys: set = set()
         self._answers: dict = {}
 
@@ -39,10 +40,12 @@ class SolutionSetup(ABC):
         return {}
 
     def _save_file(self) -> None:
-        data = {
-            "answers": {k: v for k, v in self._answers.items() if k not in self._secret_keys},
-            "state": self._state,
-        }
+        saved_answers = (
+            {k: v for k, v in self._answers.items() if k not in self._secret_keys}
+            if self._save_answers
+            else {}
+        )
+        data = {"answers": saved_answers, "state": self._state}
         self._state_file.write_text(json.dumps(data, indent=2))
 
     def _save_state(self) -> None:
@@ -69,23 +72,29 @@ class SolutionSetup(ABC):
         env_var: Optional[str] = None,
         default: Optional[str] = None,
         secret: bool = False,
+        hidden: bool = False,
     ) -> str:
-        """Prompt for a value. Uses saved answer or env var when available."""
+        """Prompt for a value. Uses saved answer or env var when available.
+
+        secret=True  — mask input AND exclude from saved JSON
+        hidden=True  — mask input only; value is still saved to JSON
+        """
+        use_getpass = secret or hidden
         if secret:
             self._secret_keys.add(key)
 
-        # Non-secret: use saved answer when --no-prompt
+        # Use saved answer when --no-prompt (works for both plain and hidden keys)
         if self._no_prompt and not secret and key in self._answers:
             return self._answers[key]
 
-        # Non-secret: saved answer takes precedence over any derived default
+        # Saved answer takes precedence over any derived default
         if not secret and key in self._answers:
             default = self._answers[key]
 
         if env_var:
             env_val = os.environ.get(env_var)
             if env_val:
-                masked = "********" if secret else env_val
+                masked = "********" if use_getpass else env_val
                 if self._no_prompt or self.confirm(f"{message} [{masked} from {env_var}]", default=True):
                     self._answers[key] = env_val
                     return env_val
@@ -94,12 +103,15 @@ class SolutionSetup(ABC):
         if self._no_prompt and secret and key not in self._answers:
             print(f"  (secret required — no env var set for {key})", file=sys.stderr)
 
-        prompt_str = message
-        if default:
-            prompt_str += f" [{default}]"
-        prompt_str += ": "
+        if use_getpass and default:
+            hint = f"********{default[-4:]}"
+        elif default:
+            hint = default
+        else:
+            hint = None
+        prompt_str = f"{message} [{hint}]: " if hint else f"{message}: "
 
-        if secret:
+        if use_getpass:
             value = getpass.getpass(prompt_str).strip()
         else:
             value = input(prompt_str).strip()
@@ -147,6 +159,8 @@ class SolutionSetup(ABC):
                 for k, v in saved.items():
                     print(f"  {k}: {v}")
                 print()
+        elif not self._no_prompt:
+            self._save_answers = self.confirm(f"Save answers for future runs to {self._state_file}", default=True)
 
         self.collect_prompts()
         self._save_file()
