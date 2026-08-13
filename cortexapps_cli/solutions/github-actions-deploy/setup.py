@@ -23,8 +23,7 @@ except ImportError:
 
 GITHUB_API = "https://api.github.com"
 TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy.yml"
-WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "trigger-github-deploy.yaml"
-ENTITY_WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "deploy-from-entity.yaml"
+WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "github-actions-deploy.yaml"
 
 
 def _hyperlink(url: str, text: str = None) -> str:
@@ -180,8 +179,7 @@ class GitHubActionsSetup(SolutionSetup):
             ("Linking GitHub repository to entity", self._link_github_repo),
         ]
         if self._answers.get("github_integration_alias"):
-            steps.append(("Creating Cortex trigger workflow", self._import_cortex_workflow))
-            steps.append(("Creating Cortex entity deploy workflow", self._import_entity_workflow))
+            steps.append(("Creating Cortex deploy workflow", self._import_cortex_workflow))
         return steps
 
     def post_steps(self) -> None:
@@ -193,20 +191,19 @@ class GitHubActionsSetup(SolutionSetup):
         cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
 
-        workflow_tag = "github-actions-trigger-deploy"
-        entity_workflow_tag = "github-actions-deploy-entity"
+        workflow_tag = "github-actions-deploy"
         entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         if self._answers.get("github_integration_alias"):
             print(f"\nTo trigger a deploy manually later:")
-            print(f"  CLI: cortex workflows runs create -t {entity_workflow_tag} --entity github-actions-demo")
+            print(f"  CLI: cortex workflows runs create -t {workflow_tag} --entity github-actions-demo")
             print(f"  UI:  {_hyperlink(entity_url, 'Open github-actions-demo')} → Workflows tab → Deploy from Entity → Run")
 
         if self.confirm("\nTrigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
                 # Use Cortex async workflow — waits for GitHub Actions callback
-                print(f"  Running: POST /api/v1/workflows/{entity_workflow_tag}/runs")
+                print(f"  Running: POST /api/v1/workflows/{workflow_tag}/runs")
                 try:
                     result = self._trigger_via_cortex_workflow()
                     status = result.get("status", "").upper()
@@ -408,6 +405,8 @@ info:
 
         yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
+        ).replace(
+            "https://api.getcortexapp.com", base_url
         )
 
         resp = requests.post(
@@ -424,37 +423,7 @@ info:
                 f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
             )
         action = "Created" if resp.status_code == 201 else "Updated"
-        return f"{action} workflow 'github-actions-trigger-deploy': {_hyperlink(workflows_url, 'View workflows')}"
-
-    def _import_entity_workflow(self) -> str:
-        """Import the entity-scoped deploy workflow."""
-        base_url = self._answers["cortex_base_url"].rstrip("/")
-        api_key = self._answers["cortex_api_key"]
-        alias = self._answers["github_integration_alias"]
-        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
-
-        yaml_content = ENTITY_WORKFLOW_TEMPLATE_PATH.read_text().replace(
-            "PLACEHOLDER_INTEGRATION_ALIAS", alias
-        ).replace(
-            "https://api.getcortexapp.com", base_url
-        )
-
-        resp = requests.post(
-            f"{base_url}/api/v1/workflows",
-            data=yaml_content.encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/yaml",
-            },
-            timeout=15,
-        )
-        if resp.status_code not in (200, 201):
-            raise RuntimeError(
-                f"Failed to import entity workflow: {resp.status_code} {resp.text}"
-            )
-        action = "Created" if resp.status_code == 201 else "Updated"
-        return f"{action} workflow 'github-actions-deploy-entity': {_hyperlink(workflows_url, 'View workflows')}"
+        return f"{action} workflow 'github-actions-deploy': {_hyperlink(workflows_url, 'View workflows')}"
 
     def _trigger_via_cortex_workflow(self) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
@@ -466,10 +435,22 @@ info:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        workflow_tag = "github-actions-deploy-entity"
+        workflow_tag = "github-actions-deploy"
+
+        # Entity-scoped runs require entityId (not entityTag) — look it up first
+        entity_resp = requests.get(
+            f"{base_url}/api/v1/catalog/github-actions-demo",
+            headers=cortex_headers,
+            timeout=10,
+        )
+        if entity_resp.status_code != 200:
+            raise RuntimeError(f"Failed to fetch entity: {entity_resp.status_code} {entity_resp.text}")
+        entity_id = entity_resp.json().get("id")
+        if not entity_id:
+            raise RuntimeError("Entity 'github-actions-demo' has no id field in catalog response")
 
         body = {
-            "scope": {"type": "ENTITY", "entityTag": "github-actions-demo"},
+            "scope": {"type": "ENTITY", "entityId": entity_id},
         }
         resp = requests.post(
             f"{base_url}/api/v1/workflows/{workflow_tag}/runs",

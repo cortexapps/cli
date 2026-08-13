@@ -1,5 +1,5 @@
 name: Deploy from Entity
-tag: github-actions-deploy-entity
+tag: github-actions-deploy
 description: |
   Triggers the Cortex deploy workflow on GitHub Actions using the GitHub
   repository already linked to this service. No inputs required — the
