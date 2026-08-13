@@ -26,9 +26,9 @@ runResponseTemplate: |
 
   **Repo:** {{variables.github-owner}}/{{variables.repo-name}}
 
-  **SHA:** `{{actions.trigger-deploy.outputs.result.output.sha}}`
+  **SHA:** `{{actions.trigger-deploy.outputs.result.sha}}`
 
-  **Run:** [View on GitHub]({{actions.trigger-deploy.outputs.result.output.run_url}})
+  **Run:** [View on GitHub]({{actions.trigger-deploy.outputs.result.run_url}})
 
   **Cortex Deploys:** [see deploys for {{context.entity.tag}}]({{variables.app-url}}/admin/service/{{context.entity.cid}}/deploys)
 
