@@ -44,8 +44,8 @@ def _encrypt_secret(public_key_b64: str, secret_value: str) -> str:
 class GitHubActionsSetup(SolutionSetup):
     solution_tag = "github-actions-deploy"
 
-    def __init__(self, cortex_api_key: str = None, cortex_base_url: str = None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, cortex_api_key: str = None, cortex_base_url: str = None, no_prompt: bool = False, **kwargs):
+        super().__init__(no_prompt=no_prompt, **kwargs)
         self._session_api_key = cortex_api_key
         self._session_base_url = cortex_base_url
 

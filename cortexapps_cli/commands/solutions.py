@@ -227,7 +227,7 @@ def _get_setup_description(solution_tag: str, solutions_dir: str | None = None) 
     return "This solution includes a post-install setup script."
 
 
-def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None) -> None:
+def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None, no_prompt: bool = False) -> None:
     """Find and invoke the solution's setup.py main() function."""
     module = _load_setup_module(solution_tag, solutions_dir)
     if module is None:
@@ -238,6 +238,7 @@ def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None
         client = ctx.obj["client"]
         kwargs["cortex_api_key"] = client.api_key
         kwargs["cortex_base_url"] = client.base_url
+    kwargs["no_prompt"] = no_prompt
     module.main(**kwargs)
 
 
@@ -747,6 +748,12 @@ def install(
 def post_install(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+    no_prompt: bool = typer.Option(
+        False,
+        "--no-prompt",
+        "-N",
+        help="Use saved answers from ~/.cortex/solutions/<tag>.json without prompting.",
+    ),
 ):
     """Run post-install setup for a solution."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
@@ -755,7 +762,7 @@ def post_install(
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
     ctx.obj["client"] = _build_client(ctx)
-    _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx)
+    _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx, no_prompt=no_prompt)
 
 
 @app.command()
