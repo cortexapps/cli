@@ -1,0 +1,110 @@
+pipeline:
+  name: Cortex Deploy
+  identifier: cortex_deploy
+  orgIdentifier: default
+  projectIdentifier: default_project
+  description: "Sample Harness pipeline that registers a deploy event in Cortex and reports back to Cortex async workflows."
+  variables:
+    - name: callback_url
+      type: String
+      description: Cortex async callback URL (set automatically when triggered via Cortex workflow)
+      required: false
+      default: ""
+      value: "<+input>"
+    - name: cortex_entity_tag
+      type: String
+      description: Cortex entity tag to register the deploy against
+      required: false
+      default: "harness-demo"
+      value: "<+input>"
+  stages:
+    - stage:
+        name: Build
+        identifier: build
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Build
+                  identifier: build_step
+                  type: ShellScript
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: echo "Building..."
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 10m
+              - step:
+                  name: Deploy Progress
+                  identifier: deploy_progress
+                  type: ShellScript
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          # Sends intermediate UPDATE callbacks to the Cortex workflow,
+                          # demonstrating that the callback URL can be called multiple times
+                          # before the terminal SUCCESS/FAILURE.
+                          if [ -z "$CALLBACK_URL" ]; then
+                            echo "No callback URL set, skipping progress updates"
+                            exit 0
+                          fi
+
+                          TOTAL_SECONDS=15
+                          INTERVAL=5
+                          ITERATIONS=$((TOTAL_SECONDS / INTERVAL))
+
+                          for i in $(seq 1 $ITERATIONS); do
+                            sleep $INTERVAL
+                            PROGRESS=$((i * 100 / ITERATIONS))
+
+                            curl -s -X POST "$CALLBACK_URL" \
+                              -H "Authorization: Bearer $CORTEX_API_KEY" \
+                              -H "Content-Type: application/json" \
+                              -d "{\"status\":\"UPDATE\",\"message\":\"Job still running – progress update.\",\"response\":{\"progress\":\"${PROGRESS}%\",\"details\":\"Deploy in progress (${i}/${ITERATIONS} intervals completed)\"}}" || true
+
+                            echo "Progress update ${i}/${ITERATIONS} (${PROGRESS}%) sent"
+                          done
+                    environmentVariables:
+                      - name: CALLBACK_URL
+                        type: String
+                        value: "<+pipeline.variables.callback_url>"
+                      - name: CORTEX_API_KEY
+                        type: Secret
+                        value: cortex_api_key
+                    outputVariables: []
+                  timeout: 5m
+
+    - stage:
+        name: Record Deploy in Cortex
+        identifier: record_deploy_stage
+        template:
+          templateRef: cortex_record_deploy
+          versionLabel: "1.0"
+          templateInputs:
+            type: Custom
+            variables:
+              - name: cortex_entity_tag
+                type: String
+                value: "<+pipeline.variables.cortex_entity_tag>"
+
+    - stage:
+        name: Callback to Cortex
+        identifier: callback_stage
+        template:
+          templateRef: cortex_async_callback
+          versionLabel: "1.0"
+          templateInputs:
+            type: Custom
+            variables:
+              - name: callback_url
+                type: String
+                value: "<+pipeline.variables.callback_url>"

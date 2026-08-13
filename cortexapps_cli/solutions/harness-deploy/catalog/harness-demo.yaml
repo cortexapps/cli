@@ -1,0 +1,14 @@
+openapi: "3.0.0"
+info:
+  title: Harness Demo
+  x-cortex-tag: harness-demo
+  x-cortex-type: service
+  x-cortex-description: Sample service for demonstrating deploy tracking via Harness pipelines.
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - demo-harness-deploys
+  x-cortex-custom-metadata:
+    harness:
+      org: PLACEHOLDER_HARNESS_ORG
+      project: PLACEHOLDER_HARNESS_PROJECT
+      pipeline: PLACEHOLDER_HARNESS_PIPELINE

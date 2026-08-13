@@ -1,0 +1,177 @@
+name: "Solution: Trigger Harness Deploy"
+tag: harness-trigger-deploy
+description: |
+  Triggers a Harness pipeline and waits for it to report completion back to Cortex,
+  registering a deploy event on the target entity. No inputs required — Harness
+  coordinates (org, project, pipeline) are read from the entity's custom metadata.
+
+  Note: custom metadata is used today as a stand-in for a native Harness integration.
+  Once a native integration is available in Cortex, the entity lookup step will be replaced.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: ENTITY
+variables:
+  - slug: harness-org
+    type: STRING
+    defaultValue: ""
+  - slug: harness-project
+    type: STRING
+    defaultValue: ""
+  - slug: harness-pipeline
+    type: STRING
+    defaultValue: ""
+runResponseTemplate: |
+  # Harness Deploy — Complete
+
+  **Pipeline:** [{{variables.harness-pipeline}} in {{variables.harness-org}}/{{variables.harness-project}}](https://app.harness.io/ng/account/PLACEHOLDER_HARNESS_ACCOUNT_ID/cd/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/executions)
+
+  **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/resources?tag={{context.entity.tag}})
+
+  ---
+
+  ## How this workflow works
+
+  This Cortex workflow triggered a deploy in Harness and waited for it to finish. Here's what happened end-to-end:
+
+  **1. Cortex read the entity's Harness configuration**
+
+  The workflow fetched this entity's catalog config and extracted `x-cortex-custom-metadata.harness` to determine which Harness org, project, and pipeline to deploy — no manual input required.
+
+  **2. Cortex triggered the Harness pipeline**
+
+  It called the Harness API to execute `{{variables.harness-pipeline}}` via the Harness integration, passing a one-time callback URL as a pipeline variable (`callback_url`).
+
+  **3. Harness ran the pipeline**
+
+  `{{variables.harness-pipeline}}` runs three stages:
+
+  - **Build** — your deploy steps (replace the placeholder `echo "Building..."` with your real build/deploy)
+
+  - **Record Deploy in Cortex** — POSTs a deploy event to the Cortex API using the `cortex_record_deploy` stage template, recording the execution ID, actor, and run URL against `{{context.entity.tag}}`. This feeds the Deploy Health scorecard.
+
+  - **Callback to Cortex** — POSTs the final status (SUCCESS/FAILURE) back to the callback URL using the `cortex_async_callback` stage template, which is how Cortex knew this workflow run was done.
+
+  **4. Cortex received the callback**
+
+  When the Harness pipeline posted to the callback URL, Cortex marked this workflow run complete and surfaced the result here.
+
+  ---
+
+  ## The Harness pipeline YAML
+
+  ```yaml
+  pipeline:
+    name: Cortex Deploy
+    identifier: {{variables.harness-pipeline}}
+    variables:
+      - name: callback_url
+        type: String
+        value: "<+input>"        # injected by Cortex at trigger time
+      - name: cortex_entity_tag
+        type: String
+        value: "<+input>"        # set to {{context.entity.tag}}
+    stages:
+      - stage:
+          name: Build
+          type: Custom
+          # ── replace this step with your real deploy ──
+          steps:
+            - step:
+                type: ShellScript
+                spec:
+                  script: echo "Building..."
+      - stage:
+          name: Record Deploy in Cortex
+          template:
+            templateRef: cortex_record_deploy
+            versionLabel: "1.0"
+            templateInputs:
+              type: Custom
+              variables:
+                - name: cortex_entity_tag
+                  value: "<+pipeline.variables.cortex_entity_tag>"
+      - stage:
+          name: Callback to Cortex
+          template:
+            templateRef: cortex_async_callback
+            versionLabel: "1.0"
+            templateInputs:
+              type: Custom
+              variables:
+                - name: callback_url
+                  value: "<+pipeline.variables.callback_url>"
+  ```
+
+  ---
+
+  ## Adapting this to your own pipelines
+
+  1. Replace the `echo "Building..."` step in the Build stage with your real deploy steps
+
+  2. Add both **Cortex Record Deploy** and **Cortex Async Callback** stage templates to any existing Harness pipeline — each only needs the `cortex_api_key` secret plus its one pipeline variable
+
+  3. Add `x-cortex-custom-metadata.harness` to your entity's catalog YAML with `org`, `project`, and `pipeline` fields pointing at your real pipeline
+actions:
+- name: Get Harness config
+  slug: get-harness-config
+  schema:
+    type: HTTP_REQUEST
+    httpMethod: GET
+    url: "https://api.getcortexapp.com/api/v1/catalog/{{context.entity.tag}}/custom-data/harness"
+    headers:
+      Authorization: "Bearer {{&context.secrets.cortex_api_key}}"
+      Content-Type: application/json
+    integration: null
+    integrationAlias: null
+  outgoingActions:
+  - parse-harness-config
+  isRootAction: true
+- name: Parse Harness config
+  slug: parse-harness-config
+  schema:
+    type: JQ
+    expression: |
+      .actions."get-harness-config".outputs.body.value as $h |
+      if ($h == null or $h.org == null) then
+        error("No Harness configuration found. Add x-cortex-custom-metadata.harness with org, project, and pipeline to this entity.")
+      else
+        {org: $h.org, project: $h.project, pipeline: $h.pipeline}
+      end
+  outgoingActions:
+  - set-variables
+  isRootAction: false
+- name: Set variables
+  slug: set-variables
+  schema:
+    type: SET_VARIABLES
+    variables:
+    - slug: harness-org
+      source:
+        path: actions.parse-harness-config.outputs.result.org
+        type: REFERENCE
+    - slug: harness-project
+      source:
+        path: actions.parse-harness-config.outputs.result.project
+        type: REFERENCE
+    - slug: harness-pipeline
+      source:
+        path: actions.parse-harness-config.outputs.result.pipeline
+        type: REFERENCE
+  outgoingActions:
+  - trigger-deploy
+  isRootAction: false
+- name: Trigger Harness Pipeline
+  slug: trigger-deploy
+  schema:
+    type: HTTP_REQUEST_ASYNC
+    httpMethod: POST
+    url: "/v1/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/execute?notes=Submitted+by+{{context.initiatedBy.email}}"
+    integration: Harness
+    integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
+    headers:
+      Content-Type: application/json
+    payload: "{\"inputs_yaml\": \"pipeline:\\n  identifier: {{variables.harness-pipeline}}\\n  variables:\\n    - name: callback_url\\n      type: String\\n      value: \\\"{{{callbackUrl}}}\\\"\\n    - name: cortex_entity_tag\\n      type: String\\n      value: \\\"{{context.entity.tag}}\\\"\"}"
+    timeoutInSeconds: 300
+  outgoingActions: []
+  isRootAction: false
