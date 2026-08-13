@@ -223,7 +223,7 @@ class GitHubActionsSetup(SolutionSetup):
                 print(f"\n  Running: POST /api/v1/workflows/{workflow_tag}/runs")
                 try:
                     def _on_run_started(run_url: str) -> None:
-                        print(f"  {_hyperlink(run_url, 'View this workflow run')}")
+                        print(f"  {_hyperlink(run_url, 'View workflow runs')}")
 
                     result = self._trigger_via_cortex_workflow(on_run_started=_on_run_started)
                     status = result.get("status", "").upper()
@@ -233,7 +233,7 @@ class GitHubActionsSetup(SolutionSetup):
                         gh_actions_url = f"https://github.com/{owner}/{repo}/actions"
                         print(f"  Deploy complete \u2713")
                         if run_url:
-                            print(f"  {_hyperlink(run_url, 'View this workflow run')}")
+                            print(f"  {_hyperlink(run_url, 'View workflow runs')}")
                         print(f"  {_hyperlink(gh_actions_url, 'View GitHub Actions runs')}")
                         self.mark_done("first_deploy")
                     else:
@@ -495,6 +495,7 @@ info:
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()
         dots = 0
+        print(f"  Waiting for Cortex workflow", end="", flush=True)
         while time.time() - start < 300:
             time.sleep(5)
             r = requests.get(
@@ -504,7 +505,7 @@ info:
             r.raise_for_status()
             status = r.json().get("status", "").upper()
             dots += 1
-            print(f"\r  Waiting for GitHub Actions{'.' * (dots % 4)}   ", end="", flush=True)
+            print(f"\r  Waiting for Cortex workflow{'.' * (dots % 4)}   ", end="", flush=True)
             if status in terminal:
                 print()  # newline after dots
                 result = r.json()
