@@ -15,58 +15,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build
-        run: echo "Hello, Cortex deploys!"
+        run: |
+          echo "Starting deployment..."
+          sleep 10
+          for i in 1 2 3; do
+            sleep 5
+            echo "Deployment progress: step $i/3"
+          done
+          echo "Build complete!"
 
-  notify-cortex:
+  cortex-callback:
     needs: build
     runs-on: ubuntu-latest
+    if: always()
     steps:
+      - name: Checkout (for local actions)
+        uses: actions/checkout@v4
+
       - name: Register deploy in Cortex
-        continue-on-error: true
-        run: |
-          curl -s -f -X POST \
-            "${{ secrets.CORTEX_BASE_URL }}/api/v1/catalog/github-actions-demo/deploys" \
-            -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n \
-              --arg sha '${{ github.sha }}' \
-              --arg actor '${{ github.actor }}' \
-              --arg branch '${{ github.ref_name }}' \
-              --arg run_id '${{ github.run_id }}' \
-              --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
-              --arg trigger '${{ github.event_name }}' \
-              --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-              '{
-                sha: $sha,
-                timestamp: $timestamp,
-                environment: "production",
-                type: "DEPLOY",
-                title: ("Triggered by " + $actor),
-                deployer: {name: $actor},
-                customData: {branch: $branch, runId: $run_id, runUrl: $run_url, trigger: $trigger}
-              }')"
+        if: needs.build.result == 'success'
+        uses: ./.github/actions/cortex-register-deploy
+        with:
+          cortex_api_key: ${{ secrets.CORTEX_API_KEY }}
+          cortex_base_url: ${{ secrets.CORTEX_BASE_URL }}
+          entity_tag: github-actions-demo
 
-      - name: Notify Cortex workflow callback
-        if: ${{ always() && inputs.cortex_callback_url != '' }}
-        run: |
-          if [ "${{ needs.build.result }}" = "success" ]; then
-            CORTEX_STATUS="SUCCESS"
-          elif [ "${{ needs.build.result }}" = "cancelled" ]; then
-            CORTEX_STATUS="CANCELLED"
-          else
-            CORTEX_STATUS="FAILURE"
-          fi
-
-          curl -s -f -X POST "${{ inputs.cortex_callback_url }}" \
-            -H "Authorization: Bearer ${{ secrets.CORTEX_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n \
-              --arg status "$CORTEX_STATUS" \
-              --arg sha '${{ github.sha }}' \
-              --arg run_id '${{ github.run_id }}' \
-              --arg run_url '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
-              '{
-                status: $status,
-                message: "",
-                output: {sha: $sha, run_id: $run_id, run_url: $run_url}
-              }')"
+      - name: Cortex async callback
+        if: inputs.cortex_callback_url != ''
+        uses: ./.github/actions/cortex-async-callback
+        with:
+          cortex_api_key: ${{ secrets.CORTEX_API_KEY }}
+          cortex_callback_url: ${{ inputs.cortex_callback_url }}
+          status: ${{ needs.build.result == 'success' && 'SUCCESS' || needs.build.result == 'cancelled' && 'CANCELLED' || 'FAILURE' }}
+          sha: ${{ github.sha }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

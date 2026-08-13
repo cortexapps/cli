@@ -227,7 +227,7 @@ def _get_setup_description(solution_tag: str, solutions_dir: str | None = None) 
     return "This solution includes a post-install setup script."
 
 
-def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None) -> None:
+def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None, no_prompt: bool = False) -> None:
     """Find and invoke the solution's setup.py main() function."""
     module = _load_setup_module(solution_tag, solutions_dir)
     if module is None:
@@ -238,6 +238,7 @@ def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None
         client = ctx.obj["client"]
         kwargs["cortex_api_key"] = client.api_key
         kwargs["cortex_base_url"] = client.base_url
+    kwargs["no_prompt"] = no_prompt
     module.main(**kwargs)
 
 
@@ -604,17 +605,6 @@ def _show_next_steps(readme: str) -> None:
             section = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1 (\2)', section)
         console.print()
         console.print(Markdown(section))
-    console.print()
-    console.print(
-        "[magenta]Planned for Q4 2027:[/magenta] CQL metadata traversal will enable scorecard rules "
-        "across relationship chains — for example, a Vulnerability Scorecard checking that no "
-        "deployed service-version has open Snyk issues:"
-    )
-    console.print(
-        "  [dim]entity.destinations(relationshipType = \"environments\", depth = 3)\n"
-        "    .filter((d) => d.type == \"service-version\")\n"
-        "    .all((sv) => sv.snyk.issues == 0)[/dim]"
-    )
 
 
 def _post_install_menu(
@@ -717,6 +707,9 @@ def install(
 
     # Post-install setup hook — runs before the informational menu
     if not no_prompt and not skip_post_install_setup and _has_post_install(solution, solutions_dir):
+        state_file = Path.home() / ".cortex" / "solutions" / f"{solution}.json"
+        if state_file.exists():
+            typer.echo(f"\nRetrieving previous responses from: {state_file}")
         desc = _get_setup_description(solution, solutions_dir)
         typer.echo(f"\n{desc}")
         if typer.confirm("Run setup now?", default=True):
@@ -747,6 +740,12 @@ def install(
 def post_install(
     ctx: typer.Context,
     solution: str = typer.Option(..., "--solution", "-s", help="Solution tag"),
+    no_prompt: bool = typer.Option(
+        False,
+        "--no-prompt",
+        "-N",
+        help="Use saved answers from ~/.cortex/solutions/<tag>.json without prompting.",
+    ),
 ):
     """Run post-install setup for a solution."""
     solutions_dir = ctx.obj.get("solutions_dir") if ctx.obj else None
@@ -755,7 +754,7 @@ def post_install(
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
     ctx.obj["client"] = _build_client(ctx)
-    _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx)
+    _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx, no_prompt=no_prompt)
 
 
 @app.command()

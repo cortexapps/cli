@@ -6,7 +6,7 @@ Run via: cortex solutions post-install -s github-actions-deploy
 
 SETUP_DESCRIPTION = (
     "This solution includes a post-install setup script that will create a GitHub "
-    "repository, seed it with the Cortex deploy workflow, and configure the required secrets."
+    "repository, seed it with a GitHub workflow that will add a deploy to a Cortex entity, and configure the required secrets."
 )
 import base64
 import os
@@ -23,7 +23,19 @@ except ImportError:
 
 GITHUB_API = "https://api.github.com"
 TEMPLATE_PATH = Path(__file__).parent / "_templates" / "cortex-deploy.yml"
-WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "trigger-github-deploy.yaml"
+WORKFLOW_TEMPLATE_PATH = Path(__file__).parent / "_templates" / "github-actions-deploy.yaml"
+
+# Local GitHub Actions seeded into the customer repo
+_GH_ACTION_TEMPLATES = [
+    (
+        Path(__file__).parent / "_templates" / "cortex-async-callback.yml",
+        ".github/actions/cortex-async-callback/action.yml",
+    ),
+    (
+        Path(__file__).parent / "_templates" / "cortex-register-deploy.yml",
+        ".github/actions/cortex-register-deploy/action.yml",
+    ),
+]
 
 
 def _hyperlink(url: str, text: str = None) -> str:
@@ -43,8 +55,8 @@ def _encrypt_secret(public_key_b64: str, secret_value: str) -> str:
 class GitHubActionsSetup(SolutionSetup):
     solution_tag = "github-actions-deploy"
 
-    def __init__(self, cortex_api_key: str = None, cortex_base_url: str = None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, cortex_api_key: str = None, cortex_base_url: str = None, no_prompt: bool = False, **kwargs):
+        super().__init__(no_prompt=no_prompt, **kwargs)
         self._session_api_key = cortex_api_key
         self._session_base_url = cortex_base_url
 
@@ -80,7 +92,11 @@ class GitHubActionsSetup(SolutionSetup):
     def _select_github_integration(self, integrations: list) -> str:
         """Present a numbered list and return the chosen alias."""
         integrations = sorted(integrations, key=lambda c: c.get("alias", "").lower())
+        saved_alias = self._answers.get("github_integration_alias")
         default_idx = next(
+            (i for i, c in enumerate(integrations) if c.get("alias") == saved_alias),
+            None,
+        ) or next(
             (i for i, c in enumerate(integrations) if c.get("isDefault")), 0
         )
         print("\nGitHub integrations configured in Cortex:")
@@ -89,6 +105,9 @@ class GitHubActionsSetup(SolutionSetup):
             type_label = cfg.get("type", "").replace("_", " ").title()
             print(f"  {marker}{i + 1}. {cfg['alias']} [{type_label}]")
         print("   (* = default)")
+
+        if self._no_prompt:
+            return integrations[default_idx]["alias"]
 
         while True:
             choice = input(f"\nSelect integration [{default_idx + 1}]: ").strip()
@@ -146,7 +165,7 @@ class GitHubActionsSetup(SolutionSetup):
 
         # 3. Cortex credentials from CLI session
         if self._session_api_key:
-            if self.confirm("Use current Cortex API key?", default=True):
+            if self.confirm("Use Cortex API key used by this CLI session?", default=True):
                 self._answers["cortex_api_key"] = self._session_api_key
             else:
                 self.prompt("cortex_api_key", "Cortex API key", secret=True)
@@ -154,7 +173,7 @@ class GitHubActionsSetup(SolutionSetup):
             self.prompt("cortex_api_key", "Cortex API key", env_var="CORTEX_API_KEY", secret=True)
 
         if self._session_base_url:
-            if self.confirm(f"Use current Cortex base URL [{self._session_base_url}]?", default=True):
+            if self.confirm(f"Use Cortex base URL used by this CLI session [{self._session_base_url}]?", default=True):
                 self._answers["cortex_base_url"] = self._session_base_url
             else:
                 self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
@@ -170,12 +189,14 @@ class GitHubActionsSetup(SolutionSetup):
         steps = [
             ("Creating GitHub repository", self._create_repo),
             ("Seeding Cortex deploy workflow", self._seed_workflow),
+            ("Seeding cortex-async-callback action", lambda: self._seed_file(*_GH_ACTION_TEMPLATES[0])),
+            ("Seeding cortex-register-deploy action", lambda: self._seed_file(*_GH_ACTION_TEMPLATES[1])),
             ("Setting CORTEX_API_KEY secret", lambda: self._set_secret("CORTEX_API_KEY", self._answers["cortex_api_key"])),
             ("Setting CORTEX_BASE_URL secret", lambda: self._set_secret("CORTEX_BASE_URL", self._answers["cortex_base_url"])),
             ("Linking GitHub repository to entity", self._link_github_repo),
         ]
         if self._answers.get("github_integration_alias"):
-            steps.append(("Importing Cortex trigger workflow", self._import_cortex_workflow))
+            steps.append(("Creating Cortex deploy workflow", self._import_cortex_workflow))
         return steps
 
     def post_steps(self) -> None:
@@ -187,10 +208,19 @@ class GitHubActionsSetup(SolutionSetup):
         cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
 
-        if self.confirm("Trigger a workflow run now?", default=True):
+        workflow_tag = "github-actions-deploy"
+        entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
+        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
+
+        if self._answers.get("github_integration_alias"):
+            print(f"\nTo trigger a deploy manually later:")
+            print(f"  CLI: cortex workflows run -t {workflow_tag} --scope ENTITY --entity github-actions-demo")
+            print(f"  UI:  {_hyperlink(entity_url, 'github-actions-demo')} → Workflows tab → Solution: Add Cortex Deploy from GitHub Actions → Run")
+
+        if self.confirm("\nTrigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
                 # Use Cortex async workflow — waits for GitHub Actions callback
-                print("  Starting Cortex workflow run (waiting for GitHub Actions to complete)...")
+                print(f"\n  Running: POST /api/v1/workflows/{workflow_tag}/runs")
                 try:
                     result = self._trigger_via_cortex_workflow()
                     status = result.get("status", "").upper()
@@ -206,10 +236,12 @@ class GitHubActionsSetup(SolutionSetup):
                     print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
             else:
                 # No integration — trigger GitHub Actions directly
+                gh_dispatch_url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/cortex-deploy.yml/dispatches"
+                print(f"  Running: POST {gh_dispatch_url}")
                 try:
                     self._trigger_direct()
                     print(f"  GitHub Actions workflow triggered \u2713")
-                    print("  (No Cortex integration configured — cannot wait for completion)")
+                    print(f"  {_hyperlink(f'https://github.com/{owner}/{repo}/actions', 'View GitHub Actions runs')}")
                 except Exception as e:
                     print(f"  Trigger failed: {e}", file=sys.stderr)
 
@@ -217,13 +249,14 @@ class GitHubActionsSetup(SolutionSetup):
         print(f"  {_hyperlink(cortex_url)}")
         print(f"\nGitHub repo: {_hyperlink(gh_url)}")
 
-    def _create_repo(self) -> None:
+    def _create_repo(self) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
+        gh_url = f"https://github.com/{owner}/{repo}"
 
         check = requests.get(f"{GITHUB_API}/repos/{owner}/{repo}", headers=self._gh_headers())
         if check.status_code == 200:
-            return  # already exists
+            return f"Already exists: {_hyperlink(gh_url)}"
         if check.status_code != 404:
             raise RuntimeError(f"Unexpected status checking repo existence: {check.status_code} {check.text}")
 
@@ -242,39 +275,48 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to create repo: {resp.status_code} {resp.text}")
+        return f"Created: {_hyperlink(gh_url)}"
 
-    def _seed_workflow(self) -> None:
+    def _seed_file(self, template_path: Path, dest_path: str) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
-        path = ".github/workflows/cortex-deploy.yml"
-        content = TEMPLATE_PATH.read_text()
+        content = template_path.read_text()
         content_b64 = base64.b64encode(content.encode()).decode()
+        file_url = f"https://github.com/{owner}/{repo}/blob/main/{dest_path}"
 
         check = requests.get(
-            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{path}",
+            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{dest_path}",
             headers=self._gh_headers(),
         )
 
-        payload = {"message": "Add Cortex deploy notification workflow", "content": content_b64}
+        payload = {"message": f"Add {dest_path}", "content": content_b64}
 
         if check.status_code == 200:
             existing = check.json()
             existing_content = base64.b64decode(existing["content"].replace("\n", "")).decode()
             if existing_content == content:
-                return  # unchanged
+                return f"Already up to date: {_hyperlink(file_url)}"
             payload["sha"] = existing["sha"]
+            action = "Updated"
+        else:
+            action = "Added"
 
         resp = requests.put(
-            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{path}",
+            f"{GITHUB_API}/repos/{owner}/{repo}/contents/{dest_path}",
             headers=self._gh_headers(),
             json=payload,
         )
         if resp.status_code not in (200, 201):
-            raise RuntimeError(f"Failed to seed workflow: {resp.status_code} {resp.text}")
+            raise RuntimeError(f"Failed to seed {dest_path}: {resp.status_code} {resp.text}")
+        return f"{action}: {_hyperlink(file_url)}"
 
-    def _set_secret(self, secret_name: str, secret_value: str) -> None:
+    def _seed_workflow(self) -> str:
+        return self._seed_file(TEMPLATE_PATH, ".github/workflows/cortex-deploy.yml")
+
+    def _set_secret(self, secret_name: str, secret_value: str) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
+        secrets_url = f"https://github.com/{owner}/{repo}/settings/secrets/actions"
 
         key_resp = requests.get(
             f"{GITHUB_API}/repos/{owner}/{repo}/actions/secrets/public-key",
@@ -293,6 +335,8 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code not in (201, 204):
             raise RuntimeError(f"Failed to set secret {secret_name}: {resp.status_code} {resp.text}")
+        action = "Created" if resp.status_code == 201 else "Updated"
+        return f"{action} GitHub Actions secret {secret_name}: {_hyperlink(secrets_url, 'View secrets')}"
 
     def _trigger_direct(self) -> None:
         """Trigger the GitHub Actions workflow directly via the GitHub API."""
@@ -321,12 +365,14 @@ class GitHubActionsSetup(SolutionSetup):
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"{resp.status_code} {resp.text}")
 
-    def _link_github_repo(self) -> None:
+    def _link_github_repo(self) -> list:
         """PATCH the Cortex entity to link the GitHub repository so workflows are discovered."""
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
 
         yaml_content = f"""\
 openapi: "3.0.0"
@@ -353,15 +399,28 @@ info:
         )
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to link GitHub repo to entity: {resp.status_code} {resp.text}")
+        return [
+            f"Patched entity github-actions-demo with:",
+            f"  x-cortex-git:",
+            f"    github:",
+            f'      repository: "{owner}/{repo}"',
+            f"View entity: {_hyperlink(entity_url)}",
+        ]
 
-    def _import_cortex_workflow(self) -> None:
+    def _import_cortex_workflow(self) -> str:
         """Import the Cortex trigger workflow with the selected GitHub integration alias."""
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
+        ).replace(
+            "PLACEHOLDER_APP_URL", app_url
+        ).replace(
+            "https://api.getcortexapp.com", base_url
         )
 
         resp = requests.post(
@@ -377,6 +436,8 @@ info:
             raise RuntimeError(
                 f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
             )
+        action = "Created" if resp.status_code == 201 else "Updated"
+        return f"{action} workflow 'github-actions-deploy': {_hyperlink(workflows_url, 'View workflows')}"
 
     def _trigger_via_cortex_workflow(self) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
@@ -388,14 +449,22 @@ info:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        workflow_tag = "github-actions-trigger-deploy"
+        workflow_tag = "github-actions-deploy"
+
+        # Entity-scoped runs require entityId (not entityTag) — look it up first
+        entity_resp = requests.get(
+            f"{base_url}/api/v1/catalog/github-actions-demo",
+            headers=cortex_headers,
+            timeout=10,
+        )
+        if entity_resp.status_code != 200:
+            raise RuntimeError(f"Failed to fetch entity: {entity_resp.status_code} {entity_resp.text}")
+        entity_id = entity_resp.json().get("id")
+        if not entity_id:
+            raise RuntimeError("Entity 'github-actions-demo' has no id field in catalog response")
 
         body = {
-            "scope": {"type": "GLOBAL"},
-            "initialContext": {
-                "github-owner": self._answers["github_owner"],
-                "repo-name": self._answers["repo_name"],
-            },
+            "scope": {"type": "ENTITY", "entityId": entity_id},
         }
         resp = requests.post(
             f"{base_url}/api/v1/workflows/{workflow_tag}/runs",
@@ -405,13 +474,17 @@ info:
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to start workflow run: {resp.status_code} {resp.text}")
 
-        run_id = resp.json().get("id")
+        run_data = resp.json()
+        run_id = run_data.get("id")
         if not run_id:
             raise RuntimeError("No run ID returned from workflow start")
 
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
+
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()
-        dots = 0
+        print(f"  Waiting for {_hyperlink(workflows_url, 'Cortex workflow')}", end="", flush=True)
         while time.time() - start < 300:
             time.sleep(5)
             r = requests.get(
@@ -420,11 +493,12 @@ info:
             )
             r.raise_for_status()
             status = r.json().get("status", "").upper()
-            dots += 1
-            print(f"\r  Waiting for GitHub Actions{'.' * (dots % 4)}   ", end="", flush=True)
+            print(".", end="", flush=True)
             if status in terminal:
                 print()  # newline after dots
-                return r.json()
+                result = r.json()
+                result["_run_id"] = run_id
+                return result
 
         raise TimeoutError("Timed out waiting for workflow to complete (5 min)")
 

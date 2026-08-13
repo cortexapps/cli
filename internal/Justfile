@@ -323,6 +323,161 @@ axon-setup:
     echo "Done. Running containers:"
     docker compose -f axon/compose.yaml ps
 
+# Configure an axon relay integration end-to-end (prompts for credentials, configures Cortex, starts relay)
+# Usage: just axon-configure jira
+axon-configure integration:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ ! -f .env ]; then
+        cp .env.example .env 2>/dev/null || touch .env
+    fi
+
+    # Prompt helper: reads a value, optionally silent, with a default
+    prompt_var() {
+        local NAME="$1" LABEL="$2" HELP="$3" DEFAULT="${4:-}" SILENT="${5:-}"
+        source .env 2>/dev/null || true
+        local CURRENT="${!NAME:-}"
+        if [ -n "$CURRENT" ]; then
+            echo "$NAME already set, skipping."
+            return
+        fi
+        echo ""
+        echo "$NAME ($LABEL)"
+        [ -n "$HELP" ] && echo "  $HELP"
+        [ -n "$DEFAULT" ] && echo "  Press Enter to use default: $DEFAULT"
+        while true; do
+            printf ": "
+            if [ "${SILENT:-}" = "silent" ]; then
+                read -rs VALUE; echo ""
+            else
+                read -r VALUE
+            fi
+            VALUE="${VALUE:-$DEFAULT}"
+            if [ -n "$VALUE" ]; then
+                # Update existing line or append
+                if grep -q "^${NAME}=" .env 2>/dev/null; then
+                    sed -i '' "s|^${NAME}=.*|${NAME}=\"${VALUE}\"|" .env
+                else
+                    echo "${NAME}=\"${VALUE}\"" >> .env
+                fi
+                export "$NAME=$VALUE"
+                break
+            fi
+            echo "  Value cannot be empty. Try again."
+        done
+    }
+
+    INTEGRATION="{{integration}}"
+
+    case "$INTEGRATION" in
+        jira)
+            echo ""
+            echo "========================================"
+            echo " Jira Axon Relay Setup"
+            echo "========================================"
+            echo ""
+            echo "This recipe will:"
+            echo "  1. Collect your Jira credentials and save them to .env"
+            echo "  2. Configure the Jira integration in your Cortex workspace via the API"
+            echo "  3. Start the Jira relay container"
+            echo ""
+            echo "--- Don't have a Jira account yet? ---"
+            echo ""
+            echo "  Atlassian offers a free Jira Cloud tier (up to 10 users):"
+            echo "  1. Sign up at: https://www.atlassian.com/software/jira/free"
+            echo "  2. Choose a subdomain (e.g. 'acme' → acme.atlassian.net)"
+            echo "  3. Create a Jira Software project"
+            echo ""
+            echo "  Then create an API token:"
+            echo "  1. Go to: https://id.atlassian.com/manage-profile/security/api-tokens"
+            echo "  2. Click 'Create API token', name it (e.g. 'cortex-axon')"
+            echo "  3. Copy the token value — it won't be shown again"
+            echo ""
+            printf "Press Enter when ready..."
+            read -r
+            echo ""
+
+            ./scripts/ensure-env.sh \
+                "CORTEX_API_KEY|Cortex API key|Get from Cortex Settings > API Keys."
+            source .env
+
+            prompt_var "JIRA_SUBDOMAIN" \
+                "Jira Cloud subdomain" \
+                "The part before .atlassian.net in your Jira URL. Example: for https://acme.atlassian.net, enter: acme"
+
+            prompt_var "JIRA_USERNAME" \
+                "Jira email" \
+                "Your Atlassian account email address."
+
+            prompt_var "JIRA_TOKEN" \
+                "Jira API token" \
+                "From https://id.atlassian.com/manage-profile/security/api-tokens" \
+                "" "silent"
+
+            source .env
+
+            # Derive JIRA_API from subdomain and save it
+            JIRA_API="https://${JIRA_SUBDOMAIN}.atlassian.net"
+            if grep -q "^JIRA_API=" .env 2>/dev/null; then
+                sed -i '' "s|^JIRA_API=.*|JIRA_API=\"${JIRA_API}\"|" .env
+            else
+                echo "JIRA_API=\"${JIRA_API}\"" >> .env
+            fi
+            export JIRA_API
+
+            # Compute and save JIRA_AUTH_TOKEN (base64 of email:token, used by accept.json)
+            JIRA_AUTH_TOKEN=$(printf '%s:%s' "${JIRA_USERNAME}" "${JIRA_TOKEN}" | base64)
+            if grep -q "^JIRA_AUTH_TOKEN=" .env 2>/dev/null; then
+                sed -i '' "s|^JIRA_AUTH_TOKEN=.*|JIRA_AUTH_TOKEN=\"${JIRA_AUTH_TOKEN}\"|" .env
+            else
+                echo "JIRA_AUTH_TOKEN=\"${JIRA_AUTH_TOKEN}\"" >> .env
+            fi
+
+            # Integration alias (must match -a flag in compose.yaml)
+            echo ""
+            echo "Integration alias in Cortex (default: jira-relay):"
+            echo "  This must match the -a flag in compose.yaml. Change only if you have a reason."
+            printf ": "
+            read -r JIRA_ALIAS
+            JIRA_ALIAS="${JIRA_ALIAS:-jira-relay}"
+
+            # Configure the Jira integration in Cortex
+            echo ""
+            echo "Configuring Jira integration in Cortex (alias: $JIRA_ALIAS)..."
+            JIRA_CONFIG=$(printf '{"type":"CLOUD_BASIC","alias":"%s","subdomain":"%s","email":"%s","apiToken":"%s","baseUrl":"ATLASSIAN","isDefault":true}' \
+                "$JIRA_ALIAS" "$JIRA_SUBDOMAIN" "$JIRA_USERNAME" "$JIRA_TOKEN")
+
+            if poetry run cortex integrations jira add -f- <<< "$JIRA_CONFIG"; then
+                echo "Cortex integration configured successfully."
+            else
+                echo ""
+                echo "Warning: Cortex API call failed (integration may already exist or credentials may be wrong)."
+                echo "You can configure it manually at: Settings > Integrations > Jira"
+                echo ""
+                printf "Continue and start the relay anyway? [y/N]: "
+                read -r CONTINUE
+                [[ "$CONTINUE" =~ ^[Yy]$ ]] || exit 1
+            fi
+
+            # Start the relay container
+            echo ""
+            echo "Starting Jira relay container..."
+            docker compose -f axon/compose.yaml up -d jira
+            echo ""
+            echo "Done!"
+            echo "  Relay alias:  $JIRA_ALIAS"
+            echo "  Jira URL:     $JIRA_API"
+            echo ""
+            echo "Run 'just axon-status' to check relay status."
+            ;;
+        *)
+            echo "Unknown integration: $INTEGRATION"
+            echo "Available: jira"
+            exit 1
+            ;;
+    esac
+
 # Show status of axon relay containers
 axon-status:
     docker compose -f axon/compose.yaml ps -a
