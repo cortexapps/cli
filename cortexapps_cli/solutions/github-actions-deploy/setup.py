@@ -451,7 +451,9 @@ info:
                 f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
             )
         action = "Created" if resp.status_code == 201 else "Updated"
-        return f"{action} workflow 'github-actions-deploy': {_hyperlink(workflows_url, 'View workflows')}"
+        workflow_id = resp.json().get("id", "")
+        wf_url = f"{app_url}/admin/workflows/{workflow_id}" if workflow_id else workflows_url
+        return f"{action} workflow 'github-actions-deploy': {_hyperlink(wf_url, 'View workflow')}"
 
     def _trigger_via_cortex_workflow(self, on_run_started=None) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""
