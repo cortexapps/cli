@@ -237,13 +237,14 @@ class GitHubActionsSetup(SolutionSetup):
         print(f"  {_hyperlink(cortex_url)}")
         print(f"\nGitHub repo: {_hyperlink(gh_url)}")
 
-    def _create_repo(self) -> None:
+    def _create_repo(self) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
+        gh_url = f"https://github.com/{owner}/{repo}"
 
         check = requests.get(f"{GITHUB_API}/repos/{owner}/{repo}", headers=self._gh_headers())
         if check.status_code == 200:
-            return  # already exists
+            return f"Already exists: {_hyperlink(gh_url)}"
         if check.status_code != 404:
             raise RuntimeError(f"Unexpected status checking repo existence: {check.status_code} {check.text}")
 
@@ -262,13 +263,15 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to create repo: {resp.status_code} {resp.text}")
+        return f"Created: {_hyperlink(gh_url)}"
 
-    def _seed_workflow(self) -> None:
+    def _seed_workflow(self) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
         path = ".github/workflows/cortex-deploy.yml"
         content = TEMPLATE_PATH.read_text()
         content_b64 = base64.b64encode(content.encode()).decode()
+        file_url = f"https://github.com/{owner}/{repo}/blob/main/{path}"
 
         check = requests.get(
             f"{GITHUB_API}/repos/{owner}/{repo}/contents/{path}",
@@ -281,8 +284,11 @@ class GitHubActionsSetup(SolutionSetup):
             existing = check.json()
             existing_content = base64.b64decode(existing["content"].replace("\n", "")).decode()
             if existing_content == content:
-                return  # unchanged
+                return f"Already up to date: {_hyperlink(file_url)}"
             payload["sha"] = existing["sha"]
+            action = "Updated"
+        else:
+            action = "Added"
 
         resp = requests.put(
             f"{GITHUB_API}/repos/{owner}/{repo}/contents/{path}",
@@ -291,10 +297,12 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to seed workflow: {resp.status_code} {resp.text}")
+        return f"{action}: {_hyperlink(file_url)}"
 
-    def _set_secret(self, secret_name: str, secret_value: str) -> None:
+    def _set_secret(self, secret_name: str, secret_value: str) -> str:
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
+        secrets_url = f"https://github.com/{owner}/{repo}/settings/secrets/actions"
 
         key_resp = requests.get(
             f"{GITHUB_API}/repos/{owner}/{repo}/actions/secrets/public-key",
@@ -313,6 +321,8 @@ class GitHubActionsSetup(SolutionSetup):
         )
         if resp.status_code not in (201, 204):
             raise RuntimeError(f"Failed to set secret {secret_name}: {resp.status_code} {resp.text}")
+        action = "Created" if resp.status_code == 201 else "Updated"
+        return f"{action} GitHub Actions secret {secret_name}: {_hyperlink(secrets_url, 'View secrets')}"
 
     def _trigger_direct(self) -> None:
         """Trigger the GitHub Actions workflow directly via the GitHub API."""
@@ -341,12 +351,14 @@ class GitHubActionsSetup(SolutionSetup):
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"{resp.status_code} {resp.text}")
 
-    def _link_github_repo(self) -> None:
+    def _link_github_repo(self) -> list:
         """PATCH the Cortex entity to link the GitHub repository so workflows are discovered."""
         owner = self._answers["github_owner"]
         repo = self._answers["repo_name"]
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
 
         yaml_content = f"""\
 openapi: "3.0.0"
@@ -373,12 +385,21 @@ info:
         )
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to link GitHub repo to entity: {resp.status_code} {resp.text}")
+        return [
+            f"Patched entity github-actions-demo with:",
+            f"  x-cortex-git:",
+            f"    github:",
+            f'      repository: "{owner}/{repo}"',
+            f"View entity: {_hyperlink(entity_url)}",
+        ]
 
-    def _import_cortex_workflow(self) -> None:
+    def _import_cortex_workflow(self) -> str:
         """Import the Cortex trigger workflow with the selected GitHub integration alias."""
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        workflows_url = f"{app_url}/admin/workflows"
 
         yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
@@ -397,12 +418,16 @@ info:
             raise RuntimeError(
                 f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
             )
+        action = "Created" if resp.status_code == 201 else "Updated"
+        return f"{action} workflow 'github-actions-trigger-deploy': {_hyperlink(workflows_url, 'View workflows')}"
 
-    def _import_entity_workflow(self) -> None:
+    def _import_entity_workflow(self) -> str:
         """Import the entity-scoped deploy workflow."""
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        workflows_url = f"{app_url}/admin/workflows"
 
         yaml_content = ENTITY_WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
@@ -423,6 +448,8 @@ info:
             raise RuntimeError(
                 f"Failed to import entity workflow: {resp.status_code} {resp.text}"
             )
+        action = "Created" if resp.status_code == 201 else "Updated"
+        return f"{action} workflow 'github-actions-deploy-entity': {_hyperlink(workflows_url, 'View workflows')}"
 
     def _trigger_via_cortex_workflow(self) -> dict:
         """Trigger the GitHub deploy via the Cortex async workflow and poll for completion."""

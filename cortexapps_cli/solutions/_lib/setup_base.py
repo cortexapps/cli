@@ -101,8 +101,12 @@ class SolutionSetup(ABC):
         total = len(step_list)
         for i, (label, fn) in enumerate(step_list, 1):
             try:
-                fn()
+                detail = fn()
                 print(f"[{i}/{total}] {label}... \u2713")
+                if detail:
+                    lines = [detail] if isinstance(detail, str) else detail
+                    for line in lines:
+                        print(f"  {line}")
             except Exception as e:
                 print(f"[{i}/{total}] {label}... \u2717  {e}", file=sys.stderr)
                 raise SystemExit(1)
