@@ -30,7 +30,7 @@ runResponseTemplate: |
 
   **Run:** [View on GitHub]({{actions.trigger-deploy.outputs.result.output.run_url}})
 
-  **Deploys:** [View deploy history]({{variables.app-url}}/admin/service/{{context.entity.cid}}/deploys)
+  **Cortex Deploys:** [see deploys for {{context.entity.tag}}]({{variables.app-url}}/admin/service/{{context.entity.cid}}/deploys)
 
   ---
 
