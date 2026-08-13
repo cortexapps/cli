@@ -18,11 +18,53 @@ variables:
   defaultValue: ""
   description: GitHub repository name (derived from entity git config).
 runResponseTemplate: |
-  # GitHub Actions Deploy
+  # GitHub Actions Deploy — Complete
 
-  Deploy complete for **{{variables.github-owner}}/{{variables.repo-name}}**.
+  **Repo:** {{variables.github-owner}}/{{variables.repo-name}}
+  **SHA:** `{{actions.trigger-deploy.outputs.result.output.sha}}`
+  **Run:** [View on GitHub]({{actions.trigger-deploy.outputs.result.output.run_url}})
 
-  [View GitHub Actions runs](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/actions)
+  ---
+
+  ## How this workflow works
+
+  This Cortex workflow triggered a deploy in GitHub Actions and waited for it to finish.
+  Here's what happened end-to-end:
+
+  **1. Cortex read the linked repo**
+  The workflow fetched this entity's catalog config and extracted `x-cortex-git.github.repository`
+  to determine which GitHub repo to deploy — no manual input required.
+
+  **2. Cortex triggered GitHub Actions**
+  It called the GitHub API to dispatch `cortex-deploy.yml` via `workflow_dispatch`, passing a
+  one-time callback URL as an input (`cortex_callback_url`).
+
+  **3. GitHub Actions ran the deploy**
+  `cortex-deploy.yml` runs two jobs:
+  - **build** — your deploy steps (replace the `sleep` placeholder with your real build/deploy)
+  - **notify-cortex** — runs after `build`, always, even on failure
+
+  The `notify-cortex` job uses two local composite actions bundled in the repo:
+
+  - **`.github/actions/cortex-register-deploy`** — POSTs a deploy event to the Cortex API,
+    recording the SHA, actor, branch, and run URL against this entity. This feeds the
+    Deploy Health scorecard.
+
+  - **`.github/actions/cortex-async-callback`** — POSTs the final status (SUCCESS/FAILURE/CANCELLED)
+    back to the callback URL, which is how Cortex knew this workflow run was done.
+
+  **4. Cortex received the callback**
+  When GitHub Actions posted to the callback URL, Cortex marked this workflow run complete
+  and surfaced the result here.
+
+  ---
+
+  ## Adapting this to your own repos
+
+  1. Copy `.github/actions/` into your repo
+  2. Add a `notify-cortex` job to your existing workflow that calls both actions
+  3. Set `CORTEX_API_KEY` and `CORTEX_BASE_URL` as repository secrets
+  4. Link the repo to your Cortex entity via `x-cortex-git.github.repository`
 actions:
 - name: Get entity details
   slug: get-entity-details
