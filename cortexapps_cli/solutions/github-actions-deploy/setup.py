@@ -176,8 +176,8 @@ class GitHubActionsSetup(SolutionSetup):
             ("Linking GitHub repository to entity", self._link_github_repo),
         ]
         if self._answers.get("github_integration_alias"):
-            steps.append(("Importing Cortex trigger workflow", self._import_cortex_workflow))
-            steps.append(("Importing Cortex entity deploy workflow", self._import_entity_workflow))
+            steps.append(("Creating Cortex trigger workflow", self._import_cortex_workflow))
+            steps.append(("Creating Cortex entity deploy workflow", self._import_entity_workflow))
         return steps
 
     def post_steps(self) -> None:
