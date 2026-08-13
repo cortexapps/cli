@@ -43,7 +43,7 @@ Trigger deploys from Cortex, track them as they run in GitHub Actions, and surfa
   │  job: build                     │
   │    └── run your deploy steps    │
   │                                 │
-  │  job: notify-cortex             │
+  │  job: cortex-callback           │
   │    ├── POST /deploys            │◄── registers deploy event
   │    │   (entity: github-actions- │    on the Cortex entity
   │    │    demo)                   │

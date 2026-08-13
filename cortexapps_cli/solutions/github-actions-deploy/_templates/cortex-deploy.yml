@@ -24,7 +24,7 @@ jobs:
           done
           echo "Build complete!"
 
-  notify-cortex:
+  cortex-callback:
     needs: build
     runs-on: ubuntu-latest
     if: always()

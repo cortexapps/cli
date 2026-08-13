@@ -50,7 +50,7 @@ runResponseTemplate: |
 
   - **build** — your deploy steps (replace the `sleep` placeholder with your real build/deploy)
 
-  - **notify-cortex** — runs after `build`, always, even on failure. It uses two local composite actions bundled in the repo:
+  - **cortex-callback** — runs after `build`, always, even on failure. It uses two local composite actions bundled in the repo:
 
   - **`.github/actions/cortex-register-deploy`** — POSTs a deploy event to the Cortex API, recording the SHA, actor, branch, and run URL against this entity. This feeds the Deploy Health scorecard.
 
@@ -66,7 +66,7 @@ runResponseTemplate: |
 
   1. Copy [`.github/actions/`](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/tree/main/.github/actions) into your repo
 
-  2. Add a `notify-cortex` job to your existing workflow that calls both actions
+  2. Add a `cortex-callback` job to your existing workflow that calls both actions
 
   3. Set `CORTEX_API_KEY` and `CORTEX_BASE_URL` as repository secrets
 
