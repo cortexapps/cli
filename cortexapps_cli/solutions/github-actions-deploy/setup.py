@@ -194,18 +194,19 @@ class GitHubActionsSetup(SolutionSetup):
         gh_url = f"https://github.com/{owner}/{repo}"
 
         workflow_tag = "github-actions-trigger-deploy"
+        entity_workflow_tag = "github-actions-deploy-entity"
+        entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         if self._answers.get("github_integration_alias"):
-            print(f"\nTo trigger manually later:")
-            print(f"  cortex workflows runs create -t {workflow_tag} \\")
-            print(f"    --variable github-owner={owner} --variable repo-name={repo}")
+            print(f"\nTo trigger a deploy manually later:")
+            print(f"  CLI: cortex workflows runs create -t {entity_workflow_tag} --entity github-actions-demo")
+            print(f"  UI:  {_hyperlink(entity_url, 'Open entity')} → Workflows tab → Deploy from Entity → Run")
 
         if self.confirm("\nTrigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
                 # Use Cortex async workflow — waits for GitHub Actions callback
-                print(f"  Running: POST /api/v1/workflows/{workflow_tag}/runs")
-                print(f"    github-owner={owner}, repo-name={repo}")
+                print(f"  Running: POST /api/v1/workflows/{entity_workflow_tag}/runs")
                 try:
                     result = self._trigger_via_cortex_workflow()
                     status = result.get("status", "").upper()
@@ -465,14 +466,10 @@ info:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        workflow_tag = "github-actions-trigger-deploy"
+        workflow_tag = "github-actions-deploy-entity"
 
         body = {
-            "scope": {"type": "GLOBAL"},
-            "initialContext": {
-                "github-owner": self._answers["github_owner"],
-                "repo-name": self._answers["repo_name"],
-            },
+            "scope": {"type": "ENTITY", "entityTag": "github-actions-demo"},
         }
         resp = requests.post(
             f"{base_url}/api/v1/workflows/{workflow_tag}/runs",
