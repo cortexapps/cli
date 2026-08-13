@@ -228,10 +228,10 @@ class GitHubActionsSetup(SolutionSetup):
                     result = self._trigger_via_cortex_workflow(on_run_started=_on_run_started)
                     status = result.get("status", "").upper()
                     run_id = result.get("_run_id", "")
-                    workflow_cid = result.get("_workflow_cid", "")
+                    workflow_numeric_id = result.get("_workflow_numeric_id", "")
                     run_url = (
-                        f"{app_url}/admin/workflows/{workflow_cid}/runs/{run_id}"
-                        if workflow_cid and run_id
+                        f"{app_url}/admin/workflows/{workflow_numeric_id}/runs/{run_id}"
+                        if workflow_numeric_id and run_id
                         else None
                     )
                     if status == "COMPLETED":
@@ -465,7 +465,14 @@ info:
         }
         workflow_tag = "github-actions-deploy"
 
-        # Entity-scoped runs require entityId (not entityTag) — look it up first
+        # Fetch workflow numeric id for the run URL, and entity numeric id for scope
+        wf_resp = requests.get(
+            f"{base_url}/api/v1/workflows/{workflow_tag}",
+            headers=cortex_headers,
+            timeout=10,
+        )
+        workflow_numeric_id = wf_resp.json().get("id", "") if wf_resp.status_code == 200 else ""
+
         entity_resp = requests.get(
             f"{base_url}/api/v1/catalog/github-actions-demo",
             headers=cortex_headers,
@@ -492,11 +499,10 @@ info:
         run_id = run_data.get("id")
         if not run_id:
             raise RuntimeError("No run ID returned from workflow start")
-        workflow_cid = run_data.get("workflow", {}).get("id", "")
 
-        if on_run_started and workflow_cid:
+        if on_run_started and workflow_numeric_id and run_id:
             app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-            on_run_started(f"{app_url}/admin/workflows/{workflow_cid}/runs/{run_id}")
+            on_run_started(f"{app_url}/admin/workflows/{workflow_numeric_id}/runs/{run_id}")
 
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()
@@ -515,7 +521,7 @@ info:
                 print()  # newline after dots
                 result = r.json()
                 result["_run_id"] = run_id
-                result["_workflow_cid"] = workflow_cid
+                result["_workflow_numeric_id"] = workflow_numeric_id
                 return result
 
         raise TimeoutError("Timed out waiting for workflow to complete (5 min)")
