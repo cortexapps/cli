@@ -189,29 +189,47 @@ class GitHubActionsSetup(SolutionSetup):
         cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
 
-        if self.confirm("Trigger a workflow run now?", default=True):
+        workflow_tag = "github-actions-trigger-deploy"
+        workflows_url = f"{app_url}/admin/workflows"
+
+        if self._answers.get("github_integration_alias"):
+            print(f"\nTo trigger manually later:")
+            print(f"  cortex workflows runs create -t {workflow_tag} \\")
+            print(f"    --variable github-owner={owner} --variable repo-name={repo}")
+
+        if self.confirm("\nTrigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
                 # Use Cortex async workflow — waits for GitHub Actions callback
-                print("  Starting Cortex workflow run (waiting for GitHub Actions to complete)...")
+                print(f"  Running: POST /api/v1/workflows/{workflow_tag}/runs")
+                print(f"    github-owner={owner}, repo-name={repo}")
                 try:
                     result = self._trigger_via_cortex_workflow()
                     status = result.get("status", "").upper()
+                    run_id = result.get("_run_id", "")
                     if status == "COMPLETED":
                         gh_actions_url = f"https://github.com/{owner}/{repo}/actions"
                         print(f"  Deploy complete \u2713")
+                        if run_id:
+                            print(f"  Run ID: {run_id}")
+                            print(f"  {_hyperlink(workflows_url, 'View workflow runs in Cortex')}")
                         print(f"  {_hyperlink(gh_actions_url, 'View GitHub Actions runs')}")
                         self.mark_done("first_deploy")
                     else:
                         print(f"  Workflow ended with status: {status}", file=sys.stderr)
+                        if run_id:
+                            print(f"  Run ID: {run_id}", file=sys.stderr)
+                            print(f"  {_hyperlink(workflows_url, 'View workflow runs in Cortex')}", file=sys.stderr)
                 except Exception as e:
                     print(f"  Trigger failed: {e}", file=sys.stderr)
                     print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
             else:
                 # No integration — trigger GitHub Actions directly
+                gh_dispatch_url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/cortex-deploy.yml/dispatches"
+                print(f"  Running: POST {gh_dispatch_url}")
                 try:
                     self._trigger_direct()
                     print(f"  GitHub Actions workflow triggered \u2713")
-                    print("  (No Cortex integration configured — cannot wait for completion)")
+                    print(f"  {_hyperlink(f'https://github.com/{owner}/{repo}/actions', 'View GitHub Actions runs')}")
                 except Exception as e:
                     print(f"  Trigger failed: {e}", file=sys.stderr)
 
@@ -433,9 +451,11 @@ info:
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"Failed to start workflow run: {resp.status_code} {resp.text}")
 
-        run_id = resp.json().get("id")
+        run_data = resp.json()
+        run_id = run_data.get("id")
         if not run_id:
             raise RuntimeError("No run ID returned from workflow start")
+        workflow_cid = run_data.get("workflow", {}).get("cid", "")
 
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()
@@ -452,7 +472,10 @@ info:
             print(f"\r  Waiting for GitHub Actions{'.' * (dots % 4)}   ", end="", flush=True)
             if status in terminal:
                 print()  # newline after dots
-                return r.json()
+                result = r.json()
+                result["_run_id"] = run_id
+                result["_workflow_cid"] = workflow_cid
+                return result
 
         raise TimeoutError("Timed out waiting for workflow to complete (5 min)")
 
