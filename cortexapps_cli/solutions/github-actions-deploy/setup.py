@@ -190,7 +190,7 @@ class GitHubActionsSetup(SolutionSetup):
         gh_url = f"https://github.com/{owner}/{repo}"
 
         workflow_tag = "github-actions-trigger-deploy"
-        workflows_url = f"{app_url}/admin/workflows"
+        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         if self._answers.get("github_integration_alias"):
             print(f"\nTo trigger manually later:")
@@ -399,7 +399,7 @@ info:
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        workflows_url = f"{app_url}/admin/workflows"
+        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
@@ -427,7 +427,7 @@ info:
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        workflows_url = f"{app_url}/admin/workflows"
+        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         yaml_content = ENTITY_WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
