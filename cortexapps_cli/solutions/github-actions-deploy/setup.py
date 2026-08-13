@@ -81,7 +81,11 @@ class GitHubActionsSetup(SolutionSetup):
     def _select_github_integration(self, integrations: list) -> str:
         """Present a numbered list and return the chosen alias."""
         integrations = sorted(integrations, key=lambda c: c.get("alias", "").lower())
+        saved_alias = self._answers.get("github_integration_alias")
         default_idx = next(
+            (i for i, c in enumerate(integrations) if c.get("alias") == saved_alias),
+            None,
+        ) or next(
             (i for i, c in enumerate(integrations) if c.get("isDefault")), 0
         )
         print("\nGitHub integrations configured in Cortex:")
