@@ -64,7 +64,7 @@ runResponseTemplate: |
 
   ## Adapting this to your own repos
 
-  1. Copy `.github/actions/` into your repo
+  1. Copy [`.github/actions/`](https://github.com/{{variables.github-owner}}/{{variables.repo-name}}/tree/main/.github/actions) into your repo
 
   2. Add a `notify-cortex` job to your existing workflow that calls both actions
 
