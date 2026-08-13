@@ -198,7 +198,7 @@ class GitHubActionsSetup(SolutionSetup):
         if self._answers.get("github_integration_alias"):
             print(f"\nTo trigger a deploy manually later:")
             print(f"  CLI: cortex workflows run -t {workflow_tag} --scope ENTITY --entity github-actions-demo")
-            print(f"  UI:  {_hyperlink(entity_url, 'github-actions-demo')} → Workflows tab → Deploy from Entity → Run")
+            print(f"  UI:  {_hyperlink(entity_url, 'github-actions-demo')} → Workflows tab → Solution: Add Cortex Deploy from GitHub Actions → Run")
 
         if self.confirm("\nTrigger a workflow run now?", default=True):
             if self._answers.get("github_integration_alias"):
