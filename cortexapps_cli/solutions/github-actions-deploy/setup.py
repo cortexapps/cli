@@ -225,19 +225,23 @@ class GitHubActionsSetup(SolutionSetup):
                     result = self._trigger_via_cortex_workflow()
                     status = result.get("status", "").upper()
                     run_id = result.get("_run_id", "")
+                    workflow_cid = result.get("_workflow_cid", "")
+                    run_url = (
+                        f"{app_url}/admin/workflows/{workflow_cid}/runs/{run_id}"
+                        if workflow_cid and run_id
+                        else None
+                    )
                     if status == "COMPLETED":
                         gh_actions_url = f"https://github.com/{owner}/{repo}/actions"
                         print(f"  Deploy complete \u2713")
-                        if run_id:
-                            print(f"  Run ID: {run_id}")
-                            print(f"  {_hyperlink(workflows_url, 'View workflow runs in Cortex')}")
+                        if run_url:
+                            print(f"  {_hyperlink(run_url, 'View this workflow run')}")
                         print(f"  {_hyperlink(gh_actions_url, 'View GitHub Actions runs')}")
                         self.mark_done("first_deploy")
                     else:
                         print(f"  Workflow ended with status: {status}", file=sys.stderr)
-                        if run_id:
-                            print(f"  Run ID: {run_id}", file=sys.stderr)
-                            print(f"  {_hyperlink(workflows_url, 'View workflow runs in Cortex')}", file=sys.stderr)
+                        if run_url:
+                            print(f"  {_hyperlink(run_url, 'View this workflow run')}", file=sys.stderr)
                 except Exception as e:
                     print(f"  Trigger failed: {e}", file=sys.stderr)
                     print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
