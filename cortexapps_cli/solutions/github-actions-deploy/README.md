@@ -82,6 +82,12 @@ GitHub Actions runs the build, then notifies Cortex twice on completion:
 - **Deploy registration** (`POST /api/v1/catalog/{tag}/deploys`) — records the deploy event on the entity, feeding the Deploy Health scorecard
 - **Workflow callback** — signals the Cortex workflow run as SUCCESS or FAILURE
 
+## After Installing
+
+If you ran the post-install setup, you're already done — it created the GitHub repo, seeded the workflow, set secrets, linked the entity, and triggered a test deploy.
+
+To roll the pattern out to your own services, add `cortex-deploy.yml` to any GitHub repo and link that repo to its Cortex entity. The same **Solution: Add Cortex Deploy from GitHub Actions** workflow will work across all of them — it reads the linked repo from the entity automatically.
+
 ## Customizing for Production
 
 - Point the workflow at your real entity by replacing `github-actions-demo` with your service tag

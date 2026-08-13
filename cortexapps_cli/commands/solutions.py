@@ -605,17 +605,6 @@ def _show_next_steps(readme: str) -> None:
             section = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1 (\2)', section)
         console.print()
         console.print(Markdown(section))
-    console.print()
-    console.print(
-        "[magenta]Planned for Q4 2027:[/magenta] CQL metadata traversal will enable scorecard rules "
-        "across relationship chains — for example, a Vulnerability Scorecard checking that no "
-        "deployed service-version has open Snyk issues:"
-    )
-    console.print(
-        "  [dim]entity.destinations(relationshipType = \"environments\", depth = 3)\n"
-        "    .filter((d) => d.type == \"service-version\")\n"
-        "    .all((sv) => sv.snyk.issues == 0)[/dim]"
-    )
 
 
 def _post_install_menu(
