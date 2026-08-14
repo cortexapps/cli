@@ -1,0 +1,74 @@
+{
+  "Report_Entry": [
+    {
+      "email": "erlich.bachman@piedpiper.com",
+      "employeeId": "100000",
+      "firstName": "Erlich",
+      "lastName": "Bachman",
+      "managersEmail": "erlich.bachman@piedpiper.com",
+      "teamId": "WORKTEAM-1-000",
+      "teamName": "PP: Pied Piper",
+      "parentTeamId": "NONE"
+    },
+    {
+      "email": "richard.hendricks@piedpiper.com",
+      "employeeId": "100001",
+      "firstName": "Richard",
+      "lastName": "Hendricks",
+      "managersEmail": "erlich.bachman@piedpiper.com",
+      "teamId": "WORKTEAM-1-001",
+      "teamName": "PP: Engineering",
+      "parentTeamId": "WORKTEAM-1-000"
+    },
+    {
+      "email": "bertram.gilfoyle@piedpiper.com",
+      "employeeId": "100002",
+      "firstName": "Bertram",
+      "lastName": "Gilfoyle",
+      "managersEmail": "richard.hendricks@piedpiper.com",
+      "teamId": "WORKTEAM-1-002",
+      "teamName": "PP: Platform",
+      "parentTeamId": "WORKTEAM-1-001"
+    },
+    {
+      "email": "dinesh.chugtai@piedpiper.com",
+      "employeeId": "100003",
+      "firstName": "Dinesh",
+      "lastName": "Chugtai",
+      "managersEmail": "richard.hendricks@piedpiper.com",
+      "teamId": "WORKTEAM-1-003",
+      "teamName": "PP: Frontend",
+      "parentTeamId": "WORKTEAM-1-001"
+    },
+    {
+      "email": "jared.dunn@piedpiper.com",
+      "employeeId": "100004",
+      "firstName": "Jared",
+      "lastName": "Dunn",
+      "managersEmail": "erlich.bachman@piedpiper.com",
+      "teamId": "WORKTEAM-1-004",
+      "teamName": "PP: Operations",
+      "parentTeamId": "WORKTEAM-1-000"
+    },
+    {
+      "email": "monica.hall@piedpiper.com",
+      "employeeId": "100005",
+      "firstName": "Monica",
+      "lastName": "Hall",
+      "managersEmail": "jared.dunn@piedpiper.com",
+      "teamId": "WORKTEAM-1-005",
+      "teamName": "PP: People Ops",
+      "parentTeamId": "WORKTEAM-1-004"
+    },
+    {
+      "email": "nelson.bighetti@piedpiper.com",
+      "employeeId": "100006",
+      "firstName": "Nelson",
+      "lastName": "Bighetti",
+      "managersEmail": "bertram.gilfoyle@piedpiper.com",
+      "teamId": "WORKTEAM-1-006",
+      "teamName": "PP: Infrastructure",
+      "parentTeamId": "WORKTEAM-1-002"
+    }
+  ]
+}
