@@ -1,11 +1,11 @@
 ---
 name: Workday Integration
-description: Configure the Cortex Workday integration with a sample Pied Piper org hierarchy to sync employees and teams into your service catalog.
+description: Configure the Cortex Workday integration with a sample org hierarchy from the fictional company Pied Piper (from the TV show Silicon Valley) to sync employees and teams into your service catalog.
 ---
 
 # Workday Integration
 
-Get the Cortex Workday integration running in minutes using a pre-built Pied Piper org hierarchy. After install, trigger a sync to see employees and teams appear in your catalog — including the full team hierarchy.
+Get the Cortex Workday integration running in minutes using a sample org hierarchy from the fictional company Pied Piper (from the TV show *Silicon Valley*). After install, trigger a sync to see employees and teams appear in your catalog — including the full team hierarchy.
 
 ## What's Included
 
@@ -18,13 +18,13 @@ Get the Cortex Workday integration running in minutes using a pre-built Pied Pip
 1. Install the solution:
 
    ```
-   cortex solutions install -s workday-integration
+   cortex solutions install -s workday
    ```
 
 2. Follow the post-install setup prompts, or run later:
 
    ```
-   cortex solutions post-install -s workday-integration
+   cortex solutions post-install -s workday
    ```
 
 3. Trigger the import in Cortex:

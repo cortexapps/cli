@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-DATA_DIR = Path("cortexapps_cli/solutions/workday-integration/data")
+DATA_DIR = Path("cortexapps_cli/solutions/workday/data")
 REPORT_URL = (
     "https://raw.githubusercontent.com/cortexapps/cli/main"
-    "/cortexapps_cli/solutions/workday-integration/data/pied-piper-hierarchy.json"
+    "/cortexapps_cli/solutions/workday/data/pied-piper-hierarchy.json"
 )
 
 
@@ -62,7 +62,7 @@ from unittest.mock import patch, MagicMock
 def load_setup_module():
     spec = importlib.util.spec_from_file_location(
         "workday_setup",
-        "cortexapps_cli/solutions/workday-integration/setup.py",
+        "cortexapps_cli/solutions/workday/setup.py",
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -84,7 +84,7 @@ def setup(mod, tmp_path):
 
 
 def test_solution_tag(mod):
-    assert mod.WorkdayIntegrationSetup.solution_tag == "workday-integration"
+    assert mod.WorkdayIntegrationSetup.solution_tag == "workday"
 
 
 def test_setup_description(mod):
@@ -124,7 +124,7 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
     resp_del = MagicMock(status_code=204)
     resp_del.raise_for_status = MagicMock()
 
-    backup_dir = tmp_path / "workday-integration"
+    backup_dir = tmp_path / "workday"
 
     with patch("requests.get", return_value=resp_200), \
          patch("requests.delete", return_value=resp_del) as mock_delete, \
@@ -136,7 +136,7 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
     delete_url = mock_delete.call_args.args[0]
     assert "configurations" in delete_url   # plural endpoint
 
-    backup_file = tmp_path / ".cortex" / "solutions" / "workday-integration" / "backup-config.json"
+    backup_file = tmp_path / ".cortex" / "solutions" / "workday" / "backup-config.json"
     assert backup_file.exists()
     assert json.loads(backup_file.read_text()) == existing
 

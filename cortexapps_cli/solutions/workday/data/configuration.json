@@ -1,6 +1,6 @@
 {
   "username": "ISU_Cortex",
-  "ownershipReportUrl": "https://raw.githubusercontent.com/cortexapps/cli/main/cortexapps_cli/solutions/workday-integration/data/pied-piper-hierarchy.json",
+  "ownershipReportUrl": "https://raw.githubusercontent.com/cortexapps/cli/main/cortexapps_cli/solutions/workday/data/pied-piper-hierarchy.json",
   "reportMappingV2": {
     "email": { "columnName": "email" },
     "employeeId": { "columnName": "employeeId" },

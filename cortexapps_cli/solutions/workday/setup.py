@@ -1,7 +1,7 @@
 """
-Post-install setup script for the workday-integration solution.
+Post-install setup script for the workday solution.
 Configures the Cortex Workday integration to sync the Pied Piper org hierarchy.
-Run via: cortex solutions post-install -s workday-integration
+Run via: cortex solutions post-install -s workday
 """
 
 SETUP_DESCRIPTION = (
@@ -25,7 +25,7 @@ CONFIG_FILE = DATA_DIR / "configuration.json"
 
 
 class WorkdayIntegrationSetup(SolutionSetup):
-    solution_tag = "workday-integration"
+    solution_tag = "workday"
 
     def __init__(
         self,
@@ -62,7 +62,7 @@ class WorkdayIntegrationSetup(SolutionSetup):
             raise SystemExit(0)
 
         # Back up the existing config
-        backup_dir = Path.home() / ".cortex" / "solutions" / "workday-integration"
+        backup_dir = Path.home() / ".cortex" / "solutions" / "workday"
         backup_dir.mkdir(parents=True, exist_ok=True)
         backup_file = backup_dir / "backup-config.json"
         backup_file.write_text(json.dumps(r.json(), indent=2))
