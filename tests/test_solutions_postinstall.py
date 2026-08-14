@@ -51,5 +51,5 @@ def test_install_prompts_and_runs_post_install_on_yes():
             ["-k", "fake", "solutions", "install", "-s", "github-actions-deploy"],
             input="y\n",
         )
-    assert "This solution includes a post-install setup script" in result.output
+    assert "This solution includes a setup script" in result.output
     mock_run.assert_called_once_with("github-actions-deploy", solutions_dir=None, ctx=ANY)

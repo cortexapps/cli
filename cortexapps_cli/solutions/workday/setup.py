@@ -5,7 +5,7 @@ Run via: cortex solutions post-install -s workday
 """
 
 SETUP_DESCRIPTION = (
-    "This solution includes a post-install setup script that will configure "
+    "This solution includes a setup script that will configure "
     "the Cortex Workday integration to sync the Pied Piper org hierarchy."
 )
 
@@ -80,6 +80,7 @@ class WorkdayIntegrationSetup(SolutionSetup):
         if self.already_done("configure"):
             return "Already configured (skipped)"
         config = json.loads(CONFIG_FILE.read_text())
+        print(f"  (cortex integrations workday add -f {CONFIG_FILE})")
         r = requests.post(
             f"{self._base_url}/api/v1/workday/configuration",
             headers=self._cortex_headers(),

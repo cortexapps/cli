@@ -49,6 +49,8 @@ def test_configuration_mapping_fields():
     mapping = config["reportMappingV2"]
     assert mapping["email"]["columnName"] == "email"
     assert mapping["managerEmail"]["columnName"] == "managersEmail"
+    assert mapping["teamId"]["columnName"] == "teamId"
+    assert mapping["teamName"]["columnName"] == "teamName"
     ff = mapping["fallbackFields"]
     assert ff["fieldOnParentNode"]["columnName"] == "teamId"
     assert ff["fieldOnChildNode"]["columnName"] == "parentTeamId"

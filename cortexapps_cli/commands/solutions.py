@@ -223,8 +223,8 @@ def _get_setup_description(solution_tag: str, solutions_dir: str | None = None) 
     """Return the SETUP_DESCRIPTION from a solution's setup.py, or a generic fallback."""
     module = _load_setup_module(solution_tag, solutions_dir)
     if module:
-        return getattr(module, "SETUP_DESCRIPTION", "This solution includes a post-install setup script.")
-    return "This solution includes a post-install setup script."
+        return getattr(module, "SETUP_DESCRIPTION", "This solution includes a setup script.")
+    return "This solution includes a setup script."
 
 
 def _run_post_install_script(solution_tag: str, solutions_dir: str | None = None, ctx=None, no_prompt: bool = False) -> None:
@@ -700,7 +700,7 @@ def install(
             if failed_m:
                 typer.echo(failed_m.group(0))
             typer.echo(f"\n  {total_imported} imported, {total_failed} failed")
-        else:
+        elif total_imported > 0:
             typer.echo(f"  {total_imported} entities imported")
     else:
         typer.echo(output)

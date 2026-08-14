@@ -7,6 +7,18 @@ description: Configure the Cortex Workday integration with a sample org hierarch
 
 Get the Cortex Workday integration running in minutes using a sample org hierarchy from the fictional company Pied Piper (from the TV show *Silicon Valley*). After install, trigger a sync to see employees and teams appear in your catalog — including the full team hierarchy.
 
+## Org Hierarchy
+
+```
+PP: Pied Piper (Erlich Bachman)
+├── PP: Engineering (Richard Hendricks)
+│   ├── PP: Platform (Bertram Gilfoyle)
+│   │   └── PP: Infrastructure (Nelson Bighetti)
+│   └── PP: Frontend (Dinesh Chugtai)
+└── PP: Operations (Jared Dunn)
+    └── PP: People Ops (Monica Hall)
+```
+
 ## What's Included
 
 - **Pied Piper org data:** 7 employees across 4 levels of hierarchy (Erlich → Richard → Gilfoyle/Dinesh, Jared → Monica, Bachman → Big Head)
@@ -32,18 +44,6 @@ Get the Cortex Workday integration running in minutes using a sample org hierarc
    **Catalog → All Entities → Import Entities**
 
 4. Check your team hierarchy to see the Pied Piper org chart.
-
-## Org Hierarchy
-
-```
-PP: Pied Piper (Erlich Bachman)
-├── PP: Engineering (Richard Hendricks)
-│   ├── PP: Platform (Bertram Gilfoyle)
-│   │   └── PP: Infrastructure (Nelson Bighetti)
-│   └── PP: Frontend (Dinesh Chugtai)
-└── PP: Operations (Jared Dunn)
-    └── PP: People Ops (Monica Hall)
-```
 
 ## How It Works
 

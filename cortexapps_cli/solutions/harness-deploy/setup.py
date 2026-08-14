@@ -6,7 +6,7 @@ Run via: cortex solutions post-install -s harness-deploy
 """
 
 SETUP_DESCRIPTION = (
-    "This solution includes a post-install setup script that will configure your Harness "
+    "This solution includes a setup script that will configure your Harness "
     "integration in Cortex, create the deploy pipeline and cortex_api_key secret in Harness, "
     "import the Cortex trigger workflow, and optionally fire a test deploy."
 )
