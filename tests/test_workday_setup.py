@@ -123,6 +123,9 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
     resp_del = MagicMock(status_code=204)
     resp_del.raise_for_status = MagicMock()
 
+    setup.mark_done("configure")  # simulate a prior completed run
+    assert setup.already_done("configure")
+
     with patch("requests.get", return_value=resp_200), \
          patch("requests.delete", return_value=resp_del) as mock_delete, \
          patch("builtins.input", return_value="y"), \
@@ -132,6 +135,9 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
     mock_delete.assert_called_once()
     delete_url = mock_delete.call_args.args[0]
     assert "configurations" in delete_url   # plural endpoint
+
+    # configure state must be cleared so the next step doesn't skip
+    assert not setup.already_done("configure")
 
     backup_file = tmp_path / ".cortex" / "solutions" / "workday" / "backup-config.json"
     assert backup_file.exists()
@@ -168,18 +174,30 @@ def test_configure_integration_idempotent(setup, tmp_path):
 
 def test_validate_integration_success(setup, capsys):
     resp = MagicMock(ok=True, status_code=200)
+    resp.raise_for_status = MagicMock()
+    resp.json.return_value = {"configurations": [{"isValid": True, "alias": "default"}]}
     with patch("requests.post", return_value=resp):
         setup._validate_integration()
     out = capsys.readouterr().out
     assert "validated successfully" in out
 
 
-def test_validate_integration_warns_on_failure(setup, capsys):
-    resp = MagicMock(ok=False, status_code=400, text="bad")
+def test_validate_integration_raises_on_invalid(setup):
+    resp = MagicMock(ok=True, status_code=200)
+    resp.raise_for_status = MagicMock()
+    resp.json.return_value = {"configurations": [{"isValid": False, "message": "404 from URL", "alias": "default"}]}
     with patch("requests.post", return_value=resp):
-        setup._validate_integration()  # must NOT raise
-    out = capsys.readouterr().out
-    assert "Validation returned" in out
+        with pytest.raises(RuntimeError, match="Validation failed: 404 from URL"):
+            setup._validate_integration()
+
+
+def test_validate_integration_raises_on_empty_result(setup):
+    resp = MagicMock(ok=True, status_code=200)
+    resp.raise_for_status = MagicMock()
+    resp.json.return_value = {"configurations": []}
+    with patch("requests.post", return_value=resp):
+        with pytest.raises(RuntimeError, match="no results"):
+            setup._validate_integration()
 
 
 def test_steps_includes_validate(setup):

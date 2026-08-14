@@ -76,6 +76,22 @@ def test_mark_done_persists_across_instances(tmp_path):
     assert ConcreteSetup(state_dir=tmp_path).already_done("step1") is True
 
 
+def test_mark_undone_clears_state(tmp_path):
+    setup = ConcreteSetup(state_dir=tmp_path)
+    setup.mark_done("step1")
+    assert setup.already_done("step1") is True
+    setup.mark_undone("step1")
+    assert setup.already_done("step1") is False
+    # persists across instances
+    assert ConcreteSetup(state_dir=tmp_path).already_done("step1") is False
+
+
+def test_mark_undone_noop_when_not_set(tmp_path):
+    setup = ConcreteSetup(state_dir=tmp_path)
+    setup.mark_undone("nonexistent")  # must not raise
+    assert setup.already_done("nonexistent") is False
+
+
 def test_state_file_path(tmp_path):
     setup = ConcreteSetup(state_dir=tmp_path)
     assert setup._state_file == tmp_path / "test-solution.json"

@@ -139,6 +139,11 @@ class SolutionSetup(ABC):
         self._state[key] = True
         self._save_file()
 
+    def mark_undone(self, key: str) -> None:
+        """Clear a step's completion state (e.g., after the underlying resource is deleted)."""
+        self._state.pop(key, None)
+        self._save_file()
+
     @abstractmethod
     def collect_prompts(self) -> None:
         """Collect all user inputs upfront before executing steps."""

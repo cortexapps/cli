@@ -74,6 +74,7 @@ class WorkdayIntegrationSetup(SolutionSetup):
             headers=self._cortex_headers(),
         )
         del_r.raise_for_status()
+        self.mark_undone("configure")
 
     def _configure_integration(self) -> None:
         """POST the bundled Workday integration configuration."""
@@ -99,10 +100,14 @@ class WorkdayIntegrationSetup(SolutionSetup):
             f"{self._base_url}/api/v1/workday/configuration/validate",
             headers=self._cortex_headers(),
         )
-        if not r.ok:
-            print(f"  ⚠ Validation returned {r.status_code}: {r.text}")
-        else:
-            print(f"  ✓ Configuration validated successfully")
+        r.raise_for_status()
+        configs = r.json().get("configurations", [])
+        if not configs:
+            raise RuntimeError("Validation returned no results — is the integration configured?")
+        result = configs[0]
+        if not result.get("isValid", False):
+            raise RuntimeError(f"Validation failed: {result.get('message', 'unknown error')}")
+        print(f"  ✓ Configuration validated successfully")
 
     def steps(self) -> list:
         return [
