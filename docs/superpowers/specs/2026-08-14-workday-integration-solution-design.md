@@ -80,23 +80,33 @@ Static — the URL is fixed at the raw.githubusercontent.com path above.
 
 ## Setup Script (`setup.py`)
 
-Extends `SolutionSetup`. Minimal — two prompts, one API call.
+Extends `SolutionSetup`. No prompts for credentials — the CLI already has them via `ctx`. Zero prompts in `collect_prompts()`.
+
+Credentials are read from `ctx.obj["client"]` (the `CortexClient` already configured for the session): `client.api_key` and `client.base_url`.
 
 ### `collect_prompts()`
 
-1. **Cortex API key** — defaults to `CORTEX_API_KEY` env var / session key
-2. **Cortex base URL** — defaults to `CORTEX_BASE_URL` env var / session URL
+Empty — no user prompts needed.
 
 ### `steps()`
 
-Single step: **Configure Workday integration**
+**Step 1: Check for existing Workday integration**
+- `GET {base_url}/api/v1/integrations/workday`
+- If 404: no existing config, proceed to Step 2
+- If 200: existing integration found — prompt: `"Existing Workday integration found. Replace it? [y/N]"`
+  - If N: abort with message `"Keeping existing Workday integration. Exiting."`
+  - If Y:
+    - Write existing config response body to `~/.cortex/solutions/workday-integration/backup-config.json`
+    - `DELETE {base_url}/api/v1/integrations/workday`
+
+**Step 2: Configure Workday integration**
 - Reads `data/configuration.json` from the solution directory
-- Calls `POST {cortex_base_url}/api/v1/integrations/workday` with the config as JSON body
-- Auth header: `Authorization: Bearer {cortex_api_key}`
+- `POST {base_url}/api/v1/integrations/workday` with config as JSON body
+- Auth header: `Authorization: Bearer {api_key}`
 - On success: prints confirmation
 - On error: raises with response body for diagnosis
 
-Uses `already_done` / `mark_done` for idempotency (re-running post-install skips if already configured).
+Uses `already_done` / `mark_done` for idempotency (re-running post-install skips Step 2 if already done).
 
 ### `post_steps()`
 
