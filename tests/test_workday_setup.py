@@ -49,8 +49,8 @@ def test_configuration_mapping_fields():
     assert mapping["teamId"]["columnName"] == "teamId"
     assert mapping["teamName"]["columnName"] == "teamName"
     ff = mapping["fallbackFields"]
-    assert ff["fieldOnParentNode"]["columnName"] == "childHierarchyColumn"
-    assert ff["fieldOnChildNode"]["columnName"] == "parentHierarchyColumn"
+    assert ff["fieldOnParentNode"]["columnName"] == "parentHierarchyColumn"
+    assert ff["fieldOnChildNode"]["columnName"] == "childHierarchyColumn"
 
 
 import importlib.util

@@ -15,8 +15,8 @@
     "fallbackFields": {
       "teamId": { "columnName": "teamId" },
       "teamName": { "columnName": "teamName" },
-      "fieldOnParentNode": { "columnName": "childHierarchyColumn" },
-      "fieldOnChildNode": { "columnName": "parentHierarchyColumn" }
+      "fieldOnParentNode": { "columnName": "parentHierarchyColumn" },
+      "fieldOnChildNode": { "columnName": "childHierarchyColumn" }
     },
     "type": "ONE_EMPLOYEE_ONE_TEAM"
   },
