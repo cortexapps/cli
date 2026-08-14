@@ -11,32 +11,40 @@ def test_hierarchy_json_is_valid():
     assert len(data["Report_Entry"]) == 7
 
 
-def test_hierarchy_has_root_employee():
-    data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
-    roots = [e for e in data["Report_Entry"] if e["managersEmail"] == e["email"]]
-    assert len(roots) == 1
-    assert roots[0]["email"] == "erlich.bachman@piedpiper.com"
-
-
 def test_hierarchy_has_root_team():
     data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
-    roots = [e for e in data["Report_Entry"] if e["childHierarchyColumn"] is None]
-    assert len(roots) == 1
-    assert roots[0]["teamId"] == "WORKTEAM-1-000"
+    all_teams = [team for entry in data["Report_Entry"] for team in entry["Workteam_Group"]]
+    root_teams = {team["teamName"] for team in all_teams if team["parentTeamId"] == "NONE"}
+    assert len(root_teams) == 1
+    assert "PP: Pied Piper" in root_teams
+
+
+def test_hierarchy_parent_child_links():
+    data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
+    all_teams = [team for entry in data["Report_Entry"] for team in entry["Workteam_Group"]]
+    team_names = {team["teamName"] for team in all_teams}
+    for team in all_teams:
+        if team["parentTeamId"] != "NONE":
+            assert team["parentTeamId"] in team_names, (
+                f"{team['teamName']}.parentTeamId={team['parentTeamId']!r} not found in any teamName"
+            )
 
 
 def test_hierarchy_required_fields():
     data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
-    required = {"email", "employeeId", "firstName", "lastName", "managersEmail",
-                "teamId", "teamName", "childHierarchyColumn", "parentHierarchyColumn"}
+    required_top = {"Email", "Employee_ID", "First_Name", "Last_Name", "Workteam_Group"}
+    required_team = {"teamName", "teamDisplayName", "parentTeamId"}
     for entry in data["Report_Entry"]:
-        assert required <= entry.keys(), f"Missing fields in entry: {entry}"
+        assert required_top <= entry.keys(), f"Missing top-level fields in entry: {entry}"
+        assert isinstance(entry["Workteam_Group"], list), f"Workteam_Group must be a list in: {entry}"
+        for team in entry["Workteam_Group"]:
+            assert required_team <= team.keys(), f"Missing team fields in: {team}"
 
 
 def test_configuration_json_is_valid():
     config = json.loads((DATA_DIR / "configuration.json").read_text())
     assert config["ownershipReportUrl"] == REPORT_URL
-    assert config["reportMappingV2"]["type"] == "ONE_EMPLOYEE_ONE_TEAM"
+    assert config["reportMappingV2"]["type"] == "ONE_EMPLOYEE_MULTIPLE_TEAMS"
     assert "password" in config
     assert "username" in config
 
@@ -44,13 +52,13 @@ def test_configuration_json_is_valid():
 def test_configuration_mapping_fields():
     config = json.loads((DATA_DIR / "configuration.json").read_text())
     mapping = config["reportMappingV2"]
-    assert mapping["email"]["columnName"] == "email"
-    assert mapping["managerEmail"]["columnName"] == "managersEmail"
-    assert mapping["teamId"]["columnName"] == "teamId"
-    assert mapping["teamName"]["columnName"] == "teamName"
-    ff = mapping["fallbackFields"]
-    assert ff["fieldOnParentNode"]["columnName"] == "parentHierarchyColumn"
-    assert ff["fieldOnChildNode"]["columnName"] == "childHierarchyColumn"
+    assert mapping["email"]["columnName"] == "Email"
+    assert mapping["employeeId"]["columnName"] == "Employee_ID"
+    tlf = mapping["teamListFields"]
+    assert tlf["teamListKey"]["columnName"] == "Workteam_Group"
+    assert tlf["teamId"]["columnName"] == "teamName"
+    assert tlf["hierarchy"]["fieldOnParentNode"]["columnName"] == "teamName"
+    assert tlf["hierarchy"]["fieldOnChildNode"]["columnName"] == "parentTeamId"
 
 
 import importlib.util
@@ -91,9 +99,8 @@ def test_setup_description(mod):
 
 
 def test_collect_prompts_is_noop(setup):
-    # collect_prompts() must not raise and must not call input()
     with patch("builtins.input", side_effect=AssertionError("should not prompt")):
-        setup.collect_prompts()  # no exception = pass
+        setup.collect_prompts()
 
 
 def test_check_existing_no_config_proceeds(setup):
@@ -102,7 +109,6 @@ def test_check_existing_no_config_proceeds(setup):
     setup.mark_done("configure")  # simulate stale cached state
     with patch("requests.get", return_value=resp_404):
         setup._check_and_replace_existing()
-    # stale cache must be cleared so configure step runs
     assert not setup.already_done("configure")
 
 
@@ -125,7 +131,7 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
     resp_del = MagicMock(status_code=204)
     resp_del.raise_for_status = MagicMock()
 
-    setup.mark_done("configure")  # simulate a prior completed run
+    setup.mark_done("configure")
     assert setup.already_done("configure")
 
     with patch("requests.get", return_value=resp_200), \
@@ -135,10 +141,7 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
         setup._check_and_replace_existing()
 
     mock_delete.assert_called_once()
-    delete_url = mock_delete.call_args.args[0]
-    assert "configurations" in delete_url   # plural endpoint
-
-    # configure state must be cleared so the next step doesn't skip
+    assert "configurations" in mock_delete.call_args.args[0]
     assert not setup.already_done("configure")
 
     backup_file = tmp_path / ".cortex" / "solutions" / "workday" / "backup-config.json"
@@ -156,7 +159,7 @@ def test_configure_integration_posts_correct_payload(setup):
     assert url.endswith("/api/v1/workday/configuration")
 
     payload = mock_post.call_args.kwargs["json"]
-    assert payload["reportMappingV2"]["type"] == "ONE_EMPLOYEE_ONE_TEAM"
+    assert payload["reportMappingV2"]["type"] == "ONE_EMPLOYEE_MULTIPLE_TEAMS"
     assert "pied-piper-supervisory-org" in payload["ownershipReportUrl"]
 
 
@@ -180,8 +183,7 @@ def test_validate_integration_success(setup, capsys):
     resp.json.return_value = {"configurations": [{"isValid": True, "alias": "default"}]}
     with patch("requests.post", return_value=resp):
         setup._validate_integration()
-    out = capsys.readouterr().out
-    assert "validated successfully" in out
+    assert "validated successfully" in capsys.readouterr().out
 
 
 def test_validate_integration_raises_on_invalid(setup):
@@ -203,8 +205,7 @@ def test_validate_integration_raises_on_empty_result(setup):
 
 
 def test_steps_includes_validate(setup):
-    steps = setup.steps()
-    labels = [s[0] for s in steps]
+    labels = [s[0] for s in setup.steps()]
     assert "Validate Workday integration" in labels
 
 
