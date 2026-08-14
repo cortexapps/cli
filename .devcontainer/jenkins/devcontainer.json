@@ -1,0 +1,15 @@
+{
+  "name": "Cortex Jenkins Demo",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "pip install cortexapps-cli && bash -c 'until curl -s -o /dev/null -w \"%{http_code}\" http://jenkins:8080/login | grep -q 200; do echo \"Waiting for Jenkins...\"; sleep 5; done; echo \"Jenkins is ready at port 8080\"'",
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Jenkins UI",
+      "onAutoForward": "notify"
+    }
+  },
+  "remoteUser": "vscode"
+}
