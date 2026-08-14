@@ -52,3 +52,122 @@ def test_configuration_mapping_fields():
     ff = mapping["fallbackFields"]
     assert ff["fieldOnParentNode"]["columnName"] == "teamId"
     assert ff["fieldOnChildNode"]["columnName"] == "parentTeamId"
+
+
+import importlib.util
+import pytest
+from unittest.mock import patch, MagicMock
+
+
+def load_setup_module():
+    spec = importlib.util.spec_from_file_location(
+        "workday_setup",
+        "cortexapps_cli/solutions/workday-integration/setup.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture
+def mod():
+    return load_setup_module()
+
+
+@pytest.fixture
+def setup(mod, tmp_path):
+    return mod.WorkdayIntegrationSetup(
+        cortex_api_key="crt_test",
+        cortex_base_url="https://api.getcortexapp.com",
+        state_dir=tmp_path,
+    )
+
+
+def test_solution_tag(mod):
+    assert mod.WorkdayIntegrationSetup.solution_tag == "workday-integration"
+
+
+def test_setup_description(mod):
+    assert "Workday" in mod.SETUP_DESCRIPTION
+
+
+def test_collect_prompts_is_noop(setup):
+    # collect_prompts() must not raise and must not call input()
+    with patch("builtins.input", side_effect=AssertionError("should not prompt")):
+        setup.collect_prompts()  # no exception = pass
+
+
+def test_check_existing_no_config_proceeds(setup):
+    resp_404 = MagicMock(status_code=404)
+    resp_404.raise_for_status = MagicMock()
+    with patch("requests.get", return_value=resp_404):
+        # Should return without prompting or raising
+        setup._check_and_replace_existing()
+
+
+def test_check_existing_user_declines_exits(setup):
+    resp_200 = MagicMock(status_code=200)
+    resp_200.raise_for_status = MagicMock()
+    resp_200.json.return_value = {"username": "ISU_Cortex"}
+    with patch("requests.get", return_value=resp_200), \
+         patch("builtins.input", return_value="n"):
+        with pytest.raises(SystemExit) as exc_info:
+            setup._check_and_replace_existing()
+        assert exc_info.value.code == 0
+
+
+def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
+    existing = {"username": "ISU_Cortex", "ownershipReportUrl": "https://old.example.com"}
+    resp_200 = MagicMock(status_code=200)
+    resp_200.raise_for_status = MagicMock()
+    resp_200.json.return_value = existing
+    resp_del = MagicMock(status_code=204)
+    resp_del.raise_for_status = MagicMock()
+
+    backup_dir = tmp_path / "workday-integration"
+
+    with patch("requests.get", return_value=resp_200), \
+         patch("requests.delete", return_value=resp_del) as mock_delete, \
+         patch("builtins.input", return_value="y"), \
+         patch("pathlib.Path.home", return_value=tmp_path):
+        setup._check_and_replace_existing()
+
+    mock_delete.assert_called_once()
+    delete_url = mock_delete.call_args.args[0]
+    assert "configurations" in delete_url   # plural endpoint
+
+    backup_file = tmp_path / ".cortex" / "solutions" / "workday-integration" / "backup-config.json"
+    assert backup_file.exists()
+    assert json.loads(backup_file.read_text()) == existing
+
+
+def test_configure_integration_posts_correct_payload(setup):
+    resp = MagicMock(ok=True, status_code=200)
+    with patch("requests.post", return_value=resp) as mock_post:
+        setup._configure_integration()
+
+    mock_post.assert_called_once()
+    url = mock_post.call_args.args[0]
+    assert url.endswith("/api/v1/workday/configuration")
+
+    payload = mock_post.call_args.kwargs["json"]
+    assert payload["reportMappingV2"]["type"] == "ONE_EMPLOYEE_ONE_TEAM"
+    assert "pied-piper-hierarchy.json" in payload["ownershipReportUrl"]
+
+
+def test_configure_integration_raises_on_failure(setup):
+    resp = MagicMock(ok=False, status_code=400, text="Bad Request")
+    with patch("requests.post", return_value=resp):
+        with pytest.raises(RuntimeError, match="Failed to configure"):
+            setup._configure_integration()
+
+
+def test_configure_integration_idempotent(setup, tmp_path):
+    setup.mark_done("configure")
+    with patch("requests.post") as mock_post:
+        setup._configure_integration()
+    mock_post.assert_not_called()
+
+
+def test_main_callable(mod):
+    assert callable(mod.main)
