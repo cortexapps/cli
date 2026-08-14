@@ -8,7 +8,8 @@
       "managersEmail": "erlich.bachman@piedpiper.com",
       "teamId": "WORKTEAM-1-000",
       "teamName": "PP: Pied Piper",
-      "parentTeamId": "NONE"
+      "childHierarchyColumn": null,
+      "parentHierarchyColumn": "SUP-000"
     },
     {
       "email": "richard.hendricks@piedpiper.com",
@@ -18,7 +19,8 @@
       "managersEmail": "erlich.bachman@piedpiper.com",
       "teamId": "WORKTEAM-1-001",
       "teamName": "PP: Engineering",
-      "parentTeamId": "WORKTEAM-1-000"
+      "childHierarchyColumn": "SUP-000",
+      "parentHierarchyColumn": "SUP-001"
     },
     {
       "email": "bertram.gilfoyle@piedpiper.com",
@@ -28,7 +30,8 @@
       "managersEmail": "richard.hendricks@piedpiper.com",
       "teamId": "WORKTEAM-1-002",
       "teamName": "PP: Platform",
-      "parentTeamId": "WORKTEAM-1-001"
+      "childHierarchyColumn": "SUP-001",
+      "parentHierarchyColumn": "SUP-002"
     },
     {
       "email": "dinesh.chugtai@piedpiper.com",
@@ -38,7 +41,8 @@
       "managersEmail": "richard.hendricks@piedpiper.com",
       "teamId": "WORKTEAM-1-003",
       "teamName": "PP: Frontend",
-      "parentTeamId": "WORKTEAM-1-001"
+      "childHierarchyColumn": "SUP-001",
+      "parentHierarchyColumn": null
     },
     {
       "email": "jared.dunn@piedpiper.com",
@@ -48,7 +52,8 @@
       "managersEmail": "erlich.bachman@piedpiper.com",
       "teamId": "WORKTEAM-1-004",
       "teamName": "PP: Operations",
-      "parentTeamId": "WORKTEAM-1-000"
+      "childHierarchyColumn": "SUP-000",
+      "parentHierarchyColumn": "SUP-004"
     },
     {
       "email": "monica.hall@piedpiper.com",
@@ -58,7 +63,8 @@
       "managersEmail": "jared.dunn@piedpiper.com",
       "teamId": "WORKTEAM-1-005",
       "teamName": "PP: People Ops",
-      "parentTeamId": "WORKTEAM-1-004"
+      "childHierarchyColumn": "SUP-004",
+      "parentHierarchyColumn": null
     },
     {
       "email": "nelson.bighetti@piedpiper.com",
@@ -68,7 +74,8 @@
       "managersEmail": "bertram.gilfoyle@piedpiper.com",
       "teamId": "WORKTEAM-1-006",
       "teamName": "PP: Infrastructure",
-      "parentTeamId": "WORKTEAM-1-002"
+      "childHierarchyColumn": "SUP-002",
+      "parentHierarchyColumn": null
     }
   ]
 }

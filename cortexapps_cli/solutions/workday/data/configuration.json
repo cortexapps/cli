@@ -1,6 +1,6 @@
 {
   "username": "ISU_Cortex",
-  "ownershipReportUrl": "https://raw.githubusercontent.com/cortexapps/cli/main/cortexapps_cli/solutions/workday/data/pied-piper-hierarchy.json",
+  "ownershipReportUrl": "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org/index.json",
   "reportMappingV2": {
     "email": { "columnName": "email" },
     "employeeId": { "columnName": "employeeId" },
@@ -15,8 +15,8 @@
     "fallbackFields": {
       "teamId": { "columnName": "teamId" },
       "teamName": { "columnName": "teamName" },
-      "fieldOnParentNode": { "columnName": "teamId" },
-      "fieldOnChildNode": { "columnName": "parentTeamId" }
+      "fieldOnParentNode": { "columnName": "childHierarchyColumn" },
+      "fieldOnChildNode": { "columnName": "parentHierarchyColumn" }
     },
     "type": "ONE_EMPLOYEE_ONE_TEAM"
   },

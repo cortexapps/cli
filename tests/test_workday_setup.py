@@ -2,36 +2,33 @@ import json
 from pathlib import Path
 
 DATA_DIR = Path("cortexapps_cli/solutions/workday/data")
-REPORT_URL = (
-    "https://raw.githubusercontent.com/cortexapps/cli/main"
-    "/cortexapps_cli/solutions/workday/data/pied-piper-hierarchy.json"
-)
+REPORT_URL = "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org/index.json"
 
 
 def test_hierarchy_json_is_valid():
-    data = json.loads((DATA_DIR / "pied-piper-hierarchy.json").read_text())
+    data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
     assert "Report_Entry" in data
     assert len(data["Report_Entry"]) == 7
 
 
 def test_hierarchy_has_root_employee():
-    data = json.loads((DATA_DIR / "pied-piper-hierarchy.json").read_text())
+    data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
     roots = [e for e in data["Report_Entry"] if e["managersEmail"] == e["email"]]
     assert len(roots) == 1
     assert roots[0]["email"] == "erlich.bachman@piedpiper.com"
 
 
 def test_hierarchy_has_root_team():
-    data = json.loads((DATA_DIR / "pied-piper-hierarchy.json").read_text())
-    roots = [e for e in data["Report_Entry"] if e["parentTeamId"] == "NONE"]
+    data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
+    roots = [e for e in data["Report_Entry"] if e["childHierarchyColumn"] is None]
     assert len(roots) == 1
     assert roots[0]["teamId"] == "WORKTEAM-1-000"
 
 
 def test_hierarchy_required_fields():
-    data = json.loads((DATA_DIR / "pied-piper-hierarchy.json").read_text())
+    data = json.loads((DATA_DIR / "pied-piper-supervisory-org.json").read_text())
     required = {"email", "employeeId", "firstName", "lastName", "managersEmail",
-                "teamId", "teamName", "parentTeamId"}
+                "teamId", "teamName", "childHierarchyColumn", "parentHierarchyColumn"}
     for entry in data["Report_Entry"]:
         assert required <= entry.keys(), f"Missing fields in entry: {entry}"
 
@@ -52,8 +49,8 @@ def test_configuration_mapping_fields():
     assert mapping["teamId"]["columnName"] == "teamId"
     assert mapping["teamName"]["columnName"] == "teamName"
     ff = mapping["fallbackFields"]
-    assert ff["fieldOnParentNode"]["columnName"] == "teamId"
-    assert ff["fieldOnChildNode"]["columnName"] == "parentTeamId"
+    assert ff["fieldOnParentNode"]["columnName"] == "childHierarchyColumn"
+    assert ff["fieldOnChildNode"]["columnName"] == "parentHierarchyColumn"
 
 
 import importlib.util
@@ -126,8 +123,6 @@ def test_check_existing_user_accepts_backs_up_and_deletes(setup, tmp_path):
     resp_del = MagicMock(status_code=204)
     resp_del.raise_for_status = MagicMock()
 
-    backup_dir = tmp_path / "workday"
-
     with patch("requests.get", return_value=resp_200), \
          patch("requests.delete", return_value=resp_del) as mock_delete, \
          patch("builtins.input", return_value="y"), \
@@ -154,7 +149,7 @@ def test_configure_integration_posts_correct_payload(setup):
 
     payload = mock_post.call_args.kwargs["json"]
     assert payload["reportMappingV2"]["type"] == "ONE_EMPLOYEE_ONE_TEAM"
-    assert "pied-piper-hierarchy.json" in payload["ownershipReportUrl"]
+    assert "pied-piper-supervisory-org" in payload["ownershipReportUrl"]
 
 
 def test_configure_integration_raises_on_failure(setup):
@@ -169,6 +164,28 @@ def test_configure_integration_idempotent(setup, tmp_path):
     with patch("requests.post") as mock_post:
         setup._configure_integration()
     mock_post.assert_not_called()
+
+
+def test_validate_integration_success(setup, capsys):
+    resp = MagicMock(ok=True, status_code=200)
+    with patch("requests.post", return_value=resp):
+        setup._validate_integration()
+    out = capsys.readouterr().out
+    assert "validated successfully" in out
+
+
+def test_validate_integration_warns_on_failure(setup, capsys):
+    resp = MagicMock(ok=False, status_code=400, text="bad")
+    with patch("requests.post", return_value=resp):
+        setup._validate_integration()  # must NOT raise
+    out = capsys.readouterr().out
+    assert "Validation returned" in out
+
+
+def test_steps_includes_validate(setup):
+    steps = setup.steps()
+    labels = [s[0] for s in steps]
+    assert "Validate Workday integration" in labels
 
 
 def test_main_callable(mod):

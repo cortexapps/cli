@@ -92,16 +92,30 @@ class WorkdayIntegrationSetup(SolutionSetup):
             )
         self.mark_done("configure")
 
+    def _validate_integration(self) -> None:
+        """Validate the Workday integration configuration."""
+        print(f"  (cortex integrations workday validate)")
+        r = requests.post(
+            f"{self._base_url}/api/v1/workday/configuration/validate",
+            headers=self._cortex_headers(),
+        )
+        if not r.ok:
+            print(f"  ⚠ Validation returned {r.status_code}: {r.text}")
+        else:
+            print(f"  ✓ Configuration validated successfully")
+
     def steps(self) -> list:
         return [
             ("Check for existing Workday integration", self._check_and_replace_existing),
             ("Configure Workday integration", self._configure_integration),
+            ("Validate Workday integration", self._validate_integration),
         ]
 
     def post_steps(self) -> None:
         print("\n✓ Workday integration configured with the Pied Piper org hierarchy.\n")
-        print("Next: trigger the import in Cortex:")
-        print("  Catalog → All Entities → Import Entities\n")
+        print("Next: trigger a sync in Cortex:")
+        print("  Catalog → All Entities → Import Entities → Workday")
+        print("  Click 'Sync Entities', then 'Next Step' to import.\n")
         print("Then check your team hierarchy to see the Pied Piper org chart.")
 
 
