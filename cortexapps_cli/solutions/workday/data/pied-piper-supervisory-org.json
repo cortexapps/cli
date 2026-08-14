@@ -6,6 +6,7 @@
       "First_Name": "Erlich",
       "Last_Name": "Bachman",
       "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "CEO",
       "Workteam_Group": [
         {
           "teamName": "PP: Pied Piper",
@@ -21,6 +22,7 @@
       "First_Name": "Richard",
       "Last_Name": "Hendricks",
       "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "CTO",
       "Workteam_Group": [
         {
           "teamName": "PP: Engineering",
@@ -36,6 +38,7 @@
       "First_Name": "Bertram",
       "Last_Name": "Gilfoyle",
       "Managers_Email": "richard.hendricks@piedpiper.com",
+      "employeeRole": "Staff Engineer",
       "Workteam_Group": [
         {
           "teamName": "PP: Platform",
@@ -51,6 +54,7 @@
       "First_Name": "Dinesh",
       "Last_Name": "Chugtai",
       "Managers_Email": "richard.hendricks@piedpiper.com",
+      "employeeRole": "Senior Engineer",
       "Workteam_Group": [
         {
           "teamName": "PP: Frontend",
@@ -65,6 +69,7 @@
       "First_Name": "Jared",
       "Last_Name": "Dunn",
       "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "COO",
       "Workteam_Group": [
         {
           "teamName": "PP: Operations",
@@ -80,6 +85,7 @@
       "First_Name": "Monica",
       "Last_Name": "Hall",
       "Managers_Email": "jared.dunn@piedpiper.com",
+      "employeeRole": "VP People",
       "Workteam_Group": [
         {
           "teamName": "PP: People Ops",
@@ -94,6 +100,7 @@
       "First_Name": "Nelson",
       "Last_Name": "Bighetti",
       "Managers_Email": "bertram.gilfoyle@piedpiper.com",
+      "employeeRole": "Engineer",
       "Workteam_Group": [
         {
           "teamName": "PP: Infrastructure",
