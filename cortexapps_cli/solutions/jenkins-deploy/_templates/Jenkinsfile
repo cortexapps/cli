@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'callback_url',      defaultValue: '', description: 'Cortex async callback URL')
+        string(name: 'cortex_entity_tag', defaultValue: '', description: 'Cortex entity tag')
+    }
+    environment {
+        CORTEX_API_KEY  = credentials('CORTEX_API_KEY')
+        CORTEX_BASE_URL = credentials('CORTEX_BASE_URL')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Placeholder for real deploy steps'
+                // Replace this echo with your actual build and deploy commands
+            }
+        }
+        stage('Record Deploy') {
+            steps {
+                script {
+                    def timestamp = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
+                    def payload = """{"sha":"${env.BUILD_NUMBER}","timestamp":"${timestamp}","environment":"production","type":"DEPLOY","title":"Build #${env.BUILD_NUMBER}","deployer":{"name":"Jenkins"},"customData":{"buildUrl":"${env.BUILD_URL}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    sh """
+                        curl -s -f -X POST \\
+                          "\${CORTEX_BASE_URL}/api/v1/catalog/${params.cortex_entity_tag}/deploys" \\
+                          -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
+                          -H "Content-Type: application/json" \\
+                          -d '${payload}' || true
+                    """
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                if (params.callback_url) {
+                    def status = currentBuild.currentResult == 'SUCCESS' ? 'SUCCESS' : 'FAILURE'
+                    def payload = """{"status":"${status}","message":"Jenkins pipeline ${status.toLowerCase()}","response":{"buildUrl":"${env.BUILD_URL}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    withEnv(["CALLBACK_URL=${params.callback_url}"]) {
+                        sh """
+                            curl -s -X POST "\$CALLBACK_URL" \\
+                              -H "Content-Type: application/json" \\
+                              -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
+                              -d '${payload}' || true
+                        """
+                    }
+                }
+            }
+        }
+    }
+}

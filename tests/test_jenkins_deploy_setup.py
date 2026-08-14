@@ -33,3 +33,16 @@ def test_scorecard_yaml_is_valid():
     assert len(data["rules"]) == 3
     levels = {r["level"] for r in data["rules"]}
     assert levels == {"Bronze", "Silver", "Gold"}
+
+
+def test_jenkinsfile_has_required_elements():
+    path = Path("cortexapps_cli/solutions/jenkins-deploy/_templates/Jenkinsfile")
+    content = path.read_text()
+    assert "callback_url" in content
+    assert "cortex_entity_tag" in content
+    assert "CORTEX_API_KEY" in content
+    assert "CORTEX_BASE_URL" in content
+    assert "/deploys" in content
+    assert "post {" in content
+    assert "always {" in content
+    assert "CALLBACK_URL" in content
