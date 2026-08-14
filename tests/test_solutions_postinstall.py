@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 from typer.testing import CliRunner
 from cortexapps_cli.cli import app
 
@@ -21,7 +21,7 @@ def test_post_install_unknown_solution():
 def test_post_install_calls_run_for_github_actions():
     with patch("cortexapps_cli.commands.solutions._run_post_install_script") as mock_run:
         runner.invoke(app, ["solutions", "post-install", "-s", "github-actions-deploy"])
-    mock_run.assert_called_once_with("github-actions-deploy", solutions_dir=None)
+    mock_run.assert_called_once_with("github-actions-deploy", solutions_dir=None, ctx=ANY, no_prompt=False)
 
 
 def test_install_skip_post_install_setup_flag_skips_script():
@@ -51,5 +51,5 @@ def test_install_prompts_and_runs_post_install_on_yes():
             ["-k", "fake", "solutions", "install", "-s", "github-actions-deploy"],
             input="y\n",
         )
-    assert "This solution includes a post-install setup script." in result.output
-    mock_run.assert_called_once_with("github-actions-deploy", solutions_dir=None)
+    assert "This solution includes a post-install setup script" in result.output
+    mock_run.assert_called_once_with("github-actions-deploy", solutions_dir=None, ctx=ANY)

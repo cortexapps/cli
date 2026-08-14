@@ -173,8 +173,6 @@ class GitHubActionsSetup(SolutionSetup):
         if self._session_base_url:
             self._answers["cortex_base_url"] = self._session_base_url
         else:
-            self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
-        else:
             self.prompt(
                 "cortex_base_url",
                 "Cortex base URL",

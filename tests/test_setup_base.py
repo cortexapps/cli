@@ -19,7 +19,8 @@ class ConcreteSetup(SolutionSetup):
 def test_prompt_uses_env_var(tmp_path, monkeypatch):
     monkeypatch.setenv("MY_VAR", "from-env")
     setup = ConcreteSetup(state_dir=tmp_path)
-    result = setup.prompt("key", "Enter value", env_var="MY_VAR")
+    with patch("builtins.input", return_value=""):
+        result = setup.prompt("key", "Enter value", env_var="MY_VAR")
     assert result == "from-env"
 
 
@@ -77,7 +78,7 @@ def test_mark_done_persists_across_instances(tmp_path):
 
 def test_state_file_path(tmp_path):
     setup = ConcreteSetup(state_dir=tmp_path)
-    assert setup._state_file == tmp_path / "setup-test-solution.json"
+    assert setup._state_file == tmp_path / "test-solution.json"
 
 
 def test_post_steps_called_after_steps(tmp_path):
