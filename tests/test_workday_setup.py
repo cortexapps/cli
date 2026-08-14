@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 DATA_DIR = Path("cortexapps_cli/solutions/workday/data")
-REPORT_URL = "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org/index.json"
+REPORT_URL = "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org"
 
 
 def test_hierarchy_json_is_valid():

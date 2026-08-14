@@ -1,6 +1,6 @@
 {
   "username": "ISU_Cortex",
-  "ownershipReportUrl": "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org/index.json",
+  "ownershipReportUrl": "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org",
   "reportMappingV2": {
     "email": { "columnName": "email" },
     "employeeId": { "columnName": "employeeId" },
