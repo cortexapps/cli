@@ -54,7 +54,8 @@ class WorkdayIntegrationSetup(SolutionSetup):
             headers=self._cortex_headers(),
         )
         if r.status_code == 404:
-            return  # no existing config — proceed
+            self.mark_undone("configure")  # no integration on server — reconfigure regardless of cached state
+            return
         r.raise_for_status()
 
         if not self.confirm("Existing Workday integration found. Replace it?", default=False):

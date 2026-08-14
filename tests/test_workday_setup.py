@@ -99,9 +99,11 @@ def test_collect_prompts_is_noop(setup):
 def test_check_existing_no_config_proceeds(setup):
     resp_404 = MagicMock(status_code=404)
     resp_404.raise_for_status = MagicMock()
+    setup.mark_done("configure")  # simulate stale cached state
     with patch("requests.get", return_value=resp_404):
-        # Should return without prompting or raising
         setup._check_and_replace_existing()
+    # stale cache must be cleared so configure step runs
+    assert not setup.already_done("configure")
 
 
 def test_check_existing_user_declines_exits(setup):

@@ -7,21 +7,28 @@ description: Configure the Cortex Workday integration with a sample org hierarch
 
 Get the Cortex Workday integration running in minutes using a sample org hierarchy from the fictional company Pied Piper (from the TV show *Silicon Valley*). After install, trigger a sync to see employees and teams appear in your catalog — including the full team hierarchy.
 
-## Org Hierarchy
+## Data Model
 
 ```
-PP: Pied Piper (Erlich Bachman)
-├── PP: Engineering (Richard Hendricks)
-│   ├── PP: Platform (Bertram Gilfoyle)
-│   │   └── PP: Infrastructure (Nelson Bighetti)
-│   └── PP: Frontend (Dinesh Chugtai)
-└── PP: Operations (Jared Dunn)
-    └── PP: People Ops (Monica Hall)
+  ┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
+  │   Workday Report     │────▶│  Cortex Integration  │────▶│   Team Catalog       │
+  │   (JSON / RaaS)      │     │   (field mapping)    │     │   + Members          │
+  └──────────────────────┘     └──────────────────────┘     └──────────────────────┘
+
+  Sample: Pied Piper supervisory org (Silicon Valley)
+
+  PP: Pied Piper (Erlich Bachman)
+  ├── PP: Engineering (Richard Hendricks)
+  │   ├── PP: Platform (Bertram Gilfoyle)
+  │   │   └── PP: Infrastructure (Nelson Bighetti)
+  │   └── PP: Frontend (Dinesh Chugtai)
+  └── PP: Operations (Jared Dunn)
+      └── PP: People Ops (Monica Hall)
 ```
 
 ## What's Included
 
-- **Pied Piper org data:** 7 employees across 4 levels of hierarchy (Erlich → Richard → Gilfoyle/Dinesh, Jared → Monica, Bachman → Big Head)
+- **Pied Piper org data:** 7 employees across 4 levels of hierarchy (Erlich → Richard → Gilfoyle/Dinesh, Jared → Monica, Gilfoyle → Big Head)
 - **Integration config:** field mapping and report URL pre-configured, pointing at the hosted data
 - **Setup script:** one-command configuration of the Cortex Workday integration via API
 
@@ -41,13 +48,13 @@ PP: Pied Piper (Erlich Bachman)
 
 3. Trigger the import in Cortex:
 
-   **Catalog → All Entities → Import Entities**
+   **Catalog → All Entities → Import Entities → Workday → Sync Entities → Next Step**
 
 4. Check your team hierarchy to see the Pied Piper org chart.
 
 ## How It Works
 
-The setup script calls the Cortex Workday integration API to configure a report URL pointing at `pied-piper-hierarchy.json` hosted in this repository. Cortex fetches the report and syncs employees and teams into your catalog on the next import run.
+The setup script calls the Cortex Workday integration API to configure a report URL pointing at the bundled Pied Piper supervisory org data. Cortex fetches the report and syncs employees and teams into your catalog on the next import run.
 
 ## Adapting to Real Workday Data
 
