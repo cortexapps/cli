@@ -120,3 +120,58 @@ def test_wait_for_codespace_polls_until_available(setup):
     with patch("requests.get", side_effect=[pending, ready]), \
          patch("time.sleep"):
         setup._wait_for_codespace("my-codespace-abc")  # should not raise
+
+
+def test_jenkins_auth(setup):
+    assert setup._jenkins_auth() == ("admin", "cortex-demo")
+
+
+def test_wait_for_jenkins_polls_until_200(setup):
+    from unittest.mock import patch, MagicMock
+    fail = MagicMock(status_code=503)
+    ok = MagicMock(status_code=200)
+    with patch("requests.get", side_effect=[fail, ok]), \
+         patch("time.sleep"):
+        setup._wait_for_jenkins()  # should not raise
+
+
+def test_create_jenkins_job_skips_if_exists(setup):
+    from unittest.mock import patch, MagicMock
+    exists_resp = MagicMock(status_code=200)
+    with patch("requests.get", return_value=exists_resp) as mock_get, \
+         patch("requests.post") as mock_post:
+        setup._create_jenkins_job()
+    mock_get.assert_called_once()
+    mock_post.assert_not_called()
+
+
+def test_create_jenkins_job_creates_when_missing(setup):
+    from unittest.mock import patch, MagicMock
+    missing_resp = MagicMock(status_code=404)
+    created_resp = MagicMock(status_code=200)
+    with patch("requests.get", return_value=missing_resp), \
+         patch("requests.post", return_value=created_resp) as mock_post:
+        setup._create_jenkins_job()
+    mock_post.assert_called_once()
+    call_kwargs = mock_post.call_args
+    assert "application/xml" in call_kwargs.kwargs.get("headers", {}).get("Content-Type", "")
+
+
+def test_add_jenkins_credential_skips_if_exists(setup):
+    from unittest.mock import patch, MagicMock
+    exists_resp = MagicMock(status_code=200)
+    with patch("requests.get", return_value=exists_resp) as mock_get, \
+         patch("requests.post") as mock_post:
+        setup._add_jenkins_credential("CORTEX_API_KEY", "secret", "Cortex API key")
+    mock_get.assert_called_once()
+    mock_post.assert_not_called()
+
+
+def test_add_jenkins_credential_creates_when_missing(setup):
+    from unittest.mock import patch, MagicMock
+    missing_resp = MagicMock(status_code=404)
+    created_resp = MagicMock(status_code=200)
+    with patch("requests.get", return_value=missing_resp), \
+         patch("requests.post", return_value=created_resp) as mock_post:
+        setup._add_jenkins_credential("CORTEX_API_KEY", "secret", "Cortex API key")
+    mock_post.assert_called_once()

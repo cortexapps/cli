@@ -159,6 +159,131 @@ class JenkinsDeploySetup(SolutionSetup):
             self.prompt("jenkins_token", "Jenkins API token or password", secret=True)
             self.prompt("jenkins_job", "Jenkins job name (will be created if missing)", default="cortex-deploy")
 
+    # ── Jenkins API helpers ────────────────────────────────────────────────
+
+    def _jenkins_url(self) -> str:
+        return self._answers["jenkins_url"].rstrip("/")
+
+    def _jenkins_auth(self) -> tuple:
+        return (self._answers["jenkins_username"], self._answers["jenkins_token"])
+
+    def _get_job_xml(self) -> str:
+        """Return Jenkins job config.xml with the Jenkinsfile embedded in CDATA."""
+        jenkinsfile = JENKINSFILE_TEMPLATE_PATH.read_text()
+        return f"""\
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Cortex Deploy Pipeline — records deploys in Cortex and posts async callback</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>callback_url</name>
+          <defaultValue></defaultValue>
+          <description>Cortex async callback URL</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>cortex_entity_tag</name>
+          <defaultValue></defaultValue>
+          <description>Cortex entity tag</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[{jenkinsfile}]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>"""
+
+    def _wait_for_jenkins(self, timeout_secs: int = 120) -> None:
+        """Poll Jenkins /login until it returns HTTP 200."""
+        url = f"{self._jenkins_url()}/login"
+        start = time.time()
+        dots = 0
+        while time.time() - start < timeout_secs:
+            try:
+                resp = requests.get(url, timeout=5)
+                if resp.status_code == 200:
+                    return
+            except requests.exceptions.RequestException:
+                pass
+            time.sleep(5)
+            dots += 1
+            print(f"\r  Waiting for Jenkins{'.' * (dots % 4)}   ", end="", flush=True)
+        raise TimeoutError(f"Jenkins did not respond within {timeout_secs}s at {url}")
+
+    def _create_jenkins_job(self) -> None:
+        """Create the cortex-deploy pipeline job in Jenkins. Skips if already exists."""
+        job_name = self._answers["jenkins_job"]
+        base = self._jenkins_url()
+        auth = self._jenkins_auth()
+
+        # Check if job exists
+        check = requests.get(
+            f"{base}/job/{job_name}/api/json",
+            auth=auth,
+            timeout=10,
+        )
+        if check.status_code == 200:
+            return  # already exists — skip
+
+        xml = self._get_job_xml()
+        resp = requests.post(
+            f"{base}/createItem",
+            params={"name": job_name},
+            auth=auth,
+            headers={"Content-Type": "application/xml"},
+            data=xml.encode("utf-8"),
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to create Jenkins job '{job_name}': {resp.status_code} {resp.text}"
+            )
+
+    def _add_jenkins_credential(self, credential_id: str, secret: str, description: str) -> None:
+        """Add a secret-text credential to the Jenkins global credential store. Skips if exists."""
+        import json as _json
+        base = self._jenkins_url()
+        auth = self._jenkins_auth()
+
+        # Check if credential exists
+        check = requests.get(
+            f"{base}/credentials/store/system/domain/_/credential/{credential_id}/api/json",
+            auth=auth,
+            timeout=10,
+        )
+        if check.status_code == 200:
+            return  # already exists
+
+        payload = {
+            "": "0",
+            "credentials": {
+                "scope": "GLOBAL",
+                "id": credential_id,
+                "secret": secret,
+                "description": description,
+                "$class": "org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl",
+            },
+        }
+        resp = requests.post(
+            f"{base}/credentials/store/system/domain/_/createCredentials",
+            auth=auth,
+            data={"json": _json.dumps(payload)},
+            timeout=15,
+        )
+        # Jenkins returns 200 or 302 on success
+        if resp.status_code not in (200, 201, 302):
+            raise RuntimeError(
+                f"Failed to create Jenkins credential '{credential_id}': {resp.status_code} {resp.text}"
+            )
+
     # ── Steps ──────────────────────────────────────────────────────────────
 
     def steps(self) -> list[tuple[str, callable]]:
