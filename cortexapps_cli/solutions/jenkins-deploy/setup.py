@@ -284,10 +284,195 @@ class JenkinsDeploySetup(SolutionSetup):
                 f"Failed to create Jenkins credential '{credential_id}': {resp.status_code} {resp.text}"
             )
 
+    # ── Codespace orchestration ────────────────────────────────────────────
+
+    def _provision_codespace(self) -> str:
+        """Create Codespace, wait for it to be ready, expose port, set jenkins_url."""
+        name = self._create_codespace()
+        self._wait_for_codespace(name)
+        url = self._expose_jenkins_port(name)
+        self._answers["jenkins_url"] = url
+        return f"Jenkins URL: {_hyperlink(url)}"
+
+    # ── Cortex entity custom metadata ─────────────────────────────────────
+
+    def _write_entity_custom_metadata(self) -> None:
+        """Patch the entity YAML with Jenkins coordinates in x-cortex-custom-metadata."""
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        entity_tag = self._answers["entity_tag"]
+        yaml_content = f"""\
+openapi: "3.0.0"
+info:
+  title: Jenkins Demo
+  x-cortex-tag: {entity_tag}
+  x-cortex-custom-metadata:
+    jenkins:
+      url: "{self._answers['jenkins_url']}"
+      job: "{self._answers['jenkins_job']}"
+      username: "{self._answers['jenkins_username']}"
+      token: "{self._answers['jenkins_token']}"
+"""
+        resp = requests.patch(
+            f"{base_url}/api/v1/open-api",
+            data=yaml_content.encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {self._answers['cortex_api_key']}",
+                "Content-Type": "application/openapi;charset=UTF-8",
+            },
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to write entity custom metadata: {resp.status_code} {resp.text}"
+            )
+
+    # ── Cortex workflow import ─────────────────────────────────────────────
+
+    def _import_cortex_workflow(self) -> None:
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+        yaml_content = WORKFLOW_TEMPLATE_PATH.read_text()
+
+        resp = requests.post(
+            f"{base_url}/api/v1/workflows",
+            data=yaml_content.encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/yaml",
+            },
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to import Cortex workflow: {resp.status_code} {resp.text}"
+            )
+
+    # ── Cortex workflow trigger ────────────────────────────────────────────
+
+    def _trigger_via_cortex_workflow(self) -> dict:
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+        workflow_tag = "jenkins-trigger-deploy"
+        cortex_headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        body = {
+            "scope": {"type": "ENTITY", "entityId": self._answers["entity_tag"]},
+            "initialContext": {},
+        }
+        resp = requests.post(
+            f"{base_url}/api/v1/workflows/{workflow_tag}/runs",
+            json=body,
+            headers=cortex_headers,
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(f"Failed to start workflow run: {resp.status_code} {resp.text}")
+
+        run_id = resp.json().get("id")
+        if not run_id:
+            raise RuntimeError("No run ID returned from workflow start")
+
+        terminal = {"COMPLETED", "FAILED", "CANCELLED"}
+        start = time.time()
+        dots = 0
+        while time.time() - start < 360:
+            time.sleep(5)
+            r = requests.get(
+                f"{base_url}/api/v1/workflows/{workflow_tag}/runs/{run_id}",
+                headers=cortex_headers,
+                timeout=10,
+            )
+            r.raise_for_status()
+            status = r.json().get("status", "").upper()
+            dots += 1
+            print(f"\r  Waiting for Jenkins pipeline{'.' * (dots % 4)}   ", end="", flush=True)
+            if status in terminal:
+                print()
+                return r.json()
+        raise TimeoutError("Timed out waiting for workflow to complete (6 min)")
+
     # ── Steps ──────────────────────────────────────────────────────────────
 
     def steps(self) -> list[tuple[str, callable]]:
-        return []
+        step_list = []
+        if self._answers.get("use_codespace"):
+            step_list.append(("Provisioning Jenkins in GitHub Codespaces", self._provision_codespace))
+            step_list.append(("Waiting for Jenkins to be ready", self._wait_for_jenkins))
+        step_list += [
+            ("Creating Jenkins deploy job", self._create_jenkins_job),
+            ("Adding CORTEX_API_KEY credential to Jenkins", lambda: self._add_jenkins_credential(
+                "CORTEX_API_KEY", self._answers["cortex_api_key"], "Cortex API key"
+            )),
+            ("Adding CORTEX_BASE_URL credential to Jenkins", lambda: self._add_jenkins_credential(
+                "CORTEX_BASE_URL", self._answers["cortex_base_url"], "Cortex base URL"
+            )),
+            ("Writing Jenkins config to entity custom metadata", self._write_entity_custom_metadata),
+            ("Importing Cortex trigger workflow", self._import_cortex_workflow),
+        ]
+        return step_list
+
+    def post_steps(self) -> None:
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
+        entity_tag = self._answers["entity_tag"]
+        workflow_tag = "jenkins-trigger-deploy"
+
+        entity_url = f"{app_url}/admin/resources?tag={entity_tag}"
+        workflows_url = f"{app_url}/admin/workflows"
+        jenkins_url = self._answers.get("jenkins_url", "")
+        jenkins_job = self._answers.get("jenkins_job", "cortex-deploy")
+        jenkins_job_url = f"{jenkins_url}/job/{jenkins_job}" if jenkins_url else ""
+
+        print(f"\nTo trigger a deploy manually later:")
+        print(f"  CLI: cortex workflows run -t {workflow_tag} --scope ENTITY --entity {entity_tag}")
+        print(f"  UI:  {_hyperlink(entity_url, entity_tag)} → Workflows tab → Solution: Trigger Jenkins Deploy → Run")
+
+        print(f"\n{_hyperlink(workflows_url, 'View workflows in Cortex')}")
+        if jenkins_job_url:
+            print(f"{_hyperlink(jenkins_job_url, 'View Jenkins job')}")
+
+        if self.confirm("Trigger a test workflow run now?", default=True):
+            print("  Starting Cortex workflow run (waiting for Jenkins pipeline to complete)...")
+            try:
+                result = self._trigger_via_cortex_workflow()
+                status = result.get("status", "").upper()
+                if status == "COMPLETED":
+                    print("  Workflow run complete ✓")
+                    self._confirm_deploy_recorded(base_url, entity_tag, entity_url)
+                    self.mark_done("first_deploy")
+                else:
+                    print(f"  Workflow run ended with status: {status}", file=sys.stderr)
+                    print(f"  Check {_hyperlink(workflows_url, 'Cortex Workflow runs')} to investigate.", file=sys.stderr)
+            except Exception as e:
+                print(f"  Trigger failed: {e}", file=sys.stderr)
+                print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
+
+        print(f"\nDone! Watch your deploy appear at:")
+        print(f"  {_hyperlink(entity_url)}")
+        if jenkins_job_url:
+            print(f"\nJenkins job: {_hyperlink(jenkins_job_url)}")
+
+    def _confirm_deploy_recorded(self, base_url: str, entity_tag: str, entity_url: str) -> None:
+        api_key = self._answers["cortex_api_key"]
+        try:
+            resp = requests.get(
+                f"{base_url}/api/v1/catalog/{entity_tag}/deploys",
+                headers={"Authorization": f"Bearer {api_key}"},
+                params={"pageSize": 1},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                deploys = data if isinstance(data, list) else data.get("deploys", [])
+                if deploys:
+                    print(f"  Deploy recorded on entity ✓  {_hyperlink(entity_url, entity_tag)}")
+                    return
+        except Exception:
+            pass
+        print(f"  Deploy may still be indexing — check {_hyperlink(entity_url, entity_tag)}")
 
 
 def main(**kwargs):

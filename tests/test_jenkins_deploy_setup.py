@@ -175,3 +175,49 @@ def test_add_jenkins_credential_creates_when_missing(setup):
          patch("requests.post", return_value=created_resp) as mock_post:
         setup._add_jenkins_credential("CORTEX_API_KEY", "secret", "Cortex API key")
     mock_post.assert_called_once()
+
+
+def test_write_entity_custom_metadata(setup):
+    from unittest.mock import patch, MagicMock
+    resp = MagicMock(status_code=200)
+    with patch("requests.patch", return_value=resp) as mock_patch:
+        setup._write_entity_custom_metadata()
+    mock_patch.assert_called_once()
+    call_kwargs = mock_patch.call_args
+    assert "open-api" in call_kwargs.args[0]
+    body = call_kwargs.kwargs["data"].decode()
+    assert "jenkins-demo" in body
+    assert "jenkins_url" not in body  # the value, not the key
+    assert "http://jenkins.example.com:8080" in body
+    assert "cortex-deploy" in body
+
+
+def test_import_cortex_workflow(setup):
+    from unittest.mock import patch, MagicMock
+    resp = MagicMock(status_code=201)
+    with patch("requests.post", return_value=resp) as mock_post:
+        setup._import_cortex_workflow()
+    mock_post.assert_called_once()
+    call_kwargs = mock_post.call_args
+    assert "workflows" in call_kwargs.args[0]
+    assert call_kwargs.kwargs["headers"]["Content-Type"] == "application/yaml"
+
+
+def test_steps_returns_expected_list(setup):
+    setup._answers["use_codespace"] = False
+    step_labels = [label for label, _ in setup.steps()]
+    assert "Creating Jenkins deploy job" in step_labels
+    assert "Adding CORTEX_API_KEY credential to Jenkins" in step_labels
+    assert "Adding CORTEX_BASE_URL credential to Jenkins" in step_labels
+    assert "Writing Jenkins config to entity custom metadata" in step_labels
+    assert "Importing Cortex trigger workflow" in step_labels
+
+
+def test_steps_includes_codespace_when_enabled(setup):
+    setup._answers["use_codespace"] = True
+    step_labels = [label for label, _ in setup.steps()]
+    assert "Provisioning Jenkins in GitHub Codespaces" in step_labels
+
+
+def test_main_callable(mod):
+    assert callable(mod.main)
