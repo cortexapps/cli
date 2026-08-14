@@ -61,3 +61,62 @@ def test_workflow_yaml_is_valid():
     assert async_action["schema"]["type"] == "HTTP_REQUEST_ASYNC"
     assert "buildWithParameters" in async_action["schema"]["url"]
     assert "@base64" in data["actions"][1]["schema"]["expression"]
+
+
+@pytest.fixture
+def mod():
+    return load_setup_module()
+
+
+@pytest.fixture
+def setup(mod, tmp_path):
+    instance = mod.JenkinsDeploySetup(state_dir=tmp_path)
+    instance._answers = {
+        "github_pat": "ghp_test",
+        "jenkins_url": "http://jenkins.example.com:8080",
+        "jenkins_username": "admin",
+        "jenkins_token": "cortex-demo",
+        "jenkins_job": "cortex-deploy",
+        "entity_tag": "jenkins-demo",
+        "cortex_api_key": "crt_testkey",
+        "cortex_base_url": "https://api.getcortexapp.com",
+    }
+    return instance
+
+
+def test_create_codespace_returns_name(setup):
+    from unittest.mock import patch, MagicMock
+    resp = MagicMock(status_code=201)
+    resp.json.return_value = {"name": "cortexapps-cli-abc123"}
+    with patch("requests.post", return_value=resp):
+        name = setup._create_codespace()
+    assert name == "cortexapps-cli-abc123"
+
+
+def test_create_codespace_raises_on_failure(setup):
+    from unittest.mock import patch, MagicMock
+    import pytest
+    resp = MagicMock(status_code=422)
+    resp.text = "Unprocessable Entity"
+    with patch("requests.post", return_value=resp):
+        with pytest.raises(RuntimeError, match="Failed to create Codespace"):
+            setup._create_codespace()
+
+
+def test_expose_jenkins_port_returns_url(setup):
+    from unittest.mock import patch, MagicMock
+    resp = MagicMock(status_code=200)
+    with patch("requests.patch", return_value=resp):
+        url = setup._expose_jenkins_port("my-codespace-abc")
+    assert url == "https://my-codespace-abc-8080.app.github.dev"
+
+
+def test_wait_for_codespace_polls_until_available(setup):
+    from unittest.mock import patch, MagicMock
+    pending = MagicMock(status_code=200)
+    pending.json.return_value = {"state": "Starting"}
+    ready = MagicMock(status_code=200)
+    ready.json.return_value = {"state": "Available"}
+    with patch("requests.get", side_effect=[pending, ready]), \
+         patch("time.sleep"):
+        setup._wait_for_codespace("my-codespace-abc")  # should not raise
