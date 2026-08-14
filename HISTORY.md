@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.34.0](https://github.com/cortexapps/cli/releases/tag/1.34.0) - 2026-08-14
+
+<small>[Compare with 1.33.0](https://github.com/cortexapps/cli/compare/1.33.0...1.34.0)</small>
+
+### Features
+
+- add Workday integration solution ([a5c84ac](https://github.com/cortexapps/cli/commit/a5c84ac7c0a1562907dda740756821399628cade) by Jeff Schnitter).
+
 ## [1.33.0](https://github.com/cortexapps/cli/releases/tag/1.33.0) - 2026-08-14
 
 <small>[Compare with 1.32.0](https://github.com/cortexapps/cli/compare/1.32.0...1.33.0)</small>
