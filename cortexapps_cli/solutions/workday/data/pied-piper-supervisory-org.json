@@ -1,0 +1,113 @@
+{
+  "Report_Entry": [
+    {
+      "Email": "erlich.bachman@piedpiper.com",
+      "Employee_ID": "PP-100000",
+      "First_Name": "Erlich",
+      "Last_Name": "Bachman",
+      "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "CEO",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Pied Piper",
+          "teamDisplayName": "PP: Pied Piper",
+          "parentTeamId": "NONE",
+          "Team_Managed": "PP: Pied Piper"
+        }
+      ]
+    },
+    {
+      "Email": "richard.hendricks@piedpiper.com",
+      "Employee_ID": "PP-100001",
+      "First_Name": "Richard",
+      "Last_Name": "Hendricks",
+      "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "CTO",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Engineering",
+          "teamDisplayName": "PP: Engineering",
+          "parentTeamId": "PP: Pied Piper",
+          "Team_Managed": "PP: Engineering"
+        }
+      ]
+    },
+    {
+      "Email": "bertram.gilfoyle@piedpiper.com",
+      "Employee_ID": "PP-100002",
+      "First_Name": "Bertram",
+      "Last_Name": "Gilfoyle",
+      "Managers_Email": "richard.hendricks@piedpiper.com",
+      "employeeRole": "Staff Engineer",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Platform",
+          "teamDisplayName": "PP: Platform",
+          "parentTeamId": "PP: Engineering",
+          "Team_Managed": "PP: Platform"
+        }
+      ]
+    },
+    {
+      "Email": "dinesh.chugtai@piedpiper.com",
+      "Employee_ID": "PP-100003",
+      "First_Name": "Dinesh",
+      "Last_Name": "Chugtai",
+      "Managers_Email": "richard.hendricks@piedpiper.com",
+      "employeeRole": "Senior Engineer",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Frontend",
+          "teamDisplayName": "PP: Frontend",
+          "parentTeamId": "PP: Engineering"
+        }
+      ]
+    },
+    {
+      "Email": "jared.dunn@piedpiper.com",
+      "Employee_ID": "PP-100004",
+      "First_Name": "Jared",
+      "Last_Name": "Dunn",
+      "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "COO",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Operations",
+          "teamDisplayName": "PP: Operations",
+          "parentTeamId": "PP: Pied Piper",
+          "Team_Managed": "PP: Operations"
+        }
+      ]
+    },
+    {
+      "Email": "monica.hall@piedpiper.com",
+      "Employee_ID": "PP-100005",
+      "First_Name": "Monica",
+      "Last_Name": "Hall",
+      "Managers_Email": "jared.dunn@piedpiper.com",
+      "employeeRole": "VP People",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: People Ops",
+          "teamDisplayName": "PP: People Ops",
+          "parentTeamId": "PP: Operations"
+        }
+      ]
+    },
+    {
+      "Email": "nelson.bighetti@piedpiper.com",
+      "Employee_ID": "PP-100006",
+      "First_Name": "Nelson",
+      "Last_Name": "Bighetti",
+      "Managers_Email": "bertram.gilfoyle@piedpiper.com",
+      "employeeRole": "Engineer",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Infrastructure",
+          "teamDisplayName": "PP: Infrastructure",
+          "parentTeamId": "PP: Platform"
+        }
+      ]
+    }
+  ]
+}

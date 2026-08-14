@@ -1,0 +1,31 @@
+{
+  "username": "ISU_Cortex",
+  "ownershipReportUrl": "https://jeff-test-org.github.io/workday-mocks/pied-piper-supervisory-org",
+  "reportMappingV2": {
+    "email": { "columnName": "Email" },
+    "employeeId": { "columnName": "Employee_ID" },
+    "firstName": { "columnName": "First_Name" },
+    "lastName": { "columnName": "Last_Name" },
+    "managerEmail": null,
+    "employeeRole": { "columnName": "employeeRole" },
+    "rootTeams": [],
+    "teamListFields": {
+      "teamListKey": { "columnName": "Workteam_Group" },
+      "teamId": { "columnName": "teamName" },
+      "teamName": { "columnName": "teamDisplayName" },
+      "hierarchy": {
+        "fieldOnChildNode": { "columnName": "parentTeamId" },
+        "fieldOnParentNode": { "columnName": "teamName", "isList": false }
+      },
+      "teamEmployeeManages": { "columnName": "Team_Managed" }
+    },
+    "fallbackFields": {
+      "teamId": null,
+      "teamName": null,
+      "fieldOnParentNode": null,
+      "fieldOnChildNode": null
+    },
+    "type": "ONE_EMPLOYEE_MULTIPLE_TEAMS"
+  },
+  "password": "asdf"
+}

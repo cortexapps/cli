@@ -5,7 +5,7 @@ Run via: cortex solutions post-install -s github-actions-deploy
 """
 
 SETUP_DESCRIPTION = (
-    "This solution includes a post-install setup script that will create a GitHub "
+    "This solution includes a setup script that will create a GitHub "
     "repository, seed it with a GitHub workflow that will add a deploy to a Cortex entity, and configure the required secrets."
 )
 import base64
@@ -172,8 +172,6 @@ class GitHubActionsSetup(SolutionSetup):
 
         if self._session_base_url:
             self._answers["cortex_base_url"] = self._session_base_url
-        else:
-            self.prompt("cortex_base_url", "Cortex base URL", default=self._session_base_url)
         else:
             self.prompt(
                 "cortex_base_url",

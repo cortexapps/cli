@@ -123,7 +123,7 @@ def test_set_secret(setup):
 def test_trigger_workflow(setup):
     resp = MagicMock(status_code=204)
     with patch("requests.post", return_value=resp) as mock_post:
-        setup._trigger_workflow()
+        setup._trigger_direct()
     url = mock_post.call_args.args[0]
     assert "dispatches" in url
     assert mock_post.call_args.kwargs["json"] == {"ref": "main"}
