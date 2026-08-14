@@ -166,7 +166,7 @@ actions:
   schema:
     type: HTTP_REQUEST_ASYNC
     httpMethod: POST
-    url: "/v1/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/execute?notes=Submitted+by+{{context.initiatedBy.email}}"
+    url: "/v1/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/execute"
     integration: Harness
     integrationAlias: "PLACEHOLDER_INTEGRATION_ALIAS"
     headers:
