@@ -26,6 +26,66 @@ Get the Cortex Workday integration running in minutes using a sample org hierarc
       └── PP: People Ops (Monica Hall)
 ```
 
+### Report Format
+
+Each entry in the Workday report represents one employee. The `Workteam_Group` array lists every team the employee belongs to, with hierarchy encoded as a `parentTeamId` pointing to the parent team's `teamName`. Root teams use `"parentTeamId": "NONE"`. Managers have a `Team_Managed` field matching their team's `teamName`.
+
+```json
+{
+  "Report_Entry": [
+    {
+      "Email": "erlich.bachman@piedpiper.com",
+      "Employee_ID": "PP-100000",
+      "First_Name": "Erlich",
+      "Last_Name": "Bachman",
+      "Managers_Email": "erlich.bachman@piedpiper.com",
+      "employeeRole": "CEO",
+      "Workteam_Group": [
+        {
+          "teamName": "PP: Pied Piper",
+          "teamDisplayName": "PP: Pied Piper",
+          "parentTeamId": "NONE",
+          "Team_Managed": "PP: Pied Piper"
+        }
+      ]
+    },
+    ...
+  ]
+}
+```
+
+### Field Mapping
+
+The `data/configuration.json` file tells Cortex how to interpret the report columns. It maps employee identity fields, defines the team list array, and specifies which fields encode the parent-child hierarchy:
+
+```json
+{
+  "username": "ISU_Cortex",
+  "password": "<your-password>",
+  "ownershipReportUrl": "<your-report-url>",
+  "reportMappingV2": {
+    "email":       { "columnName": "Email" },
+    "employeeId":  { "columnName": "Employee_ID" },
+    "firstName":   { "columnName": "First_Name" },
+    "lastName":    { "columnName": "Last_Name" },
+    "employeeRole":{ "columnName": "employeeRole" },
+    "managerEmail": null,
+    "rootTeams": [],
+    "teamListFields": {
+      "teamListKey": { "columnName": "Workteam_Group" },
+      "teamId":      { "columnName": "teamName" },
+      "teamName":    { "columnName": "teamDisplayName" },
+      "hierarchy": {
+        "fieldOnParentNode": { "columnName": "teamName", "isList": false },
+        "fieldOnChildNode":  { "columnName": "parentTeamId" }
+      },
+      "teamEmployeeManages": { "columnName": "Team_Managed" }
+    },
+    "type": "ONE_EMPLOYEE_MULTIPLE_TEAMS"
+  }
+}
+```
+
 ## After Installing
 
 Trigger the sync in Cortex to import the Pied Piper org hierarchy:
@@ -75,66 +135,6 @@ Workday reports can be customized to match your org structure. The configuration
 ## How It Works
 
 The setup script calls the Cortex Workday integration API to configure a report URL pointing at the bundled Pied Piper supervisory org data. Cortex fetches the report and syncs employees and teams into your catalog on the next import run.
-
-## Report Format
-
-Each entry in the Workday report represents one employee. The `Workteam_Group` array lists every team the employee belongs to, with hierarchy encoded as a `parentTeamId` pointing to the parent team's `teamName`. Root teams use `"parentTeamId": "NONE"`. Managers have a `Team_Managed` field matching their team's `teamName`.
-
-```json
-{
-  "Report_Entry": [
-    {
-      "Email": "erlich.bachman@piedpiper.com",
-      "Employee_ID": "PP-100000",
-      "First_Name": "Erlich",
-      "Last_Name": "Bachman",
-      "Managers_Email": "erlich.bachman@piedpiper.com",
-      "employeeRole": "CEO",
-      "Workteam_Group": [
-        {
-          "teamName": "PP: Pied Piper",
-          "teamDisplayName": "PP: Pied Piper",
-          "parentTeamId": "NONE",
-          "Team_Managed": "PP: Pied Piper"
-        }
-      ]
-    },
-    ...
-  ]
-}
-```
-
-## Field Mapping
-
-The `data/configuration.json` file tells Cortex how to interpret the report columns. It maps employee identity fields, defines the team list array, and specifies which fields encode the parent-child hierarchy:
-
-```json
-{
-  "username": "ISU_Cortex",
-  "password": "<your-password>",
-  "ownershipReportUrl": "<your-report-url>",
-  "reportMappingV2": {
-    "email":       { "columnName": "Email" },
-    "employeeId":  { "columnName": "Employee_ID" },
-    "firstName":   { "columnName": "First_Name" },
-    "lastName":    { "columnName": "Last_Name" },
-    "employeeRole":{ "columnName": "employeeRole" },
-    "managerEmail": null,
-    "rootTeams": [],
-    "teamListFields": {
-      "teamListKey": { "columnName": "Workteam_Group" },
-      "teamId":      { "columnName": "teamName" },
-      "teamName":    { "columnName": "teamDisplayName" },
-      "hierarchy": {
-        "fieldOnParentNode": { "columnName": "teamName", "isList": false },
-        "fieldOnChildNode":  { "columnName": "parentTeamId" }
-      },
-      "teamEmployeeManages": { "columnName": "Team_Managed" }
-    },
-    "type": "ONE_EMPLOYEE_MULTIPLE_TEAMS"
-  }
-}
-```
 
 ## Adapting to Real Workday Data
 
