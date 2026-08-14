@@ -204,6 +204,24 @@ def test_validate_integration_raises_on_empty_result(setup):
             setup._validate_integration()
 
 
+def test_steps_includes_auto_import(setup):
+    labels = [s[0] for s in setup.steps()]
+    assert "Enable Auto Import Workday teams" in labels
+    assert labels.index("Enable Auto Import Workday teams") == 0
+
+
+def test_auto_import_exits_when_user_declines(setup):
+    with patch("builtins.input", return_value="n"):
+        with pytest.raises(SystemExit) as exc_info:
+            setup._enable_auto_import()
+        assert exc_info.value.code == 0
+
+
+def test_auto_import_proceeds_when_user_confirms(setup):
+    with patch("builtins.input", return_value="y"):
+        setup._enable_auto_import()  # should not raise
+
+
 def test_steps_includes_validate(setup):
     labels = [s[0] for s in setup.steps()]
     assert "Validate Workday integration" in labels

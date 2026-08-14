@@ -110,8 +110,16 @@ class WorkdayIntegrationSetup(SolutionSetup):
             raise RuntimeError(f"Validation failed: {result.get('message', 'unknown error')}")
         print(f"  ✓ Configuration validated successfully")
 
+    def _enable_auto_import(self) -> None:
+        """Prompt user to enable Auto Import Workday Teams in Cortex settings."""
+        print("  In Cortex: Settings → Entities → Teams → Enable 'Auto import Workday teams'")
+        if not self.confirm("  Is 'Auto import Workday teams' enabled?", default=False):
+            print("Please enable it before continuing.")
+            raise SystemExit(0)
+
     def steps(self) -> list:
         return [
+            ("Enable Auto Import Workday teams", self._enable_auto_import),
             ("Check for existing Workday integration", self._check_and_replace_existing),
             ("Configure Workday integration", self._configure_integration),
             ("Validate Workday integration", self._validate_integration),
