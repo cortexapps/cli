@@ -46,3 +46,18 @@ def test_jenkinsfile_has_required_elements():
     assert "post {" in content
     assert "always {" in content
     assert "CALLBACK_URL" in content
+
+
+def test_workflow_yaml_is_valid():
+    import yaml
+    path = Path("cortexapps_cli/solutions/jenkins-deploy/_templates/trigger-jenkins-deploy.yaml")
+    data = yaml.safe_load(path.read_text())
+    assert data["tag"] == "jenkins-trigger-deploy"
+    slugs = {a["slug"] for a in data["actions"]}
+    assert slugs == {"get-jenkins-config", "parse-jenkins-config", "set-variables", "trigger-deploy"}
+    root_actions = [a for a in data["actions"] if a["isRootAction"]]
+    assert len(root_actions) == 1
+    async_action = next(a for a in data["actions"] if a["slug"] == "trigger-deploy")
+    assert async_action["schema"]["type"] == "HTTP_REQUEST_ASYNC"
+    assert "buildWithParameters" in async_action["schema"]["url"]
+    assert "@base64" in data["actions"][1]["schema"]["expression"]
