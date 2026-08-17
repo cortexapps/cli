@@ -43,21 +43,21 @@ Trigger deploys from Cortex, track them as they run in Jenkins, and surface depl
   │  GitHub Codespaces  (optional — provisioned by setup)   │
   │  port 8080 exposed publicly for demo                    │
   │                                                         │
-  │  ┌─────────────────────────────────┐                   │
-  │  │         Jenkins Pipeline        │                   │
-  │  │         cortex-deploy           │                   │
-  │  │                                 │                   │
-  │  │  stage: Build                   │                   │
-  │  │    └── run your deploy steps    │                   │
-  │  │                                 │                   │
-  │  │  stage: Record Deploy in Cortex │                   │
+  │  ┌─────────────────────────────────┐                    │
+  │  │         Jenkins Pipeline        │                    │
+  │  │         cortex-deploy           │                    │
+  │  │                                 │                    │
+  │  │  stage: Build                   │                    │
+  │  │    └── run your deploy steps    │                    │
+  │  │                                 │                    │
+  │  │  stage: Record Deploy in Cortex │                    │
   │  │    └── POST /deploys       ◄────┼── registers deploy │
   │  │        (entity: jenkins-demo)   │   event on entity  │
-  │  │                                 │                   │
-  │  │  post { always }                │                   │
-  │  │    └── POST callbackUrl ───────►│   Cortex marks    │
-  │  │        status: SUCCESS/FAILURE  │   workflow done   │
-  │  └─────────────────────────────────┘                   │
+  │  │                                 │                    │
+  │  │  post { always }                │                    │
+  │  │    └── POST callbackUrl ───────►│   Cortex marks     │
+  │  │        status: SUCCESS/FAILURE  │   workflow done    │
+  │  └─────────────────────────────────┘                    │
   └─────────────────────────────────────────────────────────┘
   (or point to your own Jenkins instance — Codespaces not required)
 ```
