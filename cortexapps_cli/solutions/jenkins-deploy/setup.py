@@ -184,6 +184,14 @@ class JenkinsDeploySetup(SolutionSetup):
             )
 
         # Jenkins source: Codespace or existing instance
+        print(
+            "\nJenkins source:\n"
+            "  Y — provision a fresh Jenkins instance in GitHub Codespaces (recommended for demo).\n"
+            "      Requires a GitHub PAT with 'codespace' scope. Jenkins will be pre-configured\n"
+            "      and its port made publicly accessible for Cortex to reach.\n"
+            "  N — use an existing Jenkins instance. You will be prompted for its URL and\n"
+            "      credentials. The instance must be publicly reachable from the internet.\n"
+        )
         use_codespace = self.confirm(
             "Spin up a Jenkins instance in GitHub Codespaces?", default=True
         )
