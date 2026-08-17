@@ -8,6 +8,7 @@
   "portsAttributes": {
     "8080": {
       "label": "Jenkins UI",
+      "visibility": "public",
       "onAutoForward": "notify"
     }
   },

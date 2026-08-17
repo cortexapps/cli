@@ -100,50 +100,11 @@ class JenkinsDeploySetup(SolutionSetup):
         raise TimeoutError(f"Codespace did not become Available within {timeout_secs}s")
 
     def _expose_jenkins_port(self, name: str) -> str:
-        """Register port 8080 via the API, make it public, return the public URL."""
-        # Debug: dump Codespace state and known ports before touching anything
-        cs_resp = requests.get(
-            f"{GITHUB_API}/user/codespaces/{name}",
-            headers=self._gh_headers(), timeout=15,
-        )
-        print(f"\n  [debug] Codespace state: {cs_resp.json().get('state')} "
-              f"machine={cs_resp.json().get('machine', {}).get('name')}")
+        """Return the public Jenkins URL for this Codespace.
 
-        ports_resp = requests.get(
-            f"{GITHUB_API}/user/codespaces/{name}/ports",
-            headers=self._gh_headers(), timeout=15,
-        )
-        print(f"  [debug] GET /ports → {ports_resp.status_code}: {ports_resp.text[:300]}")
-
-        # Register the port with GitHub's API (devcontainer forwardPorts only activates
-        # when a client connects; the REST API needs an explicit POST first).
-        post_url = f"{GITHUB_API}/user/codespaces/{name}/ports"
-        print(f"  [debug] POST {post_url} {{port: {JENKINS_PORT}}}")
-        post_resp = requests.post(
-            post_url,
-            headers=self._gh_headers(),
-            json={"port": JENKINS_PORT},
-            timeout=15,
-        )
-        print(f"  [debug] POST /ports → {post_resp.status_code}: {post_resp.text[:300]}")
-        if post_resp.status_code not in (200, 201, 409):  # 409 = already registered
-            raise RuntimeError(
-                f"Failed to register Jenkins port: {post_resp.status_code} {post_resp.text}"
-            )
-
-        patch_url = f"{GITHUB_API}/user/codespaces/{name}/ports/{JENKINS_PORT}/visibility"
-        print(f"  [debug] PATCH {patch_url}")
-        resp = requests.patch(
-            patch_url,
-            headers=self._gh_headers(),
-            json={"visibility": "public"},
-            timeout=15,
-        )
-        print(f"  [debug] PATCH /visibility → {resp.status_code}: {resp.text[:300]}")
-        if resp.status_code not in (200, 204):
-            raise RuntimeError(
-                f"Failed to expose Jenkins port: {resp.status_code} {resp.text}"
-            )
+        Port visibility is set to public via devcontainer.json portsAttributes,
+        applied at Codespace build time — no runtime API call needed.
+        """
         return f"https://{name}-{JENKINS_PORT}.app.github.dev"
 
     def _delete_codespace(self, name: str) -> None:
