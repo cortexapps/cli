@@ -221,3 +221,34 @@ def test_steps_includes_codespace_when_enabled(setup):
 
 def test_main_callable(mod):
     assert callable(mod.main)
+
+
+def test_delete_codespace_succeeds(setup):
+    from unittest.mock import patch, MagicMock
+    setup._state["codespace_name"] = "my-cs-abc"
+    resp = MagicMock(status_code=204)
+    with patch("requests.delete", return_value=resp):
+        setup._delete_codespace("my-cs-abc")
+    assert "codespace_name" not in setup._state
+
+
+def test_delete_codespace_raises_on_failure(setup):
+    from unittest.mock import patch, MagicMock
+    resp = MagicMock(status_code=422)
+    resp.text = "Error"
+    with patch("requests.delete", return_value=resp):
+        with pytest.raises(RuntimeError, match="Failed to delete Codespace"):
+            setup._delete_codespace("my-cs-abc")
+
+
+def test_provision_codespace_stores_name_in_state(setup):
+    from unittest.mock import patch, MagicMock
+    create_resp = MagicMock(status_code=201)
+    create_resp.json.return_value = {"name": "my-cs-abc"}
+    patch_resp = MagicMock(status_code=200)
+    with patch("requests.post", return_value=create_resp), \
+         patch("requests.get", return_value=MagicMock(status_code=200, json=lambda: {"state": "Available"})), \
+         patch("requests.patch", return_value=patch_resp), \
+         patch("time.sleep"):
+        setup._provision_codespace()
+    assert setup._state.get("codespace_name") == "my-cs-abc"

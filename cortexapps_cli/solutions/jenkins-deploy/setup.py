@@ -113,6 +113,20 @@ class JenkinsDeploySetup(SolutionSetup):
             )
         return f"https://{name}-{JENKINS_PORT}.app.github.dev"
 
+    def _delete_codespace(self, name: str) -> None:
+        """Delete a Codespace by name and clear it from state."""
+        resp = requests.delete(
+            f"{GITHUB_API}/user/codespaces/{name}",
+            headers=self._gh_headers(),
+            timeout=15,
+        )
+        if resp.status_code not in (200, 202, 204):
+            raise RuntimeError(
+                f"Failed to delete Codespace '{name}': {resp.status_code} {resp.text}"
+            )
+        self._state.pop("codespace_name", None)
+        self._save_state()
+
     # ── Prompts ────────────────────────────────────────────────────────────
 
     def collect_prompts(self) -> None:
@@ -289,6 +303,8 @@ class JenkinsDeploySetup(SolutionSetup):
     def _provision_codespace(self) -> str:
         """Create Codespace, wait for it to be ready, expose port, set jenkins_url."""
         name = self._create_codespace()
+        self._state["codespace_name"] = name
+        self._save_state()
         self._wait_for_codespace(name)
         url = self._expose_jenkins_port(name)
         self._answers["jenkins_url"] = url
@@ -415,6 +431,17 @@ info:
         return step_list
 
     def post_steps(self) -> None:
+        # Offer to clean up a Codespace left running from a previous setup run
+        saved_codespace = self._state.get("codespace_name")
+        if saved_codespace and not self._answers.get("use_codespace"):
+            print(f"\nA Codespace from a previous run is still running ({saved_codespace}).")
+            if self.confirm("Delete it?", default=True):
+                try:
+                    self._delete_codespace(saved_codespace)
+                    print(f"  Codespace '{saved_codespace}' deleted ✓")
+                except Exception as e:
+                    print(f"  Failed to delete Codespace: {e}", file=sys.stderr)
+
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
         entity_tag = self._answers["entity_tag"]
@@ -454,6 +481,29 @@ info:
         print(f"  {_hyperlink(entity_url)}")
         if jenkins_job_url:
             print(f"\nJenkins job: {_hyperlink(jenkins_job_url)}")
+
+        # Codespace lifecycle: keep or delete
+        if self._answers.get("use_codespace") and self._state.get("codespace_name"):
+            codespace_name = self._state["codespace_name"]
+            print()
+            if not self.confirm("Keep the Codespace running?", default=False):
+                print(f"  Deleting Codespace '{codespace_name}'...")
+                try:
+                    self._delete_codespace(codespace_name)
+                    print("  Codespace deleted ✓")
+                except Exception as e:
+                    print(f"  Failed to delete Codespace: {e}", file=sys.stderr)
+            else:
+                print("""
+⚠️  WARNING: Your Codespace is still running and will accrue compute charges
+    (~$0.18/core-hour after your free monthly allowance of 120 core-hours).
+    GitHub auto-stops after 30 min of inactivity, but does NOT delete it.
+
+    To delete it later, run:
+      cortex solutions post-install -s jenkins-deploy
+
+    Or delete it directly at: https://github.com/codespaces
+""")
 
     def _confirm_deploy_recorded(self, base_url: str, entity_tag: str, entity_url: str) -> None:
         api_key = self._answers["cortex_api_key"]
