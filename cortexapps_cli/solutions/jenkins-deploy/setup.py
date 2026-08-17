@@ -308,41 +308,36 @@ class JenkinsDeploySetup(SolutionSetup):
 
     # ── Codespace orchestration ────────────────────────────────────────────
 
-    def _verify_codespace_identity(self, name: str) -> bool:
-        """Return True if the Codespace belongs to this solution (correct repo + devcontainer)."""
-        resp = requests.get(
-            f"{GITHUB_API}/user/codespaces/{name}",
-            headers=self._gh_headers(),
-            timeout=15,
-        )
-        if resp.status_code == 404:
+    def _jenkins_reachable(self, name: str) -> bool:
+        """Return True if Jenkins is responding at the Codespace's public URL."""
+        url = f"https://{name}-{JENKINS_PORT}.app.github.dev/login"
+        try:
+            resp = requests.get(url, timeout=10)
+            return resp.status_code == 200
+        except requests.exceptions.RequestException:
             return False
-        resp.raise_for_status()
-        data = resp.json()
-        repo_match = data.get("repository", {}).get("full_name") == CODESPACE_REPO
-        container_match = data.get("devcontainer_path") == DEVCONTAINER_PATH
-        return repo_match and container_match
 
     def _provision_codespace(self) -> str:
         """Create Codespace (or reuse existing), wait for it to be ready, expose port, set jenkins_url."""
         existing = self._state.get("codespace_name")
         if existing:
-            if self._verify_codespace_identity(existing):
-                print(f"  Reusing existing Codespace '{existing}'")
-                name = existing
+            print(f"  Checking existing Codespace '{existing}'...")
+            if self._jenkins_reachable(existing):
+                print(f"  Jenkins is up — reusing Codespace '{existing}'")
+                url = self._expose_jenkins_port(existing)
+                self._answers["jenkins_url"] = url
+                return f"Jenkins URL: {_hyperlink(url)}"
             else:
                 print(
-                    f"  ⚠️  Saved Codespace '{existing}' no longer exists or is not a Jenkins "
-                    f"Codespace — creating a new one."
+                    f"  ⚠️  Jenkins not reachable on '{existing}' "
+                    f"(deleted, stopped, or built from stale config) — creating a new one."
                 )
                 self._state.pop("codespace_name", None)
-                name = self._create_codespace()
-                self._state["codespace_name"] = name
                 self._save_state()
-        else:
-            name = self._create_codespace()
-            self._state["codespace_name"] = name
-            self._save_state()
+
+        name = self._create_codespace()
+        self._state["codespace_name"] = name
+        self._save_state()
         self._wait_for_codespace(name)
         url = self._expose_jenkins_port(name)
         self._answers["jenkins_url"] = url

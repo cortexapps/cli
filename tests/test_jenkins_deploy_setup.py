@@ -113,33 +113,25 @@ def test_expose_jenkins_port_returns_url(setup):
     assert url == "https://my-codespace-abc-8080.app.github.dev"
 
 
-def test_verify_codespace_identity_returns_true_for_matching(setup):
+def test_jenkins_reachable_returns_true_on_200(setup):
     from unittest.mock import patch, MagicMock
     resp = MagicMock(status_code=200)
-    resp.json.return_value = {
-        "repository": {"full_name": "cortexapps/cli"},
-        "devcontainer_path": ".devcontainer/jenkins/devcontainer.json",
-    }
     with patch("requests.get", return_value=resp):
-        assert setup._verify_codespace_identity("my-cs") is True
+        assert setup._jenkins_reachable("my-cs") is True
 
 
-def test_verify_codespace_identity_returns_false_for_wrong_devcontainer(setup):
-    from unittest.mock import patch, MagicMock
-    resp = MagicMock(status_code=200)
-    resp.json.return_value = {
-        "repository": {"full_name": "cortexapps/cli"},
-        "devcontainer_path": ".devcontainer/other/devcontainer.json",
-    }
-    with patch("requests.get", return_value=resp):
-        assert setup._verify_codespace_identity("my-cs") is False
-
-
-def test_verify_codespace_identity_returns_false_if_deleted(setup):
+def test_jenkins_reachable_returns_false_on_non_200(setup):
     from unittest.mock import patch, MagicMock
     resp = MagicMock(status_code=404)
     with patch("requests.get", return_value=resp):
-        assert setup._verify_codespace_identity("my-cs") is False
+        assert setup._jenkins_reachable("my-cs") is False
+
+
+def test_jenkins_reachable_returns_false_on_connection_error(setup):
+    import requests as req
+    from unittest.mock import patch
+    with patch("requests.get", side_effect=req.exceptions.ConnectionError):
+        assert setup._jenkins_reachable("my-cs") is False
 
 
 def test_wait_for_codespace_polls_until_available(setup):
