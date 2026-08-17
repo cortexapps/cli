@@ -62,7 +62,7 @@ class JenkinsDeploySetup(SolutionSetup):
             f"{GITHUB_API}/repos/{CODESPACE_REPO}/codespaces",
             headers=self._gh_headers(),
             json={
-                "ref": "main",
+                "ref": "worktree-jenkins-deploy",
                 "devcontainer_path": DEVCONTAINER_PATH,
                 "machine": "basicLinux32gb",
             },
