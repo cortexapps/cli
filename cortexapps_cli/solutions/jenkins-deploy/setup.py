@@ -194,7 +194,7 @@ class JenkinsDeploySetup(SolutionSetup):
                 "github_pat",
                 "GitHub Personal Access Token (needs 'codespace' scope)",
                 env_var="GITHUB_PAT",
-                secret=True,
+                hidden=True,
             )
             # Jenkins URL is determined after Codespace creation (in steps)
             self._answers["jenkins_username"] = JENKINS_DEFAULT_USERNAME
