@@ -308,36 +308,42 @@ class JenkinsDeploySetup(SolutionSetup):
 
     # ── Codespace orchestration ────────────────────────────────────────────
 
-    def _jenkins_reachable(self, name: str) -> bool:
-        """Return True if Jenkins is responding at the Codespace's public URL."""
-        url = f"https://{name}-{JENKINS_PORT}.app.github.dev/login"
-        try:
-            resp = requests.get(url, timeout=10)
-            return resp.status_code == 200
-        except requests.exceptions.RequestException:
-            return False
+    def _codespace_exists(self, name: str) -> bool:
+        """Return True if the Codespace still exists in GitHub."""
+        resp = requests.get(
+            f"{GITHUB_API}/user/codespaces/{name}",
+            headers=self._gh_headers(),
+            timeout=15,
+        )
+        return resp.status_code != 404
 
     def _provision_codespace(self) -> str:
-        """Create Codespace (or reuse existing), wait for it to be ready, expose port, set jenkins_url."""
+        """Create Codespace (or reuse one previously created by this script), set jenkins_url."""
         existing = self._state.get("codespace_name")
-        if existing:
-            print(f"  Checking existing Codespace '{existing}'...")
-            if self._jenkins_reachable(existing):
-                print(f"  Jenkins is up — reusing Codespace '{existing}'")
-                url = self._expose_jenkins_port(existing)
-                self._answers["jenkins_url"] = url
-                return f"Jenkins URL: {_hyperlink(url)}"
+        if existing and self._codespace_exists(existing):
+            if self.confirm(
+                f"Reuse existing Codespace '{existing}' (created by a previous setup run)?",
+                default=True,
+            ):
+                name = existing
             else:
-                print(
-                    f"  ⚠️  Jenkins not reachable on '{existing}' "
-                    f"(deleted, stopped, or built from stale config) — creating a new one."
-                )
-                self._state.pop("codespace_name", None)
+                if self.confirm(f"Delete '{existing}'?", default=False):
+                    try:
+                        self._delete_codespace(existing)
+                        print(f"  Codespace '{existing}' deleted ✓")
+                    except Exception as e:
+                        print(f"  Failed to delete Codespace: {e}", file=sys.stderr)
+                name = self._create_codespace()
+                self._state["codespace_name"] = name
                 self._save_state()
+        else:
+            if existing:
+                print(f"  Saved Codespace '{existing}' no longer exists — creating a new one.")
+                self._state.pop("codespace_name", None)
+            name = self._create_codespace()
+            self._state["codespace_name"] = name
+            self._save_state()
 
-        name = self._create_codespace()
-        self._state["codespace_name"] = name
-        self._save_state()
         self._wait_for_codespace(name)
         url = self._expose_jenkins_port(name)
         self._answers["jenkins_url"] = url
