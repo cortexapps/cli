@@ -320,10 +320,15 @@ class JenkinsDeploySetup(SolutionSetup):
     # ── Codespace orchestration ────────────────────────────────────────────
 
     def _provision_codespace(self) -> str:
-        """Create Codespace, wait for it to be ready, expose port, set jenkins_url."""
-        name = self._create_codespace()
-        self._state["codespace_name"] = name
-        self._save_state()
+        """Create Codespace (or reuse existing), wait for it to be ready, expose port, set jenkins_url."""
+        existing = self._state.get("codespace_name")
+        if existing:
+            print(f"  Reusing existing Codespace '{existing}'")
+            name = existing
+        else:
+            name = self._create_codespace()
+            self._state["codespace_name"] = name
+            self._save_state()
         self._wait_for_codespace(name)
         url = self._expose_jenkins_port(name)
         self._answers["jenkins_url"] = url
