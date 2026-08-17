@@ -105,8 +105,10 @@ def test_create_codespace_raises_on_failure(setup):
 
 def test_expose_jenkins_port_returns_url(setup):
     from unittest.mock import patch, MagicMock
-    resp = MagicMock(status_code=200)
-    with patch("requests.patch", return_value=resp):
+    post_resp = MagicMock(status_code=201)
+    patch_resp = MagicMock(status_code=200)
+    with patch("requests.post", return_value=post_resp), \
+         patch("requests.patch", return_value=patch_resp):
         url = setup._expose_jenkins_port("my-codespace-abc")
     assert url == "https://my-codespace-abc-8080.app.github.dev"
 

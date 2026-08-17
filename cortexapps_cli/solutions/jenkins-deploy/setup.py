@@ -100,7 +100,20 @@ class JenkinsDeploySetup(SolutionSetup):
         raise TimeoutError(f"Codespace did not become Available within {timeout_secs}s")
 
     def _expose_jenkins_port(self, name: str) -> str:
-        """Make Codespace port 8080 public. Returns the public Jenkins URL."""
+        """Register port 8080 via the API, make it public, return the public URL."""
+        # Register the port with GitHub's API (devcontainer forwardPorts only activates
+        # when a client connects; the REST API needs an explicit POST first).
+        post_resp = requests.post(
+            f"{GITHUB_API}/user/codespaces/{name}/ports",
+            headers=self._gh_headers(),
+            json={"port": JENKINS_PORT},
+            timeout=15,
+        )
+        if post_resp.status_code not in (200, 201, 409):  # 409 = already registered
+            raise RuntimeError(
+                f"Failed to register Jenkins port: {post_resp.status_code} {post_resp.text}"
+            )
+
         resp = requests.patch(
             f"{GITHUB_API}/user/codespaces/{name}/ports/{JENKINS_PORT}/visibility",
             headers=self._gh_headers(),
@@ -168,6 +181,12 @@ class JenkinsDeploySetup(SolutionSetup):
             self._answers["jenkins_token"] = JENKINS_DEFAULT_TOKEN
             self._answers.setdefault("jenkins_job", "cortex-deploy")
         else:
+            print(
+                "\n⚠️  Your Jenkins instance must be publicly reachable from the internet.\n"
+                "   Cortex will POST to Jenkins to trigger builds, and Jenkins will POST\n"
+                "   back to Cortex when each build finishes. A Jenkins behind a firewall\n"
+                "   or on localhost will not work with this workflow.\n"
+            )
             self.prompt("jenkins_url", "Jenkins base URL (e.g. https://jenkins.example.com)")
             self.prompt("jenkins_username", "Jenkins username", default="admin")
             self.prompt("jenkins_token", "Jenkins API token or password", secret=True)
