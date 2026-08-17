@@ -386,7 +386,8 @@ info:
     def _import_cortex_workflow(self) -> None:
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
-        yaml_content = WORKFLOW_TEMPLATE_PATH.read_text()
+        jenkins_url = self._answers["jenkins_url"].rstrip("/")
+        yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace("JENKINS_BASE_URL", jenkins_url)
 
         resp = requests.post(
             f"{base_url}/api/v1/workflows",

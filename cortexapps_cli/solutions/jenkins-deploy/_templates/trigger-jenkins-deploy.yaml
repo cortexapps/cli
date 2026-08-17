@@ -9,9 +9,6 @@ isRunnableViaApi: true
 filter:
   type: ENTITY
 variables:
-  - slug: jenkins-url
-    type: STRING
-    defaultValue: ""
   - slug: jenkins-job
     type: STRING
     defaultValue: ""
@@ -89,11 +86,10 @@ actions:
     type: JQ
     expression: |
       .actions."get-jenkins-config".outputs.body.value as $j |
-      if ($j == null or $j.url == null) then
+      if ($j == null or $j.job == null) then
         error("No Jenkins configuration found. Add x-cortex-custom-metadata.jenkins with url, job, username, and token to this entity.")
       else
         {
-          url: $j.url,
           job: $j.job,
           auth: ("Basic " + (($j.username + ":" + $j.token) | @base64))
         }
@@ -106,10 +102,6 @@ actions:
   schema:
     type: SET_VARIABLES
     variables:
-    - slug: jenkins-url
-      source:
-        path: actions.parse-jenkins-config.outputs.result.url
-        type: REFERENCE
     - slug: jenkins-job
       source:
         path: actions.parse-jenkins-config.outputs.result.job
@@ -126,7 +118,7 @@ actions:
   schema:
     type: HTTP_REQUEST_ASYNC
     httpMethod: POST
-    url: "{{variables.jenkins-url}}/job/{{variables.jenkins-job}}/buildWithParameters?callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
+    url: "JENKINS_BASE_URL/job/{{variables.jenkins-job}}/buildWithParameters?callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
     integration: null
     integrationAlias: null
     headers:
