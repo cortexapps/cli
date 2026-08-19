@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.35.0](https://github.com/cortexapps/cli/releases/tag/1.35.0) - 2026-08-19
+
+<small>[Compare with 1.34.0](https://github.com/cortexapps/cli/compare/1.34.0...1.35.0)</small>
+
+### Features
+
+- add scaffolders commands for the public Scaffolder API (#237) ([443a16b](https://github.com/cortexapps/cli/commit/443a16b0ebbf8534ffe37964c5b6af96019fc82b) by Aaron Wirick).
+
 ## [1.34.0](https://github.com/cortexapps/cli/releases/tag/1.34.0) - 2026-08-14
 
 <small>[Compare with 1.33.0](https://github.com/cortexapps/cli/compare/1.33.0...1.34.0)</small>
