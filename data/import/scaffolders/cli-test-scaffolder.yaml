@@ -1,0 +1,14 @@
+tag: cli-test-scaffolder
+name: CLI Test Scaffolder
+description: Created by the cortex-cli test suite; safe to delete.
+type: COOKIECUTTER
+repoLocator:
+  type: GITHUB
+  repoName: cli-test-scaffolder-template
+  org: cortextests
+  url: https://github.com/cortextests/cli-test-scaffolder-template
+requireNewService: true
+requirePullRequest: false
+createYamlFile: true
+showReadme: false
+strictAliasUsage: false
