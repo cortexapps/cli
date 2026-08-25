@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "helm-chart.fullname" . }}-configmap
+data:
+  SPRING_PROFILES_ACTIVE: prod
+  BASE_URL: {{ required "Base URL must be defined." .Values.app.baseUrl }}
+  {{ if .Values.app.clusterName }}CORTEX_CLUSTER: {{ .Values.app.clusterName }}{{ end }}
+  {{ if .Values.app.namespace }}SELECTED_NAMESPACE: {{ .Values.app.namespace }}{{ end }}

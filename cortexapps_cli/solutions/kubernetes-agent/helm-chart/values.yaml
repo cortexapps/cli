@@ -1,0 +1,33 @@
+image:
+  repository: ghcr.io/cortexapps/k8s-agent/k8s-agent
+  pullPolicy: IfNotPresent
+  tag: ""
+  secrets:
+    - name: cortex-docker-registry-secret
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: cortex-k8s-agent
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: cortex-service-account
+  namespace: default
+
+clusterRole:
+  create: true
+
+clusterRoleBinding:
+  create: true
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+
+app:
+  baseUrl: https://api.getcortexapp.com
+  keySecret: cortex-key
+  clusterName: Dev Cluster
