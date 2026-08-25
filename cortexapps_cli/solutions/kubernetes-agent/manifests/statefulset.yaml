@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: demo-statefulset
+  labels:
+    app: demo-k8s-label
+  annotations:
+    cortex.io/tag: demo-kubernetes
+spec:
+  serviceName: demo-k8s
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-k8s-ss
+  template:
+    metadata:
+      labels:
+        app: demo-k8s-ss
+    spec:
+      containers:
+      - name: hello
+        image: nginx:alpine
+        ports:
+        - containerPort: 80

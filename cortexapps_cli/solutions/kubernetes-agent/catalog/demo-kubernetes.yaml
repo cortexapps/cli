@@ -1,0 +1,6 @@
+openapi: 3.0.0
+info:
+  title: Demo Kubernetes
+  description: Demo entity for the Kubernetes agent integration
+  x-cortex-tag: demo-kubernetes
+  x-cortex-type: service

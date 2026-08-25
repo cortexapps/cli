@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: demo-rollout
+  labels:
+    app: demo-k8s-label
+  annotations:
+    cortex.io/tag: demo-kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-k8s-rollout
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: demo-deployment
+    scaleDown: onsuccess
+  strategy:
+    canary:
+      steps:
+        - setWeight: 100
