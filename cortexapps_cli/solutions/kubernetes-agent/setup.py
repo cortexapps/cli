@@ -80,6 +80,22 @@ class KubernetesAgentSetup(SolutionSetup):
         print(f"  Using image tag: {tag}")
         return tag
 
+    def _check_cluster(self) -> None:
+        """Verify kubectl can reach a running cluster before attempting any k8s operations."""
+        result = subprocess.run(
+            ["kubectl", "cluster-info"],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                "kubectl cannot reach a cluster.\n\n"
+                "This solution must be run inside a GitHub Codespace — the kind cluster\n"
+                "(https://kind.sigs.k8s.io) is created automatically when the Codespace\n"
+                "opens. Open a Codespace from this repository using the 'kubernetes-agent'\n"
+                "devcontainer configuration, wait for setup to complete, then re-run:\n\n"
+                "  cortex solutions post-install -s kubernetes-agent"
+            )
+
     def _create_secrets(self) -> None:
         if self.already_done("create_secrets"):
             return
@@ -187,6 +203,7 @@ class KubernetesAgentSetup(SolutionSetup):
 
     def steps(self) -> list:
         return [
+            ("Check cluster connectivity", self._check_cluster),
             ("Create k8s secrets", self._create_secrets),
             ("Install k8s-agent via helm", self._helm_install),
             ("Wait for agent readiness", self._wait_for_readiness),
