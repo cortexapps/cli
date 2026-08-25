@@ -1,0 +1,18 @@
+{
+  "name": "Cortex Kubernetes Agent Demo",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    }
+  },
+  "onCreateCommand": "bash .devcontainer/kubernetes-agent/onCreate.sh",
+  "remoteEnv": {
+    "CORTEX_API_KEY": "${localEnv:CORTEX_API_KEY}",
+    "GHCR_TOKEN": "${localEnv:GHCR_TOKEN}"
+  },
+  "postCreateMessage": "Run: cortex solutions install -s kubernetes-agent && cortex solutions post-install -s kubernetes-agent"
+}
