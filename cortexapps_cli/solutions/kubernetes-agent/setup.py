@@ -56,7 +56,7 @@ class KubernetesAgentSetup(SolutionSetup):
         self._cluster_name = self.prompt(
             "cluster_name",
             "Name for this cluster as it will appear in Cortex",
-            default="demo",
+            default="cortex-demo",
         )
 
     def _fetch_image_tag(self) -> str:
