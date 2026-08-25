@@ -49,7 +49,7 @@ class KubernetesAgentSetup(SolutionSetup):
     def collect_prompts(self) -> None:
         self._ghcr_token = self.prompt(
             "GHCR_TOKEN",
-            "GitHub PAT with read:packages scope (see https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#prerequisites)",
+            "GitHub PAT provided by Cortex Customer Engineering for pulling the k8s-agent image (see https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#prerequisites)",
             env_var="GHCR_TOKEN",
             secret=True,
         )

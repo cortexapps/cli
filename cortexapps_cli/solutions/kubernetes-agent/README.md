@@ -19,7 +19,7 @@ After setup, visit your entity's K8s tab to see live workload data synced from t
 
 - A [GitHub Codespace](https://github.com/features/codespaces) opened from this repository
 - A Cortex API key (`CORTEX_API_KEY`) — get from Cortex Settings → API Keys
-- A GitHub PAT with `read:packages` scope (`GHCR_TOKEN`) — see [Kubernetes prerequisites](https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#prerequisites)
+- A GitHub PAT provided by Cortex Customer Engineering (`GHCR_TOKEN`) — required to pull the k8s-agent image; see [Kubernetes prerequisites](https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#prerequisites)
 
 Set both as [Codespace secrets](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-secrets-for-your-codespaces) before opening the Codespace.
 
