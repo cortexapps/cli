@@ -30,4 +30,4 @@ resources: {}
 app:
   baseUrl: https://api.getcortexapp.com
   keySecret: cortex-key
-  clusterName: Dev Cluster
+  clusterName: cortex-demo
