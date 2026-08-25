@@ -1,11 +1,12 @@
 """
 Post-install setup script for the kubernetes-agent solution.
-Deploys the Cortex k8s-agent to a kind cluster and creates a demo entity.
+Deploys the Cortex k8s-agent to a kind cluster in a GitHub Codespace and creates a demo entity.
 Run via: cortex solutions post-install -s kubernetes-agent
 """
 
 SETUP_DESCRIPTION = (
-    "This solution deploys the Cortex Kubernetes agent to a local kind cluster "
+    "This solution deploys the Cortex Kubernetes agent to a kind cluster "
+    "(https://kind.sigs.k8s.io) running in your GitHub Codespace, "
     "and creates a demo entity to demonstrate the k8s integration."
 )
 
