@@ -1,3 +1,8 @@
+---
+name: Kubernetes Agent
+description: Deploy the Cortex Kubernetes agent in a GitHub Codespace with a local kind cluster to demonstrate live workload discovery and k8s integration.
+---
+
 # Kubernetes Agent Solution
 
 Demonstrates the [Cortex Kubernetes agent](https://docs.cortex.io/docs/reference/integrations/kubernetes) integration using a GitHub Codespace with a local kind cluster.
