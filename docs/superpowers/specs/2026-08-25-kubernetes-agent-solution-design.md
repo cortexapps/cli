@@ -155,8 +155,8 @@ The k8s-agent container image (`ghcr.io/cortexapps/k8s-agent/k8s-agent`) is curr
 
 ---
 
-## Open Questions
+## Resolved Decisions
 
-1. **Helm chart URL** — needs to be confirmed before implementation. Is it hosted at a `cortexapps` GitHub Pages repo?
-2. **Argo Rollouts CRD URL** — standard upstream URL (`https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml`) or a pinned version?
-3. **`GHCR_TOKEN` username** — does the pull secret need a real GitHub username or can it be a placeholder (some GHCR PATs work with any username)?
+1. **Helm chart** — bundle from `internal/k8s/helm-chart/` into the solution directory; no public helm repo exists yet.
+2. **Argo Rollouts CRD URL** — `https://raw.githubusercontent.com/argoproj/argo-rollouts/stable/manifests/crds/rollout-crd.yaml` (just the CRD, not the full controller; `stable` channel).
+3. **GHCR pull secret username** — use placeholder `cortex`; GHCR PATs authenticate by token, not username.
