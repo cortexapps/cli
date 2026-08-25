@@ -127,8 +127,7 @@ class KubernetesAgentSetup(SolutionSetup):
         )
         # Restart to ensure secrets/configmaps are picked up
         subprocess.run(
-            ["kubectl", "rollout", "restart", "deployment",
-             "-l", "app.kubernetes.io/name=cortex-k8s-agent"],
+            ["kubectl", "rollout", "restart", "deployment/cortex-k8s-agent"],
             check=True,
         )
         self.mark_done("helm_install")
@@ -139,8 +138,7 @@ class KubernetesAgentSetup(SolutionSetup):
         print("  Waiting for k8s-agent pod to be ready (timeout: 120s)...")
         subprocess.run(
             [
-                "kubectl", "rollout", "status", "deployment",
-                "-l", "app.kubernetes.io/name=cortex-k8s-agent",
+                "kubectl", "rollout", "status", "deployment/cortex-k8s-agent",
                 "--timeout=120s",
             ],
             check=True,
