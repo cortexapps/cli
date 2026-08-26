@@ -33,6 +33,7 @@ HELM_CHART_DIR = SOLUTION_DIR / "helm-chart"
 
 ARGO_CRD_URL = "https://raw.githubusercontent.com/argoproj/argo-rollouts/stable/manifests/crds/rollout-crd.yaml"
 
+CODESPACE_BRANCH = "worktree-kubernetes-agent-solution"
 CODESPACE_READY_TIMEOUT = 600  # 10 minutes for Codespace + kind cluster startup
 CODESPACE_POLL_INTERVAL = 20   # seconds between readiness checks
 
@@ -160,6 +161,7 @@ class KubernetesAgentSetup(SolutionSetup):
             [
                 "gh", "codespace", "create",
                 "--repo", self._github_repo,
+                "--branch", CODESPACE_BRANCH,
                 "--devcontainer-path", ".devcontainer/kubernetes-agent/devcontainer.json",
             ],
             check=True,
