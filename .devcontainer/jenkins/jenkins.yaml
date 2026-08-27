@@ -1,14 +1,5 @@
 jenkins:
   numExecutors: 2
-  securityRealm:
-    local:
-      allowsSignup: false
-      users:
-        - id: "admin"
-          password: "cortex-demo"
-  authorizationStrategy:
-    loggedInUsersCanDoAnything:
-      allowAnonymousRead: false
   remotingSecurity:
     enabled: true
 unclassified:

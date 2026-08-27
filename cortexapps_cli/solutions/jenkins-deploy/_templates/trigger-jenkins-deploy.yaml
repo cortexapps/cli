@@ -124,6 +124,7 @@ actions:
     headers:
       Authorization: "{{variables.jenkins-auth}}"
       Content-Type: application/x-www-form-urlencoded
+    payload: " "
     timeoutInSeconds: 300
   outgoingActions: []
   isRootAction: false

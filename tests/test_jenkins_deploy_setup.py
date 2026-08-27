@@ -104,11 +104,17 @@ def test_create_codespace_raises_on_failure(setup):
 
 
 def test_expose_jenkins_port_returns_url(setup):
-    from unittest.mock import patch, MagicMock
-    post_resp = MagicMock(status_code=201)
-    patch_resp = MagicMock(status_code=200)
-    with patch("requests.post", return_value=post_resp), \
-         patch("requests.patch", return_value=patch_resp):
+    from unittest.mock import patch
+    with patch("subprocess.run") as mock_run:
+        url = setup._expose_jenkins_port("my-codespace-abc")
+    mock_run.assert_called_once()
+    assert url == "https://my-codespace-abc-8080.app.github.dev"
+
+
+def test_expose_jenkins_port_continues_if_gh_unavailable(setup):
+    from unittest.mock import patch
+    import subprocess
+    with patch("subprocess.run", side_effect=FileNotFoundError):
         url = setup._expose_jenkins_port("my-codespace-abc")
     assert url == "https://my-codespace-abc-8080.app.github.dev"
 
@@ -146,51 +152,53 @@ def test_wait_for_jenkins_polls_until_200(setup):
     from unittest.mock import patch, MagicMock
     fail = MagicMock(status_code=503)
     ok = MagicMock(status_code=200)
-    with patch("requests.get", side_effect=[fail, ok]), \
+    # Phase 1: /login fails once then succeeds; phase 2: /crumbIssuer/api/json succeeds
+    with patch("requests.get", side_effect=[fail, ok, ok]), \
          patch("time.sleep"):
         setup._wait_for_jenkins()  # should not raise
 
 
 def test_create_jenkins_job_skips_if_exists(setup):
     from unittest.mock import patch, MagicMock
-    exists_resp = MagicMock(status_code=200)
-    with patch("requests.get", return_value=exists_resp) as mock_get, \
-         patch("requests.post") as mock_post:
+    session = MagicMock()
+    session.get.return_value = MagicMock(status_code=200)
+    with patch.object(setup, "_jenkins_session", return_value=session):
         setup._create_jenkins_job()
-    mock_get.assert_called_once()
-    mock_post.assert_not_called()
+    session.post.assert_not_called()
 
 
 def test_create_jenkins_job_creates_when_missing(setup):
     from unittest.mock import patch, MagicMock
-    missing_resp = MagicMock(status_code=404)
-    created_resp = MagicMock(status_code=200)
-    with patch("requests.get", return_value=missing_resp), \
-         patch("requests.post", return_value=created_resp) as mock_post:
+    session = MagicMock()
+    session.get.return_value = MagicMock(status_code=404)
+    session.post.return_value = MagicMock(status_code=200)
+    with patch.object(setup, "_jenkins_session", return_value=session):
         setup._create_jenkins_job()
-    mock_post.assert_called_once()
-    call_kwargs = mock_post.call_args
+    session.post.assert_called_once()
+    call_kwargs = session.post.call_args
     assert "application/xml" in call_kwargs.kwargs.get("headers", {}).get("Content-Type", "")
 
 
 def test_add_jenkins_credential_skips_if_exists(setup):
     from unittest.mock import patch, MagicMock
     exists_resp = MagicMock(status_code=200)
-    with patch("requests.get", return_value=exists_resp) as mock_get, \
-         patch("requests.post") as mock_post:
+    session = MagicMock()
+    session.get.return_value = exists_resp
+    with patch.object(setup, "_jenkins_session", return_value=session):
         setup._add_jenkins_credential("CORTEX_API_KEY", "secret", "Cortex API key")
-    mock_get.assert_called_once()
-    mock_post.assert_not_called()
+    session.post.assert_not_called()
 
 
 def test_add_jenkins_credential_creates_when_missing(setup):
     from unittest.mock import patch, MagicMock
     missing_resp = MagicMock(status_code=404)
     created_resp = MagicMock(status_code=200)
-    with patch("requests.get", return_value=missing_resp), \
-         patch("requests.post", return_value=created_resp) as mock_post:
+    session = MagicMock()
+    session.get.return_value = missing_resp
+    session.post.return_value = created_resp
+    with patch.object(setup, "_jenkins_session", return_value=session):
         setup._add_jenkins_credential("CORTEX_API_KEY", "secret", "Cortex API key")
-    mock_post.assert_called_once()
+    session.post.assert_called_once()
 
 
 def test_write_entity_custom_metadata(setup):
@@ -233,6 +241,95 @@ def test_steps_includes_codespace_when_enabled(setup):
     setup._answers["use_codespace"] = True
     step_labels = [label for label, _ in setup.steps()]
     assert "Provisioning Jenkins in GitHub Codespaces" in step_labels
+    assert "Setting random Jenkins admin password" in step_labels
+
+
+def test_generate_passphrase_format(setup):
+    passphrase = setup._generate_passphrase()
+    parts = passphrase.split("-")
+    assert len(parts) == 4
+    assert all(len(p) > 0 for p in parts)
+
+
+def test_set_jenkins_admin_password_updates_token(setup):
+    from unittest.mock import patch, MagicMock
+    session = MagicMock()
+    # First post = password change (empty output), second = API token generation
+    session.post.side_effect = [
+        MagicMock(status_code=200, text=""),
+        MagicMock(status_code=200, text="11abc1234567890abcdef"),
+    ]
+    with patch.object(setup, "_jenkins_session", return_value=session), \
+         patch.object(setup, "_save_state"):
+        setup._set_jenkins_admin_password()
+    assert setup._answers["jenkins_token"] == "11abc1234567890abcdef"
+    assert setup._state["jenkins_api_token"] == "11abc1234567890abcdef"
+    assert "-" in setup._state["jenkins_passphrase"]
+
+
+def test_set_jenkins_admin_password_skips_if_already_set(setup):
+    setup._state["jenkins_passphrase"] = "coral-ember-ridge-titan"
+    setup._state["jenkins_api_token"] = "11abc1234567890abcdef"
+    from unittest.mock import patch
+    with patch.object(setup, "_jenkins_session") as mock_session:
+        setup._set_jenkins_admin_password()
+    mock_session.assert_not_called()
+    assert setup._answers["jenkins_token"] == "11abc1234567890abcdef"
+
+
+def test_set_jenkins_admin_password_raises_on_failure(setup):
+    from unittest.mock import patch, MagicMock
+    session = MagicMock()
+    session.post.return_value = MagicMock(status_code=500, text="Internal Server Error")
+    with patch.object(setup, "_jenkins_session", return_value=session):
+        with pytest.raises(RuntimeError, match="Jenkins Script Console error"):
+            setup._set_jenkins_admin_password()
+
+
+def test_set_jenkins_admin_password_raises_on_exception_in_output(setup):
+    from unittest.mock import patch, MagicMock
+    session = MagicMock()
+    session.post.return_value = MagicMock(status_code=200, text="groovy.lang.MissingMethodException: ...")
+    with patch.object(setup, "_jenkins_session", return_value=session):
+        with pytest.raises(RuntimeError, match="Jenkins Script Console error"):
+            setup._set_jenkins_admin_password()
+
+
+def test_run_groovy_returns_output(setup):
+    from unittest.mock import MagicMock
+    session = MagicMock()
+    session.post.return_value = MagicMock(status_code=200, text="  hello world  ")
+    result = setup._run_groovy(session, "println 'hello world'")
+    assert result == "hello world"
+
+
+def test_run_groovy_raises_on_error(setup):
+    from unittest.mock import MagicMock
+    session = MagicMock()
+    session.post.return_value = MagicMock(status_code=200, text="groovy.lang.MissingPropertyException")
+    with pytest.raises(RuntimeError, match="Jenkins Script Console error"):
+        setup._run_groovy(session, "bad script")
+
+
+def test_jenkins_session_sets_crumb_header(setup):
+    from unittest.mock import patch, MagicMock
+    crumb_resp = MagicMock(status_code=200)
+    crumb_resp.json.return_value = {"crumbRequestField": "Jenkins-Crumb", "crumb": "abc123"}
+    mock_session = MagicMock()
+    mock_session.get.return_value = crumb_resp
+    with patch("requests.Session", return_value=mock_session):
+        session = setup._jenkins_session()
+    mock_session.headers.__setitem__.assert_called_with("Jenkins-Crumb", "abc123")
+
+
+def test_jenkins_session_skips_crumb_when_disabled(setup):
+    from unittest.mock import patch, MagicMock
+    crumb_resp = MagicMock(status_code=404)
+    mock_session = MagicMock()
+    mock_session.get.return_value = crumb_resp
+    with patch("requests.Session", return_value=mock_session):
+        session = setup._jenkins_session()
+    mock_session.headers.__setitem__.assert_not_called()
 
 
 def test_main_callable(mod):

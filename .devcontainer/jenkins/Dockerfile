@@ -17,3 +17,7 @@ RUN jenkins-plugin-cli --plugins \
 
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 ENV CASC_JENKINS_CONFIG="/var/jenkins_home/casc_configs/jenkins.yaml"
+
+# Groovy init script to set admin password — JCasC password: field does not reliably
+# override the Jenkins initial admin password in the Docker image.
+COPY init-admin-password.groovy /usr/share/jenkins/ref/init.groovy.d/

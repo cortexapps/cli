@@ -11,6 +11,8 @@ SETUP_DESCRIPTION = (
     "trigger workflow, and optionally fire a test deploy."
 )
 
+import secrets
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -32,6 +34,45 @@ DEVCONTAINER_PATH = ".devcontainer/jenkins/devcontainer.json"
 JENKINS_PORT = 8080
 JENKINS_DEFAULT_USERNAME = "admin"
 JENKINS_DEFAULT_TOKEN = "cortex-demo"
+
+_PASSPHRASE_WORDS = [
+    "amber", "anchor", "apple", "arrow", "atlas", "azure", "badge", "banjo",
+    "baron", "beach", "birch", "blade", "blaze", "bloom", "brace", "brine",
+    "brook", "cedar", "chain", "chalk", "chart", "chase", "chief", "chime",
+    "civic", "clamp", "cliff", "cloak", "cloud", "clove", "cobra", "comet",
+    "coral", "crane", "crisp", "crown", "curve", "cycle", "daisy", "delta",
+    "depot", "derby", "digit", "diver", "dowel", "draft", "drake", "drift",
+    "drill", "drums", "dunes", "eagle", "ebony", "ember", "envoy", "fable",
+    "flair", "flank", "flare", "flask", "fleet", "flint", "flock", "flute",
+    "forge", "frond", "frost", "gavel", "geyser", "glide", "glint", "globe",
+    "gloss", "glove", "golem", "grace", "grain", "grand", "grasp", "grove",
+    "guild", "gusto", "hatch", "haven", "hazel", "helix", "heron", "hinge",
+    "holly", "honey", "honor", "hound", "hover", "igloo", "inlet", "ivory",
+    "jade", "jaguar", "jazz", "jewel", "joust", "judge", "jumbo", "karma",
+    "kayak", "kelp", "knoll", "lance", "lapis", "laser", "latch", "lemon",
+    "lemur", "level", "light", "lilac", "linen", "lodge", "lotus", "lucid",
+    "lunar", "lyric", "magma", "mango", "manor", "maple", "marsh", "mason",
+    "maxim", "merit", "micro", "mirth", "molar", "moose", "mossy", "mount",
+    "mural", "niche", "noble", "notch", "novel", "oaken", "ocean", "ochre",
+    "olive", "onyx", "optic", "orbit", "otter", "oxide", "ozone", "panda",
+    "panel", "patch", "pearl", "pedal", "perch", "phase", "pilot", "pinch",
+    "pixel", "plaza", "plumb", "plume", "polar", "poppy", "prism", "probe",
+    "prowl", "proxy", "pulse", "quail", "quest", "quota", "radar", "radix",
+    "rally", "raven", "realm", "relay", "ridge", "rivet", "robin", "rocky",
+    "rogue", "rouge", "rover", "royal", "rustic", "sable", "salvo", "sandy",
+    "sauce", "scale", "scout", "serum", "shade", "shaft", "shark", "sheen",
+    "shell", "shift", "sigma", "silky", "silver", "slate", "sleek", "sleet",
+    "slope", "snowy", "solar", "solid", "sonic", "spark", "spear", "spire",
+    "spore", "spray", "squad", "stalk", "stamp", "stark", "steam", "steel",
+    "stern", "stoic", "stone", "storm", "stout", "strut", "suede", "sugar",
+    "surge", "swamp", "sword", "syrup", "talon", "taper", "tapir", "tempo",
+    "terra", "thorn", "tiger", "titan", "tonic", "topaz", "torch", "totem",
+    "trawl", "trend", "trout", "truce", "tunic", "turbo", "twine", "ultra",
+    "umber", "unity", "upper", "valor", "valve", "vapor", "vault", "venom",
+    "verge", "vigor", "viola", "viper", "visor", "vista", "vocal", "vogue",
+    "walnut", "wedge", "wheat", "whirl", "wield", "winch", "witty", "woven",
+    "xenon", "yacht", "yield", "zebra", "zephyr", "zippy",
+]
 
 
 def _hyperlink(url: str, text: str = None) -> str:
@@ -100,11 +141,20 @@ class JenkinsDeploySetup(SolutionSetup):
         raise TimeoutError(f"Codespace did not become Available within {timeout_secs}s")
 
     def _expose_jenkins_port(self, name: str) -> str:
-        """Return the public Jenkins URL for this Codespace.
+        """Ensure the Jenkins port is publicly accessible and return its URL.
 
-        Port visibility is set to public via devcontainer.json portsAttributes,
-        applied at Codespace build time — no runtime API call needed.
+        Port visibility is set at build time via devcontainer.json portsAttributes.
+        For reused Codespaces this may need to be set explicitly via gh CLI.
         """
+        try:
+            subprocess.run(
+                ["gh", "codespace", "ports", "visibility",
+                 f"{JENKINS_PORT}:public", "-c", name],
+                check=True,
+                capture_output=True,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass  # gh unavailable or failed; devcontainer.json visibility applies for new Codespaces
         return f"https://{name}-{JENKINS_PORT}.app.github.dev"
 
     def _delete_codespace(self, name: str) -> None:
@@ -147,9 +197,10 @@ class JenkinsDeploySetup(SolutionSetup):
         # Jenkins source: Codespace or existing instance
         print(
             "\nJenkins source:\n"
-            "  Y — provision a fresh Jenkins instance in GitHub Codespaces (recommended for demo).\n"
+            "  Y — provision Jenkins in GitHub Codespaces (recommended for demo).\n"
             "      Requires a GitHub PAT with 'codespace' scope. Jenkins will be pre-configured\n"
             "      and its port made publicly accessible for Cortex to reach.\n"
+            "      If a Codespace from a previous run of this command exists, it will be reused.\n"
             "  N — use an existing Jenkins instance. You will be prompted for its URL and\n"
             "      credentials. The instance must be publicly reachable from the internet.\n"
         )
@@ -223,43 +274,137 @@ class JenkinsDeploySetup(SolutionSetup):
   <disabled>false</disabled>
 </flow-definition>"""
 
-    def _wait_for_jenkins(self, timeout_secs: int = 120) -> None:
-        """Poll Jenkins /login until it returns HTTP 200."""
-        url = f"{self._jenkins_url()}/login"
+    def _wait_for_jenkins(self, timeout_secs: int = 180) -> None:
+        """Poll Jenkins until the UI is up AND the default credentials are accepted.
+
+        Two-phase wait:
+        1. /login returns 200 (Jenkins is up)
+        2. /me/api/json with default credentials returns 200 (JCasC has applied)
+        """
+        base = self._jenkins_url()
         start = time.time()
         dots = 0
+
+        # Phase 1: wait for /login
         while time.time() - start < timeout_secs:
             try:
-                resp = requests.get(url, timeout=5)
+                resp = requests.get(f"{base}/login", timeout=5)
+                if resp.status_code == 200:
+                    break
+            except requests.exceptions.RequestException:
+                pass
+            time.sleep(5)
+            dots += 1
+            print(f"\r  Waiting for Jenkins{'.' * (dots % 4)}   ", end="", flush=True)
+        else:
+            raise TimeoutError(f"Jenkins did not respond within {timeout_secs}s at {base}")
+
+        # Phase 2: wait for the init script to apply (default credentials accepted).
+        # Use /crumbIssuer/api/json — it requires authentication, unlike /me/api/json
+        # which returns 200 for anonymous users.
+        auth = (JENKINS_DEFAULT_USERNAME, JENKINS_DEFAULT_TOKEN)
+        while time.time() - start < timeout_secs:
+            try:
+                resp = requests.get(f"{base}/crumbIssuer/api/json", auth=auth, timeout=5)
                 if resp.status_code == 200:
                     return
             except requests.exceptions.RequestException:
                 pass
             time.sleep(5)
             dots += 1
-            print(f"\r  Waiting for Jenkins{'.' * (dots % 4)}   ", end="", flush=True)
-        raise TimeoutError(f"Jenkins did not respond within {timeout_secs}s at {url}")
+            print(f"\r  Waiting for Jenkins config{'.' * (dots % 4)}   ", end="", flush=True)
+        raise TimeoutError(f"Jenkins credentials not accepted within {timeout_secs}s")
+
+    def _generate_passphrase(self) -> str:
+        """Return a random 4-word hyphen-joined passphrase, e.g. 'coral-ember-ridge-titan'."""
+        return "-".join(secrets.choice(_PASSPHRASE_WORDS) for _ in range(4))
+
+    def _jenkins_session(self, auth: tuple = None) -> requests.Session:
+        """Return an authenticated requests.Session with the Jenkins CSRF crumb pre-set."""
+        session = requests.Session()
+        session.auth = auth or self._jenkins_auth()
+        crumb_resp = session.get(f"{self._jenkins_url()}/crumbIssuer/api/json", timeout=10)
+        if crumb_resp.status_code == 200:
+            try:
+                data = crumb_resp.json()
+                session.headers[data["crumbRequestField"]] = data["crumb"]
+            except (ValueError, KeyError):
+                pass
+        return session
+
+    def _run_groovy(self, session: requests.Session, script: str) -> str:
+        """POST a Groovy script to Jenkins Script Console and return stdout. Raises on failure."""
+        resp = session.post(
+            f"{self._jenkins_url()}/scriptText",
+            data={"script": script},
+            timeout=15,
+        )
+        if resp.status_code != 200 or "Exception" in resp.text:
+            raise RuntimeError(
+                f"Jenkins Script Console error: {resp.status_code} {resp.text[:200]}"
+            )
+        return resp.text.strip()
+
+    def _set_jenkins_admin_password(self) -> None:
+        """Set a random admin password and generate an API token for programmatic access.
+
+        Stores the API token (not the password) as jenkins_token — API tokens bypass
+        Jenkins CSRF protection, so Cortex workflow calls don't need a session cookie.
+
+        If already done in a previous run (stored in state), restores and skips.
+        """
+        saved = self._state.get("jenkins_passphrase")
+        if saved:
+            self._answers["jenkins_token"] = self._state.get("jenkins_api_token", saved)
+            print(f"  Jenkins admin credentials already configured (from previous run)")
+            print(f"  Password: {saved}")
+            return
+
+        passphrase = self._generate_passphrase()
+        session = self._jenkins_session(auth=(JENKINS_DEFAULT_USERNAME, JENKINS_DEFAULT_TOKEN))
+
+        # Change login password
+        self._run_groovy(session, (
+            "def user = hudson.model.User.get('admin', false)\n"
+            "def prop = hudson.security.HudsonPrivateSecurityRealm.Details"
+            f".fromPlainPassword('{passphrase}')\n"
+            "user.addProperty(prop)\n"
+            "user.save()"
+        ))
+
+        # Generate an API token — these bypass CSRF, so Cortex can call Jenkins without a session
+        api_token = self._run_groovy(session, (
+            "import jenkins.security.ApiTokenProperty\n"
+            "def user = jenkins.model.Jenkins.instance.getUser('admin')\n"
+            "def prop = user.getProperty(ApiTokenProperty.class)\n"
+            "def result = prop.tokenStore.generateNewToken('cortex')\n"
+            "user.save()\n"
+            "println result.plainValue"
+        ))
+        if not api_token:
+            raise RuntimeError("Failed to generate Jenkins API token: empty response")
+
+        self._answers["jenkins_token"] = api_token
+        self._state["jenkins_passphrase"] = passphrase
+        self._state["jenkins_api_token"] = api_token
+        self._save_state()
+        print(f"  Jenkins admin password: {passphrase}")
+        print(f"  Jenkins API token:      {api_token}")
 
     def _create_jenkins_job(self) -> None:
         """Create the cortex-deploy pipeline job in Jenkins. Skips if already exists."""
         job_name = self._answers["jenkins_job"]
         base = self._jenkins_url()
-        auth = self._jenkins_auth()
+        session = self._jenkins_session()
 
-        # Check if job exists
-        check = requests.get(
-            f"{base}/job/{job_name}/api/json",
-            auth=auth,
-            timeout=10,
-        )
+        check = session.get(f"{base}/job/{job_name}/api/json", timeout=10)
         if check.status_code == 200:
             return  # already exists — skip
 
         xml = self._get_job_xml()
-        resp = requests.post(
+        resp = session.post(
             f"{base}/createItem",
             params={"name": job_name},
-            auth=auth,
             headers={"Content-Type": "application/xml"},
             data=xml.encode("utf-8"),
             timeout=15,
@@ -273,12 +418,10 @@ class JenkinsDeploySetup(SolutionSetup):
         """Add a secret-text credential to the Jenkins global credential store. Skips if exists."""
         import json as _json
         base = self._jenkins_url()
-        auth = self._jenkins_auth()
+        session = self._jenkins_session()
 
-        # Check if credential exists
-        check = requests.get(
+        check = session.get(
             f"{base}/credentials/store/system/domain/_/credential/{credential_id}/api/json",
-            auth=auth,
             timeout=10,
         )
         if check.status_code == 200:
@@ -294,9 +437,8 @@ class JenkinsDeploySetup(SolutionSetup):
                 "$class": "org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl",
             },
         }
-        resp = requests.post(
+        resp = session.post(
             f"{base}/credentials/store/system/domain/_/createCredentials",
-            auth=auth,
             data={"json": _json.dumps(payload)},
             timeout=15,
         )
@@ -317,12 +459,18 @@ class JenkinsDeploySetup(SolutionSetup):
         )
         return resp.status_code != 404
 
+    def _record_new_codespace(self, name: str) -> None:
+        """Persist a newly created Codespace and reset any Jenkins state tied to the old one."""
+        self._state["codespace_name"] = name
+        self._state.pop("jenkins_passphrase", None)  # new Jenkins instance, clear stale password
+        self._save_state()
+
     def _provision_codespace(self) -> str:
         """Create Codespace (or reuse one previously created by this script), set jenkins_url."""
         existing = self._state.get("codespace_name")
         if existing and self._codespace_exists(existing):
             if self.confirm(
-                f"Reuse existing Codespace '{existing}' (created by a previous setup run)?",
+                f"Reuse existing Codespace '{existing}'?",
                 default=True,
             ):
                 name = existing
@@ -334,15 +482,13 @@ class JenkinsDeploySetup(SolutionSetup):
                     except Exception as e:
                         print(f"  Failed to delete Codespace: {e}", file=sys.stderr)
                 name = self._create_codespace()
-                self._state["codespace_name"] = name
-                self._save_state()
+                self._record_new_codespace(name)
         else:
             if existing:
                 print(f"  Saved Codespace '{existing}' no longer exists — creating a new one.")
                 self._state.pop("codespace_name", None)
             name = self._create_codespace()
-            self._state["codespace_name"] = name
-            self._save_state()
+            self._record_new_codespace(name)
 
         self._wait_for_codespace(name)
         url = self._expose_jenkins_port(name)
@@ -457,6 +603,7 @@ info:
         if self._answers.get("use_codespace"):
             step_list.append(("Provisioning Jenkins in GitHub Codespaces", self._provision_codespace))
             step_list.append(("Waiting for Jenkins to be ready", self._wait_for_jenkins))
+            step_list.append(("Setting random Jenkins admin password", self._set_jenkins_admin_password))
         step_list += [
             ("Creating Jenkins deploy job", self._create_jenkins_job),
             ("Adding CORTEX_API_KEY credential to Jenkins", lambda: self._add_jenkins_credential(
@@ -492,6 +639,16 @@ info:
         jenkins_url = self._answers.get("jenkins_url", "")
         jenkins_job = self._answers.get("jenkins_job", "cortex-deploy")
         jenkins_job_url = f"{jenkins_url}/job/{jenkins_job}" if jenkins_url else ""
+
+        if self._answers.get("use_codespace") and jenkins_url:
+            passphrase = self._state.get("jenkins_passphrase", "")
+            api_token = self._state.get("jenkins_api_token", "")
+            print(f"\nJenkins admin credentials (browser login):")
+            print(f"  URL:      {_hyperlink(jenkins_url)}")
+            print(f"  Username: admin")
+            print(f"  Password: {passphrase}")
+            if api_token:
+                print(f"  API token (used by Cortex): {api_token}")
 
         print(f"\nTo trigger a deploy manually later:")
         print(f"  CLI: cortex workflows run -t {workflow_tag} --scope ENTITY --entity {entity_tag}")
