@@ -20,7 +20,7 @@ pipeline {
                 script {
                     def timestamp = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
                     def buildUrl = env.BUILD_URL ?: "${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
-                    def payload = """{"sha":"${env.BUILD_NUMBER}","timestamp":"${timestamp}","environment":"production","type":"DEPLOY","title":"Triggered by Jenkins","deployer":{"name":"Jenkins"},"customData":{"buildUrl":"${buildUrl}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    def payload = """{"sha":"${env.BUILD_NUMBER}","timestamp":"${timestamp}","environment":"production","type":"DEPLOY","title":"Triggered by Jenkins","url":"${buildUrl}","deployer":{"name":"Jenkins"},"customData":{"buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
                     sh """
                         curl -s -f -X POST \\
                           "\${CORTEX_BASE_URL}/api/v1/catalog/${params.cortex_entity_tag}/deploys" \\
