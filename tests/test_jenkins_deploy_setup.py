@@ -61,6 +61,7 @@ def test_workflow_yaml_is_valid():
     assert async_action["schema"]["type"] == "HTTP_REQUEST_ASYNC"
     assert "buildWithParameters" in async_action["schema"]["url"]
     assert "jenkins_auth" in async_action["schema"]["headers"].get("Authorization", "")
+    assert "{{{" in async_action["schema"]["headers"]["Authorization"]
     assert "job" in data["actions"][1]["schema"]["expression"]
 
 
