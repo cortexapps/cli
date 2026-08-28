@@ -729,6 +729,7 @@ info:
         if jenkins_job_url:
             print(f"{_hyperlink(jenkins_job_url, 'View Jenkins job')}")
 
+        workflow_succeeded = False
         if self.confirm("Trigger a test Cortex Workflow run now?", default=True):
             print("  Starting Cortex workflow run (waiting for Jenkins pipeline to complete)...")
             try:
@@ -737,6 +738,7 @@ info:
                 if status == "COMPLETED":
                     print("  Workflow run complete ✓")
                     self.mark_done("first_deploy")
+                    workflow_succeeded = True
                 else:
                     print(f"  Workflow run ended with status: {status}", file=sys.stderr)
                     _print_workflow_failure(result)
@@ -745,8 +747,9 @@ info:
                 print(f"  Trigger failed: {e}", file=sys.stderr)
                 print(f"  Re-trigger via: cortex solutions post-install -s {self.solution_tag}", file=sys.stderr)
 
-        print(f"\nDone! Watch your deploy appear at:")
-        print(f"  {_hyperlink(entity_url)}")
+        if workflow_succeeded:
+            print(f"\nDone! Watch your deploy appear at:")
+            print(f"  {_hyperlink(entity_url)}")
         if jenkins_job_url:
             print(f"\nJenkins job: {_hyperlink(jenkins_job_url)}")
 
