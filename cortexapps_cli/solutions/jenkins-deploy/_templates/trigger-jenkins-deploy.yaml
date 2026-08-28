@@ -114,7 +114,6 @@ actions:
     integrationAlias: null
     headers:
       Content-Type: application/x-www-form-urlencoded
-      Authorization: "Basic {{context.secrets.jenkins_auth}}"
     payload: "callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
     timeoutInSeconds: 60
   outgoingActions: []
