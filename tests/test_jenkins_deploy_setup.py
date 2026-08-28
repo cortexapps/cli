@@ -60,7 +60,7 @@ def test_workflow_yaml_is_valid():
     async_action = next(a for a in data["actions"] if a["slug"] == "trigger-deploy")
     assert async_action["schema"]["type"] == "HTTP_REQUEST_ASYNC"
     assert "buildWithParameters" in async_action["schema"]["url"]
-    assert "Authorization" not in async_action["schema"]["headers"]
+    assert "jenkins_auth" in async_action["schema"]["headers"].get("Authorization", "")
     assert "job" in data["actions"][1]["schema"]["expression"]
 
 
