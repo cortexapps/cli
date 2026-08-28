@@ -80,6 +80,29 @@ def _hyperlink(url: str, text: str = None) -> str:
     return f"\033]8;;{url}\033\\{label}\033]8;;\033\\"
 
 
+def _print_workflow_failure(run: dict) -> None:
+    """Print action-level failure details from a workflow run response."""
+    actions = run.get("actions", [])
+    for action in actions:
+        slug = action.get("slug", "?")
+        status = (action.get("status") or "").upper()
+        if status in ("FAILED", "ERROR"):
+            error = action.get("error") or action.get("errorMessage") or ""
+            outputs = action.get("outputs") or {}
+            http_status = outputs.get("statusCode") or outputs.get("status_code") or ""
+            body = outputs.get("body") or outputs.get("response") or ""
+            parts = [f"  Failed action: {slug}"]
+            if error:
+                parts.append(f"  Error: {error}")
+            if http_status:
+                parts.append(f"  HTTP status: {http_status}")
+            if body:
+                body_str = str(body)[:300]
+                parts.append(f"  Response: {body_str}")
+            for line in parts:
+                print(line, file=sys.stderr)
+
+
 class JenkinsDeploySetup(SolutionSetup):
     solution_tag = "jenkins-deploy"
 
@@ -746,6 +769,7 @@ info:
                     self.mark_done("first_deploy")
                 else:
                     print(f"  Workflow run ended with status: {status}", file=sys.stderr)
+                    _print_workflow_failure(result)
                     print(f"  Check {_hyperlink(workflows_url, 'Cortex Workflow runs')} to investigate.", file=sys.stderr)
             except Exception as e:
                 print(f"  Trigger failed: {e}", file=sys.stderr)
