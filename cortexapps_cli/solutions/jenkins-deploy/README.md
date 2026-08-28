@@ -108,7 +108,7 @@ To roll the pattern out to your own services:
        job: "your-pipeline-name"
    ```
 
-3. Create a **Cortex secret** with your Jenkins credentials — the workflow's trigger action already includes the `Authorization` header and will use it automatically:
+3. Create a **Cortex secret** with your Jenkins credentials:
 
    ```bash
    cortex secrets create -f - <<EOF
