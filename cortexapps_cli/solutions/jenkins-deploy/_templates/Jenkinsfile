@@ -43,6 +43,7 @@ pipeline {
                     sh """
                         curl -s -f -X POST '${callbackUrl}' \\
                           -H 'Content-Type: application/json' \\
+                          -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
                           -d '${payload}'
                     """
                 }
