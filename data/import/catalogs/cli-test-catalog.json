@@ -1,0 +1,12 @@
+{
+  "name": "CLI Test Catalog",
+  "slug": "cli-test-catalog",
+  "iconTag": "cortex",
+  "description": "Created by the cortexapps-cli test suite",
+  "isDraft": false,
+  "filter": {
+    "types": {
+      "include": ["service"]
+    }
+  }
+}
