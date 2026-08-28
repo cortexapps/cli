@@ -703,7 +703,7 @@ info:
         if jenkins_job_url:
             print(f"{_hyperlink(jenkins_job_url, 'View Jenkins job')}")
 
-        if self.confirm("Trigger a test workflow run now?", default=True):
+        if self.confirm("Trigger a test Cortex Workflow run now?", default=True):
             print("  Starting Cortex workflow run (waiting for Jenkins pipeline to complete)...")
             try:
                 result = self._trigger_via_cortex_workflow()
