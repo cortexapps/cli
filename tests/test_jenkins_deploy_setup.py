@@ -161,7 +161,12 @@ def test_wait_for_jenkins_polls_until_200(setup):
 def test_create_jenkins_job_updates_if_exists(setup):
     from unittest.mock import patch, MagicMock
     session = MagicMock()
-    session.get.return_value = MagicMock(status_code=200)
+    # First GET (api/json) → job exists; second GET (config.xml) → returns existing XML
+    existing_xml = "<flow-definition><definition><script><![CDATA[old]]></script></definition></flow-definition>"
+    session.get.side_effect = [
+        MagicMock(status_code=200),                          # api/json check
+        MagicMock(status_code=200, text=existing_xml),       # config.xml fetch
+    ]
     session.post.return_value = MagicMock(status_code=200)
     with patch.object(setup, "_jenkins_session", return_value=session):
         setup._create_jenkins_job()

@@ -387,6 +387,42 @@ class JenkinsDeploySetup(SolutionSetup):
         else:
             print(f"  Jenkins API token generated for Cortex")
 
+    def _update_jenkins_job_script(self, session: requests.Session, job_name: str, base: str) -> None:
+        """Patch the <script> CDATA block in the existing job's config.xml.
+
+        Fetching the live config and replacing only the script preserves Jenkins'
+        own plugin version attributes, avoiding the 500 that a full XML replace causes.
+        """
+        import re
+        get_resp = session.get(f"{base}/job/{job_name}/config.xml", timeout=10)
+        if get_resp.status_code != 200:
+            print(
+                f"  Warning: could not fetch existing job config ({get_resp.status_code}). "
+                f"Delete '{job_name}' in Jenkins and re-run setup to apply the latest Jenkinsfile."
+            )
+            return
+        jenkinsfile = JENKINSFILE_TEMPLATE_PATH.read_text()
+        new_cdata = f"<script><![CDATA[{jenkinsfile}]]></script>"
+        patched = re.sub(
+            r"<script><!\[CDATA\[.*?\]\]></script>",
+            new_cdata,
+            get_resp.text,
+            flags=re.DOTALL,
+        )
+        if patched == get_resp.text:
+            return  # no change needed
+        resp = session.post(
+            f"{base}/job/{job_name}/config.xml",
+            headers={"Content-Type": "application/xml"},
+            data=patched.encode("utf-8"),
+            timeout=15,
+        )
+        if resp.status_code not in (200, 201):
+            print(
+                f"  Warning: could not update Jenkinsfile ({resp.status_code}). "
+                f"Delete '{job_name}' in Jenkins and re-run setup to apply the latest Jenkinsfile."
+            )
+
     def _configure_jenkins_root_url(self) -> None:
         """Set Jenkins root URL via Script Console so env.BUILD_URL is populated in builds."""
         jenkins_url = self._jenkins_url()
@@ -409,19 +445,9 @@ class JenkinsDeploySetup(SolutionSetup):
 
         check = session.get(f"{base}/job/{job_name}/api/json", timeout=10)
         if check.status_code == 200:
-            # Job exists — update its config so the latest Jenkinsfile is always applied
-            resp = session.post(
-                f"{base}/job/{job_name}/config.xml",
-                headers={"Content-Type": "application/xml"},
-                data=xml.encode("utf-8"),
-                timeout=15,
-            )
-            if resp.status_code not in (200, 201):
-                print(
-                    f"  Warning: could not update Jenkinsfile automatically "
-                    f"({resp.status_code}). To apply the latest Jenkinsfile, "
-                    f"delete the '{job_name}' job in Jenkins and re-run setup."
-                )
+            # Job exists — patch just the <script> CDATA in the existing config so
+            # we preserve Jenkins' own plugin version attributes (full replace → 500).
+            self._update_jenkins_job_script(session, job_name, base)
             return
 
         resp = session.post(
