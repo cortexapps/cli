@@ -30,8 +30,8 @@ runResponseTemplate: |
 
   **2. Cortex triggered the Jenkins build**
 
-  It POSTed to the Jenkins `buildWithParameters` API, passing a one-time callback URL
-  and the entity tag as build parameters.
+  It POSTed to the Jenkins `buildWithParameters` API with the callback URL and entity
+  tag in the POST body so Jenkins receives them as build parameters.
 
   **3. Jenkins ran the pipeline**
 
@@ -106,12 +106,12 @@ actions:
   schema:
     type: HTTP_REQUEST_ASYNC
     httpMethod: POST
-    url: "JENKINS_BASE_URL/job/{{variables.jenkins-job}}/buildWithParameters?callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
+    url: "JENKINS_BASE_URL/job/{{variables.jenkins-job}}/buildWithParameters"
     integration: null
     integrationAlias: null
     headers:
       Content-Type: application/x-www-form-urlencoded
-    payload: " "
+    payload: "callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
     timeoutInSeconds: 300
   outgoingActions: []
   isRootAction: false

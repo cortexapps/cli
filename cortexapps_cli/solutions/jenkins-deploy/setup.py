@@ -387,6 +387,19 @@ class JenkinsDeploySetup(SolutionSetup):
         else:
             print(f"  Jenkins API token generated for Cortex")
 
+    def _configure_jenkins_root_url(self) -> None:
+        """Set Jenkins root URL via Script Console so env.BUILD_URL is populated in builds."""
+        jenkins_url = self._jenkins_url()
+        script = (
+            "import jenkins.model.JenkinsLocationConfiguration\n"
+            "def config = JenkinsLocationConfiguration.get()\n"
+            f'config.setUrl("{jenkins_url}/")\n'
+            "config.save()\n"
+            'println "ok"\n'
+        )
+        session = self._jenkins_session()
+        self._run_groovy(session, script)
+
     def _create_jenkins_job(self) -> None:
         """Create the cortex-deploy pipeline job in Jenkins. Skips if already exists."""
         job_name = self._answers["jenkins_job"]
@@ -599,6 +612,7 @@ info:
             step_list.append(("Provisioning Jenkins in GitHub Codespaces", self._provision_codespace))
             step_list.append(("Waiting for Jenkins to be ready", self._wait_for_jenkins))
             step_list.append(("Setting random Jenkins admin password", self._set_jenkins_admin_password))
+            step_list.append(("Configuring Jenkins root URL", self._configure_jenkins_root_url))
         step_list += [
             ("Creating Jenkins deploy job", self._create_jenkins_job),
             ("Adding CORTEX_API_KEY credential to Jenkins", lambda: self._add_jenkins_credential(

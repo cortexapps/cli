@@ -19,7 +19,8 @@ pipeline {
             steps {
                 script {
                     def timestamp = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
-                    def payload = """{"sha":"${env.BUILD_NUMBER}","timestamp":"${timestamp}","environment":"production","type":"DEPLOY","title":"Triggered by Jenkins","deployer":{"name":"Jenkins"},"customData":{"buildUrl":"${env.BUILD_URL}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    def buildUrl = env.BUILD_URL ?: "${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                    def payload = """{"sha":"${env.BUILD_NUMBER}","timestamp":"${timestamp}","environment":"production","type":"DEPLOY","title":"Triggered by Jenkins","deployer":{"name":"Jenkins"},"customData":{"buildUrl":"${buildUrl}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
                     sh """
                         curl -s -f -X POST \\
                           "\${CORTEX_BASE_URL}/api/v1/catalog/${params.cortex_entity_tag}/deploys" \\
@@ -36,15 +37,14 @@ pipeline {
             script {
                 if (params.callback_url) {
                     def status = currentBuild.currentResult == 'SUCCESS' ? 'SUCCESS' : 'FAILURE'
-                    def payload = """{"status":"${status}","message":"Jenkins pipeline ${status.toLowerCase()}","response":{"buildUrl":"${env.BUILD_URL}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
-                    withEnv(["CALLBACK_URL=${params.callback_url}"]) {
-                        sh """
-                            curl -s -X POST "\$CALLBACK_URL" \\
-                              -H "Content-Type: application/json" \\
-                              -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
-                              -d '${payload}' || true
-                        """
-                    }
+                    def buildUrl = env.BUILD_URL ?: "${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                    def payload = """{"status":"${status}","message":"Jenkins pipeline ${status.toLowerCase()}","response":{"buildUrl":"${buildUrl}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    def callbackUrl = params.callback_url
+                    sh """
+                        curl -s -f -X POST '${callbackUrl}' \\
+                          -H 'Content-Type: application/json' \\
+                          -d '${payload}'
+                    """
                 }
             }
         }

@@ -45,7 +45,7 @@ def test_jenkinsfile_has_required_elements():
     assert "/deploys" in content
     assert "post {" in content
     assert "always {" in content
-    assert "CALLBACK_URL" in content
+    assert "callbackUrl" in content
 
 
 def test_workflow_yaml_is_valid():
@@ -242,6 +242,21 @@ def test_steps_includes_codespace_when_enabled(setup):
     step_labels = [label for label, _ in setup.steps()]
     assert "Provisioning Jenkins in GitHub Codespaces" in step_labels
     assert "Setting random Jenkins admin password" in step_labels
+    assert "Configuring Jenkins root URL" in step_labels
+
+
+def test_configure_jenkins_root_url(setup):
+    from unittest.mock import patch, MagicMock
+    session = MagicMock()
+    session.post.return_value = MagicMock(status_code=200, text="ok")
+    with patch.object(setup, "_jenkins_session", return_value=session):
+        setup._configure_jenkins_root_url()
+    session.post.assert_called_once()
+    call_kwargs = session.post.call_args
+    script = call_kwargs.kwargs.get("data", {}).get("script", "") or call_kwargs.args[1] if len(call_kwargs.args) > 1 else ""
+    # Check via the data kwarg
+    data = call_kwargs.kwargs.get("data", {})
+    assert "JenkinsLocationConfiguration" in data.get("script", "")
 
 
 def test_generate_passphrase_format(setup):
