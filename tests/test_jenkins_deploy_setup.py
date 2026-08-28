@@ -21,8 +21,8 @@ def test_catalog_yaml_is_valid():
     meta = data["info"]["x-cortex-custom-metadata"]["jenkins"]
     assert "url" in meta
     assert "job" in meta
-    assert "username" in meta
-    assert "token" in meta
+    assert "username" not in meta
+    assert "token" not in meta
 
 
 def test_scorecard_yaml_is_valid():

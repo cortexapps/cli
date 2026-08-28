@@ -11,5 +11,3 @@ info:
     jenkins:
       url: PLACEHOLDER_JENKINS_URL
       job: cortex-deploy
-      username: admin
-      token: PLACEHOLDER_JENKINS_TOKEN

@@ -59,7 +59,10 @@ runResponseTemplate: |
      the `CORTEX_API_KEY` and `CORTEX_BASE_URL` credentials plus the two build parameters
 
   3. Add `x-cortex-custom-metadata.jenkins` to your entity's catalog YAML with
-     `url` and `job` fields pointing at your real Jenkins job
+     `url` and `job` fields — no credentials here. If your Jenkins requires auth,
+     create a Cortex secret `jenkins_auth = base64(user:token)` and add
+     `Authorization: "Basic {{&context.secrets.jenkins_auth}}"` to the workflow's
+     Trigger Jenkins Build action.
 actions:
 - name: Get Jenkins config
   slug: get-jenkins-config

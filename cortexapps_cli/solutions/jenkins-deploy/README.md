@@ -14,8 +14,7 @@ Trigger deploys from Cortex, track them as they run in Jenkins, and surface depl
   │    jenkins-demo  (service)      │
   │    ├── x-cortex-custom-metadata │
   │    │     jenkins:               │
-  │    │       url / job /          │
-  │    │       username / token     │
+  │    │       url / job            │
   │    └── Scorecard: Deploy Health │
   │          Bronze / Silver / Gold │
   └──────────────┬──────────────────┘
@@ -107,15 +106,26 @@ To roll the pattern out to your own services:
      jenkins:
        url: "https://jenkins.example.com"
        job: "your-pipeline-name"
-       username: "your-username"
-       token: "your-api-token"
    ```
 
-3. Run the **Solution: Trigger Jenkins Deploy** workflow from the entity page — it reads the Jenkins coordinates from the entity's custom metadata automatically, with no manual inputs required
+3. If your Jenkins instance requires authentication, create a **Cortex secret** named `jenkins_auth` whose value is your Jenkins credentials base64-encoded:
+
+   ```bash
+   echo -n "your-username:your-api-token" | base64
+   ```
+
+   Then add an `Authorization` header to the **Trigger Jenkins Build** action in the imported workflow:
+
+   ```yaml
+   headers:
+     Content-Type: application/x-www-form-urlencoded
+     Authorization: "Basic {{&context.secrets.jenkins_auth}}"
+   ```
+
+4. Run the **Solution: Trigger Jenkins Deploy** workflow from the entity page — it reads the Jenkins coordinates from the entity's custom metadata automatically, with no manual inputs required
 
 ## Customizing for Production
 
 - Point the workflow at your real entity by replacing `jenkins-demo` with your service tag
 - Add `CORTEX_API_KEY` and `CORTEX_BASE_URL` secret-text credentials to your real Jenkins instances
 - The Deploy Health scorecard is scoped to `demo-jenkins-deploys` to avoid affecting your existing services. To roll it out broadly, remove the group filter from the scorecard. To opt in individual services, add the `demo-jenkins-deploys` group to them.
-- In production, store Jenkins credentials in a Cortex HTTP integration with credential vaulting rather than entity custom metadata
