@@ -710,7 +710,6 @@ info:
                 status = result.get("status", "").upper()
                 if status == "COMPLETED":
                     print("  Workflow run complete ✓")
-                    self._confirm_deploy_recorded(base_url, entity_tag, entity_url)
                     self.mark_done("first_deploy")
                 else:
                     print(f"  Workflow run ended with status: {status}", file=sys.stderr)
@@ -746,25 +745,6 @@ info:
 
     Or delete it directly at: https://github.com/codespaces
 """)
-
-    def _confirm_deploy_recorded(self, base_url: str, entity_tag: str, entity_url: str) -> None:
-        api_key = self._answers["cortex_api_key"]
-        try:
-            resp = requests.get(
-                f"{base_url}/api/v1/catalog/{entity_tag}/deploys",
-                headers={"Authorization": f"Bearer {api_key}"},
-                params={"pageSize": 1},
-                timeout=10,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                deploys = data if isinstance(data, list) else data.get("deploys", [])
-                if deploys:
-                    print(f"  Deploy recorded on entity ✓  {_hyperlink(entity_url, entity_tag)}")
-                    return
-        except Exception:
-            pass
-        print(f"  Deploy may still be indexing — check {_hyperlink(entity_url, entity_tag)}")
 
 
 def main(**kwargs):
