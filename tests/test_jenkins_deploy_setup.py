@@ -158,13 +158,16 @@ def test_wait_for_jenkins_polls_until_200(setup):
         setup._wait_for_jenkins()  # should not raise
 
 
-def test_create_jenkins_job_skips_if_exists(setup):
+def test_create_jenkins_job_updates_if_exists(setup):
     from unittest.mock import patch, MagicMock
     session = MagicMock()
     session.get.return_value = MagicMock(status_code=200)
+    session.post.return_value = MagicMock(status_code=200)
     with patch.object(setup, "_jenkins_session", return_value=session):
         setup._create_jenkins_job()
-    session.post.assert_not_called()
+    session.post.assert_called_once()
+    call_url = session.post.call_args.args[0]
+    assert "config.xml" in call_url
 
 
 def test_create_jenkins_job_creates_when_missing(setup):

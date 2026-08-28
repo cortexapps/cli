@@ -112,6 +112,6 @@ actions:
     headers:
       Content-Type: application/x-www-form-urlencoded
     payload: "callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
-    timeoutInSeconds: 300
+    timeoutInSeconds: 60
   outgoingActions: []
   isRootAction: false

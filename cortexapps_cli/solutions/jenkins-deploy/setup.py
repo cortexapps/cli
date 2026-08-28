@@ -401,16 +401,27 @@ class JenkinsDeploySetup(SolutionSetup):
         self._run_groovy(session, script)
 
     def _create_jenkins_job(self) -> None:
-        """Create the cortex-deploy pipeline job in Jenkins. Skips if already exists."""
+        """Create or update the cortex-deploy pipeline job in Jenkins."""
         job_name = self._answers["jenkins_job"]
         base = self._jenkins_url()
         session = self._jenkins_session()
+        xml = self._get_job_xml()
 
         check = session.get(f"{base}/job/{job_name}/api/json", timeout=10)
         if check.status_code == 200:
-            return  # already exists — skip
+            # Job exists — update its config so the latest Jenkinsfile is always applied
+            resp = session.post(
+                f"{base}/job/{job_name}/config.xml",
+                headers={"Content-Type": "application/xml"},
+                data=xml.encode("utf-8"),
+                timeout=15,
+            )
+            if resp.status_code not in (200, 201):
+                raise RuntimeError(
+                    f"Failed to update Jenkins job '{job_name}': {resp.status_code} {resp.text}"
+                )
+            return
 
-        xml = self._get_job_xml()
         resp = session.post(
             f"{base}/createItem",
             params={"name": job_name},
@@ -588,7 +599,7 @@ info:
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()
         dots = 0
-        while time.time() - start < 360:
+        while time.time() - start < 120:
             time.sleep(5)
             r = requests.get(
                 f"{base_url}/api/v1/workflows/{workflow_tag}/runs/{run_id}",
@@ -602,7 +613,7 @@ info:
             if status in terminal:
                 print()
                 return r.json()
-        raise TimeoutError("Timed out waiting for workflow to complete (6 min)")
+        raise TimeoutError("Timed out waiting for workflow to complete (2 min)")
 
     # ── Steps ──────────────────────────────────────────────────────────────
 
