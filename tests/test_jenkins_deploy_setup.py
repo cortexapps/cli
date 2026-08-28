@@ -249,6 +249,17 @@ def test_create_cortex_jenkins_secret_updates_if_exists(setup):
     assert "jenkins_auth" in mock_put.call_args.args[0]
 
 
+def test_create_cortex_jenkins_secret_updates_on_400(setup):
+    from unittest.mock import patch, MagicMock
+    conflict = MagicMock(status_code=400)
+    updated = MagicMock(status_code=200)
+    with patch("requests.post", return_value=conflict), \
+         patch("requests.put", return_value=updated) as mock_put:
+        setup._create_cortex_jenkins_secret()
+    mock_put.assert_called_once()
+    assert "jenkins_auth" in mock_put.call_args.args[0]
+
+
 def test_import_cortex_workflow(setup):
     from unittest.mock import patch, MagicMock
     resp = MagicMock(status_code=201)

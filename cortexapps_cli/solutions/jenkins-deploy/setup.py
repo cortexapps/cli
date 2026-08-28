@@ -594,7 +594,7 @@ info:
             headers=headers,
             timeout=15,
         )
-        if resp.status_code == 409:
+        if resp.status_code in (400, 409):
             resp = requests.put(
                 f"{base_url}/api/v1/secrets/jenkins_auth",
                 json={"name": "Jenkins Auth", "secret": encoded},
