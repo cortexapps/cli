@@ -299,13 +299,11 @@ class JenkinsDeploySetup(SolutionSetup):
         else:
             raise TimeoutError(f"Jenkins did not respond within {timeout_secs}s at {base}")
 
-        # Phase 2: wait for the init script to apply (default credentials accepted).
-        # Use /crumbIssuer/api/json — it requires authentication, unlike /me/api/json
-        # which returns 200 for anonymous users.
-        auth = (JENKINS_DEFAULT_USERNAME, JENKINS_DEFAULT_TOKEN)
+        # Phase 2: wait for Jenkins to finish initializing (init scripts applied).
+        # /api/json returns 200 once Jenkins is fully up and accepting API requests.
         while time.time() - start < timeout_secs:
             try:
-                resp = requests.get(f"{base}/crumbIssuer/api/json", auth=auth, timeout=5)
+                resp = requests.get(f"{base}/api/json", timeout=5)
                 if resp.status_code == 200:
                     return
             except requests.exceptions.RequestException:
@@ -313,7 +311,7 @@ class JenkinsDeploySetup(SolutionSetup):
             time.sleep(5)
             dots += 1
             print(f"\r  Waiting for Jenkins config{'.' * (dots % 4)}   ", end="", flush=True)
-        raise TimeoutError(f"Jenkins credentials not accepted within {timeout_secs}s")
+        raise TimeoutError(f"Jenkins did not finish initializing within {timeout_secs}s")
 
     def _generate_passphrase(self) -> str:
         """Return a random 4-word hyphen-joined passphrase, e.g. 'coral-ember-ridge-titan'."""
@@ -509,8 +507,6 @@ info:
     jenkins:
       url: "{self._answers['jenkins_url']}"
       job: "{self._answers['jenkins_job']}"
-      username: "{self._answers['jenkins_username']}"
-      token: "{self._answers['jenkins_token']}"
 """
         resp = requests.patch(
             f"{base_url}/api/v1/open-api",
@@ -640,14 +636,11 @@ info:
         jenkins_job_url = f"{jenkins_url}/job/{jenkins_job}" if jenkins_url else ""
 
         if self._answers.get("use_codespace") and jenkins_url:
-            passphrase = self._state.get("jenkins_passphrase", "")
-            api_token = self._state.get("jenkins_api_token", "")
-            print(f"\nJenkins admin credentials (browser login):")
+            print(f"\nJenkins (browser login):")
             print(f"  URL:      {_hyperlink(jenkins_url)}")
-            print(f"  Username: admin")
-            print(f"  Password: {passphrase}")
-            if api_token:
-                print(f"  API token (used by Cortex): {api_token}")
+            print(f"  Username: {JENKINS_DEFAULT_USERNAME}")
+            print(f"  Password: {JENKINS_DEFAULT_TOKEN}")
+            print(f"  Note: Jenkins is open for demo — no login required to trigger builds")
 
         print(f"\nTo trigger a deploy manually later:")
         print(f"  CLI: cortex workflows run -t {workflow_tag} --scope ENTITY --entity {entity_tag}")

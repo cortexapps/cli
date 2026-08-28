@@ -1,27 +1,30 @@
 import hudson.model.User
-import hudson.security.FullControlOnceLoggedInAuthorizationStrategy
+import hudson.security.AuthorizationStrategy
 import hudson.security.HudsonPrivateSecurityRealm
 import jenkins.model.Jenkins
 
-// Configure security here — NOT in jenkins.yaml — to avoid JCasC recreating the security
-// realm (which would discard the user set up below).  JCasC runs after init scripts, so
-// any securityRealm / authorizationStrategy in jenkins.yaml would overwrite this.
+// Demo Codespace setup.
+//
+// Security model: Jenkins is fully unsecured (no auth required) with CSRF disabled.
+// The Codespace URL (long random string) is the only access control — appropriate
+// for a short-lived demo instance.  The admin user is still created with a known
+// password so the Jenkins UI can be accessed interactively.
 
 def instance = Jenkins.getInstance()
 
 def realm = new HudsonPrivateSecurityRealm(false)
 instance.setSecurityRealm(realm)
 
-// Get or create the admin user and set a known password.
-// User.get(id) creates the user object if it doesn't exist; addProperty overwrites
-// any existing HudsonPrivateSecurityRealm.Details (the password property).
 def user = User.get("admin")
 def details = HudsonPrivateSecurityRealm.Details.fromPlainPassword("cortex-demo")
 user.addProperty(details)
 user.save()
 
-def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
-strategy.setAllowAnonymousRead(false)
-instance.setAuthorizationStrategy(strategy)
+// Unsecured: all requests (including anonymous POST from Cortex) are permitted.
+// This bypasses the Codespace proxy stripping Authorization headers on POST.
+instance.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED)
+
+// Disable CSRF so POST requests from Cortex don't need a crumb.
+instance.setCrumbIssuer(null)
 
 instance.save()

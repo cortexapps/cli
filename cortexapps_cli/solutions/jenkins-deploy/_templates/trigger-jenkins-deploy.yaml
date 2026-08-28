@@ -3,7 +3,7 @@ tag: jenkins-trigger-deploy
 description: |
   Triggers a Jenkins pipeline and waits for it to report completion back to Cortex,
   registering a deploy event on the target entity. No inputs required — Jenkins
-  coordinates (url, job, username, token) are read from the entity's custom metadata.
+  coordinates (url, job) are read from the entity's custom metadata.
 isDraft: false
 isRunnableViaApi: true
 filter:
@@ -12,13 +12,10 @@ variables:
   - slug: jenkins-job
     type: STRING
     defaultValue: ""
-  - slug: jenkins-auth
-    type: STRING
-    defaultValue: ""
 runResponseTemplate: |
   # Jenkins Deploy — Complete
 
-  **Job:** [{{variables.jenkins-job}}]({{variables.jenkins-url}}/job/{{variables.jenkins-job}})
+  **Job:** [{{variables.jenkins-job}}](JENKINS_BASE_URL/job/{{variables.jenkins-job}})
 
   **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/resources?tag={{context.entity.tag}})
 
@@ -26,17 +23,15 @@ runResponseTemplate: |
 
   ## How this workflow works
 
-  This Cortex workflow triggered a deploy in Jenkins and waited for it to finish.
-
   **1. Cortex read the entity's Jenkins configuration**
 
-  The workflow fetched `x-cortex-custom-metadata.jenkins` from this entity to determine
-  which Jenkins instance and job to trigger — no manual input required.
+  The workflow fetched `x-cortex-custom-metadata.jenkins` from this entity to find
+  the Jenkins URL and job name — no manual input required.
 
   **2. Cortex triggered the Jenkins build**
 
-  It called the Jenkins `buildWithParameters` API, passing a one-time callback URL as
-  the `callback_url` build parameter and the entity tag as `cortex_entity_tag`.
+  It POSTed to the Jenkins `buildWithParameters` API, passing a one-time callback URL
+  and the entity tag as build parameters.
 
   **3. Jenkins ran the pipeline**
 
@@ -64,7 +59,7 @@ runResponseTemplate: |
      the `CORTEX_API_KEY` and `CORTEX_BASE_URL` credentials plus the two build parameters
 
   3. Add `x-cortex-custom-metadata.jenkins` to your entity's catalog YAML with
-     `url`, `job`, `username`, and `token` fields pointing at your real Jenkins job
+     `url` and `job` fields pointing at your real Jenkins job
 actions:
 - name: Get Jenkins config
   slug: get-jenkins-config
@@ -87,12 +82,9 @@ actions:
     expression: |
       .actions."get-jenkins-config".outputs.body.value as $j |
       if ($j == null or $j.job == null) then
-        error("No Jenkins configuration found. Add x-cortex-custom-metadata.jenkins with url, job, username, and token to this entity.")
+        error("No Jenkins configuration found. Add x-cortex-custom-metadata.jenkins with url and job to this entity.")
       else
-        {
-          job: $j.job,
-          auth: ("Basic " + (($j.username + ":" + $j.token) | @base64))
-        }
+        { job: $j.job }
       end
   outgoingActions:
   - set-variables
@@ -106,10 +98,6 @@ actions:
       source:
         path: actions.parse-jenkins-config.outputs.result.job
         type: REFERENCE
-    - slug: jenkins-auth
-      source:
-        path: actions.parse-jenkins-config.outputs.result.auth
-        type: REFERENCE
   outgoingActions:
   - trigger-deploy
   isRootAction: false
@@ -122,7 +110,6 @@ actions:
     integration: null
     integrationAlias: null
     headers:
-      Authorization: "{{variables.jenkins-auth}}"
       Content-Type: application/x-www-form-urlencoded
     payload: " "
     timeoutInSeconds: 300

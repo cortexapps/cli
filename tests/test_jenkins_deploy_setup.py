@@ -60,7 +60,7 @@ def test_workflow_yaml_is_valid():
     async_action = next(a for a in data["actions"] if a["slug"] == "trigger-deploy")
     assert async_action["schema"]["type"] == "HTTP_REQUEST_ASYNC"
     assert "buildWithParameters" in async_action["schema"]["url"]
-    assert "@base64" in data["actions"][1]["schema"]["expression"]
+    assert "job" in data["actions"][1]["schema"]["expression"]
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ def test_wait_for_jenkins_polls_until_200(setup):
     from unittest.mock import patch, MagicMock
     fail = MagicMock(status_code=503)
     ok = MagicMock(status_code=200)
-    # Phase 1: /login fails once then succeeds; phase 2: /crumbIssuer/api/json succeeds
+    # Phase 1: /login fails once then succeeds; phase 2: /api/json succeeds immediately
     with patch("requests.get", side_effect=[fail, ok, ok]), \
          patch("time.sleep"):
         setup._wait_for_jenkins()  # should not raise
