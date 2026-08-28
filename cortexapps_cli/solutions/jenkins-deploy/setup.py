@@ -345,51 +345,49 @@ class JenkinsDeploySetup(SolutionSetup):
             )
         return resp.text.strip()
 
-    def _set_jenkins_admin_password(self) -> None:
-        """Set a random admin password and generate an API token for programmatic access.
+    def _generate_api_token(self) -> str:
+        """Generate a Jenkins API token via the REST API (no Script Console needed).
 
-        Stores the API token (not the password) as jenkins_token — API tokens bypass
-        Jenkins CSRF protection, so Cortex workflow calls don't need a session cookie.
-
-        If already done in a previous run (stored in state), restores and skips.
+        Returns the token value on success, or the default password as fallback.
         """
-        saved = self._state.get("jenkins_passphrase")
+        session = self._jenkins_session(auth=(JENKINS_DEFAULT_USERNAME, JENKINS_DEFAULT_TOKEN))
+        resp = session.post(
+            f"{self._jenkins_url()}/user/{JENKINS_DEFAULT_USERNAME}"
+            "/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken",
+            data={"newTokenName": "cortex"},
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            try:
+                token = resp.json()["data"]["tokenValue"]
+                if token:
+                    return token
+            except (ValueError, KeyError):
+                pass
+        # Fallback: use the default password directly (works for Basic Auth too)
+        return JENKINS_DEFAULT_TOKEN
+
+    def _set_jenkins_admin_password(self) -> None:
+        """Generate a Jenkins API token for Cortex to use.
+
+        Uses the Jenkins REST API (not the Script Console) to create an API token
+        for the admin user.  Falls back to the default password if token generation
+        fails.  Skips if already done in a previous run for this Codespace.
+        """
+        saved = self._state.get("jenkins_api_token")
         if saved:
-            self._answers["jenkins_token"] = self._state.get("jenkins_api_token", saved)
-            print(f"  Jenkins admin credentials already configured (from previous run)")
-            print(f"  Password: {saved}")
+            self._answers["jenkins_token"] = saved
+            print(f"  Jenkins API token already configured (from previous run)")
             return
 
-        passphrase = self._generate_passphrase()
-        session = self._jenkins_session(auth=(JENKINS_DEFAULT_USERNAME, JENKINS_DEFAULT_TOKEN))
-
-        # Change login password
-        self._run_groovy(session, (
-            "def user = hudson.model.User.get('admin', false)\n"
-            "def prop = hudson.security.HudsonPrivateSecurityRealm.Details"
-            f".fromPlainPassword('{passphrase}')\n"
-            "user.addProperty(prop)\n"
-            "user.save()"
-        ))
-
-        # Generate an API token — these bypass CSRF, so Cortex can call Jenkins without a session
-        api_token = self._run_groovy(session, (
-            "import jenkins.security.ApiTokenProperty\n"
-            "def user = jenkins.model.Jenkins.instance.getUser('admin')\n"
-            "def prop = user.getProperty(ApiTokenProperty.class)\n"
-            "def result = prop.tokenStore.generateNewToken('cortex')\n"
-            "user.save()\n"
-            "println result.plainValue"
-        ))
-        if not api_token:
-            raise RuntimeError("Failed to generate Jenkins API token: empty response")
-
-        self._answers["jenkins_token"] = api_token
-        self._state["jenkins_passphrase"] = passphrase
-        self._state["jenkins_api_token"] = api_token
+        token = self._generate_api_token()
+        self._answers["jenkins_token"] = token
+        self._state["jenkins_api_token"] = token
         self._save_state()
-        print(f"  Jenkins admin password: {passphrase}")
-        print(f"  Jenkins API token:      {api_token}")
+        if token == JENKINS_DEFAULT_TOKEN:
+            print(f"  Jenkins credentials: {JENKINS_DEFAULT_USERNAME} / {JENKINS_DEFAULT_TOKEN}")
+        else:
+            print(f"  Jenkins API token generated for Cortex")
 
     def _create_jenkins_job(self) -> None:
         """Create the cortex-deploy pipeline job in Jenkins. Skips if already exists."""
@@ -460,9 +458,10 @@ class JenkinsDeploySetup(SolutionSetup):
         return resp.status_code != 404
 
     def _record_new_codespace(self, name: str) -> None:
-        """Persist a newly created Codespace and reset any Jenkins state tied to the old one."""
+        """Persist a newly created Codespace and reset all Jenkins state tied to the old one."""
         self._state["codespace_name"] = name
-        self._state.pop("jenkins_passphrase", None)  # new Jenkins instance, clear stale password
+        for key in ("jenkins_passphrase", "jenkins_api_token"):
+            self._state.pop(key, None)
         self._save_state()
 
     def _provision_codespace(self) -> str:

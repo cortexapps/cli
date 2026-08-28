@@ -253,46 +253,50 @@ def test_generate_passphrase_format(setup):
 
 def test_set_jenkins_admin_password_updates_token(setup):
     from unittest.mock import patch, MagicMock
-    session = MagicMock()
-    # First post = password change (empty output), second = API token generation
-    session.post.side_effect = [
-        MagicMock(status_code=200, text=""),
-        MagicMock(status_code=200, text="11abc1234567890abcdef"),
-    ]
-    with patch.object(setup, "_jenkins_session", return_value=session), \
+    token_resp = MagicMock(status_code=200)
+    token_resp.json.return_value = {"data": {"tokenValue": "11abc1234567890abcdef"}}
+    with patch.object(setup, "_generate_api_token", return_value="11abc1234567890abcdef"), \
          patch.object(setup, "_save_state"):
         setup._set_jenkins_admin_password()
     assert setup._answers["jenkins_token"] == "11abc1234567890abcdef"
     assert setup._state["jenkins_api_token"] == "11abc1234567890abcdef"
-    assert "-" in setup._state["jenkins_passphrase"]
 
 
 def test_set_jenkins_admin_password_skips_if_already_set(setup):
-    setup._state["jenkins_passphrase"] = "coral-ember-ridge-titan"
     setup._state["jenkins_api_token"] = "11abc1234567890abcdef"
     from unittest.mock import patch
-    with patch.object(setup, "_jenkins_session") as mock_session:
+    with patch.object(setup, "_generate_api_token") as mock_gen:
         setup._set_jenkins_admin_password()
-    mock_session.assert_not_called()
+    mock_gen.assert_not_called()
     assert setup._answers["jenkins_token"] == "11abc1234567890abcdef"
 
 
-def test_set_jenkins_admin_password_raises_on_failure(setup):
-    from unittest.mock import patch, MagicMock
-    session = MagicMock()
-    session.post.return_value = MagicMock(status_code=500, text="Internal Server Error")
-    with patch.object(setup, "_jenkins_session", return_value=session):
-        with pytest.raises(RuntimeError, match="Jenkins Script Console error"):
-            setup._set_jenkins_admin_password()
+def test_set_jenkins_admin_password_falls_back_to_default(setup):
+    from unittest.mock import patch
+    with patch.object(setup, "_generate_api_token", return_value="cortex-demo"), \
+         patch.object(setup, "_save_state"):
+        setup._set_jenkins_admin_password()
+    assert setup._answers["jenkins_token"] == "cortex-demo"
 
 
-def test_set_jenkins_admin_password_raises_on_exception_in_output(setup):
+def test_generate_api_token_returns_token(setup):
     from unittest.mock import patch, MagicMock
     session = MagicMock()
-    session.post.return_value = MagicMock(status_code=200, text="groovy.lang.MissingMethodException: ...")
+    token_resp = MagicMock(status_code=200)
+    token_resp.json.return_value = {"data": {"tokenValue": "11abc1234567890abcdef"}}
+    session.post.return_value = token_resp
     with patch.object(setup, "_jenkins_session", return_value=session):
-        with pytest.raises(RuntimeError, match="Jenkins Script Console error"):
-            setup._set_jenkins_admin_password()
+        token = setup._generate_api_token()
+    assert token == "11abc1234567890abcdef"
+
+
+def test_generate_api_token_falls_back_on_failure(setup):
+    from unittest.mock import patch, MagicMock
+    session = MagicMock()
+    session.post.return_value = MagicMock(status_code=401)
+    with patch.object(setup, "_jenkins_session", return_value=session):
+        token = setup._generate_api_token()
+    assert token == "cortex-demo"  # JENKINS_DEFAULT_TOKEN fallback
 
 
 def test_run_groovy_returns_output(setup):
