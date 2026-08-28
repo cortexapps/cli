@@ -119,7 +119,7 @@ To roll the pattern out to your own services:
    ```yaml
    headers:
      Content-Type: application/x-www-form-urlencoded
-     Authorization: "Basic {{&context.secrets.jenkins_auth}}"
+     Authorization: "Basic {{context.secrets.jenkins_auth}}"
    ```
 
 4. Run the **Solution: Trigger Jenkins Deploy** workflow from the entity page — it reads the Jenkins coordinates from the entity's custom metadata automatically, with no manual inputs required
