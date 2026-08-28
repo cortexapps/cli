@@ -245,7 +245,7 @@ class JenkinsDeploySetup(SolutionSetup):
         jenkinsfile = JENKINSFILE_TEMPLATE_PATH.read_text()
         return f"""\
 <?xml version='1.1' encoding='UTF-8'?>
-<flow-definition plugin="workflow-job">
+<flow-definition>
   <description>Cortex Deploy Pipeline — records deploys in Cortex and posts async callback</description>
   <keepDependencies>false</keepDependencies>
   <properties>
@@ -266,7 +266,7 @@ class JenkinsDeploySetup(SolutionSetup):
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script><![CDATA[{jenkinsfile}]]></script>
     <sandbox>true</sandbox>
   </definition>
@@ -417,8 +417,10 @@ class JenkinsDeploySetup(SolutionSetup):
                 timeout=15,
             )
             if resp.status_code not in (200, 201):
-                raise RuntimeError(
-                    f"Failed to update Jenkins job '{job_name}': {resp.status_code} {resp.text}"
+                print(
+                    f"  Warning: could not update Jenkinsfile automatically "
+                    f"({resp.status_code}). To apply the latest Jenkinsfile, "
+                    f"delete the '{job_name}' job in Jenkins and re-run setup."
                 )
             return
 
