@@ -108,10 +108,16 @@ To roll the pattern out to your own services:
        job: "your-pipeline-name"
    ```
 
-3. If your Jenkins instance requires authentication, create a **Cortex secret** named `jenkins_auth` whose value is your Jenkins credentials base64-encoded:
+3. If your Jenkins instance requires authentication, create a **Cortex secret** with your Jenkins credentials:
 
    ```bash
-   echo -n "your-username:your-api-token" | base64
+   cortex secrets create -f - <<EOF
+   {
+     "name": "Jenkins Auth",
+     "tag": "jenkins_auth",
+     "secret": "$(echo -n 'your-username:your-api-token' | base64)"
+   }
+   EOF
    ```
 
    Then add an `Authorization` header to the **Trigger Jenkins Build** action in the imported workflow:
