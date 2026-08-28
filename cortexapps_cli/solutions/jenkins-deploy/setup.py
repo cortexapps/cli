@@ -574,6 +574,38 @@ info:
                 f"Failed to write entity custom metadata: {resp.status_code} {resp.text}"
             )
 
+    # ── Cortex secret ─────────────────────────────────────────────────────
+
+    def _create_cortex_jenkins_secret(self) -> None:
+        """Create or update the jenkins_auth Cortex secret with base64(username:token)."""
+        import base64 as _base64
+        username = self._answers["jenkins_username"]
+        token = self._answers["jenkins_token"]
+        encoded = _base64.b64encode(f"{username}:{token}".encode()).decode()
+        base_url = self._answers["cortex_base_url"].rstrip("/")
+        api_key = self._answers["cortex_api_key"]
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        resp = requests.post(
+            f"{base_url}/api/v1/secrets",
+            json={"name": "Jenkins Auth", "tag": "jenkins_auth", "secret": encoded},
+            headers=headers,
+            timeout=15,
+        )
+        if resp.status_code == 409:
+            resp = requests.put(
+                f"{base_url}/api/v1/secrets/jenkins_auth",
+                json={"name": "Jenkins Auth", "secret": encoded},
+                headers=headers,
+                timeout=15,
+            )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Failed to create Cortex secret 'jenkins_auth': {resp.status_code} {resp.text}"
+            )
+
     # ── Cortex workflow import ─────────────────────────────────────────────
 
     def _import_cortex_workflow(self) -> None:
@@ -661,6 +693,7 @@ info:
                 "CORTEX_BASE_URL", self._answers["cortex_base_url"], "Cortex base URL"
             )),
             ("Writing Jenkins config to entity custom metadata", self._write_entity_custom_metadata),
+            ("Creating jenkins_auth Cortex secret", self._create_cortex_jenkins_secret),
             ("Importing Cortex trigger workflow", self._import_cortex_workflow),
         ]
         return step_list

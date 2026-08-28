@@ -60,6 +60,7 @@ def test_workflow_yaml_is_valid():
     async_action = next(a for a in data["actions"] if a["slug"] == "trigger-deploy")
     assert async_action["schema"]["type"] == "HTTP_REQUEST_ASYNC"
     assert "buildWithParameters" in async_action["schema"]["url"]
+    assert "jenkins_auth" in async_action["schema"]["headers"].get("Authorization", "")
     assert "job" in data["actions"][1]["schema"]["expression"]
 
 
@@ -224,6 +225,30 @@ def test_write_entity_custom_metadata(setup):
     assert "cortex-deploy" in body
 
 
+def test_create_cortex_jenkins_secret(setup):
+    from unittest.mock import patch, MagicMock
+    import base64
+    resp = MagicMock(status_code=201)
+    with patch("requests.post", return_value=resp) as mock_post:
+        setup._create_cortex_jenkins_secret()
+    mock_post.assert_called_once()
+    body = mock_post.call_args.kwargs["json"]
+    assert body["tag"] == "jenkins_auth"
+    expected = base64.b64encode(b"admin:cortex-demo").decode()
+    assert body["secret"] == expected
+
+
+def test_create_cortex_jenkins_secret_updates_if_exists(setup):
+    from unittest.mock import patch, MagicMock
+    conflict = MagicMock(status_code=409)
+    updated = MagicMock(status_code=200)
+    with patch("requests.post", return_value=conflict), \
+         patch("requests.put", return_value=updated) as mock_put:
+        setup._create_cortex_jenkins_secret()
+    mock_put.assert_called_once()
+    assert "jenkins_auth" in mock_put.call_args.args[0]
+
+
 def test_import_cortex_workflow(setup):
     from unittest.mock import patch, MagicMock
     resp = MagicMock(status_code=201)
@@ -242,6 +267,7 @@ def test_steps_returns_expected_list(setup):
     assert "Adding CORTEX_API_KEY credential to Jenkins" in step_labels
     assert "Adding CORTEX_BASE_URL credential to Jenkins" in step_labels
     assert "Writing Jenkins config to entity custom metadata" in step_labels
+    assert "Creating jenkins_auth Cortex secret" in step_labels
     assert "Importing Cortex trigger workflow" in step_labels
 
 

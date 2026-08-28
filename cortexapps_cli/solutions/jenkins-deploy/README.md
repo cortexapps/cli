@@ -108,7 +108,7 @@ To roll the pattern out to your own services:
        job: "your-pipeline-name"
    ```
 
-3. If your Jenkins instance requires authentication, create a **Cortex secret** with your Jenkins credentials:
+3. Create a **Cortex secret** with your Jenkins credentials — the workflow's trigger action already includes the `Authorization` header and will use it automatically:
 
    ```bash
    cortex secrets create -f - <<EOF
@@ -118,14 +118,6 @@ To roll the pattern out to your own services:
      "secret": "$(echo -n 'your-username:your-api-token' | base64)"
    }
    EOF
-   ```
-
-   Then add an `Authorization` header to the **Trigger Jenkins Build** action in the imported workflow:
-
-   ```yaml
-   headers:
-     Content-Type: application/x-www-form-urlencoded
-     Authorization: "Basic {{context.secrets.jenkins_auth}}"
    ```
 
 4. Run the **Solution: Trigger Jenkins Deploy** workflow from the entity page — it reads the Jenkins coordinates from the entity's custom metadata automatically, with no manual inputs required
