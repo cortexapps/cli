@@ -366,49 +366,19 @@ class JenkinsDeploySetup(SolutionSetup):
             )
         return resp.text.strip()
 
-    def _generate_api_token(self) -> str:
-        """Generate a Jenkins API token via the REST API (no Script Console needed).
-
-        Returns the token value on success, or the default password as fallback.
-        """
-        session = self._jenkins_session(auth=(JENKINS_DEFAULT_USERNAME, JENKINS_DEFAULT_TOKEN))
-        resp = session.post(
-            f"{self._jenkins_url()}/user/{JENKINS_DEFAULT_USERNAME}"
-            "/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken",
-            data={"newTokenName": "cortex"},
-            timeout=15,
-        )
-        if resp.status_code == 200:
-            try:
-                token = resp.json()["data"]["tokenValue"]
-                if token:
-                    return token
-            except (ValueError, KeyError):
-                pass
-        # Fallback: use the default password directly (works for Basic Auth too)
-        return JENKINS_DEFAULT_TOKEN
 
     def _set_jenkins_admin_password(self) -> None:
-        """Generate a Jenkins API token for Cortex to use.
+        """Set Jenkins credentials for Cortex to use.
 
-        Uses the Jenkins REST API (not the Script Console) to create an API token
-        for the admin user.  Falls back to the default password if token generation
-        fails.  Skips if already done in a previous run for this Codespace.
+        Uses the default admin password directly — more reliable than API tokens,
+        which don't survive Codespace restarts.  Clears any cached API token from
+        previous runs to avoid stale-token 401s.
         """
-        saved = self._state.get("jenkins_api_token")
-        if saved:
-            self._answers["jenkins_token"] = saved
-            print(f"  Jenkins API token already configured (from previous run)")
-            return
-
-        token = self._generate_api_token()
-        self._answers["jenkins_token"] = token
-        self._state["jenkins_api_token"] = token
+        self._state.pop("jenkins_api_token", None)
         self._save_state()
-        if token == JENKINS_DEFAULT_TOKEN:
-            print(f"  Jenkins credentials: {JENKINS_DEFAULT_USERNAME} / {JENKINS_DEFAULT_TOKEN}")
-        else:
-            print(f"  Jenkins API token generated for Cortex")
+        self._answers["jenkins_username"] = JENKINS_DEFAULT_USERNAME
+        self._answers["jenkins_token"] = JENKINS_DEFAULT_TOKEN
+        print(f"  Jenkins credentials: {JENKINS_DEFAULT_USERNAME} / {JENKINS_DEFAULT_TOKEN}")
 
     def _update_jenkins_job_script(self, session: requests.Session, job_name: str, base: str) -> None:
         """Patch the <script> CDATA block in the existing job's config.xml.

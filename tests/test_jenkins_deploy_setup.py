@@ -311,52 +311,14 @@ def test_generate_passphrase_format(setup):
     assert all(len(p) > 0 for p in parts)
 
 
-def test_set_jenkins_admin_password_updates_token(setup):
-    from unittest.mock import patch, MagicMock
-    token_resp = MagicMock(status_code=200)
-    token_resp.json.return_value = {"data": {"tokenValue": "11abc1234567890abcdef"}}
-    with patch.object(setup, "_generate_api_token", return_value="11abc1234567890abcdef"), \
-         patch.object(setup, "_save_state"):
-        setup._set_jenkins_admin_password()
-    assert setup._answers["jenkins_token"] == "11abc1234567890abcdef"
-    assert setup._state["jenkins_api_token"] == "11abc1234567890abcdef"
-
-
-def test_set_jenkins_admin_password_skips_if_already_set(setup):
-    setup._state["jenkins_api_token"] = "11abc1234567890abcdef"
+def test_set_jenkins_admin_password_uses_default_credentials(setup):
     from unittest.mock import patch
-    with patch.object(setup, "_generate_api_token") as mock_gen:
+    setup._state["jenkins_api_token"] = "stale-token"
+    with patch.object(setup, "_save_state"):
         setup._set_jenkins_admin_password()
-    mock_gen.assert_not_called()
-    assert setup._answers["jenkins_token"] == "11abc1234567890abcdef"
-
-
-def test_set_jenkins_admin_password_falls_back_to_default(setup):
-    from unittest.mock import patch
-    with patch.object(setup, "_generate_api_token", return_value="cortex-demo"), \
-         patch.object(setup, "_save_state"):
-        setup._set_jenkins_admin_password()
+    assert setup._answers["jenkins_username"] == "admin"
     assert setup._answers["jenkins_token"] == "cortex-demo"
-
-
-def test_generate_api_token_returns_token(setup):
-    from unittest.mock import patch, MagicMock
-    session = MagicMock()
-    token_resp = MagicMock(status_code=200)
-    token_resp.json.return_value = {"data": {"tokenValue": "11abc1234567890abcdef"}}
-    session.post.return_value = token_resp
-    with patch.object(setup, "_jenkins_session", return_value=session):
-        token = setup._generate_api_token()
-    assert token == "11abc1234567890abcdef"
-
-
-def test_generate_api_token_falls_back_on_failure(setup):
-    from unittest.mock import patch, MagicMock
-    session = MagicMock()
-    session.post.return_value = MagicMock(status_code=401)
-    with patch.object(setup, "_jenkins_session", return_value=session):
-        token = setup._generate_api_token()
-    assert token == "cortex-demo"  # JENKINS_DEFAULT_TOKEN fallback
+    assert "jenkins_api_token" not in setup._state
 
 
 def test_run_groovy_returns_output(setup):
