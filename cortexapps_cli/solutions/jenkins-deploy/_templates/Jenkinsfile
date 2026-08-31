@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'callback_url',      defaultValue: '', description: 'Cortex async callback URL')
+        string(name: 'cortex_entity_tag', defaultValue: '', description: 'Cortex entity tag')
+    }
+    environment {
+        CORTEX_API_KEY  = credentials('CORTEX_API_KEY')
+        CORTEX_BASE_URL = credentials('CORTEX_BASE_URL')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Starting build...'
+                // Replace this echo with your actual build commands
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    // Sends intermediate UPDATE callbacks to the Cortex workflow,
+                    // demonstrating that the callback URL can be called multiple times
+                    // before the terminal SUCCESS/FAILURE.
+                    def callbackUrl = params.callback_url
+                    def updates = [
+                        [progress: 33, message: 'Build complete — starting deploy'],
+                        [progress: 66, message: 'Deploy in progress'],
+                        [progress: 100, message: 'Deploy complete — recording in Cortex'],
+                    ]
+                    updates.each { u ->
+                        sleep 5
+                        echo "Deploy progress: ${u.progress}%"
+                        if (callbackUrl) {
+                            def payload = """{"status":"UPDATE","message":"${u.message}","response":{"progress":"${u.progress}%"}}"""
+                            sh """
+                                curl -s -X POST '${callbackUrl}' \\
+                                  -H 'Content-Type: application/json' \\
+                                  -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
+                                  -d '${payload}' || true
+                            """
+                        }
+                    }
+                    // Replace the placeholder loop above with your actual deploy commands
+                }
+            }
+        }
+        stage('Record Deploy in Cortex') {
+            steps {
+                script {
+                    def timestamp = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
+                    def buildUrl = env.BUILD_URL ?: "${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                    def payload = """{"sha":"${env.BUILD_NUMBER}","timestamp":"${timestamp}","environment":"production","type":"DEPLOY","title":"Triggered by Jenkins","url":"${buildUrl}","deployer":{"name":"Jenkins"},"customData":{"buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    sh """
+                        curl -s -f -X POST \\
+                          "\${CORTEX_BASE_URL}/api/v1/catalog/${params.cortex_entity_tag}/deploys" \\
+                          -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
+                          -H "Content-Type: application/json" \\
+                          -d '${payload}' || true
+                    """
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                if (params.callback_url) {
+                    def status = currentBuild.currentResult == 'SUCCESS' ? 'SUCCESS' : 'FAILURE'
+                    def buildUrl = env.BUILD_URL ?: "${env.JENKINS_URL}job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                    def payload = """{"status":"${status}","message":"Jenkins pipeline ${status.toLowerCase()}","response":{"buildUrl":"${buildUrl}","buildNumber":"${env.BUILD_NUMBER}","jobName":"${env.JOB_NAME}"}}"""
+                    def callbackUrl = params.callback_url
+                    sh """
+                        curl -s -f -X POST '${callbackUrl}' \\
+                          -H 'Content-Type: application/json' \\
+                          -H "Authorization: Bearer \${CORTEX_API_KEY}" \\
+                          -d '${payload}'
+                    """
+                }
+            }
+        }
+    }
+}

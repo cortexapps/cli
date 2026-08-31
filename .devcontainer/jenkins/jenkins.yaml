@@ -1,0 +1,7 @@
+jenkins:
+  numExecutors: 2
+  remotingSecurity:
+    enabled: true
+unclassified:
+  location:
+    url: ""
