@@ -6,6 +6,58 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.36.0](https://github.com/cortexapps/cli/releases/tag/1.36.0) - 2026-08-31
+
+<small>[Compare with 1.35.0](https://github.com/cortexapps/cli/compare/1.35.0...1.36.0)</small>
+
+### Features
+
+- add intermediate UPDATE callbacks to Jenkins pipeline ([a46bae2](https://github.com/cortexapps/cli/commit/a46bae251ee04054402caf0362f821e7805f38b0) by Jeff Schnitter).
+- add jenkins_auth Cortex secret to workflow and setup ([7f0b37e](https://github.com/cortexapps/cli/commit/7f0b37e6e20a6f3fcbc57e09611858ea680c3962) by Jeff Schnitter).
+- add Codespace lifecycle management with delete-on-teardown ([b1d7e7c](https://github.com/cortexapps/cli/commit/b1d7e7cb69e897ab2ece55a2243074ebccd9213d) by Jeff Schnitter).
+- add Cortex integration steps and orchestration to JenkinsDeploySetup ([2235df3](https://github.com/cortexapps/cli/commit/2235df33e1d4cea6239b4878fcfad87f8bd2699b) by Jeff Schnitter).
+- add Jenkins job and credential creation helpers to JenkinsDeploySetup ([bedc73f](https://github.com/cortexapps/cli/commit/bedc73f2dfe6f7b3c26dab4a64559f08dcee88df) by Jeff Schnitter).
+- add JenkinsDeploySetup class with prompts and Codespace provisioning ([1e2b594](https://github.com/cortexapps/cli/commit/1e2b594671388dbf2ae0e8fbb4201e48f0f87504) by Jeff Schnitter).
+- add Jenkins devcontainer for GitHub Codespaces ([00c2d52](https://github.com/cortexapps/cli/commit/00c2d52b45448b0a7a2a9c24490138aa653cd437) by Jeff Schnitter).
+- add Cortex workflow template for triggering Jenkins deploys ([cdf4b4a](https://github.com/cortexapps/cli/commit/cdf4b4a8a49539714c762a5040ed29bcf7f45188) by Jeff Schnitter).
+- add Jenkinsfile template with Cortex deploy recording and async callback ([26e7746](https://github.com/cortexapps/cli/commit/26e7746e72be7909f50945b123116c76dc1fa5eb) by Jeff Schnitter).
+- add jenkins-deploy catalog entity and scorecard ([25452d7](https://github.com/cortexapps/cli/commit/25452d70735c7303bdfa12acae0ac311f8baff9b) by Jeff Schnitter).
+
+### Bug Fixes
+
+- skip test_gitops_logs_page_size when API returns 504 ([df0a96f](https://github.com/cortexapps/cli/commit/df0a96f444313d409eb560da42658ddbcea6cc53) by Jeff Schnitter).
+- skip gitops-logs get test when API returns 504 instead of failing ([a187183](https://github.com/cortexapps/cli/commit/a1871839be223cf177fd5ad6eadf271612094c6a) by Jeff Schnitter).
+- limit gitops-logs get test to single page to avoid fetch-all timeout ([0c7cdd0](https://github.com/cortexapps/cli/commit/0c7cdd0278179a7b93cadfa23d31ba888656e74f) by Jeff Schnitter).
+- correct exemption status assertion after revoke (REVOKED not REJECTED) ([5516c60](https://github.com/cortexapps/cli/commit/5516c605f223e393f421d4023a59fd9214ba7d62) by Jeff Schnitter).
+- broaden <script> regex to match Jenkins config.xml regardless of CDATA format ([9752982](https://github.com/cortexapps/cli/commit/9752982f551efefeaddaf7a9e129a1dbd600520d) by Jeff Schnitter).
+- use triple braces for jenkins_auth secret to avoid HTML escaping ([887aa0e](https://github.com/cortexapps/cli/commit/887aa0ee674d0179138d06e75fa4060fb3072dea) by Jeff Schnitter).
+- suppress 'Done! Watch your deploy' message on workflow failure ([7304a17](https://github.com/cortexapps/cli/commit/7304a17a34e1848f891757306eff4ae3948651fc) by Jeff Schnitter).
+- use default password instead of API token for jenkins_auth secret ([d6f224e](https://github.com/cortexapps/cli/commit/d6f224e01032085e8f18d53c9692b8803bb40ddb) by Jeff Schnitter).
+- print action-level details when workflow run fails ([495ee31](https://github.com/cortexapps/cli/commit/495ee31d06ec693d046f743875c49373fdf68460) by Jeff Schnitter).
+- handle 400 as conflict when creating jenkins_auth Cortex secret ([b066cd5](https://github.com/cortexapps/cli/commit/b066cd571404659193e07a4d83f59dc78a0bc42e) by Jeff Schnitter).
+- restore auth header in jenkins trigger workflow ([75be774](https://github.com/cortexapps/cli/commit/75be774a756eb3b17fcb41977a2feffe534aa4aa) by Jeff Schnitter).
+- remove auth header from jenkins trigger workflow for Unsecured demo ([77c5546](https://github.com/cortexapps/cli/commit/77c5546cd750f85c3b1227b95d90a7aad7d9d5ca) by Jeff Schnitter).
+- remove & from Cortex secrets template syntax ([2b92036](https://github.com/cortexapps/cli/commit/2b920368fb465d976b380721bd53dd4463bdf4bb) by Jeff Schnitter).
+- move buildUrl to top-level url field in deploy payload ([5576bf0](https://github.com/cortexapps/cli/commit/5576bf02703fcbe735350aa65f2966e5e6252de1) by Jeff Schnitter).
+- remove credentials from entity custom metadata, use Cortex secrets ([50067ae](https://github.com/cortexapps/cli/commit/50067aef22ea66befe98bc21ffad769c9c4231d0) by Jeff Schnitter).
+- patch existing job's script CDATA instead of replacing full config.xml ([c0c5d69](https://github.com/cortexapps/cli/commit/c0c5d696acfa74040bb42a100e2df716f0c246e7) by Jeff Schnitter).
+- remove plugin version attrs from job XML and soften update failure ([e74b1bf](https://github.com/cortexapps/cli/commit/e74b1bf25062e09cf58236687380f962427d72a7) by Jeff Schnitter).
+- always update Jenkins job config and reduce workflow timeout ([169315b](https://github.com/cortexapps/cli/commit/169315bcef2623bcae7c6d8472c463199b4845bd) by Jeff Schnitter).
+- add Authorization header to Jenkins callback curl ([2ea25e6](https://github.com/cortexapps/cli/commit/2ea25e63dbabca8f1e44c9da298a0a3b77c7d59e) by Jeff Schnitter).
+- resolve Jenkins callback and BUILD_URL issues in deploy pipeline ([0d7c60a](https://github.com/cortexapps/cli/commit/0d7c60af2484d3f804a318bf868376fcecefc64b) by Jeff Schnitter).
+- make Jenkins unsecured/no-CSRF for demo; remove auth from workflow trigger ([2f49764](https://github.com/cortexapps/cli/commit/2f49764ac184bb56e071c162b4a8a1750b0caba0) by Jeff Schnitter).
+- replace Script Console with REST API for Jenkins token generation ([5600b67](https://github.com/cortexapps/cli/commit/5600b6773b7c75d3082a3b45a4a508a5506f89a5) by Jeff Schnitter).
+- set Jenkins admin password via Groovy init script; improve setup robustness ([f2dd7cf](https://github.com/cortexapps/cli/commit/f2dd7cf0233d98b28e4198bca69cf2c6aec4755c) by Jeff Schnitter).
+- substitute real Jenkins URL into workflow at import time ([4ad5fc9](https://github.com/cortexapps/cli/commit/4ad5fc98c71eeccc5ecd6ebb8abb45372fcfb239) by Jeff Schnitter).
+- use state file as ownership record; ask user before reusing Codespace ([4db07b3](https://github.com/cortexapps/cli/commit/4db07b389d30cd7852f4837a8de97a6cf282709c) by Jeff Schnitter).
+- replace Codespace identity heuristic with Jenkins connectivity probe ([6aff0dc](https://github.com/cortexapps/cli/commit/6aff0dcc48fdf370187d96a056d066add4de2ce3) by Jeff Schnitter).
+- set port 8080 public via devcontainer.json instead of ports REST API ([7e4493c](https://github.com/cortexapps/cli/commit/7e4493cf6045fbd8fdf038daf7fe6bf7292b34e7) by Jeff Schnitter).
+- add context text before Codespace/existing Jenkins prompt ([1e4215d](https://github.com/cortexapps/cli/commit/1e4215d2fd13e64a2c6fe5617935509b6c627060) by Jeff Schnitter).
+- save GitHub PAT between runs (hidden=True instead of secret=True) ([5ffe405](https://github.com/cortexapps/cli/commit/5ffe405c3f409581b461532514f4ce2f588020f8) by Jeff Schnitter).
+- verify Codespace identity before reusing on re-run ([36f787b](https://github.com/cortexapps/cli/commit/36f787ba0400ffa7af3aaf7932b822a1848b488a) by Jeff Schnitter).
+- reuse existing Codespace on re-run instead of provisioning a second one ([275a52b](https://github.com/cortexapps/cli/commit/275a52b22af73c1e7ffbddba2dfee01f483619c9) by Jeff Schnitter).
+- register Codespace port via API before setting visibility; warn about public Jenkins requirement ([829c38f](https://github.com/cortexapps/cli/commit/829c38fb3c90ae31e63dbc80e69ed8493c6e8913) by Jeff Schnitter).
+
 ## [1.35.0](https://github.com/cortexapps/cli/releases/tag/1.35.0) - 2026-08-19
 
 <small>[Compare with 1.34.0](https://github.com/cortexapps/cli/compare/1.34.0...1.35.0)</small>
