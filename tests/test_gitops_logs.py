@@ -1,7 +1,7 @@
 from tests.helpers.utils import *
 
 def test_gitops_logs_get():
-    cli(["gitops-logs", "get"])
+    cli(["gitops-logs", "get", "-p", "0", "-z", "10"])
 
 def test_gitops_logs_page_size(capsys):
     response = cli(["gitops-logs", "get", "-p", "0", "-z", "1"])
