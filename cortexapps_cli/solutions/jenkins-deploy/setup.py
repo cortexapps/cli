@@ -396,14 +396,20 @@ class JenkinsDeploySetup(SolutionSetup):
             return
         jenkinsfile = JENKINSFILE_TEMPLATE_PATH.read_text()
         new_cdata = f"<script><![CDATA[{jenkinsfile}]]></script>"
+        # Match <script>…</script> regardless of whether Jenkins stored it with CDATA,
+        # plain text, or with surrounding whitespace.
         patched = re.sub(
-            r"<script><!\[CDATA\[.*?\]\]></script>",
+            r"<script>.*?</script>",
             new_cdata,
             get_resp.text,
             flags=re.DOTALL,
         )
         if patched == get_resp.text:
-            return  # no change needed
+            print(
+                f"  Warning: could not locate <script> block in job config to update Jenkinsfile. "
+                f"Delete '{job_name}' in Jenkins and re-run setup."
+            )
+            return
         resp = session.post(
             f"{base}/job/{job_name}/config.xml",
             headers={"Content-Type": "application/xml"},
