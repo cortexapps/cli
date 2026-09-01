@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.37.0](https://github.com/cortexapps/cli/releases/tag/1.37.0) - 2026-09-01
+
+<small>[Compare with 1.36.0](https://github.com/cortexapps/cli/compare/1.36.0...1.37.0)</small>
+
+### Features
+
+- add monorepo solution (CX-41) ([44e71ef](https://github.com/cortexapps/cli/commit/44e71ef707cfe62773acb7f52ec56a969f025044) by Jeff Schnitter).
+
 ## [1.36.0](https://github.com/cortexapps/cli/releases/tag/1.36.0) - 2026-08-31
 
 <small>[Compare with 1.35.0](https://github.com/cortexapps/cli/compare/1.35.0...1.36.0)</small>
