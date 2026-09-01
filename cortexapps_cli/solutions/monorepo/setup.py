@@ -233,7 +233,7 @@ class MonorepoSetup(SolutionSetup):
         print(f"4. Ready to model your own monorepo?")
         print(f"   For each component in your repo:")
         print(f"     a. Add a cortex.yaml to the component's subdirectory")
-        print(f"     b. Set x-cortex-git.github.repository and basePath to match")
+        print(f"     b. Set x-cortex-git.github.repository and basepath to match")
         print(f"     c. Add a consistent group tag (e.g. my-monorepo) to all components")
         print(f"     d. Add x-cortex-git.github.alias if you have more than one GitHub integration configured,")
         print(f"        and your entities aren't represented by the 'default' integration")

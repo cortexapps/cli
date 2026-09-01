@@ -10,7 +10,7 @@ info:
     github:
       alias: cortex-cli
       repository: cortexapps/cli
-      basePath: cortexapps_cli/solutions/monorepo/services/cli-core
+      basepath: cortexapps_cli/solutions/monorepo/services/cli-core
   x-cortex-link:
     - name: GitHub
       type: repo

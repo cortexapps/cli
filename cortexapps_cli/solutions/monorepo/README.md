@@ -1,6 +1,6 @@
 ---
 name: Monorepo
-description: Model a real monorepo in Cortex — five Cortex services mapped to subdirectories of a single public GitHub repo, each scoped by basePath.
+description: Model a real monorepo in Cortex — five Cortex services mapped to subdirectories of a single public GitHub repo, each scoped by basepath.
 ---
 
 # Monorepo
@@ -62,7 +62,7 @@ info:
     github:
       alias: cortex-cli        # only needed with multiple GitHub integrations, and your repo isn't under the default
       repository: cortexapps/cli
-      basePath: cortexapps_cli/solutions/monorepo/services/cli-core
+      basepath: cortexapps_cli/solutions/monorepo/services/cli-core
 ```
 
 All five entities are tagged with the group `monorepo-demo` for easy catalog filtering.
@@ -71,7 +71,7 @@ All five entities are tagged with the group `monorepo-demo` for easy catalog fil
 
 **5 service entities** (group: `monorepo-demo`)
 
-| Tag | basePath | Description |
+| Tag | basepath | Description |
 |---|---|---|
 | `monorepo-demo-cli-core` | `services/cli-core` | Core CLI — Typer app, HTTP client, config, utils |
 | `monorepo-demo-cli-commands` | `services/cli-commands` | Command implementations per Cortex resource |
@@ -79,10 +79,10 @@ All five entities are tagged with the group `monorepo-demo` for easy catalog fil
 | `monorepo-demo-cli-tests` | `services/cli-tests` | Integration test suite against live Cortex API |
 | `monorepo-demo-cli-docker` | `services/cli-docker` | Container infra — published `cortexapp/cli` image |
 
-> Full basePaths are prefixed with `cortexapps_cli/solutions/monorepo/` — shortened above for readability.
+> Full basepaths are prefixed with `cortexapps_cli/solutions/monorepo/` — shortened above for readability.
 
 **1 scorecard** — `monorepo-component-health` — Bronze/Silver/Gold:
-- Bronze: has description + git configured with basePath
+- Bronze: has description + git configured with basepath
 - Silver: belongs to at least one group
 - Gold: verified within 90 days
 
@@ -161,15 +161,15 @@ GitOps syncs automatically on each push to the repo. To trigger a manual sync wi
 3. Select **GitHub**
 4. Follow the prompts to select the `cortexapps/cli` repository
 
-Cortex will find the `cortex.yaml` files in each subdirectory and recreate the deleted entities exactly as defined — group, git basePath, description, and all.
+Cortex will find the `cortex.yaml` files in each subdirectory and recreate the deleted entities exactly as defined — group, git basepath, description, and all.
 
 ## Adapting for Your Own Monorepo
 
 1. Add a `cortex.yaml` to each component subdirectory in your repo
-2. Set `x-cortex-git.github.repository` and `basePath` for each component
+2. Set `x-cortex-git.github.repository` and `basepath` for each component
 3. Add `x-cortex-git.github.alias` if you have more than one GitHub integration configured and your repo isn't under the default
 4. Add a consistent group tag to all components (e.g. `my-monorepo`)
 5. Add GitOps → your repo in Cortex Settings
 6. Cortex discovers and syncs all components automatically
 
-The `basePath` is what splits one repo into many scoped entities — each service sees only the activity in its own directory.
+The `basepath` is what splits one repo into many scoped entities — each service sees only the activity in its own directory.
