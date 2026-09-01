@@ -1,0 +1,17 @@
+openapi: "3.0.0"
+info:
+  title: monorepo-demo-cli-core
+  x-cortex-tag: monorepo-demo-cli-core
+  x-cortex-type: service
+  x-cortex-description: Core CLI package — Typer app, HTTP client, config, and output utilities
+  x-cortex-groups:
+    - monorepo-demo
+  x-cortex-git:
+    github:
+      alias: cortex-cli
+      repository: cortexapps/cli
+      basePath: cortexapps_cli/solutions/monorepo/services/cli-core
+  x-cortex-link:
+    - name: GitHub
+      type: repo
+      url: https://github.com/cortexapps/cli/tree/main/cortexapps_cli/solutions/monorepo/services/cli-core

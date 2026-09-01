@@ -1,0 +1,17 @@
+openapi: "3.0.0"
+info:
+  title: monorepo-demo-cli-solutions
+  x-cortex-tag: monorepo-demo-cli-solutions
+  x-cortex-type: service
+  x-cortex-description: Solutions framework — bundled Cortex solution packages that can be installed via the CLI
+  x-cortex-groups:
+    - monorepo-demo
+  x-cortex-git:
+    github:
+      alias: cortex-cli
+      repository: cortexapps/cli
+      basePath: cortexapps_cli/solutions/monorepo/services/cli-solutions
+  x-cortex-link:
+    - name: GitHub
+      type: repo
+      url: https://github.com/cortexapps/cli/tree/main/cortexapps_cli/solutions/monorepo/services/cli-solutions

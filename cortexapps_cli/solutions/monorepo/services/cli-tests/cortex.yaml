@@ -1,0 +1,17 @@
+openapi: "3.0.0"
+info:
+  title: monorepo-demo-cli-tests
+  x-cortex-tag: monorepo-demo-cli-tests
+  x-cortex-type: service
+  x-cortex-description: Integration test suite — pytest tests that run against a live Cortex API
+  x-cortex-groups:
+    - monorepo-demo
+  x-cortex-git:
+    github:
+      alias: cortex-cli
+      repository: cortexapps/cli
+      basePath: cortexapps_cli/solutions/monorepo/services/cli-tests
+  x-cortex-link:
+    - name: GitHub
+      type: repo
+      url: https://github.com/cortexapps/cli/tree/main/cortexapps_cli/solutions/monorepo/services/cli-tests

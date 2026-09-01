@@ -1,0 +1,17 @@
+openapi: "3.0.0"
+info:
+  title: monorepo-demo-cli-commands
+  x-cortex-tag: monorepo-demo-cli-commands
+  x-cortex-type: service
+  x-cortex-description: CLI command implementations — one module per Cortex resource (catalog, scorecards, teams, etc.)
+  x-cortex-groups:
+    - monorepo-demo
+  x-cortex-git:
+    github:
+      alias: cortex-cli
+      repository: cortexapps/cli
+      basePath: cortexapps_cli/solutions/monorepo/services/cli-commands
+  x-cortex-link:
+    - name: GitHub
+      type: repo
+      url: https://github.com/cortexapps/cli/tree/main/cortexapps_cli/solutions/monorepo/services/cli-commands

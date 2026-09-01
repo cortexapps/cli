@@ -1,0 +1,54 @@
+tag: monorepo-component-health
+name: Monorepo Component Health
+description: Checks that each component within a monorepo is documented, owned, linked to its subdirectory, and actively maintained.
+draft: false
+notifications:
+  enabled: true
+  scoreDropNotificationsEnabled: true
+exemptions:
+  enabled: true
+  autoApprove: false
+  userSpecificNotifications: false
+evaluation:
+  window: 24
+ladder:
+  name: Default Ladder
+  levels:
+    - name: Bronze
+      rank: 1
+      description: The component is discoverable — it has a description and a git reference scoped to its subdirectory.
+      color: "#CD7F32"
+    - name: Silver
+      rank: 2
+      description: The component is well-classified — it belongs to at least one group so it can be filtered and reported on.
+      color: "#C0C0C0"
+    - name: Gold
+      rank: 3
+      description: The component is actively verified as alive and its metadata is current.
+      color: "#D7AC58"
+filter:
+  category: SERVICE
+rules:
+  - title: Component has a description
+    description: Every monorepo component should have a description so developers understand its purpose without reading the source.
+    expression: entity.description().length > 0
+    weight: 1
+    level: Bronze
+
+  - title: Component has git configured with a basePath
+    description: The component's x-cortex-git must be set so Cortex can scope PRs, commits, and code coverage to this subdirectory.
+    expression: git != null
+    weight: 1
+    level: Bronze
+
+  - title: Component belongs to at least one group
+    description: Tag this component with a group (e.g. monorepo-demo) so it can be filtered and reported on across the catalog.
+    expression: groups().length > 0
+    weight: 1
+    level: Silver
+
+  - title: Component verified in the last 90 days
+    description: An engineer has confirmed this component is still in active use and its Cortex metadata is accurate.
+    expression: verifications().lastVerifiedAt() != null and verifications().lastVerifiedAt().fromNow() > duration("P-90D")
+    weight: 1
+    level: Gold

@@ -1,0 +1,20 @@
+openapi: "3.0.0"
+info:
+  title: monorepo-demo-cli-docker
+  x-cortex-tag: monorepo-demo-cli-docker
+  x-cortex-type: service
+  x-cortex-description: Container infrastructure — Dockerfile and config for the published cortexapp/cli Docker image
+  x-cortex-groups:
+    - monorepo-demo
+  x-cortex-git:
+    github:
+      alias: cortex-cli
+      repository: cortexapps/cli
+      basePath: cortexapps_cli/solutions/monorepo/services/cli-docker
+  x-cortex-link:
+    - name: GitHub
+      type: repo
+      url: https://github.com/cortexapps/cli/tree/main/cortexapps_cli/solutions/monorepo/services/cli-docker
+    - name: Docker Hub
+      type: documentation
+      url: https://hub.docker.com/r/cortexapp/cli
