@@ -568,7 +568,42 @@ def _apply_hyperlinks(line: str, entity_tags: set[str], ui_url: str) -> str:
     return "".join(parts)
 
 
-def _show_diagram(readme: str, entity_tags: set[str] | None = None, ui_url: str = "https://app.getcortexapp.com") -> None:
+_GITHUB_BLOB = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions"
+
+
+def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
+    """Replace bare filenames in the diagram with OSC 8 links to GitHub blob URLs."""
+    base = f"{_GITHUB_BLOB}/{solution_tag}/_templates/{solution_tag}"
+    parts = []
+    i = 0
+    while i < len(line):
+        # Look for a word boundary start: not alphanumeric/hyphen/dot before current pos
+        for filename in sorted(
+            (f for f in [
+                "teams.tf", "ecommerce.tf", "supply-chain.tf", "scorecards.tf",
+                "provider.tf", "variables.tf", "terraform.tfvars",
+            ] if line.find(f, i) == i),
+            key=len, reverse=True,
+        ):
+            after = i + len(filename)
+            # Ensure word boundary after: next char must not be alphanumeric
+            if after < len(line) and (line[after].isalnum() or line[after] in "-_."):
+                continue
+            parts.append(_osc8(f"{base}/{filename}", filename))
+            i = after
+            break
+        else:
+            parts.append(line[i])
+            i += 1
+    return "".join(parts)
+
+
+def _show_diagram(
+    readme: str,
+    entity_tags: set[str] | None = None,
+    ui_url: str = "https://app.getcortexapp.com",
+    solution_tag: str = "",
+) -> None:
     block = _extract_first_codeblock(readme)
     if not block:
         return
@@ -577,8 +612,11 @@ def _show_diagram(readme: str, entity_tags: set[str] | None = None, ui_url: str 
 
     print()
     for line in block.split("\n"):
-        if entity_tags and links_supported:
-            line = _apply_hyperlinks(line, entity_tags, ui_url)
+        if links_supported:
+            if entity_tags:
+                line = _apply_hyperlinks(line, entity_tags, ui_url)
+            if solution_tag:
+                line = _apply_file_hyperlinks(line, solution_tag)
         # Use print() not console.print(): Rich counts OSC 8 escape bytes as
         # visible characters, shifting ASCII art alignment.
         print(f"  {line}")
@@ -612,13 +650,14 @@ def _post_install_menu(
     import_report: str = "",
     entity_tags: set[str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
+    solution_tag: str = "",
 ) -> None:
     options = [
         ("1", "Data Model"),
         ("2", "Next steps"),
     ]
     actions = {
-        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url),
+        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url, solution_tag=solution_tag),
         "2": lambda: _show_next_steps(readme),
     }
     if import_report:
@@ -735,7 +774,7 @@ def install(
                 entity_tags = set(resources.get("catalog", []))
             except Exception:
                 pass
-            _post_install_menu(readme, import_report=output, entity_tags=entity_tags, ui_url=ui_url)
+            _post_install_menu(readme, import_report=output, entity_tags=entity_tags, ui_url=ui_url, solution_tag=solution)
 
 
 @app.command(name="post-install")
