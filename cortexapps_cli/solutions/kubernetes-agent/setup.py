@@ -82,7 +82,7 @@ class KubernetesAgentSetup(SolutionSetup):
             "GitHub PAT provided by Cortex Customer Engineering for pulling the k8s-agent image"
             " (see https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#prerequisites)",
             env_var="GHCR_TOKEN",
-            secret=True,
+            hidden=True,
         )
         self._cluster_name = self.prompt(
             "cluster_name",
