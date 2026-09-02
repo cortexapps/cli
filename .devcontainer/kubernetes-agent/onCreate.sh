@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "==> Installing kind..."
 ARCH=$(uname -m)
-KIND_ARCH="amd64"
-[ "$ARCH" = "aarch64" ] && KIND_ARCH="arm64"
-curl -Lo /tmp/kind "https://kind.sigs.k8s.io/dl/latest/kind-linux-${KIND_ARCH}"
+BIN_ARCH="amd64"
+[ "$ARCH" = "aarch64" ] && BIN_ARCH="arm64"
+
+echo "==> Installing kubectl..."
+curl -Lo /tmp/kubectl "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/${BIN_ARCH}/kubectl"
+sudo install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+
+echo "==> Installing helm..."
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+echo "==> Installing kind..."
+curl -Lo /tmp/kind "https://kind.sigs.k8s.io/dl/latest/kind-linux-${BIN_ARCH}"
 sudo install -o root -g root -m 0755 /tmp/kind /usr/local/bin/kind
 
 echo "==> Creating kind cluster 'cortex-demo'..."
