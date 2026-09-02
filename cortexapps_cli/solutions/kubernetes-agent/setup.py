@@ -178,11 +178,34 @@ class KubernetesAgentSetup(SolutionSetup):
         self._state["codespace_name"] = self._codespace_name
         self._save_file()
 
-        print(
-            f"  Codespace is up. Waiting for onCreate.sh to finish installing kind "
-            f"and creating the cluster (up to {CODESPACE_READY_TIMEOUT // 60} min)..."
-        )
         deadline = time.time() + CODESPACE_READY_TIMEOUT
+
+        # Phase 1: wait for Codespace to reach Available state
+        print("  Waiting for Codespace to start...")
+        while time.time() < deadline:
+            state_result = subprocess.run(
+                ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "state"],
+                capture_output=True,
+                text=True,
+            )
+            if state_result.returncode == 0:
+                import json as _json
+                state = _json.loads(state_result.stdout).get("state", "")
+                if state == "Available":
+                    print("  Codespace is up.")
+                    break
+            time.sleep(CODESPACE_POLL_INTERVAL)
+        else:
+            raise RuntimeError(
+                f"Timed out waiting for Codespace '{self._codespace_name}' to start.\n"
+                "Re-run this command to retry."
+            )
+
+        # Phase 2: wait for onCreate.sh to finish (kind cluster ready)
+        print(
+            f"  Waiting for kind cluster to initialize inside Codespace "
+            f"(onCreate.sh installs kind and creates the cluster, ~2-4 min)..."
+        )
         while time.time() < deadline:
             probe = subprocess.run(
                 [
@@ -193,6 +216,7 @@ class KubernetesAgentSetup(SolutionSetup):
                 capture_output=True,
             )
             if probe.returncode == 0:
+                print("  Kind cluster is ready.")
                 return
             time.sleep(CODESPACE_POLL_INTERVAL)
 
