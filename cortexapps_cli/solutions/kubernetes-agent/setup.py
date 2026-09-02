@@ -236,7 +236,10 @@ class KubernetesAgentSetup(SolutionSetup):
 
         raise RuntimeError(
             f"Timed out waiting for the kind cluster in Codespace '{self._codespace_name}'.\n"
-            "The Codespace may still be initializing. Re-run this command to retry."
+            "To diagnose, SSH into the Codespace and check the log:\n"
+            f"  gh codespace ssh -c {self._codespace_name}\n"
+            "  cat /tmp/onCreate.log\n"
+            "Re-run this command to retry once the cluster is ready."
         )
 
     # -------------------------------------------------------------------------

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Log all output so failures are diagnosable: cat /tmp/onCreate.log
+exec > >(tee /tmp/onCreate.log) 2>&1
+
 ARCH=$(uname -m)
 BIN_ARCH="amd64"
 [ "$ARCH" = "aarch64" ] && BIN_ARCH="arm64"
@@ -23,6 +26,6 @@ echo "==> Verifying cluster..."
 kubectl cluster-info --context kind-cortex-demo
 
 echo "==> Installing cortexapps-cli..."
-pip install cortexapps-cli --quiet
+python3 -m pip install cortexapps-cli --quiet
 
 echo "==> Done. Run: cortex solutions post-install -s kubernetes-agent"
