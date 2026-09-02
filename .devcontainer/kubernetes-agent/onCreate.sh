@@ -4,6 +4,15 @@ set -euo pipefail
 # Log all output so failures are diagnosable: cat /tmp/onCreate.log
 exec > >(tee /tmp/onCreate.log) 2>&1
 
+# Write a failure sentinel on non-zero exit so setup.py can detect it fast
+_on_exit() {
+    local rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$rc" > /tmp/onCreate.failed
+    fi
+}
+trap _on_exit EXIT
+
 ARCH=$(uname -m)
 BIN_ARCH="amd64"
 [ "$ARCH" = "aarch64" ] && BIN_ARCH="arm64"

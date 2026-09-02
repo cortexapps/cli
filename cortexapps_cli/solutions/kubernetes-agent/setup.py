@@ -216,27 +216,37 @@ class KubernetesAgentSetup(SolutionSetup):
 
         # Phase 2: wait for onCreate.sh to finish (kind cluster ready)
         # Always poll — even for existing Codespaces that may still be initializing.
-        print(
-            "  Waiting for kind cluster to be ready"
-            + (" (onCreate.sh installs kubectl/helm/kind and creates the cluster, ~5-10 min)..." if not existing else "...")
-        )
+        print("  Waiting for kind cluster to be ready (may take 15-20 min on first run)...")
         while time.time() < deadline:
-            probe = subprocess.run(
+            # Single SSH call: check failure sentinel and cluster readiness together
+            status = subprocess.run(
                 [
                     "gh", "codespace", "ssh",
                     "-c", self._codespace_name,
-                    "--", "kubectl", "cluster-info",
+                    "--", "bash", "-c",
+                    "if [ -f /tmp/onCreate.failed ]; then echo FAILED; cat /tmp/onCreate.failed; "
+                    "elif kubectl cluster-info > /dev/null 2>&1; then echo READY; "
+                    "else echo WAITING; fi",
                 ],
                 capture_output=True,
+                text=True,
             )
-            if probe.returncode == 0:
+            output = status.stdout.strip()
+            if output.startswith("READY"):
                 print("  Kind cluster is ready.")
                 return
+            if output.startswith("FAILED"):
+                raise RuntimeError(
+                    f"onCreate.sh failed in Codespace '{self._codespace_name}'.\n"
+                    "Check the log for details:\n"
+                    f"  gh codespace ssh -c {self._codespace_name}\n"
+                    "  cat /tmp/onCreate.log"
+                )
             time.sleep(CODESPACE_POLL_INTERVAL)
 
         raise RuntimeError(
             f"Timed out waiting for the kind cluster in Codespace '{self._codespace_name}'.\n"
-            "To diagnose, SSH into the Codespace and check the log:\n"
+            "Check the log for details:\n"
             f"  gh codespace ssh -c {self._codespace_name}\n"
             "  cat /tmp/onCreate.log\n"
             "Re-run this command to retry once the cluster is ready."
