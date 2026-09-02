@@ -105,6 +105,9 @@ resource "cortex_scorecard" "production_readiness" {
     types = {
       include = ["service"]
     }
+    groups = {
+      include = ["terraform-demo"]
+    }
   }
 
   evaluation = {
