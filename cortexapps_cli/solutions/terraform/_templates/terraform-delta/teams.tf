@@ -5,7 +5,6 @@
 # CHANGED: Sarah Connor added
 resource "cortex_catalog_entity" "team_development" {
   tag         = "team-development"
-  type        = "team"
   name        = "Development"
   description = "Application development team responsible for Parts Unlimited's e-commerce platform and core services."
 
@@ -39,7 +38,6 @@ resource "cortex_catalog_entity" "team_development" {
 
 resource "cortex_catalog_entity" "team_operations" {
   tag         = "team-operations"
-  type        = "team"
   name        = "IT Operations"
   description = "Infrastructure, reliability, and operations for Parts Unlimited's production systems."
 
@@ -63,7 +61,6 @@ resource "cortex_catalog_entity" "team_operations" {
 
 resource "cortex_catalog_entity" "team_security" {
   tag         = "team-security"
-  type        = "team"
   name        = "Information Security"
   description = "Security, compliance, and risk management for Parts Unlimited."
 
@@ -82,7 +79,6 @@ resource "cortex_catalog_entity" "team_security" {
 
 resource "cortex_catalog_entity" "team_qa" {
   tag         = "team-qa"
-  type        = "team"
   name        = "Quality Assurance"
   description = "Testing, QA, and release verification for Parts Unlimited services."
 

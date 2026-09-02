@@ -65,7 +65,7 @@ resource "cortex_scorecard" "production_readiness" {
     {
       title       = "Has terraform-workspace metadata"
       description = "Service must declare its Terraform workspace via the terraform-workspace metadata key."
-      expression  = "customData.exists(d, d.key == \"terraform-workspace\")"
+      expression  = "custom(\"terraform-workspace\") != null"
       weight      = 1
       level       = "Silver"
     },
