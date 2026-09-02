@@ -95,12 +95,7 @@ The delta shows what a real team PR looks like — modify a file, plan, apply, w
 
 **Step 1: Copy the delta files into your working directory**
 
-```bash
-cp <solutions-templates>/terraform-delta/ecommerce.tf ~/parts-unlimited-terraform/ecommerce.tf
-cp <solutions-templates>/terraform-delta/teams.tf ~/parts-unlimited-terraform/teams.tf
-```
-
-> The delta files are in `_templates/terraform-delta/` inside the installed solutions package. Run `cortex solutions info -s terraform` to find the exact path.
+The exact delta file paths were printed when you ran `cortex solutions post-install -s terraform`. Copy the delta files shown there to your working directory.
 
 **Step 2: See what will change**
 
@@ -122,7 +117,7 @@ terraform apply
 
 **Step 4: Check the scorecard**
 
-Open Production Readiness in Cortex. The Phoenix Project should now show **Silver**.
+Open Production Readiness in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
 
 ## File Walkthrough
 
