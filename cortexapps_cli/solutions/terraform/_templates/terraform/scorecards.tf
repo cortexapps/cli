@@ -1,12 +1,12 @@
 # scorecards.tf — Platform-owned
-# Defines the Production Readiness scorecard.
+# Defines the Terraform Demo Production Readiness scorecard.
 # Bronze: automatically achieved by all properly-defined services.
 # Silver: requires adding links and metadata — see the delta.
 # Gold: requires shared ownership and a rich description — aspirational.
 
 resource "cortex_scorecard" "production_readiness" {
-  tag         = "production-readiness"
-  name        = "Production Readiness"
+  tag         = "terraform-demo-production-readiness"
+  name        = "Terraform Demo Production Readiness"
   description = "Measures how production-ready a Parts Unlimited service is. Bronze is table stakes; Gold is the aspirational standard."
   draft       = false
 

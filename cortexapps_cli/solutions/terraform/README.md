@@ -63,7 +63,7 @@ This solution installs a demo org for **Parts Unlimited** (from *The Phoenix Pro
 - **4 teams**: Development (Bill's team), IT Operations (Brent's domain), Information Security (John's team), QA
 - **2 domains**: E-Commerce, Supply Chain
 - **6 services**: The Phoenix Project, Parts Catalog API, Payments Service, Inventory Service, Ordering Service, Shipping Service
-- **1 scorecard**: Production Readiness (Bronze/Silver/Gold)
+- **1 scorecard**: Terraform Demo Production Readiness (Bronze/Silver/Gold)
 
 All services start at **Bronze** — intentionally incomplete so you can see the delta in action.
 
@@ -87,7 +87,7 @@ You'll be asked where to create the working directory (default: `~/parts-unlimit
 
 ## Explore what was created
 
-After install, browse your Cortex catalog filtered by the `terraform-demo` group to see all created entities. Open the **Production Readiness** scorecard to see all 6 services at Bronze.
+After install, browse your Cortex catalog filtered by the `terraform-demo` group to see all created entities. Open the **Terraform Demo Production Readiness** scorecard to see all 6 services at Bronze.
 
 ## Try the Delta
 
@@ -117,7 +117,7 @@ terraform apply
 
 **Step 4: Check the scorecard**
 
-Open Production Readiness in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
+Open Terraform Demo Production Readiness in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
 
 ## File Walkthrough
 
@@ -131,7 +131,7 @@ Open Production Readiness in Cortex. The Phoenix Project should now show **Silve
 
 **`supply-chain.tf`** — Same pattern, owned by the supply chain team.
 
-**`scorecards.tf`** — Owned by the platform team. Defines the Production Readiness scorecard and its Bronze/Silver/Gold rules.
+**`scorecards.tf`** — Owned by the platform team. Defines the Terraform Demo Production Readiness scorecard and its Bronze/Silver/Gold rules.
 
 ## Customizing for Your Org
 
