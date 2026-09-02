@@ -14,28 +14,24 @@ resource "cortex_catalog_entity" "team_development" {
   team = {
     members = [
       {
-        name        = "Bill Palmer"
-        email       = "bill.palmer@parts-unlimited.com"
-        role        = "Team Lead"
-        description = "IT Manager leading the Phoenix Project"
+        name  = "Bill Palmer"
+        email = "bill.palmer@parts-unlimited.com"
+        role  = "Team Lead"
       },
       {
-        name        = "Maxine Chambers"
-        email       = "maxine.chambers@parts-unlimited.com"
-        role        = "Senior Engineer"
-        description = "Staff engineer on the Phoenix Project"
+        name  = "Maxine Chambers"
+        email = "maxine.chambers@parts-unlimited.com"
+        role  = "Senior Engineer"
       },
       {
-        name        = "Dev Magee"
-        email       = "dev.magee@parts-unlimited.com"
-        role        = "Engineer"
-        description = "Developer on the Phoenix Project"
+        name  = "Dev Magee"
+        email = "dev.magee@parts-unlimited.com"
+        role  = "Engineer"
       },
       {
-        name        = "Sarah Connor"
-        email       = "sarah.connor@parts-unlimited.com"
-        role        = "Engineer"
-        description = "New hire joining the Phoenix Project team"
+        name  = "Sarah Connor"
+        email = "sarah.connor@parts-unlimited.com"
+        role  = "Engineer"
       }
     ]
   }
@@ -52,16 +48,14 @@ resource "cortex_catalog_entity" "team_operations" {
   team = {
     members = [
       {
-        name        = "Brent Geller"
-        email       = "brent.geller@parts-unlimited.com"
-        role        = "Principal Engineer"
-        description = "Indispensable operations expert and bottleneck"
+        name  = "Brent Geller"
+        email = "brent.geller@parts-unlimited.com"
+        role  = "Principal Engineer"
       },
       {
-        name        = "Wes Davis"
-        email       = "wes.davis@parts-unlimited.com"
-        role        = "Operations Manager"
-        description = "Manages day-to-day operations work"
+        name  = "Wes Davis"
+        email = "wes.davis@parts-unlimited.com"
+        role  = "Operations Manager"
       }
     ]
   }
@@ -78,10 +72,9 @@ resource "cortex_catalog_entity" "team_security" {
   team = {
     members = [
       {
-        name        = "John Pesche"
-        email       = "john.pesche@parts-unlimited.com"
-        role        = "CISO"
-        description = "Chief Information Security Officer"
+        name  = "John Pesche"
+        email = "john.pesche@parts-unlimited.com"
+        role  = "CISO"
       }
     ]
   }
@@ -98,10 +91,9 @@ resource "cortex_catalog_entity" "team_qa" {
   team = {
     members = [
       {
-        name        = "Patty McKee"
-        email       = "patty.mckee@parts-unlimited.com"
-        role        = "QA Manager"
-        description = "Manages QA processes and testing"
+        name  = "Patty McKee"
+        email = "patty.mckee@parts-unlimited.com"
+        role  = "QA Manager"
       }
     ]
   }

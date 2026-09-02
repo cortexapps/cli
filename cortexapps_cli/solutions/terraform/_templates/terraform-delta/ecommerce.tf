@@ -41,11 +41,6 @@ resource "cortex_catalog_entity" "phoenix" {
       name = "Runbook"
       type = "runbook"
       url  = "https://wiki.parts-unlimited.com/runbooks/phoenix"
-    },
-    {
-      name = "Architecture Docs"
-      type = "documentation"
-      url  = "https://wiki.parts-unlimited.com/architecture/phoenix"
     }
   ]
 
