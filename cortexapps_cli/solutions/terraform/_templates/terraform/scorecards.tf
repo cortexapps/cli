@@ -93,9 +93,9 @@ resource "cortex_scorecard" "production_readiness" {
       level       = "Gold"
     },
     {
-      title       = "Has runbook"
-      description = "Service must have a runbook link for on-call responders."
-      expression  = "links.exists(l, l.type == \"runbook\")"
+      title       = "Has multiple links"
+      description = "Service should have at least two links for comprehensive documentation coverage."
+      expression  = "links.size() >= 2"
       weight      = 1
       level       = "Gold"
     }
