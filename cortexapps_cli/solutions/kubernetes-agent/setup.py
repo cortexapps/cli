@@ -34,7 +34,7 @@ HELM_CHART_DIR = SOLUTION_DIR / "helm-chart"
 ARGO_CRD_URL = "https://raw.githubusercontent.com/argoproj/argo-rollouts/stable/manifests/crds/rollout-crd.yaml"
 
 CODESPACE_BRANCH = "worktree-kubernetes-agent-solution"
-CODESPACE_READY_TIMEOUT = 600  # 10 minutes for Codespace + kind cluster startup
+CODESPACE_READY_TIMEOUT = 900  # 15 minutes for Codespace + kind cluster startup
 CODESPACE_POLL_INTERVAL = 20   # seconds between readiness checks
 
 
@@ -213,7 +213,7 @@ class KubernetesAgentSetup(SolutionSetup):
         # Phase 2: wait for onCreate.sh to finish (kind cluster ready)
         print(
             f"  Waiting for kind cluster to initialize inside Codespace "
-            f"(onCreate.sh installs kind and creates the cluster, ~2-4 min)..."
+            f"(onCreate.sh installs kubectl/helm/kind and creates the cluster, ~5-10 min)..."
         )
         while time.time() < deadline:
             probe = subprocess.run(
