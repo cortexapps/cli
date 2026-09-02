@@ -153,8 +153,17 @@ class KubernetesAgentSetup(SolutionSetup):
         self._check_gh_cli()
 
         if self._codespace_name:
-            print(f"  Using existing Codespace: {self._codespace_name}")
-            return
+            # Verify the saved Codespace still exists; if not, create a fresh one
+            probe = subprocess.run(
+                ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "name"],
+                capture_output=True,
+            )
+            if probe.returncode == 0:
+                print(f"  Using existing Codespace: {self._codespace_name}")
+                return
+            print(f"  Saved Codespace '{self._codespace_name}' no longer exists — creating a new one...")
+            self._codespace_name = ""
+            self._state.pop("codespace_name", None)
 
         print(f"  Creating GitHub Codespace from {self._github_repo}...")
         result = subprocess.run(
