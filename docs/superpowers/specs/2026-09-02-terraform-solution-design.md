@@ -66,8 +66,16 @@ All services start at **Bronze** level on the Production Readiness scorecard. Th
 
 The delta demonstrates three types of Terraform changes in one `terraform apply`:
 
+### File ownership model
+
+Terraform has no requirements on file names — it reads all `.tf` files in a directory and merges them. This means teams can own separate files, submit PRs touching only their file, and the catalog stays decentralized at the file level while remaining centralized in a single repo.
+
+Our demo makes this concrete: `ecommerce.tf` is owned by the e-commerce team, `supply-chain.tf` by the supply chain team. A PR to add a new e-commerce service touches only `ecommerce.tf`. Platform owns `teams.tf` and `scorecards.tf`.
+
+This pattern scales from a handful of services to 100K+ — at extreme scale, customers move to Terraform modules (subdirectories), but the ownership principle is the same.
+
 ### 1. Service update — `phoenix` promoted Bronze → Silver
-In `_templates/terraform-delta/services.tf`, the `phoenix` resource gains:
+In `_templates/terraform-delta/ecommerce.tf`, the `phoenix` resource gains:
 - `oncall` block (fictional PagerDuty policy)
 - `links` block with a runbook URL
 - `custom_data` block: `terraform-workspace = "phoenix-prod"`
@@ -75,12 +83,12 @@ In `_templates/terraform-delta/services.tf`, the `phoenix` resource gains:
 This satisfies all Silver rules. After apply, the scorecard score for `phoenix` updates.
 
 ### 2. New service added — `notification-service`
-A new `cortex_catalog_entity` resource is added for a `notification-service` (owner: `team-development`). Terraform creates it from scratch — no manual API call needed.
+A new `cortex_catalog_entity` resource is added to `ecommerce.tf` for a `notification-service` (owner: `team-development`). Terraform creates it from scratch — no manual API call needed. This is what adding a service looks like in a team's PR.
 
 ### 3. Team member added — `team-development`
-A new member (`Sarah Connor, sarah.connor@parts-unlimited.com`) is added to the Development team. Terraform updates only that resource in place.
+A new member (`Sarah Connor, sarah.connor@parts-unlimited.com`) is added in `_templates/terraform-delta/teams.tf`. Terraform updates only that resource in place. This is what onboarding someone looks like.
 
-The README instructs the user to run `terraform plan` after copying the delta files to see the diff before applying.
+The README instructs the user to run `terraform plan` after copying the delta files to see the diff before applying — specifically calling out which resources show as `~ update` vs `+ create`.
 
 ---
 
@@ -92,16 +100,16 @@ cortexapps_cli/solutions/terraform/
 ├── setup.py
 └── _templates/
     ├── terraform/
-    │   ├── provider.tf
-    │   ├── variables.tf
+    │   ├── provider.tf           # provider config, required versions
+    │   ├── variables.tf          # cortex_api_token, cortex_base_url
     │   ├── terraform.tfvars.example
-    │   ├── teams.tf
-    │   ├── domains.tf
-    │   ├── services.tf
-    │   └── scorecards.tf
+    │   ├── teams.tf              # owned by: platform team
+    │   ├── ecommerce.tf          # owned by: e-commerce team (domain + 3 services)
+    │   ├── supply-chain.tf       # owned by: supply chain team (domain + 3 services)
+    │   └── scorecards.tf         # owned by: platform team
     └── terraform-delta/
-        ├── services.tf          # phoenix promoted to Silver + notification-service added
-        └── teams.tf             # new member added to team-development
+        ├── ecommerce.tf          # phoenix → Silver, notification-service added
+        └── teams.tf              # new member on team-development
 ```
 
 ---
@@ -159,25 +167,27 @@ Two variables: `cortex_api_token` (sensitive, no default) and `cortex_base_url` 
 
 Template with comments. Instructs user to copy to `terraform.tfvars` and never commit it.
 
-### `teams.tf`
+### `teams.tf` (platform-owned)
 
-Four `cortex_catalog_entity` resources (type `team`) with member lists using realistic Parts Unlimited names.
+Four `cortex_catalog_entity` resources (type `team`) with member lists using realistic Parts Unlimited names (Bill, Brent, John, etc.).
 
-### `domains.tf`
+### `ecommerce.tf` (e-commerce team-owned)
 
-Two `cortex_catalog_entity` resources (type `domain`). Services are linked via `groups` — each service has a group matching the domain tag (e.g., `domain:ecommerce`).
+One `cortex_catalog_entity` resource (type `domain`) for `domain-ecommerce`, followed by three service resources: `phoenix`, `parts-catalog-api`, `payments-service`. Domain and its services co-located — the e-commerce team owns everything in this file.
 
-### `services.tf`
+Services initial state (intentionally Bronze only):
+- `description` — short, < 50 chars
+- `owner_teams` — `team-development`
+- `git` block — fictional repos under `github.com/parts-unlimited/`
+- No `oncall`, no `links`, no `custom_data`
 
-Six `cortex_catalog_entity` resources (type `service`). Initial state intentionally at Bronze only:
-- `description` — short, < 50 chars (so Gold rule fails too)
-- `owner_teams` — one team per service
-- `git` block — fictional GitHub repos under `github.com/parts-unlimited/`
-- No `oncall`, no `links`, no `custom_data` (Silver rules not met)
+### `supply-chain.tf` (supply chain team-owned)
 
-### `scorecards.tf`
+Same pattern: one `domain` resource (`domain-supply-chain`) and three service resources: `inventory-service`, `ordering-service`, `shipping-service`. Owner: `team-operations`.
 
-One `cortex_scorecard` resource: Production Readiness with Bronze/Silver/Gold rules as specified above. Filter: `types = ["service"]`.
+### `scorecards.tf` (platform-owned)
+
+One `cortex_scorecard` resource: Production Readiness with Bronze/Silver/Gold rules. Filter: `types = ["service"]`.
 
 ---
 
