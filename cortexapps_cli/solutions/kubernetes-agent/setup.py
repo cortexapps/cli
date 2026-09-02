@@ -152,6 +152,7 @@ class KubernetesAgentSetup(SolutionSetup):
         # Always check gh CLI — also needed for SSH steps that follow
         self._check_gh_cli()
 
+        existing = bool(self._codespace_name)
         if self._codespace_name:
             # Verify the saved Codespace still exists; if not, create a fresh one
             probe = subprocess.run(
@@ -160,60 +161,64 @@ class KubernetesAgentSetup(SolutionSetup):
             )
             if probe.returncode == 0:
                 print(f"  Using existing Codespace: {self._codespace_name}")
-                return
-            print(f"  Saved Codespace '{self._codespace_name}' no longer exists — creating a new one...")
-            self._codespace_name = ""
-            self._state.pop("codespace_name", None)
+            else:
+                print(f"  Saved Codespace '{self._codespace_name}' no longer exists — creating a new one...")
+                self._codespace_name = ""
+                self._state.pop("codespace_name", None)
+                existing = False
 
-        print(f"  Creating GitHub Codespace from {self._github_repo}...")
-        result = subprocess.run(
-            [
-                "gh", "codespace", "create",
-                "--repo", self._github_repo,
-                "--branch", CODESPACE_BRANCH,
-                "--devcontainer-path", ".devcontainer/kubernetes-agent/devcontainer.json",
-                "--machine", "basicLinux32gb",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        self._codespace_name = result.stdout.strip()
         if not self._codespace_name:
-            raise RuntimeError("gh codespace create did not return a codespace name")
-        print(f"  Codespace created: {self._codespace_name}")
+            print(f"  Creating GitHub Codespace from {self._github_repo}...")
+            result = subprocess.run(
+                [
+                    "gh", "codespace", "create",
+                    "--repo", self._github_repo,
+                    "--branch", CODESPACE_BRANCH,
+                    "--devcontainer-path", ".devcontainer/kubernetes-agent/devcontainer.json",
+                    "--machine", "basicLinux32gb",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self._codespace_name = result.stdout.strip()
+            if not self._codespace_name:
+                raise RuntimeError("gh codespace create did not return a codespace name")
+            print(f"  Codespace created: {self._codespace_name}")
 
-        # Persist the name so re-runs find the existing Codespace
-        self._state["codespace_name"] = self._codespace_name
-        self._save_file()
+            # Persist the name so re-runs find the existing Codespace
+            self._state["codespace_name"] = self._codespace_name
+            self._save_file()
 
         deadline = time.time() + CODESPACE_READY_TIMEOUT
 
         # Phase 1: wait for Codespace to reach Available state
-        print("  Waiting for Codespace to start...")
-        while time.time() < deadline:
-            state_result = subprocess.run(
-                ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "state"],
-                capture_output=True,
-                text=True,
-            )
-            if state_result.returncode == 0:
-                import json as _json
-                state = _json.loads(state_result.stdout).get("state", "")
-                if state == "Available":
-                    print("  Codespace is up.")
-                    break
-            time.sleep(CODESPACE_POLL_INTERVAL)
-        else:
-            raise RuntimeError(
-                f"Timed out waiting for Codespace '{self._codespace_name}' to start.\n"
-                "Re-run this command to retry."
-            )
+        if not existing:
+            print("  Waiting for Codespace to start...")
+            while time.time() < deadline:
+                state_result = subprocess.run(
+                    ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "state"],
+                    capture_output=True,
+                    text=True,
+                )
+                if state_result.returncode == 0:
+                    import json as _json
+                    state = _json.loads(state_result.stdout).get("state", "")
+                    if state == "Available":
+                        print("  Codespace is up.")
+                        break
+                time.sleep(CODESPACE_POLL_INTERVAL)
+            else:
+                raise RuntimeError(
+                    f"Timed out waiting for Codespace '{self._codespace_name}' to start.\n"
+                    "Re-run this command to retry."
+                )
 
         # Phase 2: wait for onCreate.sh to finish (kind cluster ready)
+        # Always poll — even for existing Codespaces that may still be initializing.
         print(
-            f"  Waiting for kind cluster to initialize inside Codespace "
-            f"(onCreate.sh installs kubectl/helm/kind and creates the cluster, ~5-10 min)..."
+            "  Waiting for kind cluster to be ready"
+            + (" (onCreate.sh installs kubectl/helm/kind and creates the cluster, ~5-10 min)..." if not existing else "...")
         )
         while time.time() < deadline:
             probe = subprocess.run(
