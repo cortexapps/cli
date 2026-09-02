@@ -58,7 +58,7 @@ resource "cortex_scorecard" "production_readiness" {
     {
       title       = "Has at least one link"
       description = "Service must have at least one link (runbook, docs, dashboard, etc.)."
-      expression  = "links().length > 0"
+      expression  = "links.length > 0"
       weight      = 1
       level       = "Silver"
     },
