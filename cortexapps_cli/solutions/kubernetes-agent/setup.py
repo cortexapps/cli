@@ -163,6 +163,7 @@ class KubernetesAgentSetup(SolutionSetup):
                 "--repo", self._github_repo,
                 "--branch", CODESPACE_BRANCH,
                 "--devcontainer-path", ".devcontainer/kubernetes-agent/devcontainer.json",
+                "--machine", "basicLinux32gb",
             ],
             check=True,
             capture_output=True,
