@@ -13,9 +13,9 @@ resource "cortex_scorecard" "production_readiness" {
   ladder = {
     levels = [
       {
-        name  = "Gold"
-        rank  = 3
-        color = "#D7AC58"
+        name  = "Bronze"
+        rank  = 1
+        color = "#CD7F32"
       },
       {
         name  = "Silver"
@@ -23,9 +23,9 @@ resource "cortex_scorecard" "production_readiness" {
         color = "#C0C0C0"
       },
       {
-        name  = "Bronze"
-        rank  = 1
-        color = "#CD7F32"
+        name  = "Gold"
+        rank  = 3
+        color = "#D7AC58"
       }
     ]
   }
