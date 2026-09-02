@@ -85,11 +85,11 @@ You'll be asked where to create the working directory (default: `~/parts-unlimit
 4. Run `terraform init` to download the Cortex provider
 5. Run `terraform apply` to create all entities in Cortex
 
-## Explore what was created
+## After Installing
 
-After install, browse your Cortex catalog filtered by the `terraform-demo` group to see all created entities. Open the **Terraform Demo Production Readiness** scorecard to see all 6 services at Bronze.
+Terraform created 13 entities in your Cortex catalog: 4 teams, 2 domains, and 7 services — all tagged with the `terraform-demo` group. Filter your catalog by that group to see them, or open the **Terraform Demo Production Readiness** scorecard to see all 6 services at Bronze.
 
-## Try the Delta
+### Try the Delta
 
 The delta shows what a real team PR looks like — modify a file, plan, apply, watch the scorecard update.
 
