@@ -179,8 +179,8 @@ class KubernetesAgentSetup(SolutionSetup):
         self._save_file()
 
         print(
-            f"  Waiting for Codespace and kind cluster to initialize "
-            f"(up to {CODESPACE_READY_TIMEOUT // 60} min)..."
+            f"  Codespace is up. Waiting for onCreate.sh to finish installing kind "
+            f"and creating the cluster (up to {CODESPACE_READY_TIMEOUT // 60} min)..."
         )
         deadline = time.time() + CODESPACE_READY_TIMEOUT
         while time.time() < deadline:
