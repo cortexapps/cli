@@ -56,9 +56,9 @@ resource "cortex_scorecard" "production_readiness" {
 
     # ── Silver ────────────────────────────────────────────────────────────────
     {
-      title       = "Has at least one link"
-      description = "Service must have at least one link (runbook, docs, dashboard, etc.)."
-      expression  = "links.length > 0"
+      title       = "Has runbook"
+      description = "Service must have a runbook link for operational readiness."
+      expression  = "links(\"runbook\").length > 0"
       weight      = 1
       level       = "Silver"
     },
@@ -93,9 +93,9 @@ resource "cortex_scorecard" "production_readiness" {
       level       = "Gold"
     },
     {
-      title       = "Has runbook"
-      description = "Service must have a runbook link for on-call responders."
-      expression  = "links(\"runbook\").length > 0"
+      title       = "Has documentation"
+      description = "Service must have a documentation link in addition to a runbook."
+      expression  = "links(\"documentation\").length > 0"
       weight      = 1
       level       = "Gold"
     }
