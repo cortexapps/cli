@@ -126,13 +126,10 @@ class TerraformSetup(SolutionSetup):
         self.mark_done("create_work_dir")
 
     def _copy_files(self) -> None:
-        if self.already_done("copy_files"):
-            return
         work_dir = Path(self._answers["work_dir"]).expanduser()
         for src in _TEMPLATES_DIR.iterdir():
             if src.is_file():
                 shutil.copy2(src, work_dir / src.name)
-        self.mark_done("copy_files")
 
     def _write_tfvars(self) -> None:
         if self.already_done("write_tfvars"):
