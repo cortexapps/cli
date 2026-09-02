@@ -9,6 +9,14 @@ resource "cortex_catalog_entity" "domain_supply_chain" {
   type        = "domain"
 
   groups = ["terraform-demo"]
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
+    }
+  ]
 }
 
 resource "cortex_catalog_entity" "inventory_service" {

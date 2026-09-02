@@ -571,19 +571,50 @@ def _apply_hyperlinks(line: str, entity_tags: set[str], ui_url: str) -> str:
 _GITHUB_BLOB = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions"
 
 
-def _extract_tf_entity_tags(solution_dir: Path) -> set[str]:
-    """Scan *.tf files under _templates/<solution>/ and return all tag = "..." values."""
-    tags: set[str] = set()
+def _parse_tf_tags_by_type(solution_dir: Path) -> tuple[set[str], set[str]]:
+    """Scan *.tf files under _templates/<solution>/ and return (entity_tags, scorecard_tags)."""
+    entity_tags: set[str] = set()
+    scorecard_tags: set[str] = set()
     templates = next(
         (d for d in (solution_dir / "_templates").iterdir() if d.is_dir() and not d.name.endswith("-delta")),
         None,
     ) if (solution_dir / "_templates").exists() else None
     if templates is None:
-        return tags
+        return entity_tags, scorecard_tags
     for tf in templates.glob("*.tf"):
-        for m in re.finditer(r'\btag\s*=\s*"([^"]+)"', tf.read_text(encoding="utf-8")):
-            tags.add(m.group(1))
-    return tags
+        current_type: str | None = None
+        depth = 0
+        for line in tf.read_text(encoding="utf-8").split("\n"):
+            m = re.match(r'\s*resource\s+"(cortex_\w+)"\s+"[^"]+"\s*\{', line)
+            if m:
+                current_type = m.group(1)
+                depth = 1
+                continue
+            if current_type:
+                depth += line.count("{") - line.count("}")
+                if depth <= 0:
+                    current_type = None
+                    depth = 0
+                    continue
+                tm = re.search(r'\btag\s*=\s*"([^"]+)"', line)
+                if tm:
+                    if current_type == "cortex_catalog_entity":
+                        entity_tags.add(tm.group(1))
+                    elif current_type == "cortex_scorecard":
+                        scorecard_tags.add(tm.group(1))
+    return entity_tags, scorecard_tags
+
+
+def _extract_tf_entity_tags(solution_dir: Path) -> set[str]:
+    """Return only cortex_catalog_entity tags from .tf template files."""
+    entity_tags, _ = _parse_tf_tags_by_type(solution_dir)
+    return entity_tags
+
+
+def _extract_tf_scorecard_tags(solution_dir: Path) -> set[str]:
+    """Return only cortex_scorecard tags from .tf template files."""
+    _, scorecard_tags = _parse_tf_tags_by_type(solution_dir)
+    return scorecard_tags
 
 
 def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
@@ -613,9 +644,18 @@ def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
     return "".join(parts)
 
 
+def _apply_scorecard_hyperlinks(line: str, scorecard_tags: set[str], ui_url: str) -> str:
+    """Replace scorecard tags in a line with OSC 8 links to the scorecard page."""
+    for tag in sorted(scorecard_tags, key=len, reverse=True):
+        if tag in line:
+            line = line.replace(tag, _osc8(f"{ui_url}/admin/scorecards/{tag}", tag))
+    return line
+
+
 def _show_diagram(
     readme: str,
     entity_tags: set[str] | None = None,
+    scorecard_tags: set[str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
     solution_tag: str = "",
 ) -> None:
@@ -630,24 +670,33 @@ def _show_diagram(
         if links_supported:
             if entity_tags:
                 line = _apply_hyperlinks(line, entity_tags, ui_url)
+            if scorecard_tags:
+                line = _apply_scorecard_hyperlinks(line, scorecard_tags, ui_url)
             if solution_tag:
                 line = _apply_file_hyperlinks(line, solution_tag)
         # Use print() not console.print(): Rich counts OSC 8 escape bytes as
         # visible characters, shifting ASCII art alignment.
         print(f"  {line}")
 
-    if entity_tags and not links_supported:
-        diagram_tags = sorted(
-            (tag for tag in entity_tags if tag in block),
+    all_tags_in_block = (entity_tags or set()) | (scorecard_tags or set())
+    if all_tags_in_block and not links_supported:
+        entity_rows = sorted(
+            (tag for tag in (entity_tags or set()) if tag in block),
             key=lambda t: t.lower(),
         )
-        if diagram_tags:
+        scorecard_rows = sorted(
+            (tag for tag in (scorecard_tags or set()) if tag in block),
+            key=lambda t: t.lower(),
+        )
+        if entity_rows or scorecard_rows:
             print()
             table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2, 0, 0))
             table.add_column("Entity")
             table.add_column("URL")
-            for tag in diagram_tags:
+            for tag in entity_rows:
                 table.add_row(tag, f"{ui_url}/admin/resources?tag={tag}")
+            for tag in scorecard_rows:
+                table.add_row(tag, f"{ui_url}/admin/scorecards/{tag}")
             console.print(table)
 
 
@@ -664,6 +713,7 @@ def _post_install_menu(
     readme: str,
     import_report: str = "",
     entity_tags: set[str] | None = None,
+    scorecard_tags: set[str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
     solution_tag: str = "",
 ) -> None:
@@ -672,7 +722,7 @@ def _post_install_menu(
         ("2", "Next steps"),
     ]
     actions = {
-        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url, solution_tag=solution_tag),
+        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, scorecard_tags=scorecard_tags, ui_url=ui_url, solution_tag=solution_tag),
         "2": lambda: _show_next_steps(readme),
     }
     if import_report:
@@ -779,6 +829,7 @@ def install(
         readme = _get_readme(solution, solutions_dir)
         if readme:
             entity_tags: set[str] = set()
+            scorecard_tags: set[str] = set()
             ui_url = _get_ui_url(ctx)
             try:
                 if solutions_dir:
@@ -789,9 +840,11 @@ def install(
                 entity_tags = set(resources.get("catalog", []))
                 if solutions_dir:
                     entity_tags |= _extract_tf_entity_tags(root / solution)
+                    scorecard_tags |= _extract_tf_scorecard_tags(root / solution)
                 else:
                     with as_file(root / solution) as sp:
                         entity_tags |= _extract_tf_entity_tags(sp)
+                        scorecard_tags |= _extract_tf_scorecard_tags(sp)
             except Exception:
                 pass
             has_import_results = bool(
@@ -801,6 +854,7 @@ def install(
                 readme,
                 import_report=output if has_import_results else "",
                 entity_tags=entity_tags,
+                scorecard_tags=scorecard_tags,
                 ui_url=ui_url,
                 solution_tag=solution,
             )

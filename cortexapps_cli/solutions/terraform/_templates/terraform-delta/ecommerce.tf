@@ -10,6 +10,14 @@ resource "cortex_catalog_entity" "domain_ecommerce" {
   type        = "domain"
 
   groups = ["terraform-demo"]
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    }
+  ]
 }
 
 # CHANGED: description expanded (≥30 chars for Silver rule 3),
