@@ -1,0 +1,113 @@
+# scorecards.tf — Platform-owned
+# Defines the Production Readiness scorecard.
+# Bronze: automatically achieved by all properly-defined services.
+# Silver: requires adding links and metadata — see the delta.
+# Gold: requires shared ownership and a rich description — aspirational.
+
+resource "cortex_scorecard" "production_readiness" {
+  tag         = "production-readiness"
+  name        = "Production Readiness"
+  description = "Measures how production-ready a Parts Unlimited service is. Bronze is table stakes; Gold is the aspirational standard."
+  draft       = false
+
+  ladder = {
+    levels = [
+      {
+        name  = "Gold"
+        rank  = 3
+        color = "#D7AC58"
+      },
+      {
+        name  = "Silver"
+        rank  = 2
+        color = "#C0C0C0"
+      },
+      {
+        name  = "Bronze"
+        rank  = 1
+        color = "#CD7F32"
+      }
+    ]
+  }
+
+  rules = [
+    # ── Bronze ────────────────────────────────────────────────────────────────
+    {
+      title       = "Has description"
+      description = "Service must have a non-empty description."
+      expression  = "entity.description().length > 0"
+      weight      = 1
+      level       = "Bronze"
+    },
+    {
+      title       = "Has owner team"
+      description = "Service must be owned by at least one team."
+      expression  = "owners.teams.size() > 0"
+      weight      = 1
+      level       = "Bronze"
+    },
+    {
+      title       = "Has git configured"
+      description = "Service must have a git repository linked."
+      expression  = "git != null"
+      weight      = 1
+      level       = "Bronze"
+    },
+
+    # ── Silver ────────────────────────────────────────────────────────────────
+    {
+      title       = "Has at least one link"
+      description = "Service must have at least one link (runbook, docs, dashboard, etc.)."
+      expression  = "links.size() > 0"
+      weight      = 1
+      level       = "Silver"
+    },
+    {
+      title       = "Has terraform-workspace metadata"
+      description = "Service must declare its Terraform workspace via the terraform-workspace metadata key."
+      expression  = "customData.exists(d, d.key == \"terraform-workspace\")"
+      weight      = 1
+      level       = "Silver"
+    },
+    {
+      title       = "Meaningful description"
+      description = "Service description should be at least 30 characters."
+      expression  = "entity.description().length >= 30"
+      weight      = 1
+      level       = "Silver"
+    },
+
+    # ── Gold ──────────────────────────────────────────────────────────────────
+    {
+      title       = "Rich description"
+      description = "Service description should be at least 50 characters."
+      expression  = "entity.description().length >= 50"
+      weight      = 1
+      level       = "Gold"
+    },
+    {
+      title       = "Shared ownership"
+      description = "Critical services should be owned by at least two teams to avoid single points of knowledge."
+      expression  = "owners.teams.size() >= 2"
+      weight      = 1
+      level       = "Gold"
+    },
+    {
+      title       = "Has runbook"
+      description = "Service must have a runbook link for on-call responders."
+      expression  = "links.exists(l, l.type == \"runbook\")"
+      weight      = 1
+      level       = "Gold"
+    }
+  ]
+
+  filter = {
+    types = {
+      include = ["service"]
+    }
+  }
+
+  evaluation = {
+    window = 24
+  }
+}
