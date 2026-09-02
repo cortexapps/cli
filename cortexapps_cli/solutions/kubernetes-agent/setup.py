@@ -199,12 +199,11 @@ class KubernetesAgentSetup(SolutionSetup):
             self._state["codespace_name"] = self._codespace_name
             self._save_file()
 
-        deadline = time.time() + CODESPACE_READY_TIMEOUT
-
-        # Phase 1: wait for Codespace to reach Available state
+        # Phase 1: wait for Codespace to reach Available state (own deadline)
         if not existing:
             print("  Waiting for Codespace to start...")
-            while time.time() < deadline:
+            phase1_deadline = time.time() + CODESPACE_READY_TIMEOUT
+            while time.time() < phase1_deadline:
                 state_result = subprocess.run(
                     ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "state"],
                     capture_output=True,
@@ -224,7 +223,9 @@ class KubernetesAgentSetup(SolutionSetup):
                 )
 
         # Phase 2: wait for onCreate.sh to finish (kind cluster ready)
+        # Fresh deadline — Phase 1 timing does not eat into this budget.
         # Always poll — even for existing Codespaces that may still be initializing.
+        deadline = time.time() + CODESPACE_READY_TIMEOUT
         print("  Waiting for kind cluster to be ready (may take 15-20 min on first run)...")
         while time.time() < deadline:
             # Single SSH call: check failure sentinel and cluster readiness together
