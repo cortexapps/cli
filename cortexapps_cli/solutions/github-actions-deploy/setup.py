@@ -200,11 +200,11 @@ class GitHubActionsSetup(SolutionSetup):
         repo = self._answers["repo_name"]
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        cortex_url = f"{app_url}/admin/resources?tag=github-actions-demo"
+        cortex_url = f"{app_url}/admin/service/github-actions-demo"
         gh_url = f"https://github.com/{owner}/{repo}"
 
         workflow_tag = "github-actions-deploy"
-        entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
+        entity_url = f"{app_url}/admin/service/github-actions-demo"
         workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
 
         if self._answers.get("github_integration_alias"):
@@ -367,7 +367,7 @@ class GitHubActionsSetup(SolutionSetup):
         base_url = self._answers["cortex_base_url"].rstrip("/")
         api_key = self._answers["cortex_api_key"]
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
+        entity_url = f"{app_url}/admin/service/github-actions-demo"
 
         yaml_content = f"""\
 openapi: "3.0.0"

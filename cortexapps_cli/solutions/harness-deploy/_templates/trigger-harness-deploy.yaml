@@ -26,7 +26,7 @@ runResponseTemplate: |
 
   **Pipeline:** [{{variables.harness-pipeline}} in {{variables.harness-org}}/{{variables.harness-project}}](https://app.harness.io/ng/account/PLACEHOLDER_HARNESS_ACCOUNT_ID/cd/orgs/{{variables.harness-org}}/projects/{{variables.harness-project}}/pipelines/{{variables.harness-pipeline}}/executions)
 
-  **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/resources?tag={{context.entity.tag}})
+  **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/service/{{context.entity.tag}})
 
   ---
 
