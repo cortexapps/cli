@@ -134,6 +134,15 @@ class KubernetesAgentSetup(SolutionSetup):
     # Step: Create GitHub Codespace (codespace mode only)
     # -------------------------------------------------------------------------
 
+    def _fetch_codespace_log(self) -> str:
+        """Fetch /tmp/onCreate.log from the Codespace, or a placeholder if unavailable."""
+        result = subprocess.run(
+            ["gh", "codespace", "ssh", "-c", self._codespace_name, "--", "cat", "/tmp/onCreate.log"],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip() if result.stdout.strip() else "(log not available)"
+
     def _check_gh_cli(self) -> None:
         """Verify gh CLI is installed and authenticated."""
         if subprocess.run(["gh", "--version"], capture_output=True).returncode != 0:
@@ -236,19 +245,17 @@ class KubernetesAgentSetup(SolutionSetup):
                 print("  Kind cluster is ready.")
                 return
             if output.startswith("FAILED"):
+                log = self._fetch_codespace_log()
                 raise RuntimeError(
-                    f"onCreate.sh failed in Codespace '{self._codespace_name}'.\n"
-                    "Check the log for details:\n"
-                    f"  gh codespace ssh -c {self._codespace_name}\n"
-                    "  cat /tmp/onCreate.log"
+                    f"onCreate.sh failed in Codespace '{self._codespace_name}'.\n\n"
+                    f"--- /tmp/onCreate.log ---\n{log}\n---"
                 )
             time.sleep(CODESPACE_POLL_INTERVAL)
 
+        log = self._fetch_codespace_log()
         raise RuntimeError(
-            f"Timed out waiting for the kind cluster in Codespace '{self._codespace_name}'.\n"
-            "Check the log for details:\n"
-            f"  gh codespace ssh -c {self._codespace_name}\n"
-            "  cat /tmp/onCreate.log\n"
+            f"Timed out waiting for the kind cluster in Codespace '{self._codespace_name}'.\n\n"
+            f"--- /tmp/onCreate.log ---\n{log}\n---\n\n"
             "Re-run this command to retry once the cluster is ready."
         )
 
