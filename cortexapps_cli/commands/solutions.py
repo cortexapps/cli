@@ -616,14 +616,16 @@ def _post_install_menu(
     options = [
         ("1", "Data Model"),
         ("2", "Next steps"),
-        ("3", "Import report"),
-        ("4", "Exit"),
     ]
     actions = {
         "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url),
         "2": lambda: _show_next_steps(readme),
-        "3": lambda: (console.print(), typer.echo(import_report)),
     }
+    if import_report:
+        options.append(("3", "Import report"))
+        actions["3"] = lambda: (console.print(), typer.echo(import_report))
+    exit_key = str(len(options) + 1)
+    options.append((exit_key, "Exit"))
 
     while True:
         console.print()
@@ -634,7 +636,7 @@ def _post_install_menu(
 
         choice = Prompt.ask("Choice", choices=[k for k, _ in options], show_choices=False)
 
-        if choice == "4":
+        if choice == exit_key:
             break
         actions[choice]()
 
