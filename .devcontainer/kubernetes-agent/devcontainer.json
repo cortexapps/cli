@@ -9,5 +9,5 @@
     "CORTEX_API_KEY": "${localEnv:CORTEX_API_KEY}",
     "GHCR_TOKEN": "${localEnv:GHCR_TOKEN}"
   },
-  "postCreateMessage": "Run: cortex solutions install -s kubernetes-agent && cortex solutions post-install -s kubernetes-agent"
+  "postCreateMessage": "kind cluster is ready. Run cortex solutions post-install -s kubernetes-agent from your local machine."
 }

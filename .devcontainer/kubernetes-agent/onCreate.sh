@@ -34,7 +34,4 @@ kind create cluster --name cortex-demo --wait 60s
 echo "==> Verifying cluster..."
 kubectl cluster-info --context kind-cortex-demo
 
-echo "==> Installing cortexapps-cli..."
-python3 -m pip install cortexapps-cli --quiet
-
-echo "==> Done. Run: cortex solutions post-install -s kubernetes-agent"
+echo "==> Done."
