@@ -7,6 +7,48 @@ description: Manage your Cortex catalog as code using the Cortex Terraform provi
 
 The [Cortex Terraform provider](https://github.com/cortexapps/terraform-provider-cortex) lets you define your entire service catalog — teams, services, domains, scorecards — as HCL code in `.tf` files. Changes go through PR review and apply automatically on merge, giving you a fully auditable, GitOps-driven catalog.
 
+## Data Model
+
+```
+  ┌─────────────────────────────────────────────────┐
+  │               Terraform Repo                    │
+  │                                                 │
+  │  teams.tf          scorecards.tf                │
+  │  ecommerce.tf      provider.tf                  │
+  │  supply-chain.tf   variables.tf                 │
+  └──────────────────────┬──────────────────────────┘
+                         │
+                         │  terraform apply
+                         │
+                         ▼
+  ┌─────────────────────────────────────────────────┐
+  │               Cortex Catalog                    │
+  │                                                 │
+  │  Teams                                          │
+  │  ┌───────────────────────────────────────────┐  │
+  │  │  team-development   team-security         │  │
+  │  │  team-operations    team-qa               │  │
+  │  └───────────────────────────────────────────┘  │
+  │                                                 │
+  │  Domains                                        │
+  │  ┌───────────────────────────────────────────┐  │
+  │  │  domain-ecommerce   domain-supply-chain   │  │
+  │  └───────────────────────────────────────────┘  │
+  │                                                 │
+  │  Services                                       │
+  │  ┌───────────────────────────────────────────┐  │
+  │  │  phoenix            inventory-service     │  │
+  │  │  parts-catalog-api  ordering-service      │  │
+  │  │  payments-service   shipping-service      │  │
+  │  └───────────────────────────────────────────┘  │
+  │                                                 │
+  │  Scorecard                                      │
+  │  ┌───────────────────────────────────────────┐  │
+  │  │  terraform-demo-production-readiness      │  │
+  │  └───────────────────────────────────────────┘  │
+  └─────────────────────────────────────────────────┘
+```
+
 ## What is HCL?
 
 HCL (HashiCorp Configuration Language) is the declarative language used in `.tf` files. It reads like structured config rather than code:
