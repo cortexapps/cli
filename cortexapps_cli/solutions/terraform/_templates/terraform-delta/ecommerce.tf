@@ -13,7 +13,8 @@ resource "cortex_catalog_entity" "domain_ecommerce" {
 }
 
 # CHANGED: description expanded (≥30 chars for Silver rule 3),
-#          links added (Silver rule 1), metadata added (Silver rule 2)
+#          links added (Silver rule 1 + Gold runbook rule), metadata added (Silver rule 2)
+# NOTE: Phoenix reaches Silver only — Gold requires ownership.teams().length >= 2 (shared ownership)
 resource "cortex_catalog_entity" "phoenix" {
   tag         = "phoenix"
   name        = "The Phoenix Project"
@@ -41,6 +42,11 @@ resource "cortex_catalog_entity" "phoenix" {
       name = "Runbook"
       type = "runbook"
       url  = "https://wiki.parts-unlimited.com/runbooks/phoenix"
+    },
+    {
+      name = "Architecture Docs"
+      type = "documentation"
+      url  = "https://wiki.parts-unlimited.com/architecture/phoenix"
     }
   ]
 
