@@ -571,6 +571,21 @@ def _apply_hyperlinks(line: str, entity_tags: set[str], ui_url: str) -> str:
 _GITHUB_BLOB = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions"
 
 
+def _extract_tf_entity_tags(solution_dir: Path) -> set[str]:
+    """Scan *.tf files under _templates/<solution>/ and return all tag = "..." values."""
+    tags: set[str] = set()
+    templates = next(
+        (d for d in (solution_dir / "_templates").iterdir() if d.is_dir() and not d.name.endswith("-delta")),
+        None,
+    ) if (solution_dir / "_templates").exists() else None
+    if templates is None:
+        return tags
+    for tf in templates.glob("*.tf"):
+        for m in re.finditer(r'\btag\s*=\s*"([^"]+)"', tf.read_text(encoding="utf-8")):
+            tags.add(m.group(1))
+    return tags
+
+
 def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
     """Replace bare filenames in the diagram with OSC 8 links to GitHub blob URLs."""
     base = f"{_GITHUB_BLOB}/{solution_tag}/_templates/{solution_tag}"
@@ -772,9 +787,23 @@ def install(
                     with as_file(root / solution) as sp:
                         resources = _collect_solution_resources(sp)
                 entity_tags = set(resources.get("catalog", []))
+                if solutions_dir:
+                    entity_tags |= _extract_tf_entity_tags(root / solution)
+                else:
+                    with as_file(root / solution) as sp:
+                        entity_tags |= _extract_tf_entity_tags(sp)
             except Exception:
                 pass
-            _post_install_menu(readme, import_report=output, entity_tags=entity_tags, ui_url=ui_url, solution_tag=solution)
+            has_import_results = bool(
+                total_match and (int(total_match.group(1)) > 0 or int(total_match.group(2)) > 0)
+            )
+            _post_install_menu(
+                readme,
+                import_report=output if has_import_results else "",
+                entity_tags=entity_tags,
+                ui_url=ui_url,
+                solution_tag=solution,
+            )
 
 
 @app.command(name="post-install")
