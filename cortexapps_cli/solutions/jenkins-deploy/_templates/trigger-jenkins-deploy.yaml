@@ -17,7 +17,7 @@ runResponseTemplate: |
 
   **Job:** [{{variables.jenkins-job}}](JENKINS_BASE_URL/job/{{variables.jenkins-job}})
 
-  **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/service/{{context.entity.tag}})
+  **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/resources?tag={{context.entity.tag}})
 
   ---
 

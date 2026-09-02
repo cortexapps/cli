@@ -7,13 +7,13 @@ description: Use when generating or displaying URLs to the Cortex web applicatio
 
 ## STOP — memorize this before writing any URL or user-facing text
 
-The entity page URL is `/admin/service/<tag>` — **NOT** `/admin/resources?tag=<tag>` and **NOT** `/admin/catalog/<tag>`.
+The entity page URL is `/admin/resources?tag=<tag>` — **NOT** `/admin/service/<tag>` and **NOT** `/admin/catalog/<tag>`.
 
 Do not guess. Use the table below.
 
 ## Terminology
 
-The correct term is **entity** (or **entities**). The word **resource** / **resources** is retired and must not appear in user-facing output, CLI messages, or documentation.
+The correct term is **entity** (or **entities**). The word **resource** / **resources** is retired and must not appear in user-facing output, CLI messages, or documentation. The URL path `/admin/resources` is a legacy route but is the correct one to use for entity pages.
 
 ## API vs App domains
 
@@ -31,13 +31,21 @@ app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_ur
 ## Entity page URL
 
 ```
-https://app.getcortexapp.com/admin/service/<entity-tag>
+https://app.getcortexapp.com/admin/resources?tag=<entity-tag>
 ```
 
-Example: `https://app.getcortexapp.com/admin/service/github-actions-demo`
+Example: `https://app.getcortexapp.com/admin/resources?tag=phoenix`
 
-**NOT** `/admin/resources?tag=<tag>` — legacy route, does not work correctly.
+**NOT** `/admin/service/<tag>` — type-specific path; teams and domains return "No entity".
 **NOT** `/admin/catalog/<tag>` — that path does not exist.
+
+## Deploys page URL (entity subpage — requires numeric ID, not tag)
+
+```
+https://app.getcortexapp.com/admin/service/<numeric-entity-id>/deploys
+```
+
+Use `GET /api/v1/catalog/<tag>` → `.id` to get the numeric ID.
 
 ## Scorecard page URL
 
@@ -49,8 +57,7 @@ https://app.getcortexapp.com/admin/scorecards/<scorecard-tag>
 
 | Page | URL pattern |
 |------|-------------|
-| All entities | `https://app.getcortexapp.com/admin/catalog` |
-| Entity | `https://app.getcortexapp.com/admin/service/<tag>` |
+| Entity | `https://app.getcortexapp.com/admin/resources?tag=<tag>` |
 | Scorecard | `https://app.getcortexapp.com/admin/scorecards/<tag>` |
 | Catalogs | `https://app.getcortexapp.com/admin/catalogs` |
 | Initiatives | `https://app.getcortexapp.com/admin/initiatives` |

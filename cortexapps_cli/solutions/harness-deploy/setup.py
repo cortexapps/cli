@@ -231,7 +231,7 @@ class HarnessDeploySetup(SolutionSetup):
         base_url = self._answers["cortex_base_url"].rstrip("/")
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
         entity_tag = self._answers["entity_tag"]
-        cortex_url = f"{app_url}/admin/service/{entity_tag}"
+        cortex_url = f"{app_url}/admin/resources?tag={entity_tag}"
 
         harness_pipeline_url = (
             f"{self._harness_base()}/ng/account/{self._harness_account()}"

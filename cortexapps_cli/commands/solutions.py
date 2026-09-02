@@ -562,7 +562,7 @@ def _apply_hyperlinks(line: str, entity_tags: set[str], ui_url: str) -> str:
     cur = 0
     for start, end, tag in matches:
         parts.append(line[cur:start])
-        parts.append(_osc8(f"{ui_url}/admin/service/{tag}", tag))
+        parts.append(_osc8(f"{ui_url}/admin/resources?tag={tag}", tag))
         cur = end
     parts.append(line[cur:])
     return "".join(parts)
@@ -647,7 +647,7 @@ def _show_diagram(
             table.add_column("Entity")
             table.add_column("URL")
             for tag in diagram_tags:
-                table.add_row(tag, f"{ui_url}/admin/service/{tag}")
+                table.add_row(tag, f"{ui_url}/admin/resources?tag={tag}")
             console.print(table)
 
 
