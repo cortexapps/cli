@@ -129,7 +129,19 @@ You'll be asked where to create the working directory (default: `~/parts-unlimit
 
 ## After Installing
 
-Terraform created 13 entities in your Cortex catalog: 4 teams, 2 domains, and 7 services — all tagged with the `terraform-demo` group. Filter your catalog by that group to see them, or open the **Terraform Demo Production Readiness** scorecard to see all 6 services at Bronze.
+Terraform created 13 entities in your Cortex catalog: 4 teams, 2 domains, and 6 services — all tagged with the `terraform-demo` group.
+
+**Create a catalog to filter to the demo entities**
+
+1. Go to [Catalogs](https://app.getcortexapp.com/admin/catalogs) → **New Catalog**
+2. Name it **Terraform Demo**
+3. Set the catalog filter:
+   - **Entity type:** `service`
+   - **Advanced options → Groups → Include:** `terraform-demo`
+
+**Open the scorecard**
+
+Open [Terraform Demo Production Readiness](https://app.getcortexapp.com/admin/scorecards/terraform-demo-production-readiness) to see all 6 services at Bronze.
 
 ### Try the Delta
 
@@ -159,7 +171,7 @@ terraform apply
 
 **Step 4: Check the scorecard**
 
-Open Terraform Demo Production Readiness in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
+Open [Terraform Demo Production Readiness](https://app.getcortexapp.com/admin/scorecards/terraform-demo-production-readiness) in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
 
 ## File Walkthrough
 

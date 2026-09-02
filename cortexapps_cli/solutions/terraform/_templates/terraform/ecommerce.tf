@@ -35,6 +35,14 @@ resource "cortex_catalog_entity" "phoenix" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    }
+  ]
 }
 
 resource "cortex_catalog_entity" "parts_catalog_api" {
@@ -58,6 +66,14 @@ resource "cortex_catalog_entity" "parts_catalog_api" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    }
+  ]
 }
 
 resource "cortex_catalog_entity" "payments_service" {
@@ -81,4 +97,12 @@ resource "cortex_catalog_entity" "payments_service" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    }
+  ]
 }

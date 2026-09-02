@@ -39,6 +39,11 @@ resource "cortex_catalog_entity" "phoenix" {
 
   links = [
     {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    },
+    {
       name = "Runbook"
       type = "runbook"
       url  = "https://wiki.parts-unlimited.com/runbooks/phoenix"
@@ -76,6 +81,14 @@ resource "cortex_catalog_entity" "parts_catalog_api" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    }
+  ]
 }
 
 resource "cortex_catalog_entity" "payments_service" {
@@ -99,6 +112,14 @@ resource "cortex_catalog_entity" "payments_service" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
+    }
+  ]
 }
 
 # NEW SERVICE — will show as `+ create` in terraform plan
@@ -123,4 +144,12 @@ resource "cortex_catalog_entity" "notification_service" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform-delta/ecommerce.tf"
+    }
+  ]
 }

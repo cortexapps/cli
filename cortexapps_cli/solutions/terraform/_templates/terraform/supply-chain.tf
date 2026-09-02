@@ -32,6 +32,14 @@ resource "cortex_catalog_entity" "inventory_service" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
+    }
+  ]
 }
 
 resource "cortex_catalog_entity" "ordering_service" {
@@ -55,6 +63,14 @@ resource "cortex_catalog_entity" "ordering_service" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
+    }
+  ]
 }
 
 resource "cortex_catalog_entity" "shipping_service" {
@@ -78,4 +94,12 @@ resource "cortex_catalog_entity" "shipping_service" {
       base_path  = "/"
     }
   }
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
+    }
+  ]
 }

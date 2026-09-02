@@ -10,6 +10,14 @@ resource "cortex_catalog_entity" "team_development" {
 
   groups = ["terraform-demo"]
 
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
+    }
+  ]
+
   team = {
     members = [
       {
@@ -43,6 +51,14 @@ resource "cortex_catalog_entity" "team_operations" {
 
   groups = ["terraform-demo"]
 
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
+    }
+  ]
+
   team = {
     members = [
       {
@@ -66,6 +82,14 @@ resource "cortex_catalog_entity" "team_security" {
 
   groups = ["terraform-demo"]
 
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
+    }
+  ]
+
   team = {
     members = [
       {
@@ -83,6 +107,14 @@ resource "cortex_catalog_entity" "team_qa" {
   description = "Testing, QA, and release verification for Parts Unlimited services."
 
   groups = ["terraform-demo"]
+
+  links = [
+    {
+      name = "Terraform Source"
+      type = "source"
+      url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
+    }
+  ]
 
   team = {
     members = [
