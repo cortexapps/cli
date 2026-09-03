@@ -4,7 +4,7 @@
 #          notification-service added (new Bronze service)
 
 resource "cortex_catalog_entity" "domain_ecommerce" {
-  tag         = "domain-ecommerce"
+  tag         = "terraform-demo-domain-ecommerce"
   name        = "E-Commerce"
   description = "Customer-facing e-commerce platform including product catalog, checkout, and payments."
   type        = "domain"
@@ -24,13 +24,13 @@ resource "cortex_catalog_entity" "domain_ecommerce" {
 #          links added (Silver rule 1 + Gold runbook rule), metadata added (Silver rule 2)
 # NOTE: Phoenix reaches Silver only — Gold requires ownership.teams().length >= 2 (shared ownership)
 resource "cortex_catalog_entity" "phoenix" {
-  tag         = "phoenix"
+  tag         = "terraform-demo-phoenix"
   name        = "The Phoenix Project"
   description = "Main e-commerce monolith for Parts Unlimited, handling product browsing, cart, and checkout flows."
 
   owners = [
     {
-      name     = "team-development"
+      name     = "terraform-demo-team-development"
       type     = "group"
       provider = "CORTEX"
     }
@@ -69,13 +69,13 @@ resource "cortex_catalog_entity" "phoenix" {
 }
 
 resource "cortex_catalog_entity" "parts_catalog_api" {
-  tag         = "parts-catalog-api"
+  tag         = "terraform-demo-parts-catalog-api"
   name        = "Parts Catalog API"
   description = "REST API for browsing the parts catalog."
 
   owners = [
     {
-      name     = "team-development"
+      name     = "terraform-demo-team-development"
       type     = "group"
       provider = "CORTEX"
     }
@@ -100,13 +100,13 @@ resource "cortex_catalog_entity" "parts_catalog_api" {
 }
 
 resource "cortex_catalog_entity" "payments_service" {
-  tag         = "payments-service"
+  tag         = "terraform-demo-payments-service"
   name        = "Payments Service"
   description = "Payment processing and refund handling."
 
   owners = [
     {
-      name     = "team-development"
+      name     = "terraform-demo-team-development"
       type     = "group"
       provider = "CORTEX"
     }
@@ -132,13 +132,13 @@ resource "cortex_catalog_entity" "payments_service" {
 
 # NEW SERVICE — will show as `+ create` in terraform plan
 resource "cortex_catalog_entity" "notification_service" {
-  tag         = "notification-service"
+  tag         = "terraform-demo-notification-service"
   name        = "Notification Service"
   description = "Handles email, SMS, and push notifications for Parts Unlimited customer events."
 
   owners = [
     {
-      name     = "team-development"
+      name     = "terraform-demo-team-development"
       type     = "group"
       provider = "CORTEX"
     }

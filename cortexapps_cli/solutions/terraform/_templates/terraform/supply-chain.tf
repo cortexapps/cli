@@ -3,7 +3,7 @@
 # The supply chain team submits PRs to this file to add/update services.
 
 resource "cortex_catalog_entity" "domain_supply_chain" {
-  tag         = "domain-supply-chain"
+  tag         = "terraform-demo-domain-supply-chain"
   name        = "Supply Chain"
   description = "Inventory, ordering, and shipping services supporting Parts Unlimited's fulfillment operations."
   type        = "domain"
@@ -20,13 +20,13 @@ resource "cortex_catalog_entity" "domain_supply_chain" {
 }
 
 resource "cortex_catalog_entity" "inventory_service" {
-  tag         = "inventory-service"
+  tag         = "terraform-demo-inventory-service"
   name        = "Inventory Service"
   description = "Real-time inventory tracking across all Parts Unlimited warehouses."
 
   owners = [
     {
-      name     = "team-operations"
+      name     = "terraform-demo-team-operations"
       type     = "group"
       provider = "CORTEX"
     }
@@ -51,13 +51,13 @@ resource "cortex_catalog_entity" "inventory_service" {
 }
 
 resource "cortex_catalog_entity" "ordering_service" {
-  tag         = "ordering-service"
+  tag         = "terraform-demo-ordering-service"
   name        = "Ordering Service"
   description = "Order placement, validation, and fulfillment coordination."
 
   owners = [
     {
-      name     = "team-development"
+      name     = "terraform-demo-team-development"
       type     = "group"
       provider = "CORTEX"
     }
@@ -82,13 +82,13 @@ resource "cortex_catalog_entity" "ordering_service" {
 }
 
 resource "cortex_catalog_entity" "shipping_service" {
-  tag         = "shipping-service"
+  tag         = "terraform-demo-shipping-service"
   name        = "Shipping Service"
   description = "Shipping and logistics tracking for Parts Unlimited orders."
 
   owners = [
     {
-      name     = "team-operations"
+      name     = "terraform-demo-team-operations"
       type     = "group"
       provider = "CORTEX"
     }

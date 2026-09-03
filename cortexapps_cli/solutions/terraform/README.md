@@ -10,43 +10,49 @@ The [Cortex Terraform provider](https://github.com/cortexapps/terraform-provider
 ## Data Model
 
 ```
-  ┌─────────────────────────────────────────────────┐
-  │               Terraform Repo                    │
-  │                                                 │
-  │  teams.tf          scorecards.tf                │
-  │  ecommerce.tf      provider.tf                  │
-  │  supply-chain.tf   variables.tf                 │
-  └──────────────────────┬──────────────────────────┘
-                         │
-                         │  terraform apply
-                         │
-                         ▼
-  ┌─────────────────────────────────────────────────┐
-  │               Cortex Catalog                    │
-  │                                                 │
-  │  Teams                                          │
-  │  ┌───────────────────────────────────────────┐  │
-  │  │  team-development   team-security         │  │
-  │  │  team-operations    team-qa               │  │
-  │  └───────────────────────────────────────────┘  │
-  │                                                 │
-  │  Domains                                        │
-  │  ┌───────────────────────────────────────────┐  │
-  │  │  domain-ecommerce   domain-supply-chain   │  │
-  │  └───────────────────────────────────────────┘  │
-  │                                                 │
-  │  Services                                       │
-  │  ┌───────────────────────────────────────────┐  │
-  │  │  phoenix            inventory-service     │  │
-  │  │  parts-catalog-api  ordering-service      │  │
-  │  │  payments-service   shipping-service      │  │
-  │  └───────────────────────────────────────────┘  │
-  │                                                 │
-  │  Scorecard                                      │
-  │  ┌───────────────────────────────────────────┐  │
-  │  │  terraform-demo-production-readiness      │  │
-  │  └───────────────────────────────────────────┘  │
-  └─────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────┐
+  │                   Terraform Repo                     │
+  │                                                      │
+  │  teams.tf          scorecards.tf                     │
+  │  ecommerce.tf      provider.tf                       │
+  │  supply-chain.tf   variables.tf                      │
+  └─────────────────────────────┬────────────────────────┘
+                                │
+                                │  terraform apply
+                                │
+                                ▼
+  ┌──────────────────────────────────────────────────────┐
+  │                   Cortex Catalog                     │
+  │                                                      │
+  │  Teams                                               │
+  │  ┌────────────────────────────────────────────────┐  │
+  │  │  terraform-demo-team-development               │  │
+  │  │  terraform-demo-team-operations                │  │
+  │  │  terraform-demo-team-security                  │  │
+  │  │  terraform-demo-team-qa                        │  │
+  │  └────────────────────────────────────────────────┘  │
+  │                                                      │
+  │  Domains                                             │
+  │  ┌────────────────────────────────────────────────┐  │
+  │  │  terraform-demo-domain-ecommerce               │  │
+  │  │  terraform-demo-domain-supply-chain            │  │
+  │  └────────────────────────────────────────────────┘  │
+  │                                                      │
+  │  Services                                            │
+  │  ┌────────────────────────────────────────────────┐  │
+  │  │  terraform-demo-phoenix                        │  │
+  │  │  terraform-demo-parts-catalog-api              │  │
+  │  │  terraform-demo-payments-service               │  │
+  │  │  terraform-demo-inventory-service              │  │
+  │  │  terraform-demo-ordering-service               │  │
+  │  │  terraform-demo-shipping-service               │  │
+  │  └────────────────────────────────────────────────┘  │
+  │                                                      │
+  │  Scorecard                                           │
+  │  ┌────────────────────────────────────────────────┐  │
+  │  │  terraform-demo-production-readiness           │  │
+  │  └────────────────────────────────────────────────┘  │
+  └──────────────────────────────────────────────────────┘
 ```
 
 ## What is HCL?
@@ -55,11 +61,11 @@ HCL (HashiCorp Configuration Language) is the declarative language used in `.tf`
 
 ```hcl
 resource "cortex_catalog_entity" "phoenix" {
-  tag         = "phoenix"
+  tag         = "terraform-demo-phoenix"
   name        = "The Phoenix Project"
   description = "Main e-commerce monolith for Parts Unlimited."
 
-  owners = [{ name = "team-development", type = "group", provider = "CORTEX" }]
+  owners = [{ name = "terraform-demo-team-development", type = "group", provider = "CORTEX" }]
 
   git = {
     github = { repository = "parts-unlimited/phoenix" }
@@ -159,9 +165,9 @@ terraform plan
 ```
 
 You'll see:
-- `~ cortex_catalog_entity.phoenix` — **update** (adds links, metadata)
-- `+ cortex_catalog_entity.notification_service` — **create** (new service)
-- `~ cortex_catalog_entity.team_development` — **update** (new team member)
+- `~ cortex_catalog_entity.phoenix` — **update** (adds links, metadata to `terraform-demo-phoenix`)
+- `+ cortex_catalog_entity.notification_service` — **create** (`terraform-demo-notification-service`)
+- `~ cortex_catalog_entity.team_development` — **update** (new member on `terraform-demo-team-development`)
 
 **Step 3: Apply**
 

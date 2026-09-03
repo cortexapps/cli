@@ -4,7 +4,7 @@
 
 # CHANGED: Sarah Connor added
 resource "cortex_catalog_entity" "team_development" {
-  tag         = "team-development"
+  tag         = "terraform-demo-team-development"
   name        = "Development"
   description = "Application development team responsible for Parts Unlimited's e-commerce platform and core services."
 
@@ -45,7 +45,7 @@ resource "cortex_catalog_entity" "team_development" {
 }
 
 resource "cortex_catalog_entity" "team_operations" {
-  tag         = "team-operations"
+  tag         = "terraform-demo-team-operations"
   name        = "IT Operations"
   description = "Infrastructure, reliability, and operations for Parts Unlimited's production systems."
 
@@ -76,7 +76,7 @@ resource "cortex_catalog_entity" "team_operations" {
 }
 
 resource "cortex_catalog_entity" "team_security" {
-  tag         = "team-security"
+  tag         = "terraform-demo-team-security"
   name        = "Information Security"
   description = "Security, compliance, and risk management for Parts Unlimited."
 
@@ -102,7 +102,7 @@ resource "cortex_catalog_entity" "team_security" {
 }
 
 resource "cortex_catalog_entity" "team_qa" {
-  tag         = "team-qa"
+  tag         = "terraform-demo-team-qa"
   name        = "Quality Assurance"
   description = "Testing, QA, and release verification for Parts Unlimited services."
 
