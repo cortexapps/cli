@@ -23,6 +23,7 @@ sudo install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
 
 echo "==> Installing helm..."
 curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+sudo chmod a+rx /usr/local/bin/helm
 
 echo "==> Installing kind..."
 curl -Lo /tmp/kind "https://kind.sigs.k8s.io/dl/latest/kind-linux-${BIN_ARCH}"
