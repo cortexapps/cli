@@ -611,11 +611,6 @@ def _extract_tf_entity_tags(solution_dir: Path) -> set[str]:
     return entity_tags
 
 
-def _extract_tf_scorecard_tags(solution_dir: Path) -> set[str]:
-    """Return only cortex_scorecard tags from .tf template files."""
-    _, scorecard_tags = _parse_tf_tags_by_type(solution_dir)
-    return scorecard_tags
-
 
 def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
     """Replace bare filenames in the diagram with OSC 8 links to GitHub blob URLs."""
@@ -644,25 +639,10 @@ def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
     return "".join(parts)
 
 
-def _fetch_scorecard_id_map(scorecard_tags: set[str]) -> dict[str, str]:
-    """Return a tag→tag map for scorecard URL generation.
-    Cortex scorecard URLs use the tag directly (not a numeric ID)."""
-    return {tag: tag for tag in scorecard_tags}
-
-
-def _apply_scorecard_hyperlinks(line: str, scorecard_id_map: dict[str, str], ui_url: str) -> str:
-    """Replace scorecard tags in a line with OSC 8 links to the scorecard page (by numeric ID)."""
-    for tag in sorted(scorecard_id_map, key=len, reverse=True):
-        if tag in line:
-            url_id = scorecard_id_map[tag]
-            line = line.replace(tag, _osc8(f"{ui_url}/admin/scorecards/{url_id}", tag))
-    return line
-
 
 def _show_diagram(
     readme: str,
     entity_tags: set[str] | None = None,
-    scorecard_id_map: dict[str, str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
     solution_tag: str = "",
 ) -> None:
@@ -677,34 +657,24 @@ def _show_diagram(
         if links_supported:
             if entity_tags:
                 line = _apply_hyperlinks(line, entity_tags, ui_url)
-            if scorecard_id_map:
-                line = _apply_scorecard_hyperlinks(line, scorecard_id_map, ui_url)
             if solution_tag:
                 line = _apply_file_hyperlinks(line, solution_tag)
         # Use print() not console.print(): Rich counts OSC 8 escape bytes as
         # visible characters, shifting ASCII art alignment.
         print(f"  {line}")
 
-    all_tags_in_block = (entity_tags or set()) | set(scorecard_id_map or {})
-    if all_tags_in_block and not links_supported:
+    if entity_tags and not links_supported:
         entity_rows = sorted(
-            (tag for tag in (entity_tags or set()) if tag in block),
+            (tag for tag in entity_tags if tag in block),
             key=lambda t: t.lower(),
         )
-        scorecard_rows = sorted(
-            (tag for tag in (scorecard_id_map or {}) if tag in block),
-            key=lambda t: t.lower(),
-        )
-        if entity_rows or scorecard_rows:
+        if entity_rows:
             print()
             table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2, 0, 0))
             table.add_column("Entity")
             table.add_column("URL")
             for tag in entity_rows:
                 table.add_row(tag, f"{ui_url}/admin/resources?tag={tag}")
-            for tag in scorecard_rows:
-                url_id = (scorecard_id_map or {})[tag]
-                table.add_row(tag, f"{ui_url}/admin/scorecards/{url_id}")
             console.print(table)
 
 
@@ -721,7 +691,6 @@ def _post_install_menu(
     readme: str,
     import_report: str = "",
     entity_tags: set[str] | None = None,
-    scorecard_id_map: dict[str, str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
     solution_tag: str = "",
 ) -> None:
@@ -730,7 +699,7 @@ def _post_install_menu(
         ("2", "Next steps"),
     ]
     actions = {
-        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, scorecard_id_map=scorecard_id_map, ui_url=ui_url, solution_tag=solution_tag),
+        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, ui_url=ui_url, solution_tag=solution_tag),
         "2": lambda: _show_next_steps(readme),
     }
     if import_report:
@@ -837,7 +806,6 @@ def install(
         readme = _get_readme(solution, solutions_dir)
         if readme:
             entity_tags: set[str] = set()
-            scorecard_tags: set[str] = set()
             ui_url = _get_ui_url(ctx)
             try:
                 if solutions_dir:
@@ -848,14 +816,11 @@ def install(
                 entity_tags = set(resources.get("catalog", []))
                 if solutions_dir:
                     entity_tags |= _extract_tf_entity_tags(root / solution)
-                    scorecard_tags |= _extract_tf_scorecard_tags(root / solution)
                 else:
                     with as_file(root / solution) as sp:
                         entity_tags |= _extract_tf_entity_tags(sp)
-                        scorecard_tags |= _extract_tf_scorecard_tags(sp)
             except Exception:
                 pass
-            scorecard_id_map = _fetch_scorecard_id_map(scorecard_tags)
             has_import_results = bool(
                 total_match and (int(total_match.group(1)) > 0 or int(total_match.group(2)) > 0)
             )
@@ -863,7 +828,6 @@ def install(
                 readme,
                 import_report=output if has_import_results else "",
                 entity_tags=entity_tags,
-                scorecard_id_map=scorecard_id_map,
                 ui_url=ui_url,
                 solution_tag=solution,
             )
