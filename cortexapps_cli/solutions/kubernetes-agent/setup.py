@@ -12,11 +12,9 @@ SETUP_DESCRIPTION = (
     "(https://kind.sigs.k8s.io) automatically, or deploy to any existing cluster."
 )
 
-import os
 import shlex
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -104,14 +102,13 @@ class KubernetesAgentSetup(SolutionSetup):
     def _run_remote(self, bash_cmd: str) -> None:
         """Run a bash command inside the Codespace.
 
-        Writes the command to a temp script file and copies it via
-        'gh codespace cp', then executes it. This avoids two pitfalls
-        of passing complex commands via 'gh codespace ssh -- bash -c ...':
+        Pipes the script to 'tee' via SSH stdin, then executes it.
+        This avoids two pitfalls of 'gh codespace ssh -- bash -c SCRIPT':
           1. gh joins post-'--' args with spaces before the remote shell
-             sees them, so shell metacharacters (|, >, ;) are interpreted
-             by the remote shell rather than bash.
-          2. 'bash -lc' sources profile scripts that can print to stdout,
-             corrupting piped commands (e.g. kubectl apply -f -).
+             sees them, so metacharacters (|, >, ;) in the script are
+             interpreted by the remote shell instead of bash.
+          2. 'bash -lc' sources profile scripts that print to stdout,
+             corrupting piped commands (e.g. kubectl create | kubectl apply).
         """
         script = (
             "#!/bin/bash\n"
@@ -119,27 +116,20 @@ class KubernetesAgentSetup(SolutionSetup):
             "export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\n"
             "export KUBECONFIG=/home/vscode/.kube/config\n"
             f"{bash_cmd}\n"
+        ).encode()
+        remote_script = "/home/vscode/cortex-run.sh"
+        subprocess.run(
+            ["gh", "codespace", "ssh", "-c", self._codespace_name,
+             "--", "tee", remote_script],
+            input=script,
+            check=True,
+            capture_output=True,
         )
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".sh", delete=False
-        ) as f:
-            f.write(script)
-            tmp_path = f.name
-        try:
-            subprocess.run(
-                ["gh", "codespace", "cp",
-                 tmp_path, "remote:/tmp/cortex-remote-cmd.sh",
-                 "-c", self._codespace_name],
-                check=True,
-                capture_output=True,
-            )
-            subprocess.run(
-                ["gh", "codespace", "ssh", "-c", self._codespace_name,
-                 "--", "bash", "/tmp/cortex-remote-cmd.sh"],
-                check=True,
-            )
-        finally:
-            os.unlink(tmp_path)
+        subprocess.run(
+            ["gh", "codespace", "ssh", "-c", self._codespace_name,
+             "--", "bash", remote_script],
+            check=True,
+        )
 
     def _fetch_image_tag(self) -> str:
         """Fetch the latest k8s-agent image tag from the GitHub API."""
