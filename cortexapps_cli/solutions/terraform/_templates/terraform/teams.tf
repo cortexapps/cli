@@ -4,6 +4,7 @@
 resource "cortex_catalog_entity" "team_development" {
   tag         = "terraform-demo-team-development"
   name        = "Development"
+  type        = "team"
   description = "Application development team responsible for Parts Unlimited's e-commerce platform and core services."
 
   groups = ["terraform-demo"]
@@ -11,7 +12,7 @@ resource "cortex_catalog_entity" "team_development" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
     }
   ]
@@ -21,12 +22,12 @@ resource "cortex_catalog_entity" "team_development" {
       {
         name  = "Bill Palmer"
         email = "bill.palmer@parts-unlimited.com"
-        role  = "Team Lead"
+        role  = "Team-Lead"
       },
       {
         name  = "Maxine Chambers"
         email = "maxine.chambers@parts-unlimited.com"
-        role  = "Senior Engineer"
+        role  = "Senior-Engineer"
       },
       {
         name  = "Dev Magee"
@@ -40,6 +41,7 @@ resource "cortex_catalog_entity" "team_development" {
 resource "cortex_catalog_entity" "team_operations" {
   tag         = "terraform-demo-team-operations"
   name        = "IT Operations"
+  type        = "team"
   description = "Infrastructure, reliability, and operations for Parts Unlimited's production systems."
 
   groups = ["terraform-demo"]
@@ -47,7 +49,7 @@ resource "cortex_catalog_entity" "team_operations" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
     }
   ]
@@ -57,12 +59,12 @@ resource "cortex_catalog_entity" "team_operations" {
       {
         name  = "Brent Geller"
         email = "brent.geller@parts-unlimited.com"
-        role  = "Principal Engineer"
+        role  = "Principal-Engineer"
       },
       {
         name  = "Wes Davis"
         email = "wes.davis@parts-unlimited.com"
-        role  = "Operations Manager"
+        role  = "Operations-Manager"
       }
     ]
   }
@@ -71,6 +73,7 @@ resource "cortex_catalog_entity" "team_operations" {
 resource "cortex_catalog_entity" "team_security" {
   tag         = "terraform-demo-team-security"
   name        = "Information Security"
+  type        = "team"
   description = "Security, compliance, and risk management for Parts Unlimited."
 
   groups = ["terraform-demo"]
@@ -78,7 +81,7 @@ resource "cortex_catalog_entity" "team_security" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
     }
   ]
@@ -97,6 +100,7 @@ resource "cortex_catalog_entity" "team_security" {
 resource "cortex_catalog_entity" "team_qa" {
   tag         = "terraform-demo-team-qa"
   name        = "Quality Assurance"
+  type        = "team"
   description = "Testing, QA, and release verification for Parts Unlimited services."
 
   groups = ["terraform-demo"]
@@ -104,7 +108,7 @@ resource "cortex_catalog_entity" "team_qa" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/teams.tf"
     }
   ]
@@ -114,7 +118,7 @@ resource "cortex_catalog_entity" "team_qa" {
       {
         name  = "Patty McKee"
         email = "patty.mckee@parts-unlimited.com"
-        role  = "QA Manager"
+        role  = "QA-Manager"
       }
     ]
   }

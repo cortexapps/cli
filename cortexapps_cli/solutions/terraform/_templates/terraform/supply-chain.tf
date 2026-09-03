@@ -13,7 +13,7 @@ resource "cortex_catalog_entity" "domain_supply_chain" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
     }
   ]
@@ -44,7 +44,7 @@ resource "cortex_catalog_entity" "inventory_service" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
     }
   ]
@@ -75,7 +75,7 @@ resource "cortex_catalog_entity" "ordering_service" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
     }
   ]
@@ -106,7 +106,7 @@ resource "cortex_catalog_entity" "shipping_service" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/supply-chain.tf"
     }
   ]

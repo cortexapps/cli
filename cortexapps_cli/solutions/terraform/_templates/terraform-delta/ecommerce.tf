@@ -14,7 +14,7 @@ resource "cortex_catalog_entity" "domain_ecommerce" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
     }
   ]
@@ -48,7 +48,7 @@ resource "cortex_catalog_entity" "phoenix" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
     },
     {
@@ -93,7 +93,7 @@ resource "cortex_catalog_entity" "parts_catalog_api" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
     }
   ]
@@ -124,7 +124,7 @@ resource "cortex_catalog_entity" "payments_service" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform/ecommerce.tf"
     }
   ]
@@ -156,7 +156,7 @@ resource "cortex_catalog_entity" "notification_service" {
   links = [
     {
       name = "Terraform Source"
-      type = "source"
+      type = "documentation"
       url  = "https://github.com/cortexapps/cli/blob/main/cortexapps_cli/solutions/terraform/_templates/terraform-delta/ecommerce.tf"
     }
   ]
