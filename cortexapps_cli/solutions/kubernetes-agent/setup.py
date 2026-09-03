@@ -402,10 +402,14 @@ class KubernetesAgentSetup(SolutionSetup):
         if self.already_done("install_argo_crd"):
             return
         print("  Installing Argo Rollouts CRD...")
+        # --server-side avoids the 262144-byte annotation limit that
+        # kubectl apply (client-side) hits with large CRDs like Argo Rollouts.
         if self._use_codespace:
-            self._run_remote(f"kubectl apply -f {ARGO_CRD_URL}")
+            self._run_remote(f"kubectl apply --server-side -f {ARGO_CRD_URL}")
         else:
-            subprocess.run(["kubectl", "apply", "-f", ARGO_CRD_URL], check=True)
+            subprocess.run(
+                ["kubectl", "apply", "--server-side", "-f", ARGO_CRD_URL], check=True
+            )
         self.mark_done("install_argo_crd")
 
     def _apply_manifests(self) -> None:
