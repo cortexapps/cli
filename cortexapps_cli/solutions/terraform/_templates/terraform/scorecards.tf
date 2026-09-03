@@ -42,7 +42,7 @@ resource "cortex_scorecard" "production_readiness" {
     {
       title       = "Has owner team"
       description = "Service must be owned by at least one team."
-      expression  = "ownership?.teams()?.length > 0"
+      expression  = "ownership.teams().length > 0"
       weight      = 1
       level       = "Bronze"
     },
@@ -88,7 +88,7 @@ resource "cortex_scorecard" "production_readiness" {
     {
       title       = "Shared ownership"
       description = "Service should be owned by at least two teams for bus-factor resilience."
-      expression  = "ownership?.teams()?.length >= 2"
+      expression  = "ownership.teams().length >= 2"
       weight      = 1
       level       = "Gold"
     },
