@@ -232,32 +232,32 @@ class KubernetesAgentSetup(SolutionSetup):
         deadline = time.time() + CODESPACE_READY_TIMEOUT
         print("  Waiting for kind cluster to be ready (may take 15-20 min on first run)...")
         while time.time() < deadline:
-            # Single SSH call: check failure sentinel and cluster readiness together.
-            # Use explicit kubeconfig path — non-interactive SSH sessions don't load
-            # .bashrc so KUBECONFIG env var and PATH additions are not set.
-            status = subprocess.run(
-                [
-                    "gh", "codespace", "ssh",
-                    "-c", self._codespace_name,
-                    "--", "bash", "-c",
-                    "if [ -f /tmp/onCreate.failed ]; then echo FAILED; cat /tmp/onCreate.failed; "
-                    "elif /usr/local/bin/kubectl --kubeconfig /home/vscode/.kube/config "
-                    "cluster-info > /dev/null 2>&1; then echo READY; "
-                    "else echo WAITING; fi",
-                ],
+            # Check failure sentinel — simple command, no shell metacharacters.
+            fail_check = subprocess.run(
+                ["gh", "codespace", "ssh", "-c", self._codespace_name,
+                 "--", "test", "-f", "/tmp/onCreate.failed"],
                 capture_output=True,
-                text=True,
             )
-            output = status.stdout.strip()
-            if output.startswith("READY"):
-                print("  Kind cluster is ready.")
-                return
-            if output.startswith("FAILED"):
+            if fail_check.returncode == 0:
                 log = self._fetch_codespace_log()
                 raise RuntimeError(
                     f"onCreate.sh failed in Codespace '{self._codespace_name}'.\n\n"
                     f"--- /tmp/onCreate.log ---\n{log}\n---"
                 )
+
+            # Check cluster readiness with explicit binary + kubeconfig paths.
+            # Non-interactive SSH sessions don't load .bashrc, so PATH and
+            # KUBECONFIG are not set from the user's shell configuration.
+            ready_check = subprocess.run(
+                ["gh", "codespace", "ssh", "-c", self._codespace_name,
+                 "--", "/usr/local/bin/kubectl",
+                 "--kubeconfig", "/home/vscode/.kube/config",
+                 "cluster-info"],
+                capture_output=True,
+            )
+            if ready_check.returncode == 0:
+                print("  Kind cluster is ready.")
+                return
             time.sleep(CODESPACE_POLL_INTERVAL)
 
         log = self._fetch_codespace_log()
