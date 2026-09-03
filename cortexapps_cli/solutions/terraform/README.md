@@ -141,7 +141,7 @@ Terraform created 13 entities in your Cortex catalog: 4 teams, 2 domains, and 6 
 
 **Open the scorecard**
 
-Open [Terraform Demo Production Readiness](https://app.getcortexapp.com/admin/scorecards/terraform-demo-production-readiness) to see all 6 services at Bronze.
+Open [Terraform Demo Production Readiness](https://app.getcortexapp.com/admin/scorecards) to see all 6 services at Bronze.
 
 ### Try the Delta
 
@@ -171,7 +171,7 @@ terraform apply
 
 **Step 4: Check the scorecard**
 
-Open [Terraform Demo Production Readiness](https://app.getcortexapp.com/admin/scorecards/terraform-demo-production-readiness) in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
+Open [Terraform Demo Production Readiness](https://app.getcortexapp.com/admin/scorecards) in Cortex. The Phoenix Project should now show **Silver**. Also check that the new **Notification Service** appears in your catalog.
 
 ## File Walkthrough
 

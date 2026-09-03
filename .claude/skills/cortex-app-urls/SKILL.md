@@ -7,7 +7,8 @@ description: Use when generating or displaying URLs to the Cortex web applicatio
 
 ## STOP — memorize this before writing any URL or user-facing text
 
-The entity page URL is `/admin/resources?tag=<tag>` — **NOT** `/admin/service/<tag>` and **NOT** `/admin/catalog/<tag>`.
+The entity page URL is `/admin/resources?tag=<tag>` for ALL entity types (service, domain, team, resource).
+The scorecard URL requires a **numeric ID**, not a tag: `/admin/scorecards/<numeric-id>`.
 
 Do not guess. Use the table below.
 
@@ -28,16 +29,48 @@ When you have an API base URL (e.g. from `CORTEX_BASE_URL` or the CLI session), 
 app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
 ```
 
-## Entity page URL
+## Entity page URL (ALL entity types)
 
 ```
 https://app.getcortexapp.com/admin/resources?tag=<entity-tag>
 ```
 
+This works for services, domains, teams, and resources — all use `/admin/resources?tag=<tag>`.
+
 Example: `https://app.getcortexapp.com/admin/resources?tag=phoenix`
 
-**NOT** `/admin/service/<tag>` — type-specific path; teams and domains return "No entity".
+**NOT** `/admin/service/<tag>` — returns "No entity" for teams and domains.
 **NOT** `/admin/catalog/<tag>` — that path does not exist.
+
+## Scorecard page URL (requires numeric ID, not tag)
+
+```
+https://app.getcortexapp.com/admin/scorecards/<numeric-id>
+```
+
+The scorecard detail page uses a numeric `id`, not the tag. Look up the ID first:
+
+```
+GET /api/v1/scorecards/{tag}  →  response["id"]
+```
+
+Then build: `https://app.getcortexapp.com/admin/scorecards/{id}`
+
+**In code — fetch and fall back gracefully:**
+
+```python
+def _fetch_scorecard_id_map(client, scorecard_tags: set[str]) -> dict[str, str]:
+    """Map tag → url_id. Falls back to tag string if API lookup fails."""
+    result: dict[str, str] = {}
+    for tag in scorecard_tags:
+        try:
+            data = client.get(f"api/v1/scorecards/{tag}")
+            sc_id = data.get("id")
+            result[tag] = str(sc_id) if sc_id is not None else tag
+        except Exception:
+            result[tag] = tag
+    return result
+```
 
 ## Deploys page URL (entity subpage — requires numeric ID, not tag)
 
@@ -47,18 +80,12 @@ https://app.getcortexapp.com/admin/service/<numeric-entity-id>/deploys
 
 Use `GET /api/v1/catalog/<tag>` → `.id` to get the numeric ID.
 
-## Scorecard page URL
-
-```
-https://app.getcortexapp.com/admin/scorecards/<scorecard-tag>
-```
-
 ## Other common pages
 
 | Page | URL pattern |
 |------|-------------|
-| Entity | `https://app.getcortexapp.com/admin/resources?tag=<tag>` |
-| Scorecard | `https://app.getcortexapp.com/admin/scorecards/<tag>` |
+| Entity (all types) | `https://app.getcortexapp.com/admin/resources?tag=<tag>` |
+| Scorecard | `https://app.getcortexapp.com/admin/scorecards/<numeric-id>` |
 | Catalogs | `https://app.getcortexapp.com/admin/catalogs` |
 | Initiatives | `https://app.getcortexapp.com/admin/initiatives` |
 

@@ -644,18 +644,32 @@ def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
     return "".join(parts)
 
 
-def _apply_scorecard_hyperlinks(line: str, scorecard_tags: set[str], ui_url: str) -> str:
-    """Replace scorecard tags in a line with OSC 8 links to the scorecard page."""
-    for tag in sorted(scorecard_tags, key=len, reverse=True):
+def _fetch_scorecard_id_map(client, scorecard_tags: set[str]) -> dict[str, str]:
+    """Look up numeric IDs for scorecard tags. Falls back to tag if lookup fails."""
+    result: dict[str, str] = {}
+    for tag in scorecard_tags:
+        try:
+            data = client.get(f"api/v1/scorecards/{tag}")
+            sc_id = data.get("id")
+            result[tag] = str(sc_id) if sc_id is not None else tag
+        except Exception:
+            result[tag] = tag
+    return result
+
+
+def _apply_scorecard_hyperlinks(line: str, scorecard_id_map: dict[str, str], ui_url: str) -> str:
+    """Replace scorecard tags in a line with OSC 8 links to the scorecard page (by numeric ID)."""
+    for tag in sorted(scorecard_id_map, key=len, reverse=True):
         if tag in line:
-            line = line.replace(tag, _osc8(f"{ui_url}/admin/scorecards/{tag}", tag))
+            url_id = scorecard_id_map[tag]
+            line = line.replace(tag, _osc8(f"{ui_url}/admin/scorecards/{url_id}", tag))
     return line
 
 
 def _show_diagram(
     readme: str,
     entity_tags: set[str] | None = None,
-    scorecard_tags: set[str] | None = None,
+    scorecard_id_map: dict[str, str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
     solution_tag: str = "",
 ) -> None:
@@ -670,22 +684,22 @@ def _show_diagram(
         if links_supported:
             if entity_tags:
                 line = _apply_hyperlinks(line, entity_tags, ui_url)
-            if scorecard_tags:
-                line = _apply_scorecard_hyperlinks(line, scorecard_tags, ui_url)
+            if scorecard_id_map:
+                line = _apply_scorecard_hyperlinks(line, scorecard_id_map, ui_url)
             if solution_tag:
                 line = _apply_file_hyperlinks(line, solution_tag)
         # Use print() not console.print(): Rich counts OSC 8 escape bytes as
         # visible characters, shifting ASCII art alignment.
         print(f"  {line}")
 
-    all_tags_in_block = (entity_tags or set()) | (scorecard_tags or set())
+    all_tags_in_block = (entity_tags or set()) | set(scorecard_id_map or {})
     if all_tags_in_block and not links_supported:
         entity_rows = sorted(
             (tag for tag in (entity_tags or set()) if tag in block),
             key=lambda t: t.lower(),
         )
         scorecard_rows = sorted(
-            (tag for tag in (scorecard_tags or set()) if tag in block),
+            (tag for tag in (scorecard_id_map or {}) if tag in block),
             key=lambda t: t.lower(),
         )
         if entity_rows or scorecard_rows:
@@ -696,7 +710,8 @@ def _show_diagram(
             for tag in entity_rows:
                 table.add_row(tag, f"{ui_url}/admin/resources?tag={tag}")
             for tag in scorecard_rows:
-                table.add_row(tag, f"{ui_url}/admin/scorecards/{tag}")
+                url_id = (scorecard_id_map or {})[tag]
+                table.add_row(tag, f"{ui_url}/admin/scorecards/{url_id}")
             console.print(table)
 
 
@@ -713,7 +728,7 @@ def _post_install_menu(
     readme: str,
     import_report: str = "",
     entity_tags: set[str] | None = None,
-    scorecard_tags: set[str] | None = None,
+    scorecard_id_map: dict[str, str] | None = None,
     ui_url: str = "https://app.getcortexapp.com",
     solution_tag: str = "",
 ) -> None:
@@ -722,7 +737,7 @@ def _post_install_menu(
         ("2", "Next steps"),
     ]
     actions = {
-        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, scorecard_tags=scorecard_tags, ui_url=ui_url, solution_tag=solution_tag),
+        "1": lambda: _show_diagram(readme, entity_tags=entity_tags, scorecard_id_map=scorecard_id_map, ui_url=ui_url, solution_tag=solution_tag),
         "2": lambda: _show_next_steps(readme),
     }
     if import_report:
@@ -847,6 +862,14 @@ def install(
                         scorecard_tags |= _extract_tf_scorecard_tags(sp)
             except Exception:
                 pass
+            scorecard_id_map: dict[str, str] = {}
+            if scorecard_tags and ctx.obj and "client" in ctx.obj:
+                try:
+                    scorecard_id_map = _fetch_scorecard_id_map(ctx.obj["client"], scorecard_tags)
+                except Exception:
+                    scorecard_id_map = {tag: tag for tag in scorecard_tags}
+            else:
+                scorecard_id_map = {tag: tag for tag in scorecard_tags}
             has_import_results = bool(
                 total_match and (int(total_match.group(1)) > 0 or int(total_match.group(2)) > 0)
             )
@@ -854,7 +877,7 @@ def install(
                 readme,
                 import_report=output if has_import_results else "",
                 entity_tags=entity_tags,
-                scorecard_tags=scorecard_tags,
+                scorecard_id_map=scorecard_id_map,
                 ui_url=ui_url,
                 solution_tag=solution,
             )
