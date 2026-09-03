@@ -466,7 +466,7 @@ class KubernetesAgentSetup(SolutionSetup):
             print(f"  Stop Codespace: gh codespace stop -c {self._codespace_name}")
             print()
         print("The agent syncs every 5 minutes. After the first sync, visit:")
-        print(f"  {self._base_url.replace('api.', 'app.')}/catalog/demo-kubernetes/k8s")
+        print(f"  {self._base_url.replace('api.', 'app.')}/admin/resources?tag=demo-kubernetes")
         print("\nYou should see: demo-deployment, demo-statefulset, demo-cronjob, demo-rollout")
         print("\nNote: GHCR_TOKEN requirement goes away once the k8s-agent image is made public.")
 
