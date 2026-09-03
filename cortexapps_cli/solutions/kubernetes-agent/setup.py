@@ -100,12 +100,16 @@ class KubernetesAgentSetup(SolutionSetup):
         return f"/workspaces/{repo_name}/cortexapps_cli/solutions/kubernetes-agent"
 
     def _run_remote(self, bash_cmd: str) -> None:
-        """Run a bash command inside the Codespace via gh codespace ssh."""
+        """Run a bash command inside the Codespace via gh codespace ssh.
+
+        Sources /etc/profile and ~/.bashrc so PATH and KUBECONFIG are set
+        correctly in the non-interactive SSH session.
+        """
         subprocess.run(
             [
                 "gh", "codespace", "ssh",
                 "-c", self._codespace_name,
-                "--", "bash", "-c", bash_cmd,
+                "--", "bash", "-lc", bash_cmd,
             ],
             check=True,
         )
@@ -228,14 +232,17 @@ class KubernetesAgentSetup(SolutionSetup):
         deadline = time.time() + CODESPACE_READY_TIMEOUT
         print("  Waiting for kind cluster to be ready (may take 15-20 min on first run)...")
         while time.time() < deadline:
-            # Single SSH call: check failure sentinel and cluster readiness together
+            # Single SSH call: check failure sentinel and cluster readiness together.
+            # Use explicit kubeconfig path — non-interactive SSH sessions don't load
+            # .bashrc so KUBECONFIG env var and PATH additions are not set.
             status = subprocess.run(
                 [
                     "gh", "codespace", "ssh",
                     "-c", self._codespace_name,
                     "--", "bash", "-c",
                     "if [ -f /tmp/onCreate.failed ]; then echo FAILED; cat /tmp/onCreate.failed; "
-                    "elif kubectl cluster-info > /dev/null 2>&1; then echo READY; "
+                    "elif /usr/local/bin/kubectl --kubeconfig /home/vscode/.kube/config "
+                    "cluster-info > /dev/null 2>&1; then echo READY; "
                     "else echo WAITING; fi",
                 ],
                 capture_output=True,
