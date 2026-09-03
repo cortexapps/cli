@@ -93,6 +93,36 @@ The setup script is idempotent — re-run `cortex solutions post-install -s kube
 
 For the Codespace path, the Codespace name is saved locally so re-runs reconnect to the same Codespace rather than creating a new one.
 
+## Next steps
+
+Once you have verified the agent working against the demo cluster, roll it out to your real clusters:
+
+1. **Install the Helm chart into each cluster** you want Cortex to ingest. For each cluster, run:
+
+   ```bash
+   helm upgrade --install cortex-k8s-agent \
+     oci://ghcr.io/cortexapps/k8s-agent/helm/cortex-k8s-agent \
+     --set app.apiKey=<your-cortex-api-key> \
+     --set app.clusterName=<name-as-it-appears-in-cortex> \
+     --set app.baseUrl=https://api.getcortexapp.com
+   ```
+
+   Give each cluster a distinct `clusterName` — this is how Cortex identifies which cluster a workload belongs to.
+
+2. **Annotate your workloads** with your Cortex entity tag so the agent can map resources to catalog entities:
+
+   ```yaml
+   metadata:
+     annotations:
+       cortex.io/service: my-service-tag
+   ```
+
+3. **Wait for the first sync** (~5 min) then visit each entity's K8s tab in Cortex to confirm workload data is flowing.
+
+4. **Set up additional clusters** by repeating step 1 with a different `clusterName` for each environment (e.g., `prod-us-east`, `staging`, `dev`).
+
+See the [Cortex Kubernetes integration docs](https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes) for full configuration options including namespace filtering, custom resource types, and RBAC setup.
+
 ## Temporary limitation
 
 The k8s-agent image is currently private on GHCR, requiring `GHCR_TOKEN`. This requirement will be removed once the image is made public.
