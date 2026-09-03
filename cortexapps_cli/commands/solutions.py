@@ -644,17 +644,10 @@ def _apply_file_hyperlinks(line: str, solution_tag: str) -> str:
     return "".join(parts)
 
 
-def _fetch_scorecard_id_map(client, scorecard_tags: set[str]) -> dict[str, str]:
-    """Look up numeric IDs for scorecard tags. Falls back to tag if lookup fails."""
-    result: dict[str, str] = {}
-    for tag in scorecard_tags:
-        try:
-            data = client.get(f"api/v1/scorecards/{tag}")
-            sc_id = data.get("id")
-            result[tag] = str(sc_id) if sc_id is not None else tag
-        except Exception:
-            result[tag] = tag
-    return result
+def _fetch_scorecard_id_map(scorecard_tags: set[str]) -> dict[str, str]:
+    """Return a tag→tag map for scorecard URL generation.
+    Cortex scorecard URLs use the tag directly (not a numeric ID)."""
+    return {tag: tag for tag in scorecard_tags}
 
 
 def _apply_scorecard_hyperlinks(line: str, scorecard_id_map: dict[str, str], ui_url: str) -> str:
@@ -862,14 +855,7 @@ def install(
                         scorecard_tags |= _extract_tf_scorecard_tags(sp)
             except Exception:
                 pass
-            scorecard_id_map: dict[str, str] = {}
-            if scorecard_tags and ctx.obj and "client" in ctx.obj:
-                try:
-                    scorecard_id_map = _fetch_scorecard_id_map(ctx.obj["client"], scorecard_tags)
-                except Exception:
-                    scorecard_id_map = {tag: tag for tag in scorecard_tags}
-            else:
-                scorecard_id_map = {tag: tag for tag in scorecard_tags}
+            scorecard_id_map = _fetch_scorecard_id_map(scorecard_tags)
             has_import_results = bool(
                 total_match and (int(total_match.group(1)) > 0 or int(total_match.group(2)) > 0)
             )
