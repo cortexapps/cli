@@ -6,6 +6,52 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.39.0](https://github.com/cortexapps/cli/releases/tag/1.39.0) - 2026-09-03
+
+<small>[Compare with 1.38.0](https://github.com/cortexapps/cli/compare/1.38.0...1.39.0)</small>
+
+### Features
+
+- add terraform source links to all entities; add catalog creation and scorecard links to README ([5e6a2a9](https://github.com/cortexapps/cli/commit/5e6a2a9ba144aca164b7b7a40300ffbf5b5a14df) by Jeff Schnitter).
+- hyperlink .tf filenames in Data Model diagram to GitHub blob URLs (CX-43) ([7f5fb9b](https://github.com/cortexapps/cli/commit/7f5fb9b0516645e90d296b99e0abbbc2f15838ba) by Jeff Schnitter).
+- add setup.py for terraform solution (CX-43) ([1e6398a](https://github.com/cortexapps/cli/commit/1e6398a9d607621d656c77a08d667e533f00a502) by Jeff Schnitter).
+- add terraform-delta files for terraform solution (CX-43) ([2f88b46](https://github.com/cortexapps/cli/commit/2f88b46e27b8d53fcfa1b20b9cebaa2c4fcf7fa2) by Jeff Schnitter).
+- add scorecards.tf for terraform solution (CX-43) ([6427bca](https://github.com/cortexapps/cli/commit/6427bca840bd1b17df10447dc2fe684f5ef9122b) by Jeff Schnitter).
+- add supply-chain.tf for terraform solution (CX-43) ([e53be4a](https://github.com/cortexapps/cli/commit/e53be4ab088ae5cb66e8d736b199546ef21d3ec8) by Jeff Schnitter).
+- add ecommerce.tf for terraform solution (CX-43) ([35e82d5](https://github.com/cortexapps/cli/commit/35e82d53c9a9a685e6b1730a7fed0955f4cf27ed) by Jeff Schnitter).
+- add teams.tf for terraform solution (CX-43) ([3cd5911](https://github.com/cortexapps/cli/commit/3cd5911ebd2aa811afaaf65cdd91fa1e54b72809) by Jeff Schnitter).
+- add terraform provider config files (CX-43) ([cd0fe59](https://github.com/cortexapps/cli/commit/cd0fe59fb458b9c6060da88f3d23c02c4e2c17e6) by Jeff Schnitter).
+- add terraform solution scaffold and README (CX-43) ([d7775d6](https://github.com/cortexapps/cli/commit/d7775d69dfd84698789b24e9dfc2f1ed9eed4e7c) by Jeff Schnitter).
+
+### Bug Fixes
+
+- revert ownership CQL to clean expression (no null-safe needed) ([002086c](https://github.com/cortexapps/cli/commit/002086cc49e53dcf7f61e96406c10ff3a3611986) by Jeff Schnitter).
+- correct team type, link type, role format, and scorecard CQL (CX-43) ([8638e6f](https://github.com/cortexapps/cli/commit/8638e6fca27df4368278a3b5ee26b20e584323bd) by Jeff Schnitter).
+- remove scorecard hyperlink from data model diagram ([3cb3136](https://github.com/cortexapps/cli/commit/3cb313647ecdd9431bdbece21f82578ee6937653) by Jeff Schnitter).
+- remove spurious 404 from scorecard id lookup in terraform solution ([bde1fa1](https://github.com/cortexapps/cli/commit/bde1fa1842633475c98d7e77a4e33fc7a016343c) by Jeff Schnitter).
+- prefix all terraform demo entity tags with terraform-demo- ([b1a2233](https://github.com/cortexapps/cli/commit/b1a2233c107b7f6522f914c3debf9088a0c93c6a) by Jeff Schnitter).
+- use numeric scorecard ID for UI hyperlinks; update URL skill ([5f351dd](https://github.com/cortexapps/cli/commit/5f351dd168d220b58662e84c29020e9b1d40b440) by Jeff Schnitter).
+- scorecard tags link to /admin/scorecards/; domain source links; fix scorecard vs entity tag extraction ([9c8ceb2](https://github.com/cortexapps/cli/commit/9c8ceb2a38ea6ac64a1e66d42898d88e804df277) by Jeff Schnitter).
+- revert entity URLs back to /admin/resources?tag=; fix deploys URL in github-actions-deploy template; update cortex-app-urls skill ([dbf1986](https://github.com/cortexapps/cli/commit/dbf1986c89e2949066b36ca4a80db4a95f65f4e1) by Jeff Schnitter).
+- entity page URLs from /admin/resources?tag= to /admin/service/; add cortex-app-urls skill to repo ([9319ce6](https://github.com/cortexapps/cli/commit/9319ce6658c65089907f5b74ccfa9545440798ef) by Jeff Schnitter).
+- hyperlink entity tags in Data Model diagram for terraform solution (CX-43) ([10a3e73](https://github.com/cortexapps/cli/commit/10a3e73eaad693ed6a526afd294f20611314d587) by Jeff Schnitter).
+- hide Import report menu option when import report is empty (CX-43) ([6486e40](https://github.com/cortexapps/cli/commit/6486e40aff484290ad19f57aeeb8d97516c8f094) by Jeff Schnitter).
+- add Data Model ASCII diagram to README for post-install menu (CX-43) ([b316457](https://github.com/cortexapps/cli/commit/b316457b9781f746a4c3a8b6ad23630035eec2e3) by Jeff Schnitter).
+- add After Installing section to README for post-install menu (CX-43) ([d31270c](https://github.com/cortexapps/cli/commit/d31270c68a94a559370d351f64f42e963328362e) by Jeff Schnitter).
+- scope scorecard to terraform-demo group to avoid evaluating all services (CX-43) ([d9d073b](https://github.com/cortexapps/cli/commit/d9d073bfb6d8ae7236628b437e37f574008af961) by Jeff Schnitter).
+- rename scorecard to avoid collision with customer scorecards (CX-43) ([40080e5](https://github.com/cortexapps/cli/commit/40080e5b35fc80e0b6b4494acfc4cb7c70bc7dc0) by Jeff Schnitter).
+- define ladder levels in ascending rank order (CX-43) ([221f7ad](https://github.com/cortexapps/cli/commit/221f7ade5ea5c6080ed206be0a46e913c92c1f8b) by Jeff Schnitter).
+- use named link types in all scorecard link rules (CX-43) ([cb2427f](https://github.com/cortexapps/cli/commit/cb2427f28364b7cea0d465b6b8bb41e9ad652b34) by Jeff Schnitter).
+- try links.length > 0 for Silver has-any-link rule (CX-43) ([2d9fb68](https://github.com/cortexapps/cli/commit/2d9fb68afa9df503ffc13ff850c0331f67b9d1fb) by Jeff Schnitter).
+- links.size() > 0 -> links().length > 0 for Silver rule (CX-43) ([afab489](https://github.com/cortexapps/cli/commit/afab489d5c4386ccd538f3d0c9fd650689c5a25f) by Jeff Schnitter).
+- use links("runbook").length > 0 for Gold runbook rule (CX-43) ([f91c42e](https://github.com/cortexapps/cli/commit/f91c42e8ccfec75d337caa937c201813cdfcece4) by Jeff Schnitter).
+- replace links.exists() with links.size() >= 2 for Gold rule (CX-43) ([571df30](https://github.com/cortexapps/cli/commit/571df30731e08545a3cc655ea6e7f27dd124883a) by Jeff Schnitter).
+- remove type=\"team\" from team entities, fix custom data expression (CX-43) ([dee1eb8](https://github.com/cortexapps/cli/commit/dee1eb8c3ffdfde40b054efe6188e1dbc56ccbcf) by Jeff Schnitter).
+- always copy template files so re-runs pick up updates (CX-43) ([7acff09](https://github.com/cortexapps/cli/commit/7acff09c885a5b9441b67bb97228df37b9d5fcbf) by Jeff Schnitter).
+- use ownership.teams().length expressions in scorecard (CX-43) ([868f2f4](https://github.com/cortexapps/cli/commit/868f2f4697073960e6a34e221fb458e8c5a0c845) by Jeff Schnitter).
+- correct team member schema and scorecard expressions (CX-43) ([5b101b5](https://github.com/cortexapps/cli/commit/5b101b59558de59f747602ca4cd02dff0d3bc664) by Jeff Schnitter).
+- correct team entity type and README cleanup (CX-43) ([c2b6efc](https://github.com/cortexapps/cli/commit/c2b6efcd41295b2077ba0e8d37102b40d64ba1e8) by Jeff Schnitter).
+
 ## [1.38.0](https://github.com/cortexapps/cli/releases/tag/1.38.0) - 2026-09-01
 
 <small>[Compare with 1.37.0](https://github.com/cortexapps/cli/compare/1.37.0...1.38.0)</small>
