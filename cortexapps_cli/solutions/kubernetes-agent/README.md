@@ -87,6 +87,15 @@ After the agent's first sync (~5 min), visit:
 - `demo-cronjob` (CronJob)
 - `demo-rollout` (Argo Rollout — containers resolved from `demo-deployment`)
 
+## Troubleshooting
+
+**No K8s details showing on the entity page after the first sync**
+
+If you have configured [K8s metadata label customization](https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#auto-mapping-customization) in your Cortex settings (Settings → Kubernetes → Metadata labels), Cortex uses *only* those labels for resource mapping and ignores the `cortex.io/tag` annotation used by the demo manifests. Either:
+
+- Remove the metadata label customization to use the default annotation-based mapping, or
+- Add a matching label (e.g., `app: demo-kubernetes`) to the demo manifests
+
 ## Re-running setup
 
 The setup script is idempotent — re-run `cortex solutions post-install -s kubernetes-agent` to retry any failed step. Completed steps are skipped.
