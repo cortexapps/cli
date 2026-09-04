@@ -1,0 +1,10 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# IMPORTANT: Never commit terraform.tfvars to source control — it contains your API token.
+# Add terraform.tfvars to your .gitignore.
+
+# Your Cortex API token.
+# Alternatively, set the CORTEX_API_TOKEN environment variable and omit this line.
+# cortex_api_token = "your-api-token-here"
+
+# Cortex API base URL. Only change if you are on a self-hosted instance.
+cortex_base_url = "https://api.getcortexapp.com"
