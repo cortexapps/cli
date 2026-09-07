@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.41.0](https://github.com/cortexapps/cli/releases/tag/1.41.0) - 2026-09-07
+
+<small>[Compare with 1.40.0](https://github.com/cortexapps/cli/compare/1.40.0...1.41.0)</small>
+
+### Features
+
+- support both GitHub Codespace and existing cluster deployment paths ([e95bdac](https://github.com/cortexapps/cli/commit/e95bdac286c7d9571ed8af423bb194c63c9413fc) by Jeff Schnitter).
+- add kubernetes-agent Codespace devcontainer ([9999d2e](https://github.com/cortexapps/cli/commit/9999d2eefa6e4c9e82412c92f1d533e538a7aaf1) by Jeff Schnitter).
+- add kubernetes-agent solution post-install setup script ([7ce6186](https://github.com/cortexapps/cli/commit/7ce61864d60ed657a3c6408e201db3a7b2f6da2d) by Jeff Schnitter).
+- bundle k8s-agent helm chart in kubernetes-agent solution ([6b92211](https://github.com/cortexapps/cli/commit/6b92211a7ab0ff3af6aa47542a29a8460ba2fb63) by Jeff Schnitter).
+- add kubernetes-agent solution catalog entity and demo manifests ([b728cea](https://github.com/cortexapps/cli/commit/b728ceac7898b456761df317ce7374cb2292bbed) by Jeff Schnitter).
+
+### Bug Fixes
+
+- replace Mermaid with ASCII art; rename sections for CLI menu ([dd27b24](https://github.com/cortexapps/cli/commit/dd27b241731f3c7279250cfc62026e4f6a3e3ff0) by Jeff Schnitter).
+- correct post-install URL to /admin/resources?tag=demo-kubernetes ([a88d3ea](https://github.com/cortexapps/cli/commit/a88d3ea991fcc79a4707ad5aea468c00851924cd) by Jeff Schnitter).
+- use --server-side apply for Argo Rollouts CRD ([92d9b93](https://github.com/cortexapps/cli/commit/92d9b9345f0204242037831b23fda48d09cd7ccc) by Jeff Schnitter).
+- chmod helm world-executable after install (get-helm-3 sets 750) ([514a151](https://github.com/cortexapps/cli/commit/514a151167c92fbb608bff81493605aa72e4e6b7) by Jeff Schnitter).
+- pipe script via SSH stdin to tee instead of using gh codespace cp ([019da91](https://github.com/cortexapps/cli/commit/019da9162298069a004485ec8415580303507c1d) by Jeff Schnitter).
+- use gh codespace cp to upload scripts instead of bash -c via SSH ([e22aa9f](https://github.com/cortexapps/cli/commit/e22aa9fccba0ba9ae622e99e6a32a0f7f4781872) by Jeff Schnitter).
+- replace bash -c poll script with simple SSH commands ([31a4938](https://github.com/cortexapps/cli/commit/31a4938416039fba191867137706ff4b6d129423) by Jeff Schnitter).
+- use explicit kubeconfig path in poll; use login shell for _run_remote ([86de516](https://github.com/cortexapps/cli/commit/86de5163a2bb7a806ccf844f5863e809d9ae57f7) by Jeff Schnitter).
+- give Phase 2 its own deadline; add sshd feature for early SSH access ([501a2fd](https://github.com/cortexapps/cli/commit/501a2fd7a8353ba4f11d504402da5b5a37a94e22) by Jeff Schnitter).
+- auto-fetch and print onCreate.log on failure instead of asking user ([37feda0](https://github.com/cortexapps/cli/commit/37feda0a2b99968a9e09ead3021e52ef8b868934) by Jeff Schnitter).
+- remove cortexapps-cli install from onCreate.sh (python3 not found) ([7c5d673](https://github.com/cortexapps/cli/commit/7c5d6738b48214210d3c0e69041add614e12d483) by Jeff Schnitter).
+- detect onCreate.sh failure immediately instead of timing out ([d087cd6](https://github.com/cortexapps/cli/commit/d087cd67a3e4c02428faf2030bfbed75bdca9d19) by Jeff Schnitter).
+- log onCreate.sh output and improve timeout error message ([9860560](https://github.com/cortexapps/cli/commit/9860560c7cc3767a112486904b2c12a7d0c7f866) by Jeff Schnitter).
+- poll kubectl readiness when reusing existing Codespace ([dffa45f](https://github.com/cortexapps/cli/commit/dffa45fea68a53c88fa689337f2ef96db4eef177) by Jeff Schnitter).
+- verify saved Codespace exists before reusing, create new one if not found ([dbf8acd](https://github.com/cortexapps/cli/commit/dbf8acd81bee753bc0cf20c9162f9349f1d07c8e) by Jeff Schnitter).
+- move kubectl/helm install into onCreate.sh, remove kubectl-helm-minikube feature ([48096c6](https://github.com/cortexapps/cli/commit/48096c69b76b287f88ab8453a4fc92e48ba97c04) by Jeff Schnitter).
+- use sudo+arch-detect for kind install in onCreate.sh; clarify Codespace wait message ([caae054](https://github.com/cortexapps/cli/commit/caae054be5b60731d9fbf81c4ee54e0d6cfdac82) by Jeff Schnitter).
+- specify machine type for gh codespace create to avoid no-terminal error ([0286e0e](https://github.com/cortexapps/cli/commit/0286e0eacd9b0357dd35afba81df652a0a478f31) by Jeff Schnitter).
+- add preflight cluster connectivity check with Codespace guidance ([e5fbfe5](https://github.com/cortexapps/cli/commit/e5fbfe5cf0d87e4678e54b3589435bc760d1ad5a) by Jeff Schnitter).
+- use explicit deployment name for kubectl rollout commands ([e110b76](https://github.com/cortexapps/cli/commit/e110b769431a9ffe17f5619cf22ef5a78bbf118b) by Jeff Schnitter).
+
 ## [1.40.0](https://github.com/cortexapps/cli/releases/tag/1.40.0) - 2026-09-07
 
 <small>[Compare with 1.39.0](https://github.com/cortexapps/cli/compare/1.39.0...1.40.0)</small>
