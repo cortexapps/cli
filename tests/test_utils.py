@@ -174,6 +174,12 @@ def test_print_output_table_invalid_sort_raises():
         print_output(data, columns=["a"], sort=["bad_sort"], output_format="table")
 
 
+def test_print_output_table_unknown_sort_path_raises():
+    data = {"items": [{"tag": "b"}, {"tag": "a"}]}
+    with pytest.raises(typer.BadParameter, match="Sort path 'Tag' did not match any values"):
+        print_output(data, columns=["tag"], sort=["Tag:asc"], output_format="table")
+
+
 def test_print_output_csv(capsys):
     data = {"items": [{"name": "foo"}, {"name": "bar"}]}
     print_output(data, columns=["Name=name"], output_format="csv")
