@@ -18,27 +18,34 @@ Demonstrates the [Cortex Kubernetes agent](https://docs.cortex.io/docs/reference
 
 After setup, visit your entity's K8s tab to see live workload data synced from the cluster.
 
-## Architecture
+## Data Model
 
-```mermaid
-flowchart TD
-    subgraph CS["GitHub Codespace"]
-        subgraph kind["kind cluster — cortex-demo"]
-            K8S["Kubernetes API Server"]
-            subgraph workloads["demo workloads"]
-                DW["Deployment / StatefulSet / CronJob / Rollout"]
-            end
-            AGENT["cortex-k8s-agent pod"]
-        end
-    end
-
-    CORTEX["Cortex Platform"]
-
-    AGENT -->|"reads resources every 5 min"| K8S
-    AGENT -->|"pushes data via HTTPS"| CORTEX
+```
+  GitHub Codespace
+  ┌──────────────────────────────────────────────────────────┐
+  │  kind cluster (cortex-demo)                              │
+  │  ┌────────────────────────────────────────────────────┐  │
+  │  │                                                    │  │
+  │  │  ┌─────────────────┐   ┌──────────────────────┐   │  │
+  │  │  │  Kubernetes API │◀──│  cortex-k8s-agent    │   │  │
+  │  │  │  Server         │   │  (polls every 5 min) │   │  │
+  │  │  └─────────────────┘   └──────────┬───────────┘   │  │
+  │  │                                   │ HTTPS push     │  │
+  │  │  ┌──────────────────────────────┐ │               │  │
+  │  │  │  demo workloads              │ │               │  │
+  │  │  │  Deployment · StatefulSet    │ │               │  │
+  │  │  │  CronJob · Argo Rollout      │ │               │  │
+  │  │  └──────────────────────────────┘ │               │  │
+  │  └────────────────────────────────────────────────────┘  │
+  └──────────────────────────────────┬───────────────────────┘
+                                     ▼
+                           ┌─────────────────┐
+                           │  Cortex         │
+                           │  Platform       │
+                           └─────────────────┘
 ```
 
-The agent runs inside the kind cluster as a Kubernetes Deployment. Every 5 minutes it queries the Kubernetes API for workload resources (Deployments, StatefulSets, CronJobs, Argo Rollouts, etc.) and pushes the collected metadata to the Cortex API over HTTPS. Cortex stores the data and surfaces it on each entity's K8s tab.
+The agent runs inside the cluster as a Deployment. Every 5 minutes it queries the Kubernetes API for workload resources and pushes the metadata to Cortex over HTTPS. Cortex surfaces the data on each entity's K8s tab.
 
 ## Prerequisites
 
@@ -102,11 +109,11 @@ The setup script is idempotent — re-run `cortex solutions post-install -s kube
 
 For the Codespace path, the Codespace name is saved locally so re-runs reconnect to the same Codespace rather than creating a new one.
 
-## Next steps
+## After Installing
 
 Once you have verified the agent working against the demo cluster, roll it out to your real clusters:
 
-1. **Install the Helm chart into each cluster** you want Cortex to ingest. For each cluster, run:
+1. **Install the Cortex Kubernetes agent Helm chart into each cluster** for which you want data associated with your Cortex entities. Give each cluster a distinct `clusterName` — this is how Cortex identifies which cluster a workload belongs to:
 
    ```bash
    helm upgrade --install cortex-k8s-agent \
@@ -116,19 +123,12 @@ Once you have verified the agent working against the demo cluster, roll it out t
      --set app.baseUrl=https://api.getcortexapp.com
    ```
 
-   Give each cluster a distinct `clusterName` — this is how Cortex identifies which cluster a workload belongs to.
+2. **Ensure your Kubernetes workloads have the appropriate annotation or label** so Cortex can map them to your catalog entities:
 
-2. **Annotate your workloads** with your Cortex entity tag so the agent can map resources to catalog entities:
-
-   ```yaml
-   metadata:
-     annotations:
-       cortex.io/service: my-service-tag
-   ```
+   - **Annotation** (default): add `cortex.io/tag: <entity-tag>` to each workload's metadata
+   - **Label** (if you have configured K8s metadata label customization in Cortex Settings): add the configured label key with the entity tag as the value, e.g. `app: <entity-tag>`
 
 3. **Wait for the first sync** (~5 min) then visit each entity's K8s tab in Cortex to confirm workload data is flowing.
-
-4. **Set up additional clusters** by repeating step 1 with a different `clusterName` for each environment (e.g., `prod-us-east`, `staging`, `dev`).
 
 See the [Cortex Kubernetes integration docs](https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes) for full configuration options including namespace filtering, custom resource types, and RBAC setup.
 
