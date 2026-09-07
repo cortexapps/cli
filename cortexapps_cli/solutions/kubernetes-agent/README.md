@@ -26,16 +26,16 @@ After setup, visit your entity's K8s tab to see live workload data synced from t
   │  kind cluster (cortex-demo)                              │
   │  ┌────────────────────────────────────────────────────┐  │
   │  │                                                    │  │
-  │  │  ┌─────────────────┐   ┌──────────────────────┐   │  │
-  │  │  │  Kubernetes API │◀──│  cortex-k8s-agent    │   │  │
-  │  │  │  Server         │   │  (polls every 5 min) │   │  │
-  │  │  └─────────────────┘   └──────────┬───────────┘   │  │
+  │  │  ┌─────────────────┐   ┌──────────────────────┐    │  │
+  │  │  │  Kubernetes API │◀──│  cortex-k8s-agent    │    │  │
+  │  │  │  Server         │   │  (polls every 5 min) │    │  │
+  │  │  └─────────────────┘   └──────────┬───────────┘    │  │
   │  │                                   │ HTTPS push     │  │
-  │  │  ┌──────────────────────────────┐ │               │  │
-  │  │  │  demo workloads              │ │               │  │
-  │  │  │  Deployment · StatefulSet    │ │               │  │
-  │  │  │  CronJob · Argo Rollout      │ │               │  │
-  │  │  └──────────────────────────────┘ │               │  │
+  │  │  ┌──────────────────────────────┐ │                │  │
+  │  │  │  demo workloads              │ │                │  │
+  │  │  │  Deployment · StatefulSet    │ │                │  │
+  │  │  │  CronJob · Argo Rollout      │ │                │  │
+  │  │  └──────────────────────────────┘ │                │  │
   │  └────────────────────────────────────────────────────┘  │
   └──────────────────────────────────┬───────────────────────┘
                                      ▼
