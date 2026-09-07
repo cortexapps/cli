@@ -1,0 +1,126 @@
+name: "Solution: Trigger Jenkins Deploy"
+tag: jenkins-trigger-deploy
+description: |
+  Triggers a Jenkins pipeline and waits for it to report completion back to Cortex,
+  registering a deploy event on the target entity. No inputs required — Jenkins
+  coordinates (url, job) are read from the entity's custom metadata.
+isDraft: false
+isRunnableViaApi: true
+filter:
+  type: ENTITY
+variables:
+  - slug: jenkins-job
+    type: STRING
+    defaultValue: ""
+runResponseTemplate: |
+  # Jenkins Deploy — Complete
+
+  **Job:** [{{variables.jenkins-job}}](JENKINS_BASE_URL/job/{{variables.jenkins-job}})
+
+  **Cortex Deploys:** [see deploys for {{context.entity.tag}}](https://app.getcortexapp.com/admin/resources?tag={{context.entity.tag}})
+
+  ---
+
+  ## How this workflow works
+
+  **1. Cortex read the entity's Jenkins configuration**
+
+  The workflow fetched `x-cortex-custom-metadata.jenkins` from this entity to find
+  the Jenkins URL and job name — no manual input required.
+
+  **2. Cortex triggered the Jenkins build**
+
+  It POSTed to the Jenkins `buildWithParameters` API with the callback URL and entity
+  tag in the POST body so Jenkins receives them as build parameters.
+
+  **3. Jenkins ran the pipeline**
+
+  The `cortex-deploy` pipeline runs three stages:
+
+  - **Build** — your build steps (replace `echo "Starting build..."` with your real commands)
+
+  - **Deploy** — your deploy steps, with intermediate `UPDATE` callbacks sent to Cortex
+    so you can track progress in real time; replace the placeholder loop with your real deploy
+
+  - **Record Deploy in Cortex** — POSTs a deploy event to `/api/v1/catalog/{tag}/deploys`,
+    recording build number, URL, and job name. This feeds the Deploy Health scorecard.
+
+  The `post { always { ... } }` block POSTs the final `SUCCESS` or `FAILURE` status to the
+  callback URL — which is how Cortex knows the workflow run is done.
+
+  **4. Cortex received the callback**
+
+  When Jenkins posted to the callback URL, Cortex marked this workflow run complete.
+
+  ---
+
+  ## Adapting this to your own pipelines
+
+  1. Replace the placeholder `echo` in the **Build** stage and the progress loop in the
+     **Deploy** stage with your actual build and deploy commands
+
+  2. Add the Deploy, Record Deploy, and callback steps to any existing Jenkinsfile — they
+     only need the `CORTEX_API_KEY` and `CORTEX_BASE_URL` credentials plus the two build
+     parameters
+
+  3. Add `x-cortex-custom-metadata.jenkins` to your entity's catalog YAML with
+     `url` and `job` fields — no credentials here. If your Jenkins requires auth,
+     create a Cortex secret `jenkins_auth = base64(user:token)` and add
+     `Authorization: "Basic {{context.secrets.jenkins_auth}}"` to the workflow's
+     Trigger Jenkins Build action.
+actions:
+- name: Get Jenkins config
+  slug: get-jenkins-config
+  schema:
+    type: HTTP_REQUEST
+    httpMethod: GET
+    url: "https://api.getcortexapp.com/api/v1/catalog/{{context.entity.tag}}/custom-data/jenkins"
+    headers:
+      Authorization: "Bearer {{context.secrets.cortex_api_key}}"
+      Content-Type: application/json
+    integration: null
+    integrationAlias: null
+  outgoingActions:
+  - parse-jenkins-config
+  isRootAction: true
+- name: Parse Jenkins config
+  slug: parse-jenkins-config
+  schema:
+    type: JQ
+    expression: |
+      .actions."get-jenkins-config".outputs.body.value as $j |
+      if ($j == null or $j.job == null) then
+        error("No Jenkins configuration found. Add x-cortex-custom-metadata.jenkins with url and job to this entity.")
+      else
+        { job: $j.job }
+      end
+  outgoingActions:
+  - set-variables
+  isRootAction: false
+- name: Set variables
+  slug: set-variables
+  schema:
+    type: SET_VARIABLES
+    variables:
+    - slug: jenkins-job
+      source:
+        path: actions.parse-jenkins-config.outputs.result.job
+        type: REFERENCE
+  outgoingActions:
+  - trigger-deploy
+  isRootAction: false
+- name: Trigger Jenkins Build
+  slug: trigger-deploy
+  schema:
+    type: HTTP_REQUEST_ASYNC
+    httpMethod: POST
+    url: "JENKINS_BASE_URL/job/{{variables.jenkins-job}}/buildWithParameters"
+    integration: null
+    integrationAlias: null
+    headers:
+      Content-Type: application/x-www-form-urlencoded
+      Authorization: "Basic {{{context.secrets.jenkins_auth}}}"
+    payload: "callback_url={{{callbackUrl}}}&cortex_entity_tag={{context.entity.tag}}"
+    timeoutInSeconds: 60
+  outgoingActions: []
+  isRootAction: false

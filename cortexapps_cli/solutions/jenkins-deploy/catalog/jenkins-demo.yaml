@@ -1,0 +1,13 @@
+openapi: "3.0.0"
+info:
+  title: Jenkins Demo
+  x-cortex-tag: jenkins-demo
+  x-cortex-type: service
+  x-cortex-description: Sample service for demonstrating deploy tracking via Jenkins pipelines.
+  x-cortex-definition: {}
+  x-cortex-groups:
+    - demo-jenkins-deploys
+  x-cortex-custom-metadata:
+    jenkins:
+      url: PLACEHOLDER_JENKINS_URL
+      job: cortex-deploy

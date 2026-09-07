@@ -115,7 +115,7 @@ def test_approve_exemption():
     response = cli(["scorecards", "exemptions", "approve", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-ri", rule_id])
     assert response['exemptions'][0]['exemptionStatus']['status'] == 'APPROVED', "exemption state should be APPROVED"
     response = cli(["scorecards", "exemptions", "revoke", "-s", "cli-test-scorecard", "-t", "cli-test-service", "-r", "I revoke you", "-ri", rule_id])
-    assert response['exemptions'][0]['exemptionStatus']['status'] == 'REJECTED', "exemption state should be REJECTED"
+    assert response['exemptions'][0]['exemptionStatus']['status'] == 'REVOKED', "exemption state should be REVOKED"
 
 @pytest.fixture(scope='session')
 def test_exemption_that_will_be_denied():
