@@ -1,0 +1,9 @@
+# Bundled copy of the Cortex k8s-agent helm chart for demo purposes.
+# This copy is not kept up-to-date. Once the chart is published to a
+# public helm repo, this bundle will be replaced with a helm repo reference.
+apiVersion: v2
+name: cortex-k8s-agent
+description: A Helm chart for deploying Cortex K8s agent in your cluster
+type: application
+version: 0.1.0
+appVersion: 1.16.0

@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: demo-cronjob
+  labels:
+    app: demo-k8s-label
+  annotations:
+    cortex.io/tag: demo-kubernetes
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox:latest
+            command:
+            - /bin/sh
+            - -c
+            - echo "$(date '+%Y-%m-%d %H:%M:%S') - Hello from demo-kubernetes cronjob" >> /tmp/hello-world.txt
+          restartPolicy: OnFailure

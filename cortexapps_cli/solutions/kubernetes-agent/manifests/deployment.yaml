@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-deployment
+  labels:
+    app: demo-k8s-label
+  annotations:
+    cortex.io/tag: demo-kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-k8s
+  template:
+    metadata:
+      labels:
+        app: demo-k8s
+    spec:
+      containers:
+      - name: hello
+        image: nginx:alpine
+        ports:
+        - containerPort: 80

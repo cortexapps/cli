@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Log all output so failures are diagnosable: cat /tmp/onCreate.log
+exec > >(tee /tmp/onCreate.log) 2>&1
+
+# Write a failure sentinel on non-zero exit so setup.py can detect it fast
+_on_exit() {
+    local rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$rc" > /tmp/onCreate.failed
+    fi
+}
+trap _on_exit EXIT
+
+ARCH=$(uname -m)
+BIN_ARCH="amd64"
+[ "$ARCH" = "aarch64" ] && BIN_ARCH="arm64"
+
+echo "==> Installing kubectl..."
+curl -Lo /tmp/kubectl "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/${BIN_ARCH}/kubectl"
+sudo install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+
+echo "==> Installing helm..."
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+sudo chmod a+rx /usr/local/bin/helm
+
+echo "==> Installing kind..."
+curl -Lo /tmp/kind "https://kind.sigs.k8s.io/dl/latest/kind-linux-${BIN_ARCH}"
+sudo install -o root -g root -m 0755 /tmp/kind /usr/local/bin/kind
+
+echo "==> Creating kind cluster 'cortex-demo'..."
+kind create cluster --name cortex-demo --wait 60s
+
+echo "==> Verifying cluster..."
+kubectl cluster-info --context kind-cortex-demo
+
+echo "==> Done."

@@ -1,0 +1,483 @@
+"""
+Post-install setup script for the kubernetes-agent solution.
+Deploys the Cortex k8s-agent either by creating a GitHub Codespace with a kind
+cluster, or against an existing Kubernetes cluster.
+Run via: cortex solutions post-install -s kubernetes-agent
+"""
+
+SETUP_DESCRIPTION = (
+    "This solution deploys the Cortex Kubernetes agent to a Kubernetes cluster "
+    "and creates a demo entity to demonstrate the k8s integration. "
+    "It can spin up a GitHub Codespace with a kind cluster "
+    "(https://kind.sigs.k8s.io) automatically, or deploy to any existing cluster."
+)
+
+import shlex
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import requests
+
+try:
+    from cortexapps_cli.solutions._lib.setup_base import SolutionSetup
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from _lib.setup_base import SolutionSetup
+
+SOLUTION_DIR = Path(__file__).parent
+CATALOG_FILE = SOLUTION_DIR / "catalog" / "demo-kubernetes.yaml"
+MANIFESTS_DIR = SOLUTION_DIR / "manifests"
+HELM_CHART_DIR = SOLUTION_DIR / "helm-chart"
+
+ARGO_CRD_URL = "https://raw.githubusercontent.com/argoproj/argo-rollouts/stable/manifests/crds/rollout-crd.yaml"
+
+CODESPACE_BRANCH = "worktree-kubernetes-agent-solution"
+CODESPACE_READY_TIMEOUT = 900  # 15 minutes for Codespace + kind cluster startup
+CODESPACE_POLL_INTERVAL = 20   # seconds between readiness checks
+
+
+class KubernetesAgentSetup(SolutionSetup):
+    solution_tag = "kubernetes-agent"
+
+    def __init__(
+        self,
+        cortex_api_key: str = None,
+        cortex_base_url: str = None,
+        no_prompt: bool = False,
+        **kwargs,
+    ):
+        super().__init__(no_prompt=no_prompt, **kwargs)
+        self._api_key = cortex_api_key or ""
+        self._base_url = (cortex_base_url or "https://api.getcortexapp.com").rstrip("/")
+        self._ghcr_token = ""
+        self._cluster_name = ""
+        self._github_repo = ""
+        # Recover codespace name from previous run; its presence means codespace mode
+        self._codespace_name = self._state.get("codespace_name", "")
+        self._use_codespace = bool(self._codespace_name)
+
+    def collect_prompts(self) -> None:
+        # If a Codespace was already created in a prior run, stay in codespace mode.
+        # Otherwise ask the user which path they want.
+        if not self._codespace_name:
+            use_cs_raw = self.prompt(
+                "use_codespace",
+                "Create a new GitHub Codespace with a kind cluster?"
+                " (yes = spin up Codespace, no = use an existing configured cluster)",
+                default="yes",
+            )
+            self._use_codespace = use_cs_raw.lower() in ("yes", "y", "true", "1")
+
+        if self._use_codespace:
+            self._github_repo = self.prompt(
+                "github_repo",
+                "GitHub repository to create the Codespace from (org/repo)",
+                default="cortexapps/cli",
+            )
+
+        self._ghcr_token = self.prompt(
+            "GHCR_TOKEN",
+            "GitHub PAT provided by Cortex Customer Engineering for pulling the k8s-agent image"
+            " (see https://docs.cortex.io/ingesting-data-into-cortex/integrations/kubernetes#prerequisites)",
+            env_var="GHCR_TOKEN",
+            hidden=True,
+        )
+        self._cluster_name = self.prompt(
+            "cluster_name",
+            "Name for this cluster as it will appear in Cortex",
+            default="cortex-demo",
+        )
+
+    # -------------------------------------------------------------------------
+    # Helpers
+    # -------------------------------------------------------------------------
+
+    def _remote_solution_dir(self) -> str:
+        """Path to the solution directory inside the Codespace."""
+        repo_name = self._github_repo.split("/")[-1]
+        return f"/workspaces/{repo_name}/cortexapps_cli/solutions/kubernetes-agent"
+
+    def _run_remote(self, bash_cmd: str) -> None:
+        """Run a bash command inside the Codespace.
+
+        Pipes the script to 'tee' via SSH stdin, then executes it.
+        This avoids two pitfalls of 'gh codespace ssh -- bash -c SCRIPT':
+          1. gh joins post-'--' args with spaces before the remote shell
+             sees them, so metacharacters (|, >, ;) in the script are
+             interpreted by the remote shell instead of bash.
+          2. 'bash -lc' sources profile scripts that print to stdout,
+             corrupting piped commands (e.g. kubectl create | kubectl apply).
+        """
+        script = (
+            "#!/bin/bash\n"
+            "set -euo pipefail\n"
+            "export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\n"
+            "export KUBECONFIG=/home/vscode/.kube/config\n"
+            f"{bash_cmd}\n"
+        ).encode()
+        remote_script = "/home/vscode/cortex-run.sh"
+        subprocess.run(
+            ["gh", "codespace", "ssh", "-c", self._codespace_name,
+             "--", "tee", remote_script],
+            input=script,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["gh", "codespace", "ssh", "-c", self._codespace_name,
+             "--", "bash", remote_script],
+            check=True,
+        )
+
+    def _fetch_image_tag(self) -> str:
+        """Fetch the latest k8s-agent image tag from the GitHub API."""
+        r = requests.get(
+            "https://api.github.com/orgs/cortexapps/packages/container/k8s-agent%2Fk8s-agent/versions",
+            headers={
+                "Authorization": f"Bearer {self._ghcr_token}",
+                "Accept": "application/vnd.github+json",
+            },
+        )
+        r.raise_for_status()
+        versions = r.json()
+        if not versions:
+            raise RuntimeError("No k8s-agent versions found in GHCR — is GHCR_TOKEN valid?")
+        tags = versions[0].get("metadata", {}).get("container", {}).get("tags", [])
+        tag = tags[0] if tags else ""
+        if not tag:
+            raise RuntimeError("Could not determine k8s-agent image tag from GHCR API response")
+        print(f"  Using image tag: {tag}")
+        return tag
+
+    # -------------------------------------------------------------------------
+    # Step: Create GitHub Codespace (codespace mode only)
+    # -------------------------------------------------------------------------
+
+    def _fetch_codespace_log(self) -> str:
+        """Fetch /tmp/onCreate.log from the Codespace, or a placeholder if unavailable."""
+        result = subprocess.run(
+            ["gh", "codespace", "ssh", "-c", self._codespace_name, "--", "cat", "/tmp/onCreate.log"],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip() if result.stdout.strip() else "(log not available)"
+
+    def _check_gh_cli(self) -> None:
+        """Verify gh CLI is installed and authenticated."""
+        if subprocess.run(["gh", "--version"], capture_output=True).returncode != 0:
+            raise RuntimeError(
+                "The 'gh' CLI is required but not found.\n"
+                "Install it from https://cli.github.com and run 'gh auth login' first."
+            )
+        if subprocess.run(["gh", "auth", "status"], capture_output=True).returncode != 0:
+            raise RuntimeError(
+                "The 'gh' CLI is not authenticated.\n"
+                "Run 'gh auth login' and try again."
+            )
+
+    def _create_codespace(self) -> None:
+        """Create a GitHub Codespace and wait for the kind cluster to be ready."""
+        # Always check gh CLI — also needed for SSH steps that follow
+        self._check_gh_cli()
+
+        existing = bool(self._codespace_name)
+        if self._codespace_name:
+            # Verify the saved Codespace still exists; if not, create a fresh one
+            probe = subprocess.run(
+                ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "name"],
+                capture_output=True,
+            )
+            if probe.returncode == 0:
+                print(f"  Using existing Codespace: {self._codespace_name}")
+            else:
+                print(f"  Saved Codespace '{self._codespace_name}' no longer exists — creating a new one...")
+                self._codespace_name = ""
+                self._state.pop("codespace_name", None)
+                existing = False
+
+        if not self._codespace_name:
+            print(f"  Creating GitHub Codespace from {self._github_repo}...")
+            result = subprocess.run(
+                [
+                    "gh", "codespace", "create",
+                    "--repo", self._github_repo,
+                    "--branch", CODESPACE_BRANCH,
+                    "--devcontainer-path", ".devcontainer/kubernetes-agent/devcontainer.json",
+                    "--machine", "basicLinux32gb",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self._codespace_name = result.stdout.strip()
+            if not self._codespace_name:
+                raise RuntimeError("gh codespace create did not return a codespace name")
+            print(f"  Codespace created: {self._codespace_name}")
+
+            # Persist the name so re-runs find the existing Codespace
+            self._state["codespace_name"] = self._codespace_name
+            self._save_file()
+
+        # Phase 1: wait for Codespace to reach Available state (own deadline)
+        if not existing:
+            print("  Waiting for Codespace to start...")
+            phase1_deadline = time.time() + CODESPACE_READY_TIMEOUT
+            while time.time() < phase1_deadline:
+                state_result = subprocess.run(
+                    ["gh", "codespace", "view", "-c", self._codespace_name, "--json", "state"],
+                    capture_output=True,
+                    text=True,
+                )
+                if state_result.returncode == 0:
+                    import json as _json
+                    state = _json.loads(state_result.stdout).get("state", "")
+                    if state == "Available":
+                        print("  Codespace is up.")
+                        break
+                time.sleep(CODESPACE_POLL_INTERVAL)
+            else:
+                raise RuntimeError(
+                    f"Timed out waiting for Codespace '{self._codespace_name}' to start.\n"
+                    "Re-run this command to retry."
+                )
+
+        # Phase 2: wait for onCreate.sh to finish (kind cluster ready)
+        # Fresh deadline — Phase 1 timing does not eat into this budget.
+        # Always poll — even for existing Codespaces that may still be initializing.
+        deadline = time.time() + CODESPACE_READY_TIMEOUT
+        print("  Waiting for kind cluster to be ready (may take 15-20 min on first run)...")
+        while time.time() < deadline:
+            # Check failure sentinel — simple command, no shell metacharacters.
+            fail_check = subprocess.run(
+                ["gh", "codespace", "ssh", "-c", self._codespace_name,
+                 "--", "test", "-f", "/tmp/onCreate.failed"],
+                capture_output=True,
+            )
+            if fail_check.returncode == 0:
+                log = self._fetch_codespace_log()
+                raise RuntimeError(
+                    f"onCreate.sh failed in Codespace '{self._codespace_name}'.\n\n"
+                    f"--- /tmp/onCreate.log ---\n{log}\n---"
+                )
+
+            # Check cluster readiness with explicit binary + kubeconfig paths.
+            # Non-interactive SSH sessions don't load .bashrc, so PATH and
+            # KUBECONFIG are not set from the user's shell configuration.
+            ready_check = subprocess.run(
+                ["gh", "codespace", "ssh", "-c", self._codespace_name,
+                 "--", "/usr/local/bin/kubectl",
+                 "--kubeconfig", "/home/vscode/.kube/config",
+                 "cluster-info"],
+                capture_output=True,
+            )
+            if ready_check.returncode == 0:
+                print("  Kind cluster is ready.")
+                return
+            time.sleep(CODESPACE_POLL_INTERVAL)
+
+        log = self._fetch_codespace_log()
+        raise RuntimeError(
+            f"Timed out waiting for the kind cluster in Codespace '{self._codespace_name}'.\n\n"
+            f"--- /tmp/onCreate.log ---\n{log}\n---\n\n"
+            "Re-run this command to retry once the cluster is ready."
+        )
+
+    # -------------------------------------------------------------------------
+    # Step: Check existing cluster (existing-cluster mode only)
+    # -------------------------------------------------------------------------
+
+    def _check_cluster(self) -> None:
+        """Verify kubectl can reach a running cluster."""
+        result = subprocess.run(["kubectl", "cluster-info"], capture_output=True)
+        if result.returncode != 0:
+            raise RuntimeError(
+                "kubectl cannot reach a cluster.\n"
+                "Ensure your kubectl context points to a running Kubernetes cluster and try again."
+            )
+
+    # -------------------------------------------------------------------------
+    # Steps: shared between both modes
+    # -------------------------------------------------------------------------
+
+    def _create_secrets(self) -> None:
+        if self.already_done("create_secrets"):
+            return
+        print("  Creating cortex-docker-registry-secret...")
+        if self._use_codespace:
+            self._run_remote(
+                f"kubectl create secret docker-registry cortex-docker-registry-secret "
+                f"--docker-server=ghcr.io --docker-username=cortex "
+                f"--docker-password={shlex.quote(self._ghcr_token)} "
+                f"--dry-run=client -o yaml | kubectl apply -f -"
+            )
+        else:
+            result = subprocess.run(
+                [
+                    "kubectl", "create", "secret", "docker-registry",
+                    "cortex-docker-registry-secret",
+                    "--docker-server=ghcr.io",
+                    "--docker-username=cortex",
+                    f"--docker-password={self._ghcr_token}",
+                    "--dry-run=client", "-o", "yaml",
+                ],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(["kubectl", "apply", "-f", "-"], input=result.stdout, check=True)
+
+        print("  Creating cortex-key secret...")
+        if self._use_codespace:
+            self._run_remote(
+                f"kubectl create secret generic cortex-key "
+                f"--from-literal=api-key={shlex.quote(self._api_key)} "
+                f"--dry-run=client -o yaml | kubectl apply -f -"
+            )
+        else:
+            result = subprocess.run(
+                [
+                    "kubectl", "create", "secret", "generic", "cortex-key",
+                    f"--from-literal=api-key={self._api_key}",
+                    "--dry-run=client", "-o", "yaml",
+                ],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(["kubectl", "apply", "-f", "-"], input=result.stdout, check=True)
+
+        self.mark_done("create_secrets")
+
+    def _helm_install(self) -> None:
+        if self.already_done("helm_install"):
+            return
+        image_tag = self._fetch_image_tag()
+        print("  Installing k8s-agent via helm...")
+        if self._use_codespace:
+            helm_chart = f"{self._remote_solution_dir()}/helm-chart"
+            self._run_remote(
+                f"helm upgrade --install cortex-k8s-agent {helm_chart} "
+                f"--set image.tag={shlex.quote(image_tag)} "
+                f"--set app.baseUrl={shlex.quote(self._base_url)} "
+                f"--set app.clusterName={shlex.quote(self._cluster_name)}"
+            )
+            self._run_remote("kubectl rollout restart deployment/cortex-k8s-agent")
+        else:
+            subprocess.run(
+                [
+                    "helm", "upgrade", "--install", "cortex-k8s-agent",
+                    str(HELM_CHART_DIR),
+                    "--set", f"image.tag={image_tag}",
+                    "--set", f"app.baseUrl={self._base_url}",
+                    "--set", f"app.clusterName={self._cluster_name}",
+                ],
+                check=True,
+            )
+            # Restart to ensure secrets/configmaps are picked up
+            subprocess.run(
+                ["kubectl", "rollout", "restart", "deployment/cortex-k8s-agent"],
+                check=True,
+            )
+        self.mark_done("helm_install")
+
+    def _wait_for_readiness(self) -> None:
+        if self.already_done("wait_for_readiness"):
+            return
+        print("  Waiting for k8s-agent pod to be ready (timeout: 120s)...")
+        if self._use_codespace:
+            self._run_remote(
+                "kubectl rollout status deployment/cortex-k8s-agent --timeout=120s"
+            )
+        else:
+            subprocess.run(
+                [
+                    "kubectl", "rollout", "status", "deployment/cortex-k8s-agent",
+                    "--timeout=120s",
+                ],
+                check=True,
+            )
+        self.mark_done("wait_for_readiness")
+
+    def _install_argo_crd(self) -> None:
+        if self.already_done("install_argo_crd"):
+            return
+        print("  Installing Argo Rollouts CRD...")
+        # --server-side avoids the 262144-byte annotation limit that
+        # kubectl apply (client-side) hits with large CRDs like Argo Rollouts.
+        if self._use_codespace:
+            self._run_remote(f"kubectl apply --server-side -f {ARGO_CRD_URL}")
+        else:
+            subprocess.run(
+                ["kubectl", "apply", "--server-side", "-f", ARGO_CRD_URL], check=True
+            )
+        self.mark_done("install_argo_crd")
+
+    def _apply_manifests(self) -> None:
+        if self.already_done("apply_manifests"):
+            return
+        print("  Applying demo k8s manifests...")
+        if self._use_codespace:
+            manifests = f"{self._remote_solution_dir()}/manifests"
+            self._run_remote(f"kubectl apply -f {manifests}")
+        else:
+            subprocess.run(["kubectl", "apply", "-f", str(MANIFESTS_DIR)], check=True)
+        self.mark_done("apply_manifests")
+
+    def _create_entity(self) -> None:
+        if self.already_done("create_entity"):
+            return
+        print("  Creating demo-kubernetes Cortex entity...")
+        yaml_content = CATALOG_FILE.read_bytes()
+        r = requests.post(
+            f"{self._base_url}/api/v1/open-api",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/openapi;charset=UTF-8",
+            },
+            data=yaml_content,
+        )
+        if not r.ok:
+            raise RuntimeError(
+                f"Failed to create Cortex entity: {r.status_code} {r.text}"
+            )
+        self.mark_done("create_entity")
+
+    def steps(self) -> list:
+        first_step = (
+            ("Create GitHub Codespace", self._create_codespace)
+            if self._use_codespace
+            else ("Check cluster connectivity", self._check_cluster)
+        )
+        return [
+            first_step,
+            ("Create k8s secrets", self._create_secrets),
+            ("Install k8s-agent via helm", self._helm_install),
+            ("Wait for agent readiness", self._wait_for_readiness),
+            ("Install Argo Rollouts CRD", self._install_argo_crd),
+            ("Apply demo k8s manifests", self._apply_manifests),
+            ("Create demo Cortex entity", self._create_entity),
+        ]
+
+    def post_steps(self) -> None:
+        print("\n✓ Kubernetes agent deployed and demo workloads running.\n")
+        if self._codespace_name:
+            print(f"Codespace: {self._codespace_name}")
+            print(f"  Open terminal: gh codespace ssh -c {self._codespace_name}")
+            print(f"  Stop Codespace: gh codespace stop -c {self._codespace_name}")
+            print()
+        print("The agent syncs every 5 minutes. After the first sync, visit:")
+        print(f"  {self._base_url.replace('api.', 'app.')}/admin/resources?tag=demo-kubernetes")
+        print("\nYou should see: demo-deployment, demo-statefulset, demo-cronjob, demo-rollout")
+        print("\nNote: GHCR_TOKEN requirement goes away once the k8s-agent image is made public.")
+
+
+def main(cortex_api_key=None, cortex_base_url=None, no_prompt=False, **kwargs):
+    KubernetesAgentSetup(
+        cortex_api_key=cortex_api_key,
+        cortex_base_url=cortex_base_url,
+        no_prompt=no_prompt,
+    ).run()
+
+
+if __name__ == "__main__":
+    main()
