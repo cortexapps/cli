@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.42.0](https://github.com/cortexapps/cli/releases/tag/1.42.0) - 2026-09-14
+
+<small>[Compare with 1.41.0](https://github.com/cortexapps/cli/compare/1.41.0...1.42.0)</small>
+
+### Features
+
+- add verifications periods and entity CLI commands ([9c4f4a5](https://github.com/cortexapps/cli/commit/9c4f4a526e4c60d129c1bb5d7391ba4bd9b4a53f) by Jeff Schnitter).
+
 ## [1.41.0](https://github.com/cortexapps/cli/releases/tag/1.41.0) - 2026-09-07
 
 <small>[Compare with 1.40.0](https://github.com/cortexapps/cli/compare/1.40.0...1.41.0)</small>
