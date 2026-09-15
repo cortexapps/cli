@@ -14,7 +14,6 @@ import requests
 
 from cortexapps_cli.cortex_client import CortexClient
 
-import cortexapps_cli.commands.ai_skills as ai_skills
 import cortexapps_cli.commands.api_keys as api_keys
 import cortexapps_cli.commands.audit_logs as audit_logs
 import cortexapps_cli.commands.backup as backup
@@ -47,6 +46,7 @@ import cortexapps_cli.commands.solutions as solutions
 import cortexapps_cli.commands.teams as teams
 import cortexapps_cli.commands.users as users
 import cortexapps_cli.commands.verifications as verifications
+import cortexapps_cli.commands.whoami as whoami
 import cortexapps_cli.commands.workflows as workflows
 
 class _SortedTyper(typer.Typer):
@@ -68,7 +68,7 @@ app = _SortedTyper(
 # interleaved with add_typer() calls so they appear alphabetically in --help.
 
 # global options
-@app.callback()
+@app.callback(invoke_without_command=True)
 def global_callback(
     ctx: typer.Context,
     api_key: str = typer.Option(None, "--api-key", "-k", help="API key", envvar="CORTEX_API_KEY"),
@@ -142,6 +142,10 @@ def global_callback(
     # strip any quotes or spaces from the api_key and url
     api_key = api_key.strip('"\' ')
     url = url.strip('"\' /')
+
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
 
     ctx.obj["client"] = CortexClient(api_key, tenant, numeric_level, url, rate_limit)
 
@@ -253,7 +257,6 @@ def version():
     print(version)
 
 # Register all commands alphabetically so they appear in order in --help
-app.add_typer(ai_skills.app, name="ai-skills")
 app.add_typer(api_keys.app, name="api-keys")
 app.add_typer(audit_logs.app, name="audit-logs")
 app.add_typer(backup.app, name="backup")
@@ -288,6 +291,7 @@ app.add_typer(teams.app, name="teams")
 app.add_typer(users.app, name="users")
 app.add_typer(verifications.app, name="verifications")
 app.command()(version)
+app.add_typer(whoami.app, name="whoami")
 app.add_typer(workflows.app, name="workflows")
 
 if __name__ == "__main__":

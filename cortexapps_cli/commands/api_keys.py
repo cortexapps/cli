@@ -139,6 +139,14 @@ def get(
     print_output_with_context(ctx, r)
 
 @app.command()
+def current(ctx: typer.Context):
+    """
+    Print the API key currently in use. Useful for passing to scripts, e.g. $(cortex api-keys current).
+    """
+    client = ctx.obj["client"]
+    typer.echo(client.api_key)
+
+@app.command()
 def delete(
     ctx: typer.Context,
     cid: str = typer.Option(..., "--cid", "-c", help="The unique, auto-generated identifier for the API key"),
