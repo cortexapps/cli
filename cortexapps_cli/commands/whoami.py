@@ -42,8 +42,7 @@ def whoami(ctx: typer.Context):
     rows = [
         ("Base URL",   client.base_url),
         ("Tenant",     client.tenant),
-        ("Tenant ID",  str(claims["tenant-id"]) if "tenant-id" in claims else "— (not encoded in token)"),
-        ("User ID",    claims.get("sub") or "—"),
+        ("Tenant ID",  claims.get("sub") or "—"),
         ("Token Type", claims.get("type") or "—"),
         ("Auth Scope", claims.get("key-authenticated-request-type") or "—"),
         ("Issued",     fmt_ts(claims.get("iat"))),
