@@ -47,6 +47,7 @@ import cortexapps_cli.commands.solutions as solutions
 import cortexapps_cli.commands.teams as teams
 import cortexapps_cli.commands.users as users
 import cortexapps_cli.commands.verifications as verifications
+import cortexapps_cli.commands.whoami as whoami
 import cortexapps_cli.commands.workflows as workflows
 
 class _SortedTyper(typer.Typer):
@@ -288,6 +289,7 @@ app.add_typer(teams.app, name="teams")
 app.add_typer(users.app, name="users")
 app.add_typer(verifications.app, name="verifications")
 app.command()(version)
+app.add_typer(whoami.app, name="whoami")
 app.add_typer(workflows.app, name="workflows")
 
 if __name__ == "__main__":
