@@ -11,9 +11,8 @@ info:
     members:
       - name: Emma Johnson
         email: emma.johnson@cortex.io
-  x-cortex-custom-data:
-    - key: ai-budget-weekly
-      value: 280
+  x-cortex-custom-metadata:
+    ai-budget-weekly: 280
   x-cortex-relationships:
     - type: team-member
       destinations:

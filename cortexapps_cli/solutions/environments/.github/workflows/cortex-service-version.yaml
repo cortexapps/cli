@@ -41,7 +41,7 @@ jobs:
                 "x-cortex-tag": "${{ steps.meta.outputs.entity_tag }}",
                 "x-cortex-type": "service-version",
                 "x-cortex-description": "${{ steps.meta.outputs.service }} version ${{ steps.meta.outputs.version }}",
-                "x-cortex-custom-data": {
+                "x-cortex-custom-metadata": {
                   "service": "${{ steps.meta.outputs.service }}",
                   "version": "${{ steps.meta.outputs.version }}",
                   "github_release_url": "${{ github.event.release.html_url }}",
