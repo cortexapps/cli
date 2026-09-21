@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.43.0](https://github.com/cortexapps/cli/releases/tag/1.43.0) - 2026-09-21
+
+<small>[Compare with 1.42.0](https://github.com/cortexapps/cli/compare/1.42.0...1.43.0)</small>
+
+### Bug Fixes
+
+- use x-cortex-custom-metadata key in environments and ai-spend solutions ([f4ea129](https://github.com/cortexapps/cli/commit/f4ea1297438fc95bc9c436474098b6d8cc7f492e) by Aaron Wirick).
+
 ## [1.42.0](https://github.com/cortexapps/cli/releases/tag/1.42.0) - 2026-09-14
 
 <small>[Compare with 1.41.0](https://github.com/cortexapps/cli/compare/1.41.0...1.42.0)</small>
