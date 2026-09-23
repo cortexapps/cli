@@ -48,6 +48,10 @@ cortex solutions install -s ai-agents
 
 ## After Installing
 
+**AI Agents catalog**
+
+AI agents are available in a catalog named [AI Agents](https://app.getcortexapp.com/admin/catalogs/ai-agents).
+
 **Replace the sample entities with your real agents**
 
 The nine sample entities use `platform-engineering` as a placeholder team and `owner@example.com` as a placeholder business owner. For each real agent:
@@ -112,14 +116,3 @@ x-cortex-git:
 **Reaching Gold**
 
 The Gold rule checks that the agent has been verified within the last 90 days (`verifications().lastVerifiedAt() != null and verifications().lastVerifiedAt().fromNow() > duration("P-90D")`). Verify entities via the Cortex UI or API — none of the sample entities start at Gold by design. Wire a quarterly reminder or a GitHub Action on your agent directories to prompt re-verification when files change.
-
-**Create an AI Agents Catalog in the UI**
-
-Cortex Catalogs (the nav-level groupings) are UI-only today — no API or CLI support yet:
-
-1. Go to [Catalogs](https://app.getcortexapp.com/admin/catalogs) → **New Catalog**
-2. Entity type: `ai-agent`
-3. Name it **AI Agents**
-
-> Catalog creation will be automated once catalog API support is added to the CLI.
-
