@@ -6,7 +6,6 @@ from typing_extensions import Annotated
 import os
 import sys
 import importlib.metadata
-import tomllib
 import configparser
 import logging
 import webbrowser
@@ -244,12 +243,9 @@ def version():
     """
     Show the version and exit
     """
-    try:
-        with open("pyproject.toml", "rb") as f:
-            pyproject = tomllib.load(f)
-        version = pyproject["tool"]["poetry"]["version"]
-    except Exception as e:
-        version = importlib.metadata.version('cortexapps_cli')
+    version = importlib.metadata.version('cortexapps_cli')
+    if version == "0.0.0":
+        version = "0.0.0 (dev)"
     print(version)
 
 # Register all commands alphabetically so they appear in order in --help
