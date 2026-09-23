@@ -1,7 +1,7 @@
 {
   "name": "CLI Test Catalog",
   "slug": "cli-test-catalog",
-  "iconTag": "cortex",
+  "iconTag": "list",
   "description": "Created by the cortexapps-cli test suite",
   "isDraft": false,
   "filter": {

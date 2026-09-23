@@ -2,7 +2,7 @@ from tests.helpers.utils import *
 
 
 def _api_enabled():
-    # The public catalog-pages API is permission/feature gated; skip rather than
+    # The public catalogs API is permission/feature gated; skip rather than
     # fail when the test tenant does not have it enabled.
     raw = cli(["catalogs", "list"], return_type=ReturnType.RAW)
     return raw.exit_code == 0
@@ -10,14 +10,14 @@ def _api_enabled():
 
 def test_list():
     if not _api_enabled():
-        pytest.skip("Public catalog-pages API is not enabled for this tenant")
+        pytest.skip("Public catalogs API is not enabled for this tenant")
     response = cli(["catalogs", "list"])
     assert "catalogPages" in response
 
 
 def test_crud():
     if not _api_enabled():
-        pytest.skip("Public catalog-pages API is not enabled for this tenant")
+        pytest.skip("Public catalogs API is not enabled for this tenant")
     slug = "cli-test-catalog"
     raw = cli(
         ["catalogs", "create", "-f", "data/import/catalogs/cli-test-catalog.json"],

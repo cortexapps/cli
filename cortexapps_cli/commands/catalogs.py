@@ -97,6 +97,7 @@ def get(
 def create(
     ctx: typer.Context,
     file_input: Annotated[typer.FileText, typer.Option(..., "--file", "-f", help="File containing the catalog page definition (JSON or YAML); can be passed as stdin with -, example: -f-")],
+    _print: CommandOptions._print = True,
 ):
     """
     Create a catalog page, or replace the existing one with the same slug.  API key must have the Edit Catalogs permission.
@@ -106,7 +107,8 @@ def create(
 
     data = _read_definition(file_input)
     r = client.post("api/v1/catalog-pages", data=data)
-    print_output(r)
+    if _print:
+        print_output(r)
 
 @app.command()
 def delete(

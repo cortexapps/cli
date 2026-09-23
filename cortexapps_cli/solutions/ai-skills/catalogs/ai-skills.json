@@ -1,0 +1,7 @@
+{
+  "name": "AI Skills",
+  "slug": "ai-skills",
+  "iconTag": "list",
+  "isDraft": false,
+  "relationshipTypeTag": "ai-plugin-skills"
+}

@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import cortexapps_cli.commands.scorecards as scorecards
 import cortexapps_cli.commands.catalog as catalog
+import cortexapps_cli.commands.catalogs as catalogs
 import cortexapps_cli.commands.entity_types as entity_types
 import cortexapps_cli.commands.entity_relationship_types as entity_relationship_types
 import cortexapps_cli.commands.entity_relationships as entity_relationships
@@ -206,16 +207,30 @@ def _export_workflows(ctx, directory):
         except Exception as e:
             print(f"Failed to export workflow {tag}: {e}")
 
-backupTypes = {
+def _export_catalog_pages(ctx, directory):
+    directory = _directory_name(directory, "catalogs")
+
+    data = catalogs.list(ctx, _print=False)
+    pages = sorted(data.get("catalogPages", []), key=lambda x: x["slug"])
+
+    for page in pages:
+        slug = page["slug"]
+        try:
+            _file_name(directory, slug, json.dumps(page, indent=2), "json")
+        except Exception as e:
+            print(f"Failed to export catalog page {slug}: {e}")
+
+backupTypes = sorted([
         "catalog",
-        "entity-types",
+        "catalogs",
         "entity-relationship-types",
         "entity-relationships",
+        "entity-types",
         "ip-allowlist",
         "plugins",
         "scorecards",
-        "workflows"
-}
+        "workflows",
+])
 backupString = ','.join(backupTypes) 
 
 def _parse_export_types(value: str) -> List[str]:
@@ -257,6 +272,7 @@ def export(
 
     Exports the following objects:
     - catalog
+    - catalogs
     - entity-types
     - entity-relationship-types
     - entity-relationships
@@ -310,6 +326,8 @@ def export(
         _export_scorecards(ctx, directory)
     if "workflows" in export_types:
         _export_workflows(ctx, directory)
+    if "catalogs" in export_types:
+        _export_catalog_pages(ctx, directory)
 
     print("\nExport complete!")
     print("Contents available in " + directory)
@@ -744,6 +762,44 @@ def _import_scorecards(ctx, directory):
 
     return ("scorecards", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
 
+def _import_catalog_pages(ctx, directory):
+    results = []
+    failed_count = 0
+    if os.path.isdir(directory):
+        print("Processing: " + directory)
+        files = [(filename, os.path.join(directory, filename))
+                 for filename in sorted(os.listdir(directory))
+                 if os.path.isfile(os.path.join(directory, filename))]
+
+        def import_catalog_page_file(file_info):
+            filename, file_path = file_info
+            try:
+                with open(file_path) as f:
+                    catalogs.create(ctx, file_input=f, _print=False)
+                return (filename, file_path, None, None)
+            except typer.Exit as e:
+                return (filename, file_path, "HTTP", "Validation or HTTP error")
+            except Exception as e:
+                return (filename, file_path, type(e).__name__, str(e))
+
+        # Import all files in parallel
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(import_catalog_page_file, file_info): file_info[0] for file_info in files}
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
+
+        # Print results in alphabetical order
+        failed_count = 0
+        for filename, file_path, error_type, error_msg in sorted(results, key=lambda x: x[0]):
+            if error_type:
+                print(f"   Failed to import {filename}: {error_type} - {error_msg}")
+                failed_count += 1
+            else:
+                print(f"   Importing: {filename}")
+
+    return ("catalogs", len(results) - failed_count, [(fp, et, em) for fn, fp, et, em in results if et])
+
 def _import_workflows(ctx, directory):
     results = []
     failed_count = 0
@@ -805,6 +861,7 @@ def import_tenant(
     all_stats.append(_import_plugins(ctx, directory + "/plugins"))
     all_stats.append(_import_scorecards(ctx, directory + "/scorecards"))
     all_stats.append(_import_workflows(ctx, directory + "/workflows"))
+    all_stats.append(_import_catalog_pages(ctx, directory + "/catalogs"))
 
     # Print summary
     print("\n" + "="*80)
@@ -861,6 +918,8 @@ def import_tenant(
                 print(f"cortex scorecards create -f \"{file_path}\"")
             elif import_type == "workflows":
                 print(f"cortex workflows create -f \"{file_path}\"")
+            elif import_type == "catalogs":
+                print(f"cortex catalogs create -f \"{file_path}\"")
 
     # Exit with non-zero code if any imports failed
     if total_failed > 0:

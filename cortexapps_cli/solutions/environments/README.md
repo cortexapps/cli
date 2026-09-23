@@ -73,16 +73,9 @@ cortex solutions install -s environments
 
 ## After Installing
 
-**Set up your Environments catalog**
+**Environments catalog**
 
-Create a catalog to visualize the deployment hierarchy:
-
-1. Go to [Catalogs](https://app.getcortexapp.com/admin/catalogs) → **New Catalog**
-2. Relationship type: `environments`
-3. Root entity type: `environment`
-4. Name it **Environments**
-
-> Catalog creation will be automated once catalog API support is added to the CLI.
+Environments, releases, and service-versions are available in a catalog named [Environments](https://app.getcortexapp.com/admin/catalogs/environments).
 
 **Try the workflows**
 
