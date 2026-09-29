@@ -55,6 +55,10 @@ cortex solutions install -s ai-skills
 
 ## After Installing
 
+**AI Skills catalog**
+
+AI plugins and skills are available in a catalog named [AI Skills](https://app.getcortexapp.com/admin/catalogs/ai-skills).
+
 **Populate quality data for real skills**
 
 Three of the scorecard's rules — concise (`lineCount`), description length (`descriptionCharCount`, named to avoid confusion with the entity's own `description` field), and shallow references (`hasDeepReferences`) — read from Cortex custom metadata. `cortex ai-skills sync` pushes these via the Custom Data API. For each real skill you ingest:
@@ -72,14 +76,3 @@ The sample entities above don't have these set, so they'll score lower on those 
 **Link real plugins and skills to your own Services**
 
 Point `ai-plugin-service` / `ai-skill-service` at whatever Service (or repository entity) already owns that code in your Catalog, instead of the sample `docs-portal`.
-
-**Set up your AI Skills catalog**
-
-Cortex Catalogs (the nav-level groupings like Services, Infrastructure, Domains) are UI-only today — there's no API or CLI support yet to script this step:
-
-1. Go to [Catalogs](https://app.getcortexapp.com/admin/catalogs) → **New Catalog**
-2. Relationship type: `ai-plugin-skills`
-3. Root entity type: `ai-plugin`
-4. Name it **AI Skills**
-
-> Catalog creation will be automated once catalog API support is added to the CLI.
