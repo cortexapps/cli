@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.44.0](https://github.com/cortexapps/cli/releases/tag/1.44.0) - 2026-09-29
+
+<small>[Compare with 1.43.0](https://github.com/cortexapps/cli/compare/1.43.0...1.44.0)</small>
+
+### Features
+
+- integrate catalog-pages into backup, solutions, and solution bundles ([296813d](https://github.com/cortexapps/cli/commit/296813d6bedebdddb525c45267b41db14ebd21c5) by Jeff Schnitter).
+- add catalogs command for the public catalog-pages API ([0e05a4d](https://github.com/cortexapps/cli/commit/0e05a4d2afb18b1fabdeb6b2ec40acefbe142a15) by jeff.schnitter).
+
+### Bug Fixes
+
+- show (dev) suffix in version command when running from dev tree ([2164b3e](https://github.com/cortexapps/cli/commit/2164b3e3af2175f8a4f5d932de3fed5c9613552a) by Jeff Schnitter).
+
 ## [1.43.0](https://github.com/cortexapps/cli/releases/tag/1.43.0) - 2026-09-21
 
 <small>[Compare with 1.42.0](https://github.com/cortexapps/cli/compare/1.42.0...1.43.0)</small>
