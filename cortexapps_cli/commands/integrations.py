@@ -3,6 +3,9 @@ from rich import print_json
 import typer
 from typing_extensions import Annotated
 
+from cortexapps_cli.command_options import ListCommandOptions
+from cortexapps_cli.utils import print_output_with_context
+
 import cortexapps_cli.commands.integrations_commands.apiiro as apiiro
 import cortexapps_cli.commands.integrations_commands.argocd as argocd
 import cortexapps_cli.commands.integrations_commands.aws as aws
@@ -101,3 +104,31 @@ app.add_typer(veracode.app, name="veracode")
 app.add_typer(wiz.app, name="wiz")
 app.add_typer(workday.app, name="workday")
 app.add_typer(xmatters.app, name="xmatters")
+
+@app.command()
+def status(
+    ctx: typer.Context,
+    table_output: ListCommandOptions.table_output = False,
+    csv_output: ListCommandOptions.csv_output = False,
+    columns: ListCommandOptions.columns = [],
+    no_headers: ListCommandOptions.no_headers = False,
+    filters: ListCommandOptions.filters = [],
+    sort: ListCommandOptions.sort = [],
+):
+    """
+    List all installed integrations and their connection status
+    """
+
+    client = ctx.obj["client"]
+
+    if (table_output or csv_output) and not ctx.params.get('columns'):
+        ctx.params['columns'] = [
+            "Type=integrationType",
+            "Alias=alias",
+            "Status=validation.status",
+            "LastValidatedAt=validation.lastValidatedAt",
+            "Message=validation.message",
+        ]
+
+    r = client.get("api/v1/integrations/status")
+    print_output_with_context(ctx, r)
