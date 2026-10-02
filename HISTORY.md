@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.46.1](https://github.com/cortexapps/cli/releases/tag/1.46.1) - 2026-10-02
+
+<small>[Compare with 1.46.0](https://github.com/cortexapps/cli/compare/1.46.0...1.46.1)</small>
+
+### Bug Fixes
+
+- pin Docker image to exact published version via build arg #patch ([03af8ee](https://github.com/cortexapps/cli/commit/03af8ee875a944028cbca7058382914c7e2e84aa) by Jeff Schnitter).
+
 ## [1.46.0](https://github.com/cortexapps/cli/releases/tag/1.46.0) - 2026-10-02
 
 <small>[Compare with 1.45.0](https://github.com/cortexapps/cli/compare/1.45.0...1.46.0)</small>
