@@ -38,15 +38,23 @@ Getting the prefix wrong means the wrong version ships — and fixing it require
 ## Step 2: Craft the commit message
 
 - Use `fix:` for bug fixes, `feat:` for new features.
-- If the prefix and bump disagree, add an explicit keyword override:
-  - `#patch` — force patch regardless of prefix
-  - `#minor` — force minor regardless of prefix
-  - `#major` — force major (rare)
 - **Only use `feat:`/`fix:` for commits that touch deliverable paths**: `cortexapps_cli/`, `pyproject.toml`, `poetry.lock`, `tests/`, `docker/`. Use `chore:` for anything else.
+
+### Version bump hashtags (REQUIRED for patch releases)
+
+The tag action (`anothrNick/github-tag-action`) defaults to **minor** when no hashtag is present. `feat:`/`fix:` prefixes alone do NOT control the bump. You must append a hashtag:
+
+| Desired bump | Hashtag to append | When to use |
+|---|---|---|
+| patch | `#patch` | All `fix:` commits |
+| minor | *(no hashtag needed — it's the default)* | All `feat:` commits |
+| major | `#major` | Breaking changes (rare) |
+
+**Always append `#patch` to every `fix:` commit message.** Omitting it silently produces a minor bump instead.
 
 Example:
 ```
-fix: two-pass re-import for catalog entities with x-cortex-relationships #patch
+fix: bump urllib3 to 2.8.0 to resolve CVE-2026-97687 and CVE-2026-97689 #patch
 ```
 
 ---
