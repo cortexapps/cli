@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.46.0](https://github.com/cortexapps/cli/releases/tag/1.46.0) - 2026-10-02
+
+<small>[Compare with 1.45.0](https://github.com/cortexapps/cli/compare/1.45.0...1.46.0)</small>
+
+### Bug Fixes
+
+- bump urllib3 to 2.8.0 to resolve CVE-2026-97687 and CVE-2026-97689 ([e438504](https://github.com/cortexapps/cli/commit/e4385040d73ce1122cc92f269761207d0133b2e2) by Jeff Schnitter).
+
 ## [1.45.0](https://github.com/cortexapps/cli/releases/tag/1.45.0) - 2026-10-01
 
 <small>[Compare with 1.44.0](https://github.com/cortexapps/cli/compare/1.44.0...1.45.0)</small>
