@@ -1,4 +1,5 @@
 from tests.helpers.utils import *
+import json
 
 # Since responses are all mocked and no data validation is done by the CLI --
 # we let the API handle validation -- we don't need valid input files.
@@ -11,6 +12,12 @@ def _dummy_file(tmp_path):
 def test_integrations_prometheus_add():
     responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/prometheus/configuration", json={}, status=200)
     cli(["integrations", "prometheus", "add", "-a", "myAlias", "-h", "my.host.com", "--username", "my-user", "--password", "my-password", "-t", "my-tenant", "-i"])
+    body = json.loads(responses.calls[0].request.body)
+    assert body["password"] == "my-password"
+    assert body["tenantId"] == "my-tenant"
+    assert body["isDefault"] is True
+    assert "tenant_id" not in body
+    assert "is_default" not in body
 
 @responses.activate
 def test_integrations_prometheus_add_multiple(tmp_path):
