@@ -123,24 +123,6 @@ def delete(
     client.delete("api/v1/catalog/" + tag)
 
 @app.command()
-def delete_by_type(
-    ctx: typer.Context,
-    types: CatalogCommandOptions.types = None,
-):
-    """
-    Dangerous operation that will delete all entities that are of the given type
-    """
-    client = ctx.obj["client"]
-
-    #TODO: check if types is a regex of form: ([-A-Za-z]+,)+
-
-    params = {
-        "types": types
-    }
-
-    client.delete("api/v1/catalog", params=params)
-
-@app.command()
 def descriptor(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
