@@ -123,6 +123,18 @@ def delete(
     client.delete("api/v1/catalog/" + tag)
 
 @app.command()
+def delete_by_id(
+    ctx: typer.Context,
+    ids: Optional[List[str]] = typer.Option(..., "--id", "-i", help="CID of an entity to delete (e.g. en2da8159dbeefb974). Can be specified multiple times.", show_default=False),
+):
+    """
+    Delete entities by CID. Accepts one or more --id flags.
+    """
+    client = ctx.obj["client"]
+
+    client.delete("api/v1/catalog", params={"ids": ids})
+
+@app.command()
 def descriptor(
     ctx: typer.Context,
     tag: str = typer.Option(..., "--tag", "-t", help="The tag (x-cortex-tag) or unique, auto-generated identifier for the entity."),
