@@ -5,8 +5,11 @@
 # versions installed and shows 0 vulnerabilities in Trivy's METADATA scans:
 #   - msgpack:    installed at 1.2.1 (GHSA-6v7p-g79w-8964 fixed at 1.2.1)
 #   - setuptools: installed at 83.0.0 (CVE-2025-47273 fixed at 78.1.1)
+#   - urllib3:    installed at 2.8.0 (CVE-2026-97687, CVE-2026-97689 fixed at 2.8.0)
 #
 # The Debian-packaged versions in the system Python cannot be upgraded via pip.
 
 GHSA-6v7p-g79w-8964
 CVE-2025-47273
+CVE-2026-97687
+CVE-2026-97689
