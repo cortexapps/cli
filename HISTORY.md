@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.47.0](https://github.com/cortexapps/cli/releases/tag/1.47.0) - 2026-10-12
+
+<small>[Compare with 1.46.1](https://github.com/cortexapps/cli/compare/1.46.1...1.47.0)</small>
+
+### Features
+
+- remove delete-by-type and add delete-by-id for catalog entities (#247) ([e331a14](https://github.com/cortexapps/cli/commit/e331a14d647efbb4db46ce78f106653bfdc7ea48) by Jeff Schnitter).
+
 ## [1.46.1](https://github.com/cortexapps/cli/releases/tag/1.46.1) - 2026-10-02
 
 <small>[Compare with 1.46.0](https://github.com/cortexapps/cli/compare/1.46.0...1.46.1)</small>
