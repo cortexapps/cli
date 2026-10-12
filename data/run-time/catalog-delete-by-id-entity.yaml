@@ -1,5 +1,0 @@
-openapi: 3.0.1
-info:
-  title: Delete By ID Test Entity
-  x-cortex-tag: cli-test-delete-by-id-entity
-  x-cortex-type: service
