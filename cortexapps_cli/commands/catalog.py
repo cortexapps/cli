@@ -123,22 +123,29 @@ def delete(
     client.delete("api/v1/catalog/" + tag)
 
 @app.command()
-def delete_by_type(
+def delete_by_id(
     ctx: typer.Context,
-    types: CatalogCommandOptions.types = None,
+    ids: Optional[List[str]] = typer.Option(None, "--id", "-i", help="CID of an entity to delete (e.g. en2da8159dbeefb974). Can be specified multiple times.", show_default=False),
+    file_input: Annotated[Optional[typer.FileText], typer.Option("--file", "-f", help="File containing one CID per line; can be passed as stdin with -, example: -f-")] = None,
+    batch_size: int = typer.Option(100, "--batch-size", hidden=True, help="Number of IDs per API call when processing file input"),
 ):
     """
-    Dangerous operation that will delete all entities that are of the given type
+    Delete entities by CID. Accepts one or more --id flags, or a file with one CID per line.
     """
+    if ids and file_input:
+        raise typer.BadParameter("Specify either --id or --file, not both")
+
+    if not ids and not file_input:
+        raise typer.BadParameter("One of --id or --file is required")
+
     client = ctx.obj["client"]
 
-    #TODO: check if types is a regex of form: ([-A-Za-z]+,)+
-
-    params = {
-        "types": types
-    }
-
-    client.delete("api/v1/catalog", params=params)
+    if file_input:
+        all_ids = [line.strip() for line in file_input if line.strip()]
+        for i in range(0, len(all_ids), batch_size):
+            client.delete("api/v1/catalog", params={"ids": all_ids[i:i + batch_size]})
+    else:
+        client.delete("api/v1/catalog", params={"ids": ids})
 
 @app.command()
 def descriptor(
