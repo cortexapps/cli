@@ -53,7 +53,7 @@ def add_multiple(
 
     data = json.loads("".join([line for line in file_input]))
 
-    r = client.put("api/v1/jenkins/configurations", data=data)
+    r = client.post("api/v1/jenkins/configurations", data=data)
     print_json(data=r)
 
 @app.command()
