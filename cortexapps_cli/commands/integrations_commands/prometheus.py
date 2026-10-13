@@ -33,8 +33,8 @@ def add(
            "host": host,
            "username": username,
            "password": password,
-           "tenant_id": tenant_id,
-           "is_default": is_default
+           "tenantId": tenant_id,
+           "isDefault": is_default
         }       
 
         for k, v in data.items():
