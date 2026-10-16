@@ -205,7 +205,7 @@ class GitHubActionsSetup(SolutionSetup):
 
         workflow_tag = "github-actions-deploy"
         entity_url = f"{app_url}/admin/resources?tag=github-actions-demo"
-        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
+        workflows_url = f"{app_url}/admin/workflows/github-actions-deploy"
 
         if self._answers.get("github_integration_alias"):
             print(f"\nTo trigger a deploy manually later:")
@@ -408,7 +408,7 @@ info:
         api_key = self._answers["cortex_api_key"]
         alias = self._answers["github_integration_alias"]
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
+        workflows_url = f"{app_url}/admin/workflows/github-actions-deploy"
 
         yaml_content = WORKFLOW_TEMPLATE_PATH.read_text().replace(
             "PLACEHOLDER_INTEGRATION_ALIAS", alias
@@ -475,7 +475,7 @@ info:
             raise RuntimeError("No run ID returned from workflow start")
 
         app_url = base_url.replace("api.", "app.", 1) if "api." in base_url else base_url
-        workflows_url = f"{app_url}/admin/workflows?activeTab=runs"
+        workflows_url = f"{app_url}/admin/workflows/github-actions-deploy"
 
         terminal = {"COMPLETED", "FAILED", "CANCELLED"}
         start = time.time()

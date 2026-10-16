@@ -79,10 +79,10 @@ Environments, releases, and service-versions are available in a catalog named [E
 
 **Try the workflows**
 
-Three workflows were installed. Go to [Workflows](https://app.getcortexapp.com/admin/workflows) in the Cortex UI:
+Three workflows were installed:
 
-- **Create Environment** (`create-environment`) — provision a new environment entity
-- **Create Release** (`create-release`) — create a release linked to service versions
-- **Trigger GitHub Release** (`trigger-github-release`) — publish a service version via GitHub Actions
+- **[Create Environment](https://app.getcortexapp.com/admin/workflows/create-environment)** (`create-environment`) — provision a new environment entity
+- **[Create Release](https://app.getcortexapp.com/admin/workflows/create-release)** (`create-release`) — create a release linked to service versions
+- **[Trigger GitHub Release](https://app.getcortexapp.com/admin/workflows/trigger-github-release)** (`trigger-github-release`) — publish a service version via GitHub Actions
 
 These are all stub workflows. You might add the creation of these entities as part of your automated CI/CD process. You might extend these workflows and call them via the Cortex API. These are included to show conceptually what you'll want to create/maintain.
