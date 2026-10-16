@@ -140,7 +140,7 @@ Use the GitHub-recommended format: `<issue-number>-<short-description>`
 - Keep the description concise (3-5 words)
 
 ### Direct Commits to Main
-Documentation-only changes (like updates to CLAUDE.md, README.md, STYLE.md) can be committed directly to `main` without going through the staging workflow.
+Changes can be committed directly to `main` without going through the staging workflow. Note that **every push to `main` triggers a release**, including documentation-only changes — there is no way to suppress this. Use `fix:` for any commit that touches deliverable paths (`cortexapps_cli/`, `tests/`, etc.) so the bump is intentional and clearly a patch.
 
 ### Release Workflow
 
@@ -162,11 +162,11 @@ Documentation-only changes (like updates to CLAUDE.md, README.md, STYLE.md) can 
    - Include the expected version number and brief description in title
    - List all changes in the PR body
 
-**Version bumping** is automatic based on **conventional commit prefixes** in the commit history since the last tag:
+**Every push to `main` triggers a release.** There is no way to push to `main` without publishing. The `anothrNick/github-tag-action` runs on every push and bumps the version based on **conventional commit prefixes** in the commit history since the last tag:
 - `feat:` prefix → **minor** version bump (new features)
 - `fix:` prefix → **patch** version bump (bug fixes)
 - If multiple types present, the highest wins (feat > fix)
-- Default (no recognized prefix): patch bump
+- Default (no recognized prefix, e.g. `chore:`, `docs:`): **minor** bump (the action's default — `DEFAULT_BUMP` is not configured)
 
 **Release publishes to:**
 - PyPI
