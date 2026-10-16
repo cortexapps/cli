@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.49.0](https://github.com/cortexapps/cli/releases/tag/1.49.0) - 2026-10-16
+
+<small>[Compare with 1.48.0](https://github.com/cortexapps/cli/compare/1.48.0...1.49.0)</small>
+
 ## [1.48.0](https://github.com/cortexapps/cli/releases/tag/1.48.0) - 2026-10-12
 
 <small>[Compare with 1.47.0](https://github.com/cortexapps/cli/compare/1.47.0...1.48.0)</small>
