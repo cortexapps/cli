@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.50.0](https://github.com/cortexapps/cli/releases/tag/1.50.0) - 2026-10-19
+
+<small>[Compare with 1.49.0](https://github.com/cortexapps/cli/compare/1.49.0...1.50.0)</small>
+
+### Features
+
+- add whoami command and api-keys current subcommand (#242) ([1833b43](https://github.com/cortexapps/cli/commit/1833b4316aa83f2413b5ca2b48ab20f3e34530f0) by Jeff Schnitter).
+
 ## [1.49.0](https://github.com/cortexapps/cli/releases/tag/1.49.0) - 2026-10-16
 
 <small>[Compare with 1.48.0](https://github.com/cortexapps/cli/compare/1.48.0...1.49.0)</small>
