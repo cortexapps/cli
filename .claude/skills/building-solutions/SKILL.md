@@ -93,7 +93,7 @@ info:
   x-cortex-definition: {}      ← REQUIRED for custom entity types (e.g. non-service/domain/team)
   x-cortex-groups:
     - groupName:value
-  x-cortex-custom-data:
+  x-cortex-custom-metadata:
     key: value
   x-cortex-relationships:
     - type: relationship-type-tag
@@ -104,6 +104,8 @@ info:
 **`description`** — the plain OpenAPI `info.description` field, not `x-cortex-description`. Confirmed live: `x-cortex-description` is not a recognized Cortex attribute and is silently dropped — the entity imports fine but its description stays null in `catalog list`/`catalog details` and the UI. Use plain `description:` alongside `title:`.
 
 **`x-cortex-definition: {}`** — Required for custom entity types (anything not service, domain, or team). Omitting it causes "Standard cortex tags: Definition is required" on import.
+
+**`x-cortex-custom-metadata`** — the key is `custom-metadata`, NOT `custom-data`. `x-cortex-custom-data` is not a recognized extension: OpenAPI ignores unknown `x-` keys, so the entity imports with zero errors and the block is silently discarded. Nothing warns you, and `custom()` then returns null for every key you thought you set. The block must also be a **map** of key to value. A list of `{key:, value:}` pairs parses to nothing, because the parser bails on anything that is not a map.
 
 ---
 
@@ -271,8 +273,9 @@ rules:
 
 **Rule expressions (CQL)** — a few patterns that aren't obvious and are easy to get wrong (all confirmed against a live tenant):
 - Relationship existence: `entity.destinations(relationshipType = "my-relationship").length > 0` (or `.sources(...)` for the reverse direction).
-- Numeric custom data: `custom("key")` only reads values pushed via the **Custom Data API** (`POST api/v1/catalog/<tag>/custom-data`, i.e. `cortex custom-data add`) — the `x-cortex-custom-data` block in the catalog descriptor YAML is invisible to `custom()`. Values also come back as strings even when numeric, so comparisons need a jq cast: `jq(custom("key"), ". | tonumber") <= 200`, not `custom("key") <= 200` (silently scores 0, no error).
-- Boolean custom data: use `jq(custom("key"), "not")` or `jq(custom("key"), ". == false")` — `custom("key") == false` and `custom("key") == "false"` both silently score 0 against the live evaluator despite the value being stored and typed correctly.
+- Custom data has two write paths into the same store, and they differ in typing. The descriptor block `x-cortex-custom-metadata` preserves real types: `true` parses as a Boolean, `5` and `3.472` as BigDecimal. The Custom Data API (`POST api/v1/catalog/<tag>/custom-data`, i.e. `cortex custom-data add`) is what `cortex ai-skills sync` uses, and it stringifies on the way in, so those values read back as strings.
+- Numeric custom data pushed via the API therefore needs a jq cast: `jq(custom("key"), ". | tonumber") <= 200`, not `custom("key") <= 200` (silently scores 0, no error). Values set via `x-cortex-custom-metadata` are already numeric. The cast is harmless either way, so prefer it when you are not sure which path populated the key.
+- Boolean custom data: `jq(custom("key"), "not")` is the form currently used in `ai-skills-quality`. The older note here claimed `custom("key") == false` and `== "false"` both silently score 0 despite correct storage. Treat that as unconfirmed: it was recorded alongside the `custom-data` key bug above, which meant `custom()` was reading a key that was never stored, and a null makes every comparison score 0 while `jq(null, "not")` passes vacuously. Re-test against a live tenant before relying on either form.
 - Regex/string ops: `entity.tag().matches(".*pattern.*")`; combine with `OR` (not `||`) and `!(...)` (not `NOT ...`) — e.g. `!(entity.tag().matches(".*a.*") OR entity.tag().matches(".*b.*"))`.
 
 ---
@@ -364,6 +367,8 @@ with as_file(_solutions_root() / tag) as solution_path:
 | `Duplicate field 'filter'` | Script added filter twice | Remove duplicate from workflow YAML |
 | `Invalid Github configuration alias` | Workflow uses `github.*` action but no GitHub integration configured in tenant | Remove GitHub action or document as manual step |
 | `.gitkeep` parse errors | Empty placeholder files are parsed | Remove all `.gitkeep` files from solution |
+| **No error at all.** Import reports success, but `custom()` returns null and every rule reading it scores 0 | Misspelled `x-cortex-*` key. Unrecognized extensions are silently discarded, so a typo costs you a whole block with no warning | Check the key against the recognized list in `Parser.kt`. The custom data one is `x-cortex-custom-metadata`, not `x-cortex-custom-data` |
+| **No error at all.** `x-cortex-custom-metadata` key is correct but values never appear | Block written as a list of `{key:, value:}` pairs. The parser bails on anything that is not a map | Use a plain map: `ai-budget-weekly: 480` |
 
 ---
 

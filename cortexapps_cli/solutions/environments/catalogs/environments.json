@@ -1,0 +1,7 @@
+{
+  "name": "Environments",
+  "slug": "environments",
+  "iconTag": "database",
+  "isDraft": false,
+  "relationshipTypeTag": "environments"
+}

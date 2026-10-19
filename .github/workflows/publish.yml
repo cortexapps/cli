@@ -157,7 +157,7 @@ jobs:
       id: build-docker-image
       working-directory: ./docker
       run: |
-        docker build -t ${{ env.DOCKER_IMAGE }} .
+        docker build --build-arg VERSION=${{ env.VERSION }} -t ${{ env.DOCKER_IMAGE }} .
         sha=$(docker images --format {{.ID}}  --no-trunc ${{ env.DOCKER_ORGANIZATION }}/cli:${{ env.VERSION }})
         echo "SHA=${sha}" >> $GITHUB_OUTPUT
         echo "URL=https://hub.docker.com/layers/${{ env.DOCKER_ORGANIZATION }}/cli/${{ env.VERSION }}/images/${sha}" >> $GITHUB_OUTPUT

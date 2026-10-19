@@ -1,0 +1,11 @@
+{
+  "name": "AI Agents",
+  "slug": "ai-agents",
+  "iconTag": "list",
+  "isDraft": false,
+  "filter": {
+    "types": {
+      "include": ["ai-agent"]
+    }
+  }
+}

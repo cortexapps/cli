@@ -241,7 +241,7 @@ class HarnessDeploySetup(SolutionSetup):
         )
 
         workflow_tag = "harness-trigger-deploy"
-        workflows_url = f"{app_url}/admin/workflows"
+        workflows_url = f"{app_url}/admin/workflows/harness-trigger-deploy"
         entity_url = cortex_url
 
         print(f"\nTo trigger a deploy manually later:")

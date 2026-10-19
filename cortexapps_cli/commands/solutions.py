@@ -334,7 +334,11 @@ def _read_resource_tag(content: str, kind: str) -> str | None:
         data = yaml.safe_load(content)
         if not isinstance(data, dict):
             data = json.loads(content)
-        return data.get("type") if kind == "entity-types" else data.get("tag")
+        if kind == "entity-types":
+            return data.get("type")
+        if kind == "catalogs":
+            return data.get("slug")
+        return data.get("tag")
     except Exception:
         return None
 
@@ -348,6 +352,7 @@ def _collect_solution_resources(path: Path) -> dict[str, list[str]]:
         "scorecards": [],
         "workflows": [],
         "plugins": [],
+        "catalogs": [],
     }
     for kind in resources:
         subdir = path / kind
@@ -404,7 +409,7 @@ def _run_uninstall(client, path: Path, yes: bool) -> None:
         return
 
     typer.echo("\nThis will remove the following entities:")
-    for kind in ("workflows", "scorecards", "plugins", "catalog", "entity-relationship-types", "entity-types"):
+    for kind in ("catalogs", "workflows", "scorecards", "plugins", "catalog", "entity-relationship-types", "entity-types"):
         count = len(resources[kind])
         if count:
             typer.echo(f"  {kind}: {count}")
@@ -418,6 +423,7 @@ def _run_uninstall(client, path: Path, yes: bool) -> None:
 
     # Delete in reverse import order
     steps = [
+        ("catalogs",                  lambda t: f"api/v1/catalog-pages/{t}"),
         ("workflows",                 lambda t: f"api/v1/workflows/{t}"),
         ("scorecards",                lambda t: f"api/v1/scorecards/{t}"),
         ("plugins",                   lambda t: f"api/v1/plugins/{t}"),

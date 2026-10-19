@@ -5,7 +5,7 @@ info:
   x-cortex-type: service-version
   x-cortex-description: payments service version 1.6.1
   x-cortex-definition: {}
-  x-cortex-custom-data:
+  x-cortex-custom-metadata:
     service: payments
     version: 1.6.1
     packages:

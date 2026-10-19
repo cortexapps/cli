@@ -715,7 +715,7 @@ info:
         workflow_tag = "jenkins-trigger-deploy"
 
         entity_url = f"{app_url}/admin/resources?tag={entity_tag}"
-        workflows_url = f"{app_url}/admin/workflows"
+        workflows_url = f"{app_url}/admin/workflows/jenkins-trigger-deploy"
         jenkins_url = self._answers.get("jenkins_url", "")
         jenkins_job = self._answers.get("jenkins_job", "cortex-deploy")
         jenkins_job_url = f"{jenkins_url}/job/{jenkins_job}" if jenkins_url else ""

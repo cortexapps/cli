@@ -6,6 +6,67 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.49.0](https://github.com/cortexapps/cli/releases/tag/1.49.0) - 2026-10-16
+
+<small>[Compare with 1.48.0](https://github.com/cortexapps/cli/compare/1.48.0...1.49.0)</small>
+
+## [1.48.0](https://github.com/cortexapps/cli/releases/tag/1.48.0) - 2026-10-12
+
+<small>[Compare with 1.47.0](https://github.com/cortexapps/cli/compare/1.47.0...1.48.0)</small>
+
+## [1.47.0](https://github.com/cortexapps/cli/releases/tag/1.47.0) - 2026-10-12
+
+<small>[Compare with 1.46.1](https://github.com/cortexapps/cli/compare/1.46.1...1.47.0)</small>
+
+### Features
+
+- remove delete-by-type and add delete-by-id for catalog entities (#247) ([e331a14](https://github.com/cortexapps/cli/commit/e331a14d647efbb4db46ce78f106653bfdc7ea48) by Jeff Schnitter).
+
+## [1.46.1](https://github.com/cortexapps/cli/releases/tag/1.46.1) - 2026-10-02
+
+<small>[Compare with 1.46.0](https://github.com/cortexapps/cli/compare/1.46.0...1.46.1)</small>
+
+### Bug Fixes
+
+- pin Docker image to exact published version via build arg #patch ([03af8ee](https://github.com/cortexapps/cli/commit/03af8ee875a944028cbca7058382914c7e2e84aa) by Jeff Schnitter).
+
+## [1.46.0](https://github.com/cortexapps/cli/releases/tag/1.46.0) - 2026-10-02
+
+<small>[Compare with 1.45.0](https://github.com/cortexapps/cli/compare/1.45.0...1.46.0)</small>
+
+### Bug Fixes
+
+- bump urllib3 to 2.8.0 to resolve CVE-2026-97687 and CVE-2026-97689 ([e438504](https://github.com/cortexapps/cli/commit/e4385040d73ce1122cc92f269761207d0133b2e2) by Jeff Schnitter).
+
+## [1.45.0](https://github.com/cortexapps/cli/releases/tag/1.45.0) - 2026-10-01
+
+<small>[Compare with 1.44.0](https://github.com/cortexapps/cli/compare/1.44.0...1.45.0)</small>
+
+### Features
+
+- add integrations status command ([3aeb9aa](https://github.com/cortexapps/cli/commit/3aeb9aa314360f4ae3e86c0e485020f43fed42e9) by Jeff Schnitter).
+
+## [1.44.0](https://github.com/cortexapps/cli/releases/tag/1.44.0) - 2026-09-29
+
+<small>[Compare with 1.43.0](https://github.com/cortexapps/cli/compare/1.43.0...1.44.0)</small>
+
+### Features
+
+- integrate catalog-pages into backup, solutions, and solution bundles ([296813d](https://github.com/cortexapps/cli/commit/296813d6bedebdddb525c45267b41db14ebd21c5) by Jeff Schnitter).
+- add catalogs command for the public catalog-pages API ([0e05a4d](https://github.com/cortexapps/cli/commit/0e05a4d2afb18b1fabdeb6b2ec40acefbe142a15) by jeff.schnitter).
+
+### Bug Fixes
+
+- show (dev) suffix in version command when running from dev tree ([2164b3e](https://github.com/cortexapps/cli/commit/2164b3e3af2175f8a4f5d932de3fed5c9613552a) by Jeff Schnitter).
+
+## [1.43.0](https://github.com/cortexapps/cli/releases/tag/1.43.0) - 2026-09-21
+
+<small>[Compare with 1.42.0](https://github.com/cortexapps/cli/compare/1.42.0...1.43.0)</small>
+
+### Bug Fixes
+
+- use x-cortex-custom-metadata key in environments and ai-spend solutions ([f4ea129](https://github.com/cortexapps/cli/commit/f4ea1297438fc95bc9c436474098b6d8cc7f492e) by Aaron Wirick).
+
 ## [1.42.0](https://github.com/cortexapps/cli/releases/tag/1.42.0) - 2026-09-14
 
 <small>[Compare with 1.41.0](https://github.com/cortexapps/cli/compare/1.41.0...1.42.0)</small>

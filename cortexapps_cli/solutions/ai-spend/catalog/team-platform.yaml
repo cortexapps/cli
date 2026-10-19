@@ -13,9 +13,8 @@ info:
         email: alice.chen@cortex.io
       - name: Bob Martinez
         email: bob.martinez@cortex.io
-  x-cortex-custom-data:
-    - key: ai-budget-weekly
-      value: 480
+  x-cortex-custom-metadata:
+    ai-budget-weekly: 480
   x-cortex-relationships:
     - type: team-member
       destinations:
