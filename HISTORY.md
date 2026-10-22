@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.51.0](https://github.com/cortexapps/cli/releases/tag/1.51.0) - 2026-10-22
+
+<small>[Compare with 1.50.0](https://github.com/cortexapps/cli/compare/1.50.0...1.51.0)</small>
+
+### Bug Fixes
+
+- require certifi 2026.10.19 to drop the compromised eMudhra root (#248) ([fb1ea48](https://github.com/cortexapps/cli/commit/fb1ea48ee4373189bcd90ec3004eb52799b6bfa1) by Arkadiusz Szarama).
+
 ## [1.50.0](https://github.com/cortexapps/cli/releases/tag/1.50.0) - 2026-10-19
 
 <small>[Compare with 1.49.0](https://github.com/cortexapps/cli/compare/1.49.0...1.50.0)</small>
