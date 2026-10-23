@@ -1,7 +1,9 @@
 from collections import defaultdict
 from datetime import datetime
 import typer
+from typing import Optional
 from typing_extensions import Annotated
+from rich import print_json
 
 app = typer.Typer(help="Custom metrics commands")
 
@@ -131,3 +133,35 @@ def delete(
     params = _convert_datetime_to_string(params)
 
     r = client.delete("api/v1/eng-intel/custom-metrics/" + custom_metric_key + "/entity/" + tag, params=params)
+
+@app.command()
+def definition_create(
+    ctx: typer.Context,
+    key: str = typer.Option(..., "--key", "-k", help="Unique metric key (2-255 chars, letters/digits/hyphens, alphanumeric start/end)"),
+    name: str = typer.Option(..., "--name", "-n", help="Display name for the metric"),
+    valence: str = typer.Option(..., "--valence", "-V", help="Whether higher values are preferable: POSITIVE, NEGATIVE, or NEUTRAL"),
+    category: Optional[str] = typer.Option(None, "--category", "-c", help="Grouping label"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="What the metric measures"),
+    is_draft: bool = typer.Option(False, "--is-draft", help="If true, metric accepts data but is hidden from Eng Intelligence"),
+):
+    """
+    Create a custom metric definition
+    """
+
+    client = ctx.obj["client"]
+
+    data = {
+        "key": key,
+        "name": name,
+        "valence": valence,
+        "category": category,
+        "description": description,
+        "isDraft": is_draft,
+        "type": "PUBLIC_API"
+    }
+
+    # Remove keys whose value is None
+    data = {k: v for k, v in data.items() if v is not None}
+
+    result = client.post("api/v1/eng-intel/custom-metrics", data=data)
+    print_json(data=result)
