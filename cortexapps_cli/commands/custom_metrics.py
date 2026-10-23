@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+import json
 import typer
 from typing import Optional
 from typing_extensions import Annotated
@@ -137,9 +138,10 @@ def delete(
 @app.command()
 def definition_create(
     ctx: typer.Context,
-    key: str = typer.Option(..., "--key", "-k", help="Unique metric key (2-255 chars, letters/digits/hyphens, alphanumeric start/end)"),
-    name: str = typer.Option(..., "--name", "-n", help="Display name for the metric"),
-    valence: str = typer.Option(..., "--valence", "-V", help="Whether higher values are preferable: POSITIVE, NEGATIVE, or NEUTRAL"),
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file containing the metric definition; can be passed as stdin with -, example: -f-")] = None,
+    key: Optional[str] = typer.Option(None, "--key", "-k", help="Unique metric key (2-255 chars, letters/digits/hyphens, alphanumeric start/end)"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Display name for the metric"),
+    valence: Optional[str] = typer.Option(None, "--valence", "-V", help="Whether higher values are preferable: POSITIVE, NEGATIVE, or NEUTRAL"),
     category: Optional[str] = typer.Option(None, "--category", "-c", help="Grouping label"),
     description: Optional[str] = typer.Option(None, "--description", "-d", help="What the metric measures"),
     is_draft: bool = typer.Option(False, "--is-draft", help="If true, metric accepts data but is hidden from Eng Intelligence"),
@@ -150,18 +152,22 @@ def definition_create(
 
     client = ctx.obj["client"]
 
-    data = {
-        "key": key,
-        "name": name,
-        "valence": valence,
-        "category": category,
-        "description": description,
-        "isDraft": is_draft,
-        "type": "PUBLIC_API"
-    }
-
-    # Remove keys whose value is None
-    data = {k: v for k, v in data.items() if v is not None}
+    if file_input:
+        data = json.loads("".join([line for line in file_input]))
+    else:
+        if not key or not name or not valence:
+            raise typer.BadParameter("--key, --name, and --valence are required when --file is not provided")
+        data = {
+            "key": key,
+            "name": name,
+            "valence": valence,
+            "category": category,
+            "description": description,
+            "isDraft": is_draft,
+            "type": "PUBLIC_API"
+        }
+        # Remove keys whose value is None
+        data = {k: v for k, v in data.items() if v is not None}
 
     result = client.post("api/v1/eng-intel/custom-metrics", data=data)
     print_json(data=result)
