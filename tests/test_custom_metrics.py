@@ -15,8 +15,7 @@ def test():
     # 'vulnerabilities' must already exist as a metric definition; use `cortex custom-metrics definition-create` to create it.
     result = cli(["custom-metrics", "get", "-t", "cli-test-service", "-k", "vulnerabilities"], ReturnType.STDOUT)
     if "HTTP Error 404: Not Found - CustomMetricKey not found" in result:
-        print("Custom metric named 'vulnerabilities' does not exist.  It has to be created in the UI for this test to run.")
-        print("To create: Settings -> Eng Intelligence -> General -> Custom -> Add Metric -> (select API toggle).")
+        print("Custom metric named 'vulnerabilities' does not exist.  Create it with: cortex custom-metrics definition-create -k vulnerabilities -n Vulnerabilities -V POSITIVE")
         return
 
     date = today()

@@ -51,7 +51,7 @@ class AiSpendSetup(SolutionSetup):
     def collect_prompts(self) -> None:
         pass
 
-    def _create_metric_definition(self) -> None:
+    def _create_metric_definition(self) -> str | None:
         """Create the ai-spend metric definition via the Cortex API."""
         if self.already_done("create-definition"):
             return "Already created (skipped)"
