@@ -35,8 +35,11 @@ def test_definition_create():
         print("Skipping - no Eng Metrics access")
         return
 
-    base_url = os.environ.get("CORTEX_BASE_URL", "https://api.getcortexapp.com").rstrip("/")
-    api_key = os.environ.get("CORTEX_API_KEY", "")
+    import configparser
+    _cfg = configparser.ConfigParser()
+    _cfg.read(os.path.expanduser("~/.cortex/config"))
+    base_url = (os.environ.get("CORTEX_BASE_URL") or _cfg.get("default", "base_url", fallback="https://api.getcortexapp.com")).rstrip("/")
+    api_key = os.environ.get("CORTEX_API_KEY") or _cfg.get("default", "api_key", fallback="")
     # Pre-clean any leftover from a prior interrupted run (ignore result)
     _requests.delete(
         f"{base_url}/api/v1/eng-intel/custom-metrics/cli-test-definition",
