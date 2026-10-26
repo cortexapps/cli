@@ -56,6 +56,49 @@ info:
         assert result.exit_code != 0, f"backup import should exit with non-zero code on failure, got exit_code={result.exit_code}"
 
 
+def test_backup_import_custom_metric_definitions_invalid_api_key(monkeypatch):
+    """
+    Test that backup import of custom-metric-definitions fails cleanly with invalid API key.
+    """
+    monkeypatch.setenv("CORTEX_API_KEY", "invalidKey")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        defs_dir = os.path.join(tmpdir, "custom-metric-definitions")
+        os.makedirs(defs_dir)
+
+        def_file = os.path.join(defs_dir, "test-metric.json")
+        with open(def_file, "w") as f:
+            json.dump({
+                "key": "test-metric",
+                "name": "Test Metric",
+                "valence": "POSITIVE",
+                "type": "PUBLIC_API",
+                "isDraft": True,
+            }, f)
+
+        result = cli(["backup", "import", "-d", tmpdir], return_type=ReturnType.RAW)
+        assert result.exit_code != 0, (
+            f"backup import should exit with non-zero code on failure, "
+            f"got exit_code={result.exit_code}"
+        )
+
+
+def test_backup_import_custom_metric_definitions_empty_dir():
+    """
+    Test that backup import with an empty custom-metric-definitions/ dir is a silent no-op.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        defs_dir = os.path.join(tmpdir, "custom-metric-definitions")
+        os.makedirs(defs_dir)
+        # No files — import should succeed with 0 imported and 0 failed
+        result = cli(["backup", "import", "-d", tmpdir], return_type=ReturnType.RAW)
+        # Empty dir is a no-op — exit code 0 (all_stats has 0 failed)
+        assert result.exit_code == 0, (
+            f"backup import with empty custom-metric-definitions/ should exit 0, "
+            f"got exit_code={result.exit_code}\n{result.stdout}"
+        )
+
+
 def test_backup_export_invalid_api_key(monkeypatch):
     """
     Test that backup export exits with non-zero return code and clean error message when API calls fail.

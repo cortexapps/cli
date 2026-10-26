@@ -220,9 +220,18 @@ def _export_catalog_pages(ctx, directory):
         except Exception as e:
             print(f"Failed to export catalog page {slug}: {e}")
 
+def _export_custom_metric_definitions(ctx, directory):
+    directory = _directory_name(directory, "custom-metric-definitions")
+    client = ctx.obj["client"]
+    data = client.fetch("api/v1/eng-intel/custom-metrics", params={})
+    for definition in data.get("customMetrics", []):
+        key = definition["key"]
+        _file_name(directory, key, definition, "json")
+
 backupTypes = sorted([
         "catalog",
         "catalogs",
+        "custom-metric-definitions",
         "entity-relationship-types",
         "entity-relationships",
         "entity-types",
@@ -273,6 +282,7 @@ def export(
     Exports the following objects:
     - catalog
     - catalogs
+    - custom-metric-definitions
     - entity-types
     - entity-relationship-types
     - entity-relationships
@@ -293,7 +303,7 @@ def export(
     - api-keys
     - custom-events
     - custom-metadata created by the public API
-    - custom-metrics
+    - custom-metrics data points (definitions are backed up; per-entity data points are not)
     - dependencies created by the API
     - deploys
     - docs created by the API
@@ -312,6 +322,10 @@ def export(
     _create_directory(directory)
     if "catalog" in export_types:
         _export_catalog(ctx, directory, catalog_types)
+    if "catalogs" in export_types:
+        _export_catalog_pages(ctx, directory)
+    if "custom-metric-definitions" in export_types:
+        _export_custom_metric_definitions(ctx, directory)
     if "entity-types" in export_types:
         _export_entity_types(ctx, directory)
     if "entity-relationship-types" in export_types:
@@ -326,8 +340,6 @@ def export(
         _export_scorecards(ctx, directory)
     if "workflows" in export_types:
         _export_workflows(ctx, directory)
-    if "catalogs" in export_types:
-        _export_catalog_pages(ctx, directory)
 
     print("\nExport complete!")
     print("Contents available in " + directory)
@@ -488,6 +500,33 @@ def _import_entity_relationships(ctx, directory):
             print(f"\n   Total entity relationship import failures: {failed_count}")
 
     return ("entity-relationships", len(results) - failed_count, [(fp, et, em) for rt, fp, et, em in results if et])
+
+def _import_custom_metric_definitions(ctx, directory):
+    imported = 0
+    failed = []
+    if os.path.isdir(directory):
+        print("Processing: " + directory)
+        client = ctx.obj["client"]
+        for filename in sorted(os.listdir(directory)):
+            if not filename.endswith(".json"):
+                continue
+            file_path = os.path.join(directory, filename)
+            if not os.path.isfile(file_path):
+                continue
+            try:
+                print("   Importing: " + filename)
+                with open(file_path) as f:
+                    definition = json.load(f)
+                client.post("api/v1/eng-intel/custom-metrics", data=definition)
+                imported += 1
+            except Exception as e:
+                if "409" in str(e):
+                    print(f"   Definition {filename} already exists, skipping")
+                    imported += 1
+                else:
+                    print(f"   Failed: {type(e).__name__} - {str(e)}")
+                    failed.append((file_path, type(e).__name__, str(e)))
+    return ("custom-metric-definitions", imported, failed)
 
 def _import_custom_metrics(ctx, directory):
     imported = 0
@@ -846,6 +885,10 @@ def import_tenant(
 ):
     """
     Import data into tenant
+
+    If the import directory contains a custom-metric-definitions/ subdirectory,
+    definitions are created before custom-metrics data points are imported.
+    Existing definitions (HTTP 409) are skipped silently and counted as successes.
     """
 
     client = ctx.obj["client"]
@@ -857,6 +900,7 @@ def import_tenant(
     all_stats.append(_import_entity_relationship_types(ctx, directory + "/entity-relationship-types"))
     all_stats.append(_import_catalog(ctx, directory + "/catalog"))
     all_stats.append(_import_entity_relationships(ctx, directory + "/entity-relationships"))
+    all_stats.append(_import_custom_metric_definitions(ctx, directory + "/custom-metric-definitions"))
     all_stats.append(_import_custom_metrics(ctx, directory + "/custom-metrics"))
     all_stats.append(_import_plugins(ctx, directory + "/plugins"))
     all_stats.append(_import_scorecards(ctx, directory + "/scorecards"))
@@ -910,6 +954,8 @@ def import_tenant(
             elif import_type == "entity-relationships":
                 # These need special handling - would need the relationship type
                 print(f"# Manual retry needed for entity-relationships: {file_path}")
+            elif import_type == "custom-metric-definitions":
+                print(f"cortex custom-metrics definition-create -f \"{file_path}\"")
             elif import_type == "custom-metrics":
                 print(f"# Manual retry needed for custom-metrics: {file_path}")
             elif import_type == "plugins":
