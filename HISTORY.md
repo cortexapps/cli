@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.52.0](https://github.com/cortexapps/cli/releases/tag/1.52.0) - 2026-10-26
+
+<small>[Compare with 1.51.0](https://github.com/cortexapps/cli/compare/1.51.0...1.52.0)</small>
+
+### Features
+
+- install ai-spend metric definition via solutions install, not post-install ([a378a05](https://github.com/cortexapps/cli/commit/a378a053d71441926e0bfd54181984ae8f53dceb) by Jeff Schnitter).
+- add custom-metric-definitions to backup export and import ([712da1a](https://github.com/cortexapps/cli/commit/712da1ac4b12fd90fcbb273617ffd5dd545c0851) by Jeff Schnitter).
+- add definition-list, definition-get, definition-update, definition-delete commands ([68f8be8](https://github.com/cortexapps/cli/commit/68f8be88ce8e57e860092c1ea4e2848351e94244) by Jeff Schnitter).
+- add --file option to custom-metrics definition-create ([2cecc48](https://github.com/cortexapps/cli/commit/2cecc483c63844cc3dc93b2aa0f2833905500467) by Jeff Schnitter).
+- add ai-spend setup.py to auto-create metric definition ([2227495](https://github.com/cortexapps/cli/commit/222749570fd782e41b62f4afb94a1def244880b6) by Jeff Schnitter).
+- add custom-metrics definition-create command ([21ec281](https://github.com/cortexapps/cli/commit/21ec281bdb0bb9cc13051353fbec6447ba752d87) by Jeff Schnitter).
+
+### Bug Fixes
+
+- fall back to config file for api key in test pre-clean ([61b6b57](https://github.com/cortexapps/cli/commit/61b6b57785575e22c91009eefbd729617352687b) by Jeff Schnitter).
+- correct return type annotation and update stale test skip message ([f55bf93](https://github.com/cortexapps/cli/commit/f55bf9330b1a4cb02418dcc38b966f3d36061d85) by Jeff Schnitter).
+
 ## [1.51.0](https://github.com/cortexapps/cli/releases/tag/1.51.0) - 2026-10-22
 
 <small>[Compare with 1.50.0](https://github.com/cortexapps/cli/compare/1.50.0...1.51.0)</small>
