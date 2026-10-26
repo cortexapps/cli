@@ -1,0 +1,9 @@
+{
+  "key": "ai-spend",
+  "name": "AI Spend",
+  "type": "PUBLIC_API",
+  "valence": "POSITIVE",
+  "category": "Cost",
+  "description": "Weekly Claude AI spend per entity in USD",
+  "isDraft": false
+}
