@@ -171,3 +171,72 @@ def definition_create(
 
     result = client.post("api/v1/eng-intel/custom-metrics", data=data)
     print_json(data=result)
+
+@app.command()
+def definition_list(
+    ctx: typer.Context,
+    page: int | None = typer.Option(None, "--page", "-p", help="Page number, 0-indexed — omit to fetch all pages"),
+    page_size: int | None = typer.Option(None, "--page-size", "-z", help="Page size for results"),
+    prt: bool = typer.Option(True, "--print", help="If result should be printed to the terminal", hidden=True),
+):
+    """List custom metric definitions"""
+
+    client = ctx.obj["client"]
+
+    params = {}
+    if page_size is not None:
+        params["pageSize"] = page_size
+
+    client.fetch_or_get("api/v1/eng-intel/custom-metrics", page, prt, params=params)
+
+@app.command()
+def definition_get(
+    ctx: typer.Context,
+    key: str = typer.Option(..., "--key", "-k", help="Metric key"),
+):
+    """Get a custom metric definition"""
+
+    client = ctx.obj["client"]
+
+    result = client.get("api/v1/eng-intel/custom-metrics/" + key)
+    print_json(data=result)
+
+@app.command()
+def definition_update(
+    ctx: typer.Context,
+    key: str = typer.Option(..., "--key", "-k", help="Metric key to update"),
+    file_input: Annotated[typer.FileText, typer.Option("--file", "-f", help="JSON file with updated definition; can be passed as stdin with -, example: -f-")] = None,
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Display name for the metric"),
+    valence: Optional[str] = typer.Option(None, "--valence", "-V", help="POSITIVE, NEGATIVE, or NEUTRAL"),
+    category: Optional[str] = typer.Option(None, "--category", "-c", help="Grouping label"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="What the metric measures"),
+):
+    """Update a custom metric definition"""
+
+    client = ctx.obj["client"]
+
+    if file_input:
+        data = json.loads("".join([line for line in file_input]))
+    else:
+        data = {
+            "name": name,
+            "valence": valence,
+            "category": category,
+            "description": description,
+        }
+        # Strip None-valued keys
+        data = {k: v for k, v in data.items() if v is not None}
+
+    result = client.put("api/v1/eng-intel/custom-metrics/" + key, data=data)
+    print_json(data=result)
+
+@app.command()
+def definition_delete(
+    ctx: typer.Context,
+    key: str = typer.Option(..., "--key", "-k", help="Metric key to delete"),
+):
+    """Delete a custom metric definition"""
+
+    client = ctx.obj["client"]
+
+    client.delete("api/v1/eng-intel/custom-metrics/" + key)

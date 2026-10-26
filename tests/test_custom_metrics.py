@@ -60,3 +60,85 @@ def test_definition_create():
     assert result["description"] == "Temporary definition for CLI testing"
     assert result["isDraft"] is True
     assert result["type"] == "PUBLIC_API"
+
+
+def test_definition_list():
+    access_check = cli(["custom-metrics", "get", "-t", "cli-test-service", "-k", "vulnerabilities"], ReturnType.STDOUT)
+    if "HTTP Error 403: Product access to [ENG_METRICS] not permitted" in access_check:
+        print("Skipping - no Eng Metrics access")
+        return
+    result = cli(["custom-metrics", "definition-list"])
+    assert "customMetrics" in result
+    assert isinstance(result["customMetrics"], list)
+    # Verify pagination params work
+    result_paged = cli(["custom-metrics", "definition-list", "--page", "0", "--page-size", "1"])
+    assert "customMetrics" in result_paged
+    assert isinstance(result_paged["customMetrics"], list)
+
+
+def test_definition_get():
+    access_check = cli(["custom-metrics", "get", "-t", "cli-test-service", "-k", "vulnerabilities"], ReturnType.STDOUT)
+    if "HTTP Error 403: Product access to [ENG_METRICS] not permitted" in access_check:
+        print("Skipping - no Eng Metrics access")
+        return
+    import configparser
+    _cfg = configparser.ConfigParser()
+    _cfg.read(os.path.expanduser("~/.cortex/config"))
+    base_url = (os.environ.get("CORTEX_BASE_URL") or _cfg.get("default", "base_url", fallback="https://api.getcortexapp.com")).rstrip("/")
+    api_key = os.environ.get("CORTEX_API_KEY") or _cfg.get("default", "api_key", fallback="")
+    _requests.delete(
+        f"{base_url}/api/v1/eng-intel/custom-metrics/cli-test-def-get",
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    cli(["custom-metrics", "definition-create", "-k", "cli-test-def-get", "-n", "CLI Test Get", "-V", "POSITIVE", "--is-draft"])
+    result = cli(["custom-metrics", "definition-get", "-k", "cli-test-def-get"])
+    assert result["key"] == "cli-test-def-get"
+    assert result["name"] == "CLI Test Get"
+    _requests.delete(
+        f"{base_url}/api/v1/eng-intel/custom-metrics/cli-test-def-get",
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+
+
+def test_definition_update():
+    access_check = cli(["custom-metrics", "get", "-t", "cli-test-service", "-k", "vulnerabilities"], ReturnType.STDOUT)
+    if "HTTP Error 403: Product access to [ENG_METRICS] not permitted" in access_check:
+        print("Skipping - no Eng Metrics access")
+        return
+    import configparser
+    _cfg = configparser.ConfigParser()
+    _cfg.read(os.path.expanduser("~/.cortex/config"))
+    base_url = (os.environ.get("CORTEX_BASE_URL") or _cfg.get("default", "base_url", fallback="https://api.getcortexapp.com")).rstrip("/")
+    api_key = os.environ.get("CORTEX_API_KEY") or _cfg.get("default", "api_key", fallback="")
+    _requests.delete(
+        f"{base_url}/api/v1/eng-intel/custom-metrics/cli-test-def-update",
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    cli(["custom-metrics", "definition-create", "-k", "cli-test-def-update", "-n", "CLI Test Update", "-V", "POSITIVE", "--is-draft"])
+    result = cli(["custom-metrics", "definition-update", "-k", "cli-test-def-update", "-n", "CLI Test Updated"])
+    assert result["key"] == "cli-test-def-update"
+    assert result["name"] == "CLI Test Updated"
+    _requests.delete(
+        f"{base_url}/api/v1/eng-intel/custom-metrics/cli-test-def-update",
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+
+
+def test_definition_delete():
+    access_check = cli(["custom-metrics", "get", "-t", "cli-test-service", "-k", "vulnerabilities"], ReturnType.STDOUT)
+    if "HTTP Error 403: Product access to [ENG_METRICS] not permitted" in access_check:
+        print("Skipping - no Eng Metrics access")
+        return
+    import configparser
+    _cfg = configparser.ConfigParser()
+    _cfg.read(os.path.expanduser("~/.cortex/config"))
+    base_url = (os.environ.get("CORTEX_BASE_URL") or _cfg.get("default", "base_url", fallback="https://api.getcortexapp.com")).rstrip("/")
+    api_key = os.environ.get("CORTEX_API_KEY") or _cfg.get("default", "api_key", fallback="")
+    _requests.delete(
+        f"{base_url}/api/v1/eng-intel/custom-metrics/cli-test-def-delete",
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    cli(["custom-metrics", "definition-create", "-k", "cli-test-def-delete", "-n", "CLI Test Delete", "-V", "POSITIVE", "--is-draft"])
+    cli(["custom-metrics", "definition-delete", "-k", "cli-test-def-delete"])
+    result = cli(["custom-metrics", "definition-get", "-k", "cli-test-def-delete"], ReturnType.STDOUT)
+    assert "404" in result or "Not Found" in result
