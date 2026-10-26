@@ -156,5 +156,5 @@ The sample entities are fictional. Add your real employees as catalog entities w
 
 - Users who authenticate Claude Code with a personal API key (not Enterprise OAuth) show $0 spend in the Analytics API and are skipped automatically.
 - Cost data may take up to 24 hours to appear; dates at least 30 days old are considered final for billing purposes.
-- The `ai-spend` custom metric definition is created automatically during install by the solution's setup script (`cortex solutions post-install -s ai-spend`).
+- The `ai-spend` custom metric definition is installed automatically via `custom-metric-definitions/ai-spend.json` when you run `cortex solutions install -s ai-spend`.
 - The scorecard's Bronze rule uses a `P1Y` lookback to accommodate sample data. Once your weekly sync is running consistently, consider tightening it to `P8D` to ensure the rule only passes when data is fresh. The Silver and Gold rules use `P8D` and can similarly be adjusted to match your sync frequency.
