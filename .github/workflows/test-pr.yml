@@ -15,7 +15,6 @@ on:
           - '3.14'
   pull_request:
     branches:
-      - staging
       - main
     paths:
       - 'cortexapps_cli/**'

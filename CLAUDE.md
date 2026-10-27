@@ -140,27 +140,17 @@ Use the GitHub-recommended format: `<issue-number>-<short-description>`
 - Keep the description concise (3-5 words)
 
 ### Direct Commits to Main
-Changes can be committed directly to `main` without going through the staging workflow. Note that **every push to `main` triggers a release**, including documentation-only changes — there is no way to suppress this. Use `fix:` for any commit that touches deliverable paths (`cortexapps_cli/`, `tests/`, etc.) so the bump is intentional and clearly a patch.
+Changes can be committed directly to `main` without going through a feature branch. Note that **every push to `main` triggers a release**, including documentation-only changes — there is no way to suppress this. Use `fix:` for any commit that touches deliverable paths (`cortexapps_cli/`, `tests/`, etc.) so the bump is intentional and clearly a patch.
 
 ### Release Workflow
 
-**Default (single-feature release):** Feature branch → PR directly to `main`
+**Feature branch → PR directly to `main`**
 1. Create feature branch for changes
 2. Create PR to merge feature branch to `main`:
    ```bash
    gh pr create --base main --head <feature-branch> --title "feat: description"
    ```
 3. Merge the PR to trigger release
-
-**Multi-feature release:** Use `staging` to bundle multiple features
-1. Create feature branches for each change
-2. Create PRs to merge each feature branch to `staging`
-3. Create PR to merge `staging` to `main` to trigger release:
-   ```bash
-   gh pr create --base main --head staging --title "Release X.Y.Z: Description"
-   ```
-   - Include the expected version number and brief description in title
-   - List all changes in the PR body
 
 **Every push to `main` triggers a release.** There is no way to push to `main` without publishing. The `anothrNick/github-tag-action` runs on every push and bumps the version based on **conventional commit prefixes** in the commit history since the last tag:
 - `feat:` prefix → **minor** version bump (new features)
@@ -184,7 +174,7 @@ Before merging to `main`, Claude must:
 
 2. **Analyze commits since the last tag** (use the source branch):
    ```bash
-   git log <last-tag>..<feature-branch-or-staging> --oneline
+   git log <last-tag>..<feature-branch> --oneline
    ```
 
 3. **Determine the version bump** by examining commit prefixes:
@@ -226,33 +216,9 @@ Best practice: Use `feat:` for new features (will bump minor) and `fix:` for bug
 
 **Important**: `feat:` and `fix:` must only be used for commits that affect the CLI deliverable (i.e., changes under `cortexapps_cli/`, `pyproject.toml`, `poetry.lock`, `tests/`, `docker/`). Commits that only touch non-deliverable paths (`internal/`, `docs/superpowers/`, Justfile recipes for internal tooling, etc.) must use `chore:` or `docs:` prefixes to avoid unintended version bumps.
 
-### HISTORY.md Merge Conflicts
-The `HISTORY.md` file is auto-generated when `staging` is merged to `main`. This means:
-- `main` always has the latest HISTORY.md
-- `staging` lags behind until the next release
-- Feature branches created from `main` have the updated history
-
-When merging feature branches to `staging`, conflicts in HISTORY.md are expected. Resolve by accepting the incoming version:
-```bash
-git checkout --theirs HISTORY.md
-git add HISTORY.md
-```
-
-### HISTORY.md Merge Conflicts
-The `HISTORY.md` file is auto-generated when `staging` is merged to `main`. This means:
-- `main` always has the latest HISTORY.md
-- `staging` lags behind until the next release
-- Feature branches created from `main` have the updated history
-
-When merging feature branches to `staging`, conflicts in HISTORY.md are expected. Resolve by accepting the incoming version:
-```bash
-git checkout --theirs HISTORY.md
-git add HISTORY.md
-```
-
 ### GitHub Actions
 - **`publish.yml`**: Triggered on push to `main`, handles versioning and multi-platform publishing
-- **`test-pr.yml`**: Runs tests on pull requests
+- **`test-pr.yml`**: Runs tests on pull requests to `main`
 
 ### Branch Protection on `main`
 The `main` branch has push restrictions enabled to control who can merge:
