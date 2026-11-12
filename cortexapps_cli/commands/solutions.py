@@ -272,7 +272,7 @@ def _get_ui_url(ctx: typer.Context) -> str:
     return api_url.replace("://api.", "://app.")
 
 
-def _build_client(ctx: typer.Context) -> CortexClient:
+def _build_client(ctx: typer.Context, solution: str | None = None) -> CortexClient:
     """Build a CortexClient from auth params stored by global_callback."""
     params = ctx.obj.get("_auth_params", {})
     api_key = params.get("api_key")
@@ -316,7 +316,8 @@ def _build_client(ctx: typer.Context) -> CortexClient:
     url = url.strip("\"' /")
 
     numeric_level = getattr(logging, log_level_str.upper(), logging.WARNING)
-    return CortexClient(api_key, tenant, numeric_level, url, rate_limit)
+    command = f"solutions/{solution}" if solution else "solutions"
+    return CortexClient(api_key, tenant, numeric_level, url, rate_limit, command=command)
 
 
 def _read_catalog_tag(content: str) -> str | None:
@@ -763,7 +764,13 @@ def install(
         typer.echo(f"Error: Solution '{solution}' not found. Available: {avail}")
         raise typer.Exit(1)
 
-    ctx.obj["client"] = _build_client(ctx)
+    ctx.obj["client"] = _build_client(ctx, solution=solution)
+    # Emit one API call so this install is always recorded in Datadog, even for
+    # setup-script-only solutions that make no backup import requests.
+    try:
+        ctx.obj["client"].get("api/v1/catalog/definitions", params={"pageSize": 1})
+    except Exception:
+        pass
 
     import cortexapps_cli.commands.backup as backup
 
@@ -858,6 +865,51 @@ def post_install(
         raise typer.Exit(1)
     ctx.obj["client"] = _build_client(ctx)
     _run_post_install_script(solution, solutions_dir=solutions_dir, ctx=ctx, no_prompt=no_prompt)
+
+    if not no_prompt:
+        readme = _get_readme(solution, solutions_dir)
+        if readme:
+            entity_tags: set[str] = set()
+            ui_url = _get_ui_url(ctx)
+            resources: dict[str, list[str]] = {}
+            try:
+                root = files("cortexapps_cli.solutions")
+                if solutions_dir:
+                    resources = _collect_solution_resources(Path(solutions_dir) / solution)
+                else:
+                    with as_file(root / solution) as sp:
+                        resources = _collect_solution_resources(sp)
+                entity_tags = set(resources.get("catalog", []))
+                if solutions_dir:
+                    entity_tags |= _extract_tf_entity_tags(Path(solutions_dir) / solution)
+                else:
+                    with as_file(root / solution) as sp:
+                        entity_tags |= _extract_tf_entity_tags(sp)
+            except Exception:
+                pass
+            # Build a synthetic import report from the solution's known resources
+            kind_labels = {
+                "entity-types": "Entity type",
+                "entity-relationship-types": "Entity relationship type",
+                "catalog": "Entity",
+                "scorecards": "Scorecard",
+                "workflows": "Workflow",
+                "plugins": "Plugin",
+                "catalogs": "Catalog",
+            }
+            report_lines: list[str] = []
+            for kind, tags in resources.items():
+                label = kind_labels.get(kind, kind)
+                for tag in tags:
+                    report_lines.append(f"  {label}: {tag}")
+            import_report = "\n".join(report_lines) if report_lines else ""
+            _post_install_menu(
+                readme,
+                import_report=import_report,
+                entity_tags=entity_tags,
+                ui_url=ui_url,
+                solution_tag=solution,
+            )
 
 
 @app.command()

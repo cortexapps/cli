@@ -83,7 +83,7 @@ class TokenBucket:
 
 
 class CortexClient:
-    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com', rate_limit=None):
+    def __init__(self, api_key, tenant, numeric_level, base_url='https://api.getcortexapp.com', rate_limit=None, command=None):
         self.api_key = api_key
         self.tenant = tenant
         self.base_url = base_url
@@ -92,6 +92,8 @@ class CortexClient:
             self.version = importlib.metadata.version('cortexapps_cli')
         except importlib.metadata.PackageNotFoundError:
             self.version = 'unknown'
+
+        self.command = command
 
         logging.basicConfig(level=numeric_level)
         self.logger = logging.getLogger(__name__)
@@ -132,7 +134,7 @@ class CortexClient:
         req_headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': content_type,
-            'User-Agent': f'cortexapps-cli/{self.version}',
+            'User-Agent': f'cortexapps-cli/{self.version} ({self.command})' if self.command else f'cortexapps-cli/{self.version}',
             **headers
         }
         url = '/'.join([self.base_url.rstrip('/'), endpoint.lstrip('/')])
