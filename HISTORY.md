@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.53.0](https://github.com/cortexapps/cli/releases/tag/1.53.0) - 2026-11-12
+
+<small>[Compare with 1.52.0](https://github.com/cortexapps/cli/compare/1.52.0...1.53.0)</small>
+
+### Features
+
+- embed solution name in CLI user-agent for Datadog telemetry ([547b5d2](https://github.com/cortexapps/cli/commit/547b5d2c87edf8c3f2b167429b2d155bf151cd18) by Jeff Schnitter).
+
+### Bug Fixes
+
+- mock _post_install_menu in post-install no-setup test ([93f2010](https://github.com/cortexapps/cli/commit/93f2010fede336172d69f74adc9240ba4b869e60) by Jeff Schnitter).
+
 ## [1.52.0](https://github.com/cortexapps/cli/releases/tag/1.52.0) - 2026-10-26
 
 <small>[Compare with 1.51.0](https://github.com/cortexapps/cli/compare/1.51.0...1.52.0)</small>
@@ -964,4 +976,3 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.5](https://github.com/cortexapps/cli/releases/tag/0.0.5) - 2023-11-04
 
 <small>[Compare with first commit](https://github.com/cortexapps/cli/compare/c1de1ad2bf64e156246c6806e2d57ee3b03b3d1b...0.0.5)</small>
-
