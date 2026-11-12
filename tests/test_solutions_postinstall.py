@@ -7,7 +7,8 @@ runner = CliRunner()
 
 
 def test_post_install_no_setup_for_ai_agents():
-    result = runner.invoke(app, ["solutions", "post-install", "-s", "ai-agents"])
+    with patch("cortexapps_cli.commands.solutions._post_install_menu"):
+        result = runner.invoke(app, ["solutions", "post-install", "-s", "ai-agents"])
     assert result.exit_code == 0
     assert "No post-install setup available" in result.output
 
