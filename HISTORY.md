@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [1.54.0](https://github.com/cortexapps/cli/releases/tag/1.54.0) - 2026-11-17
+
+<small>[Compare with 1.53.0](https://github.com/cortexapps/cli/compare/1.53.0...1.54.0)</small>
+
+### Features
+
+- add scorecards exemptions list command (ISP-1898) ([ece284e](https://github.com/cortexapps/cli/commit/ece284ebcedea746a6300beab10de0c98a4bfe2a) by mikolaj.stepniewski).
+
 ## [1.53.0](https://github.com/cortexapps/cli/releases/tag/1.53.0) - 2026-11-12
 
 <small>[Compare with 1.52.0](https://github.com/cortexapps/cli/compare/1.52.0...1.53.0)</small>
