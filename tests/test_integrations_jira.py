@@ -70,5 +70,5 @@ def test_integrations_jira_add_valid(tmp_path):
 def test_integrations_jira_add_multiple_valid(tmp_path):
     f = tmp_path / "valid.json"
     f.write_text('{"configurations": []}')
-    responses.add(responses.PUT, os.getenv("CORTEX_BASE_URL") + "/api/v1/jira/configurations", json={}, status=200)
+    responses.add(responses.POST, os.getenv("CORTEX_BASE_URL") + "/api/v1/jira/configurations", json={}, status=200)
     cli(["integrations", "jira", "add-multiple", "-f", str(f)])
